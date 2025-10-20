@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const response = await fetch('https://moni-pro-tela-de-login-funcional.onrender.com/cadastro', {
+            const response = await fetch('https://monipro-beta.onrender.com/cadastro', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -93,4 +93,5 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
 });
