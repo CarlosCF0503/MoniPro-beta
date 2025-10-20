@@ -1,0 +1,130 @@
+*{
+    margin: 0;
+    padding: 0;
+    font-family: "Inter", sans-serif;
+    box-sizing: border-box; /* Adicionado para um melhor controle de layout */
+}
+
+body{
+    background: linear-gradient(to top,#ffffff,#ACC8FF);
+    min-height: 100vh; /* Usar min-height para garantir que o corpo ocupe pelo menos a tela inteira */
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 0; /* Adiciona um respiro no topo e na base */
+}
+.logo{
+    height: 30vh;
+    max-height: 200px; /* Define uma altura máxima para a logo em telas maiores */
+}
+
+form{
+    height: auto;
+    background-color: #FFFAFA;
+    display: grid;
+    grid-template-areas: 
+    "email"
+    "senha"
+    "erro"
+    "entrar"
+    "cadastro";
+    padding: 30px 60px;
+    border-radius: 15px;
+    font-size: 15px;
+    gap: 10px;
+    box-shadow: 0 0 100px 0 rgba(0, 0, 0, 0.25);
+}
+
+
+form input{
+    border-radius: 15px;
+    width: 400px;
+    padding-left: 20px;
+    height: 50px;
+    border: 2px solid #1F4287;
+    font-size: 15px;
+}
+
+
+#bloco{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.EmailArea{
+    grid-area: email;
+    margin-left: -25px;
+}
+.SenhaArea{
+    grid-area: senha;
+    margin-left: -25px;
+}
+
+.ErroArea{
+    grid-area: erro;
+    /* Otimização: Define uma altura mínima para evitar que o layout "pule" */
+    min-height: 20px;
+    color: #D8000C; /* Cor de erro mais forte */
+    font-weight: bold;
+}
+#erro{
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+#erro.aparecer{
+    opacity: 1;
+}
+
+.EntrarArea{
+    grid-area: entrar;
+}
+.EntrarArea input{
+    width: 200px;
+    padding: 0;
+    color: white;
+    background-color: #071E3D;
+    border: none;
+    font-size: 20px;
+    transition: background-color 0.2s; /* Transição um pouco mais suave */
+    cursor: pointer;
+    margin-bottom: 15px;
+}
+
+.EntrarArea input:hover{
+    background-color: #1F4287;
+}
+.CadastroArea{
+    grid-area: cadastro;
+    justify-content: space-between; /* Ajusta o espaçamento */
+    font-size: 18px;
+    gap: 200px; /* Reduz o gap entre o texto e o link */
+}
+
+.icone{
+    width: 50px;
+    text-align: center;
+}
+.icone img{
+    transform: scale(70%);
+}
+
+/* Otimização: Classe para esconder labels de forma acessível */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+input:focus{
+    border: 2px solid #FFA500;
+    outline: none;
+}
