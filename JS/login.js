@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- FIM DA CORREÇÃO ---
 
         try {
-            const response = await fetch('https://moni-pro-tela-de-login-funcional.onrender.com/login', {
+            const response = await fetch('https://monipro-beta.onrender.com/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 // --- CORREÇÃO: Envia o tipo de usuário selecionado ---
@@ -62,4 +62,5 @@ document.addEventListener('DOMContentLoaded', () => {
             erro.classList.add('aparecer');
         }
     });
+
 });
