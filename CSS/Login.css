@@ -24,23 +24,22 @@ form {
     height: auto;
     background-color: #FFFAFA;
     display: grid;
-    /* ========================================================================= */
-    /* CORREÇÃO: Adicionada a nova área "profile" na ordem correta */
+    /* Adicionada a nova área "profile-title" na ordem correta */
     grid-template-areas: 
     "email"
     "senha"
     "erro"
+    "profile-title" 
     "profile"
     "entrar"
     "cadastro";
-    /* ========================================================================= */
     padding-left: 60px;
     padding-right: 60px;
     padding-top: 30px;
     padding-bottom: 30px;
     border-radius: 15px;
     font-size: 15px;
-    gap: 10px; /* Reduzido para um espaçamento mais agradável */
+    gap: 10px;
     box-shadow: 0 0 100px 0 rgba(0, 0, 0, 0.25);
 }
 
@@ -186,6 +185,7 @@ input:focus{
     font-size: 20px;
     transition: background-color 0.1s;
     cursor: pointer;
+    margin-top: 15px;
     margin-bottom: 15px;
 }
 #entrar:hover{
@@ -198,5 +198,16 @@ input:focus{
     grid-area: profile;
     gap: 10px; /* Adiciona um espaço entre os botões Aluno/Monitor */
 }
+
+/* Estilo e posicionamento para o novo título da seleção */
+.profile-selector-title {
+    grid-area: profile-title;
+    font-weight: bold;
+    color: #071E3D;
+    font-size: 16px;
+    /* Remove a margem padrão do parágrafo para um melhor alinhamento */
+    margin-bottom: -5px; 
+}
+
 /* ========================================================================= */
 /* ===== FIM DOS ESTILOS ADICIONADOS ===== */
