@@ -1,0 +1,215 @@
+* {
+    margin: 0;
+    padding: 0;
+    font-family: "Inter", sans-serif;
+    box-sizing: border-box;
+}
+
+body {
+    background-image: linear-gradient(to top, #ffffff, #ACC8FF);
+    background-repeat: no-repeat;
+    min-height: 100vh;
+}
+
+/* --- HEADER --- */
+header {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 9vh;
+    background-color: #FFFAFA;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.header-icon {
+    cursor: pointer;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+}
+
+.header-icon img {
+    height: 60%;
+}
+
+.logo{
+    height: 100%;
+}
+.logo a img{
+    height: 100%;
+}
+/* --- OVERLAY --- */
+#overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1;
+    opacity: 0;
+    pointer-events: none; /* Não pode ser clicado quando invisível */
+    transition: opacity 0.3s ease-in-out;
+}
+
+#overlay.active {
+    opacity: 1;
+    pointer-events: all; /* Pode ser clicado quando visível */
+}
+
+/* --- SIDEBAR (MENU LATERAL) --- */
+#menuLateral {
+    position: fixed; /* Usar fixed para não mover com o scroll */
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 300px; /* Largura fixa é mais previsível */
+    background-color: #071E3D;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    z-index: 2; /* Fica acima do overlay */
+    
+}
+
+#menuLateral.aparecer {
+    transform: translateX(0);
+}
+
+.logo_fechar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+}
+
+#menu_fechar img {
+    height: 40px;
+}
+
+#menu_fechar {
+    cursor: pointer;
+    padding: 15px;
+}
+
+.item {
+    display: flex;
+    color: white;
+    align-items: center;
+    gap: 20px;
+    height: 60px;
+    padding-left: 15px;
+    font-size: 24px;
+    transition: background-color 0.3s;
+    cursor: pointer;
+}
+.item .icone {
+    width: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: margin-right 0.3s;
+}
+.item:hover {
+    background-color: #1F4287;
+}
+
+.item:hover .icone{
+    margin-right: 50px;
+}
+
+/* --- MODAL DE LOGOUT --- */
+#aviso_sair {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9); /* Inicia um pouco menor */
+    width: 400px;
+    max-width: 90%;
+    background-color: #FFFAFA;
+    border-radius: 25px;
+    box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+    
+    display: grid;
+    grid-template-areas: "icone icone" "areaSim areaNao";
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    
+    z-index: 2;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+#aviso_sair.aparecer {
+    opacity: 1;
+    pointer-events: all;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.icone_sair {
+    grid-area: icone;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 10px;
+    color: #071E3D;
+    border-bottom: 1px solid #ddd;
+}
+.icone_sair p {
+    font-size: 22px;
+}
+.icone_sair img {
+    height: 60px;
+    margin-bottom: 10px;
+}
+
+.areaSim, .areaNao {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 0;
+}
+
+.areaSim { grid-area: areaSim; }
+.areaNao { grid-area: areaNao; }
+
+button {
+    border: none;
+    border-radius: 15px;
+    padding: 8px 45px;
+    font-size: 25px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+button:hover {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+button:active {
+    transform: scale(0.95);
+}
+
+#btnSim {
+    background-color: #7CFC00;
+    color: black;
+}
+
+#btnNao {
+    background-color: #FF0000;
+    color: white;
+}
+
