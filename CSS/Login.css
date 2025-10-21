@@ -12,8 +12,7 @@ body{
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
-    padding: 20px 0; /* Adiciona um respiro no topo e na base */
+    gap: 5px;
 }
 .logo{
     height: 30vh;
@@ -35,11 +34,11 @@ form {
     "cadastro";
     padding-left: 60px;
     padding-right: 60px;
-    padding-top: 30px;
+    padding-top: 35px;
     padding-bottom: 30px;
     border-radius: 15px;
     font-size: 15px;
-    gap: 10px;
+    gap: 5px;
     box-shadow: 0 0 100px 0 rgba(0, 0, 0, 0.25);
 }
 
@@ -63,9 +62,11 @@ form input{
 
 .EmailArea{
     grid-area: email;
+    margin-top: 15px;
     margin-left: -25px;
 }
 .SenhaArea{
+    margin-top: 15px;
     grid-area: senha;
     margin-left: -25px;
 }

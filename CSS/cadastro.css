@@ -2,7 +2,8 @@
 .text1 {
     font-size: 35px;
     color: #071E3D;
-    margin-bottom: 20px; /* Adiciona espaço abaixo do título */
+    margin-bottom: 0px; 
+    margin-top: -15px;
 }
 
 /* Container principal do formulário */
@@ -10,7 +11,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 15px;
+    gap: 10px;
 }
 
 /* Estilo para cada grupo de input (ícone + campo) */
@@ -53,7 +54,7 @@
     border-radius: 15px; /* Borda consistente com os inputs */
     transition: background-color 0.2s;
     cursor: pointer;
-    margin-top: 10px; /* Espaço acima do botão */
+    margin-top: 0px; /* Espaço acima do botão */
 }
 
 #entrar:hover {
@@ -67,5 +68,4 @@
     justify-content: center;
     gap: 250px;
     font-size: 18px; /* Usa o mesmo tamanho do Login.css */
-    margin-top: 15px;
 }
