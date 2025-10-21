@@ -17,7 +17,7 @@ const port = 3000;
 // ========================================================================= //
 // CORREÇÃO: Configuração de CORS para produção
 const corsOptions = {
-  origin: 'https://moni-pro-tela-de-login-funcional.vercel.app'
+  origin: 'https://moni-pro-beta.vercel.app'
 };
 app.use(cors(corsOptions));
 // ========================================================================= //
@@ -39,4 +39,5 @@ app.post('/login', async (req, res) => {
 // Inicia o servidor para ouvir na porta definida
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
+
 });
