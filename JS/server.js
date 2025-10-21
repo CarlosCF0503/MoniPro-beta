@@ -12,7 +12,7 @@ const cors = require('cors');
 // Inicializa a aplicação Express
 const app = express();
 // Define a porta do servidor
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 // ========================================================================= //
 // CORREÇÃO: Configuração de CORS para produção
@@ -41,3 +41,4 @@ app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
 
 });
+
