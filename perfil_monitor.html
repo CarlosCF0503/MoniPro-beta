@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="CSS/base.css">
+    <link rel="icon" href="IMG/MoniPro-mini.png">
+    <link rel="stylesheet" href="CSS/perfil.css">
+    <title>Perfil - Aluno - MoniPro</title>
+</head>
+<body>
+    
+    <header>
+        <div class="logo">
+            <a href="base.html">
+                <img src="IMG/MoniPro_logo-menor.png" alt="Logo MoniPro" >
+            </a>
+        </div>
+        
+
+        <div class="header-actions">
+            <div id="perfil" class="header-icon">
+                <img src="IMG/Icone_Perfil.png" alt="Ver perfil do usuário">
+            </div>
+
+            <div id="menu" class="header-icon">
+                <img src="IMG/Menu_hamburguer.png" alt="Abrir menu de navegação">
+            </div>
+        </div>
+    </header>
+
+
+
+
+
+    <div id="overlay"></div>
+
+    <nav id="menuLateral">
+        <div class="logo_fechar">
+            <img src="IMG/Logo.png" alt="Logo completo MoniPro">
+            <div id="menu_fechar">
+                <img src="IMG/Icone_menu_fechar.png" alt="Fechar menu">
+            </div>   
+        </div>
+
+
+        <div id = "perfil"class="item">
+            <div class="icone">
+                <img src="IMG/Icone_perfil_menu.png" alt="">
+            </div>
+            <p>Perfil</p>
+        </div>
+
+
+
+
+        <div id="sair" class="item">
+            <div class="icone">
+                <img src="IMG/Icone_sair.png" alt="Ícone de porta">
+            </div>
+            <p>Sair</p>
+        </div>
+    </nav>
+
+    <div id="aviso_sair">
+        <div class="icone_sair">
+            <img src="IMG/Icone_aviso.png" alt="Ícone de aviso">
+            <p>Tem certeza que quer sair?</p>
+        </div>
+        <div class="areaSim">
+            <button id="btnSim">Sim</button>
+        </div>
+        <div class="areaNao">
+            <button id="btnNao">Não</button>
+        </div>
+    </div>
+
+
+
+
+
+
+    <div class="perfil_informacao" id = "perfil_informacao">
+        <img src="IMG/Icone_perfil_grande.png" alt="">
+        <div class="risco"></div>
+        <h1>Nome usuario</h1>
+        <p>Monitor - <img src="IMG/Icone_moeda.png" alt=""><strong>15</strong></p>
+        <div class="linha"></div>
+        <div class="informacoes">
+            
+            <span>
+                <div class="icone">
+                    <img src="IMG/Icone Email.png" alt="">
+                </div>
+                 <p>Aluno@email.com.br</p>
+            </span>
+
+            <span>
+                <div class="icone">
+                    <img src="IMG/Icone_telefone.png" alt="">
+                </div>
+                 <p>(62)123456789</p>
+            </span>
+            
+            <span>
+                <div class="icone">
+                    <img src="IMG/Icone_chapeu.png" alt="">
+                </div>
+                 <p>Cursos inscritos</p>
+            </span>
+
+            <span class="linha-interativa">
+                <div class="icone">
+                    <img src="IMG/Icone_certificado.png" alt="">
+                </div>
+                <p>Certificados</p>
+                <div id="abrir_c">
+                    <p>ver</p>
+                </div>
+            </span>
+
+        </div>
+        
+    </div>
+    <div id="area_certificados">
+        <div class="titulo">
+            <div class="icone">
+                <img src="IMG/Icone_certificado.png" alt="">
+            </div>
+            <h1>Certificados disponiveis</h1>
+        </div>
+        
+                <div id="certificado">
+                    <div class="icone">
+                        <img src="IMG/Icone_certificado_2.png" alt="">
+                    </div>
+                    <span>
+                        <h3>Materia 1</h3>
+                        <p>Data e hora de finalização</p>
+                    </span>
+                    <a href="DOC/Certificando em Branco.pdf" download><img src="IMG/icone_download.png" alt=""></a>
+                    
+                </div>
+        </div>
+
+    <script src="JS/base.js" defer></script>
+    <script src="JS/perfil_monitor.js"></script> 
+</body>
+</html>
