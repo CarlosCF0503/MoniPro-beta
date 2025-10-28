@@ -11,34 +11,19 @@ const cors = require('cors');
 
 // Inicializa a aplicação Express
 const app = express();
-// Usa a porta do ambiente (Render) ou 3000 como padrão (local)
+// Define a porta do servidor
 const port = process.env.PORT || 3000;
 
-// Configuração de CORS para produção
-const corsOptions = {
-  origin: 'https://moni-pro-beta.vercel.app' // << Garanta que esta é a URL correta do seu Vercel
-};
-app.use(cors(corsOptions));
+// Configuração de CORS para desenvolvimento local
+app.use(cors());
 
 // Middleware para o Express entender JSON no corpo das requisições
 app.use(express.json());
-
-
-// ========================================================================= //
-// ROTA DE TESTE PARA DIAGNÓSTICO
-// Localizada aqui, antes das rotas que usam o banco de dados.
-app.get('/teste', (req, res) => {
-  console.log('A ROTA DE TESTE FOI ACESSADA!');
-  res.status(200).json({ success: true, message: 'O servidor está no ar e respondendo!' });
-});
-// ========================================================================= //
-
 
 // --- ROTA DE CADASTRO (/cadastro) ---
 app.post('/cadastro', async (req, res) => {
   const { nome_completo, email, senha, tipo_usuario } = req.body;
 
-  // Validação de Senha Forte
   const senhaForteRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
   if (!senha || !senhaForteRegex.test(senha)) {
       return res.status(400).json({ 
@@ -48,7 +33,6 @@ app.post('/cadastro', async (req, res) => {
   }
 
   try {
-    // Verifica se o e-mail já existe PARA O MESMO TIPO de usuário
     const checkUserQuery = 'SELECT * FROM usuarios WHERE email = $1 AND tipo_usuario = $2';
     const existingUser = await db.query(checkUserQuery, [email, tipo_usuario]);
 
@@ -59,7 +43,6 @@ app.post('/cadastro', async (req, res) => {
         });
     }
 
-    // Se não encontrou, prossegue com o cadastro
     const saltRounds = 10;
     const senhaHash = await bcrypt.hash(senha, saltRounds);
 
