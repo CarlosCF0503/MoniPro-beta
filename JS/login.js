@@ -34,33 +34,29 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- FIM DA CORREÇÃO ---
 
         try {
-            const response = await fetch('https://monipro-beta.onrender.com/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                // --- CORREÇÃO: Envia o tipo de usuário selecionado ---
-                body: JSON.stringify({ 
-                    email, 
-                    senha, 
-                    tipo_usuario: tipoUsuario
-                }),
-            });
+    const response = await fetch('http://localhost:3000/login', { /* ... */ });
+    const data = await response.json();
 
-            const data = await response.json();
+    if (data.success) {
+        // SUBSTITUÍDO:
+        showToast(`Login como ${tipoUsuario} efetuado com sucesso!`, 'success');
+        localStorage.setItem('monipro_token', data.token);
+        
+        // Adiciona um pequeno delay antes de redirecionar para dar tempo de ler o toast
+        setTimeout(() => {
+            window.location.href = 'base.html';
+        }, 1000); // Redireciona após 1 segundo
 
-            if (data.success) {
-                localStorage.setItem('monipro_token', data.token);
-                alert(`Login como ${tipoUsuario} efetuado com sucesso!`);
-                window.location.href = 'base.html'; 
-            } else {
-                erro.textContent = data.message || 'Ocorreu um erro no login.';
-                erro.classList.add('aparecer');
-            }
+    } else {
+        // SUBSTITUÍDO:
+        showToast(data.message || 'Ocorreu um erro no login.', 'error');
+    }
 
-        } catch (error) {
-            console.error('Erro de rede:', error);
-            erro.textContent = 'Não foi possível conectar ao servidor.';
-            erro.classList.add('aparecer');
-        }
+} catch (error) {
+    console.error('Erro de rede:', error);
+    // SUBSTITUÍDO:
+    showToast('Não foi possível conectar ao servidor.', 'error');
+}
     });
 
 });

@@ -77,7 +77,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Lógica de Logout
     confirmLogoutButton.addEventListener('click', () => {
-        localStorage.removeItem('monipro_token');
+    // 1. Remove o token de autenticação
+    localStorage.removeItem('monipro_token');
+    
+    // 2. Mostra a notificação de sucesso
+    showToast('Sessão encerrada com sucesso!', 'success');
+    
+    // 3. Redireciona para a página de login após um pequeno delay
+    setTimeout(() => {
         window.location.href = 'index.html';
-    });
+    }, 1000); // Redireciona após 1 segundo
+});
 });

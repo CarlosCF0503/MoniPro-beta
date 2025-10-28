@@ -44,31 +44,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const response = await fetch('https://monipro-beta.onrender.com/cadastro', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    nome_completo: nome,
-                    email: email,
-                    senha: senha,
-                    tipo_usuario: tipoUsuario
-                }),
-            });
+    const response = await fetch('http://localhost:3000/cadastro', { /* ... */ });
+    const data = await response.json();
 
-            const data = await response.json();
+    if (data.success) {
+        // SUBSTITUÍDO:
+        showToast('Cadastro realizado com sucesso!', 'success');
+        
+        // Adiciona um delay antes de redirecionar
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 1500); // Redireciona após 1.5 segundos
 
-            if (data.success) {
-                alert('Cadastro realizado com sucesso! Faça o login.');
-                window.location.href = 'index.html';
-            } else {
-                erro.textContent = data.message || 'Ocorreu um erro no cadastro.';
-                erro.classList.add('aparecer');
-            }
-        } catch (error) {
-            console.error('Erro de rede:', error);
-            erro.textContent = 'Não foi possível conectar ao servidor. Tente novamente mais tarde.';
-            erro.classList.add('aparecer');
-        }
+    } else {
+        // SUBSTITUÍDO:
+        showToast(data.message || 'Ocorreu um erro no cadastro.', 'error');
+    }
+} catch (error) {
+    console.error('Erro de rede:', error);
+    // SUBSTITUÍDO:
+    showToast('Não foi possível conectar ao servidor.', 'error');
+}
     });
 
     // --- LÓGICA DO ÍCONE DE MOSTRAR/OCULTAR SENHA ---
