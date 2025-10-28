@@ -11,14 +11,23 @@ const cors = require('cors');
 
 // Inicializa a aplicação Express
 const app = express();
-// Define a porta do servidor
+// Usa a porta do ambiente (Render) ou 3000 como padrão (local)
 const port = process.env.PORT || 3000;
 
-// Configuração de CORS para desenvolvimento local
-app.use(cors());
+// Configuração de CORS para produção
+const corsOptions = {
+  origin: 'https://moni-pro-beta.vercel.app'
+};
+app.use(cors(corsOptions));
 
 // Middleware para o Express entender JSON no corpo das requisições
 app.use(express.json());
+
+// Rota de teste para diagnóstico
+app.get('/teste', (req, res) => {
+  console.log('A ROTA DE TESTE FOI ACESSADA!');
+  res.status(200).json({ success: true, message: 'O servidor está no ar e respondendo!' });
+});
 
 // --- ROTA DE CADASTRO (/cadastro) ---
 app.post('/cadastro', async (req, res) => {
