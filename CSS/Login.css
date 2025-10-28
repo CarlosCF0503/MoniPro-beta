@@ -13,7 +13,7 @@ body{
     flex-direction: column;
     align-items: center;
     gap: 5px;
-    padding: 20px 0; /* Adiciona um respiro */
+    padding: 10px 0; /* Adiciona um respiro */
 }
 .logo{
     height: 30vh;
@@ -204,4 +204,36 @@ input:focus{
         width: 120px; /* Botões de perfil menores */
         font-size: 14px;
     }
+}
+
+/* ========================================================================= */
+/* --- ESTILOS PARA AS NOTIFICAÇÕES TOAST --- */
+/* ========================================================================= */
+#toast-container {
+    position: fixed; /* Fica fixo na tela */
+    bottom: 25px;
+    right: 25px;
+    background-color: #071E3D; /* Cor padrão */
+    color: white;
+    padding: 16px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 1000; /* Garante que fique acima de outros elementos */
+    
+    /* Animação */
+    transform: translateX(200%); /* Começa fora da tela */
+    transition: transform 0.4s ease-in-out;
+}
+
+#toast-container.show {
+    transform: translateX(0); /* Move para dentro da tela */
+}
+
+/* Modificadores de cor para sucesso e erro */
+#toast-container.success {
+    background-color: #28a745; /* Verde */
+}
+
+#toast-container.error {
+    background-color: #D8000C; /* Vermelho */
 }
