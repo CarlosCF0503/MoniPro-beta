@@ -98,15 +98,22 @@ app.post('/cadastro', async (req, res) => {
 
 // --- ROTA DE LOGIN (/login) ---
 app.post('/login', async (req, res) => {
-    const { email, senha, tipo_usuario } = req.body;
+    // ALTERAÇÃO AQUI: Recebe 'identificador' em vez de 'email'
+    const { identificador, senha, tipo_usuario } = req.body;
 
-    if (!email || !senha || !tipo_usuario) {
-        return res.status(400).json({ success: false, message: 'E-mail, senha e tipo de usuário são obrigatórios.' });
+    if (!identificador || !senha || !tipo_usuario) {
+        return res.status(400).json({ success: false, message: 'Identificador, senha e tipo de usuário são obrigatórios.' });
     }
 
     try {
-        const findUserQuery = 'SELECT * FROM usuarios WHERE email = $1 AND tipo_usuario = $2';
-        const result = await db.query(findUserQuery, [email, tipo_usuario]);
+        // ALTERAÇÃO CRÍTICA: A query agora verifica tanto a coluna de email
+        // quanto a de matrícula (convertida para texto para uma comparação segura).
+        const findUserQuery = `
+            SELECT * FROM usuarios 
+            WHERE (email = $1 OR CAST(matricula AS TEXT) = $1) 
+            AND tipo_usuario = $2
+        `;
+        const result = await db.query(findUserQuery, [identificador, tipo_usuario]);
 
         if (result.rows.length === 0) {
             return res.status(401).json({ success: false, message: 'Credenciais inválidas ou perfil não encontrado.' });
@@ -122,7 +129,8 @@ app.post('/login', async (req, res) => {
         const payload = { 
             id: user.id, 
             email: user.email, 
-            tipo: user.tipo_usuario 
+            tipo: user.tipo_usuario,
+            matricula: user.matricula
         };
 
         const token = jwt.sign(
@@ -143,4 +151,5 @@ app.post('/login', async (req, res) => {
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
 });
+
 
