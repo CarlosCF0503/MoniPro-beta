@@ -8,8 +8,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const tipoUsuario = urlParams.get('tipo');
 
     if (!tipoUsuario) {
-        alert('Por favor, escolha se você é Aluno ou Monitor antes de se cadastrar.');
-        window.location.href = 'escolha_cadastro.html';
+        // Usa a função showToast para consistência
+        showToast('Erro: Perfil não selecionado. Por favor, volte e escolha um.', 'error');
+        setTimeout(() => {
+            window.location.href = 'escolha_cadastro.html';
+        }, 2000);
         return;
     }
 
@@ -25,46 +28,50 @@ document.addEventListener('DOMContentLoaded', () => {
         erro.classList.remove('aparecer');
 
         if (!nome || !email || !senha || !confirmarSenha) {
-            erro.textContent = 'Por favor, preencha todos os campos.';
-            erro.classList.add('aparecer');
+            showToast('Por favor, preencha todos os campos.', 'error');
             return;
         }
 
         const senhaForteRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
         if (!senhaForteRegex.test(senha)) {
-            erro.textContent = 'A senha deve ter no mínimo 8 caracteres, com pelo menos uma letra e um número.';
-            erro.classList.add('aparecer');
+            showToast('A senha deve ter no mínimo 8 caracteres, com uma letra e um número.', 'error');
             return;
         }
 
         if (senha !== confirmarSenha) {
-            erro.textContent = 'As senhas não coincidem. Por favor, tente novamente.';
-            erro.classList.add('aparecer');
+            showToast('As senhas não coincidem. Por favor, tente novamente.', 'error');
             return;
         }
 
         try {
-    const response = await fetch('http://localhost:3000/cadastro', { /* ... */ });
-    const data = await response.json();
+            // ================================================================= //
+            // CORREÇÃO: URL atualizada para o servidor de produção na Render
+            const response = await fetch('https://monipro-beta.onrender.com/cadastro', {
+            // ================================================================= //
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nome_completo: nome,
+                    email: email,
+                    senha: senha,
+                    tipo_usuario: tipoUsuario
+                }),
+            });
 
-    if (data.success) {
-        // SUBSTITUÍDO:
-        showToast('Cadastro realizado com sucesso!', 'success');
-        
-        // Adiciona um delay antes de redirecionar
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 1500); // Redireciona após 1.5 segundos
+            const data = await response.json();
 
-    } else {
-        // SUBSTITUÍDO:
-        showToast(data.message || 'Ocorreu um erro no cadastro.', 'error');
-    }
-} catch (error) {
-    console.error('Erro de rede:', error);
-    // SUBSTITUÍDO:
-    showToast('Não foi possível conectar ao servidor.', 'error');
-}
+            if (data.success) {
+                showToast('Cadastro realizado com sucesso!', 'success');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+            } else {
+                showToast(data.message || 'Ocorreu um erro no cadastro.', 'error');
+            }
+        } catch (error) {
+            console.error('Erro de rede:', error);
+            showToast('Não foi possível conectar ao servidor. Tente novamente mais tarde.', 'error');
+        }
     });
 
     // --- LÓGICA DO ÍCONE DE MOSTRAR/OCULTAR SENHA ---
@@ -72,7 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     iconesOlho.forEach(icone => {
         icone.addEventListener('click', () => {
-            // Encontra o campo de senha que é "irmão" do ícone clicado
             const inputSenha = icone.previousElementSibling;
             const imgIcone = icone.querySelector('img');
 
@@ -89,5 +95,4 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
-
 });
