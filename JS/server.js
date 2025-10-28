@@ -16,11 +16,10 @@ const port = process.env.PORT || 3000;
 
 // Configuração de CORS para produção
 const corsOptions = {
-  origin: 'https://moni-pro-beta.vercel.app'
+  origin: 'https://moni-pro-beta.vercel.app' // << Garanta que esta é a URL correta do seu Vercel
 };
 app.use(cors(corsOptions));
 
-// Middleware para o Express entender JSON no corpo das requisições
 app.use(express.json());
 
 // Rota de teste para diagnóstico
@@ -33,6 +32,7 @@ app.get('/teste', (req, res) => {
 app.post('/cadastro', async (req, res) => {
   const { nome_completo, email, senha, tipo_usuario } = req.body;
 
+  // Validação de Senha Forte
   const senhaForteRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
   if (!senha || !senhaForteRegex.test(senha)) {
       return res.status(400).json({ 
@@ -42,25 +42,46 @@ app.post('/cadastro', async (req, res) => {
   }
 
   try {
-    const checkUserQuery = 'SELECT * FROM usuarios WHERE email = $1 AND tipo_usuario = $2';
-    const existingUser = await db.query(checkUserQuery, [email, tipo_usuario]);
+    // ========================================================================= //
+    // NOVA LÓGICA DE MATRÍCULA
+    let matriculaParaSalvar;
+
+    // 1. Primeiro, verifica se um usuário com este e-mail JÁ EXISTE, não importa o tipo
+    const findUserByEmailQuery = 'SELECT * FROM usuarios WHERE email = $1 LIMIT 1';
+    const existingUser = await db.query(findUserByEmailQuery, [email]);
 
     if (existingUser.rows.length > 0) {
+        // Se o usuário já existe, usamos a matrícula dele
+        matriculaParaSalvar = existingUser.rows[0].matricula;
+    } else {
+        // Se é um usuário totalmente novo, pegamos um novo número da sequência
+        const newMatriculaResult = await db.query("SELECT nextval('matricula_seq') AS nova_matricula");
+        matriculaParaSalvar = newMatriculaResult.rows[0].nova_matricula;
+    }
+
+    // 2. Agora, verifica se a combinação de email e TIPO já existe (para evitar duplicação)
+    const checkUserQuery = 'SELECT * FROM usuarios WHERE email = $1 AND tipo_usuario = $2';
+    const existingProfile = await db.query(checkUserQuery, [email, tipo_usuario]);
+
+    if (existingProfile.rows.length > 0) {
         return res.status(409).json({ 
             success: false, 
             message: `Este e-mail já está cadastrado como ${tipo_usuario}.` 
         });
     }
+    // ========================================================================= //
 
+    // 3. Prossegue com o cadastro usando a matrícula correta
     const saltRounds = 10;
     const senhaHash = await bcrypt.hash(senha, saltRounds);
 
+    // Adicionada a coluna 'matricula' e o 5º parâmetro ($5)
     const insertQuery = `
-      INSERT INTO usuarios (nome_completo, email, senha, tipo_usuario)
-      VALUES ($1, $2, $3, $4)
-      RETURNING id, email;
+      INSERT INTO usuarios (nome_completo, email, senha, tipo_usuario, matricula)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING id, email, matricula;
     `;
-    const values = [nome_completo, email, senhaHash, tipo_usuario];
+    const values = [nome_completo, email, senhaHash, tipo_usuario, matriculaParaSalvar];
     const result = await db.query(insertQuery, values);
 
     res.status(201).json({
@@ -122,3 +143,4 @@ app.post('/login', async (req, res) => {
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
 });
+
