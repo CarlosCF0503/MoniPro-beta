@@ -5,7 +5,7 @@
     flex-direction: column;
     align-items: center;
     gap: 5px;
-    
+    padding: 20px 0; /* Adiciona um respiro */
 }
 
 /* Estiliza o card central onde ficam as opções */
@@ -26,6 +26,7 @@
     font-size: 40px;
     color: #071E3D;
     margin-bottom: 10px; /* Adiciona um espaço extra abaixo do título */
+    text-align: center; /* Garante a centralização em telas menores */
 }
 
 /* Container para as duas opções (Aluno e Monitor) */
@@ -97,4 +98,31 @@
 
 .btn-voltar:hover {
     background-color: #1F4287;
+}
+
+
+/* ========================================================================= */
+/* --- Estilos para Telas Menores (Responsividade) --- */
+/* ========================================================================= */
+@media (max-width: 768px) {
+    .card-escolha {
+        width: 90%;
+        padding: 20px 10px;
+        gap: 20px;
+    }
+
+    .card-escolha h1 {
+        font-size: 28px; /* Reduz o tamanho do título */
+    }
+
+    .opcoes {
+        flex-direction: column; /* Empilha as opções na vertical */
+        gap: 20px; /* Reduz o espaçamento entre elas */
+    }
+
+    .opcoes .opcao {
+        width: 180px; /* Reduz o tamanho dos cards de opção */
+        height: 180px;
+        font-size: 28px;
+    }
 }

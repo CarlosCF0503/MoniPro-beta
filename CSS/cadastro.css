@@ -1,4 +1,3 @@
-/* Título principal do formulário */
 .text1 {
     font-size: 35px;
     color: #071E3D;
@@ -6,7 +5,6 @@
     margin-top: -15px;
 }
 
-/* Container principal do formulário */
 #formCadastro {
     display: flex;
     flex-direction: column;
@@ -14,25 +12,22 @@
     gap: 10px;
 }
 
-/* Estilo para cada grupo de input (ícone + campo) */
 .input-group {
     display: flex;
     align-items: center;
-    position: relative; /* Necessário para posicionar o ícone do olho */
-    margin-left: -25px; /* Compensa o padding do form */
+    position: relative;
+    width: 100%; /* Garante que o grupo ocupe a largura do form */
 }
 
-/* Ícone dentro do grupo de input */
 .input-group .icone {
     transform: scale(60%);
-    width: 50px; /* Garante que o ícone tenha um espaço fixo */
+    width: 50px;
     text-align: center;
 }
 
-/* Posicionamento do ícone de olho */
 .olho {
     position: absolute;
-    right: 0; /* Posiciona o ícone à direita, dentro do campo */
+    right: 10px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -42,7 +37,6 @@
     transform: scale(55%);
 }
 
-/* Botão de cadastrar */
 #entrar {
     width: 200px;
     padding: 0;
@@ -50,22 +44,38 @@
     background-color: #071E3D;
     border: none;
     font-size: 20px;
-    height: 50px; /* Altura consistente com os inputs */
-    border-radius: 15px; /* Borda consistente com os inputs */
+    height: 50px;
+    border-radius: 15px;
     transition: background-color 0.2s;
     cursor: pointer;
-    margin-top: 0px; /* Espaço acima do botão */
+    margin-top: 0px;
 }
 
 #entrar:hover {
     background-color: #1F4287;
 }
 
-/* Link para voltar para a tela de login */
 .link-voltar {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 250px;
-    font-size: 18px; /* Usa o mesmo tamanho do Login.css */
+    gap: 10px; /* Reduzido para um valor seguro */
+    font-size: 18px;
+}
+
+/* --- Estilos para Telas Menores (Responsividade) --- */
+@media (max-width: 768px) {
+    .text1 {
+        font-size: 28px; /* Título um pouco menor */
+        margin-top: 0;
+    }
+    
+    .input-group {
+        margin-left: -15px; /* Reduz o recuo */
+    }
+    
+    .link-voltar {
+        flex-direction: column; /* Empilha o texto e o link */
+        gap: 5px;
+    }
 }

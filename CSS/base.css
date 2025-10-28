@@ -11,10 +11,8 @@ body {
     min-height: 100vh;
 }
 
-/* --- HEADER --- */
 header {
     display: flex;
-    flex-direction: row;
     width: 100%;
     height: 9vh;
     background-color: #FFFAFA;
@@ -23,7 +21,6 @@ header {
     padding: 0 10px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
-
 
 .header-actions {
     display: flex;
@@ -50,7 +47,7 @@ header {
 .logo a img{
     height: 100%;
 }
-/* --- OVERLAY --- */
+
 #overlay {
     position: fixed;
     top: 0;
@@ -60,29 +57,27 @@ header {
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 1;
     opacity: 0;
-    pointer-events: none; /* Não pode ser clicado quando invisível */
+    pointer-events: none;
     transition: opacity 0.3s ease-in-out;
 }
 
 #overlay.active {
     opacity: 1;
-    pointer-events: all; /* Pode ser clicado quando visível */
+    pointer-events: all;
 }
 
-/* --- SIDEBAR (MENU LATERAL) --- */
 #menuLateral {
-    position: fixed; /* Usar fixed para não mover com o scroll */
+    position: fixed;
     top: 0;
     left: 0;
     height: 100vh;
-    width: 300px; /* Largura fixa é mais previsível */
+    width: 300px;
     background-color: #071E3D;
     display: flex;
     flex-direction: column;
     transform: translateX(-100%);
     transition: transform 0.3s ease-in-out;
-    z-index: 2; /* Fica acima do overlay */
-    
+    z-index: 2;
 }
 
 #menuLateral.aparecer {
@@ -131,12 +126,11 @@ header {
     margin-right: 50px;
 }
 
-/* --- MODAL DE LOGOUT --- */
 #aviso_sair {
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%) scale(0.9); /* Inicia um pouco menor */
+    transform: translate(-50%, -50%) scale(0.9);
     width: 400px;
     max-width: 90%;
     background-color: #FFFAFA;
@@ -146,7 +140,6 @@ header {
     display: grid;
     grid-template-areas: "icone icone" "areaSim areaNao";
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto 1fr;
     
     z-index: 2;
     opacity: 0;
@@ -214,5 +207,27 @@ button:active {
     color: white;
 }
 
+/* --- Estilos para Telas Menores (Responsividade) --- */
+@media (max-width: 768px) {
+    .header-actions {
+        gap: 10px; /* Reduz o espaço entre os ícones do header */
+    }
 
-
+    #menuLateral {
+        width: 250px; /* Menu lateral mais estreito */
+    }
+    
+    .item:hover .icone{
+        margin-right: 0; /* Remove o efeito de deslizar o ícone */
+    }
+    
+    .icone_sair p {
+        font-size: 18px; /* Texto do modal menor */
+        text-align: center;
+    }
+    
+    button {
+        padding: 8px 35px; /* Botões do modal um pouco menores */
+        font-size: 20px;
+    }
+}

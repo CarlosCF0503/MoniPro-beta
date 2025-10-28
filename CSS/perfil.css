@@ -1,11 +1,10 @@
-/* Container principal do card de perfil */
 .perfil_informacao {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 500px;
-    max-width: 95%; /* Garante que não quebre em telas menores */
+    max-width: 95%;
     padding: 20px;
     
     display: flex;
@@ -21,14 +20,13 @@
     transition: left 0.3s ease-in-out;
 }
 
-/* Efeito de mover para o lado (usado no perfil do monitor) */
 .perfil_informacao.mudar {
     left: 30%;
 }
 
 .perfil_informacao > img {
-    width: 200px; /* Reduzido para um visual mais limpo */
-    border-radius: 50%; /* Deixa a imagem de perfil redonda */
+    width: 200px;
+    border-radius: 50%;
     border: 5px solid #071E3D;
 }
 
@@ -36,7 +34,7 @@
     margin-top: 10px;
 }
 
-.perfil_informacao > p { /* Seletor mais específico para o parágrafo principal */
+.perfil_informacao > p {
     display: flex;
     align-items: center;
     font-size: 18px;
@@ -49,46 +47,44 @@
 
 .linha {
     width: 80%;
-    height: 3px; /* Linha mais sutil */
+    height: 3px;
     background-color: #071E3D;
     border-radius: 15px;
     margin: 10px 0;
 }
 
-/* Container para as informações de contato/curso */
 .informacoes {
     width: 100%;
     display: flex;
     flex-direction: column;
-    align-items: flex-start; /* Alinha o texto à esquerda */
+    align-items: flex-start;
     gap: 15px;
-    padding: 0 10%; /* Adiciona um espaçamento lateral */
+    padding: 0 10%;
 }
 
 .informacoes span {
     display: flex;
     align-items: center;
-    gap: 15px; /* Espaço entre o ícone e o texto */
+    gap: 15px;
     width: 100%;
 }
 
 .informacoes span .icone {
     width: 25px; 
-    flex-shrink: 0; /* Impede que o ícone encolha */
+    flex-shrink: 0;
 }
 
 .informacoes span .icone img {
     width: 100%; 
 }
 
-/* Estilos específicos para a linha interativa do certificado */
 .linha-interativa {
-    position: relative; /* Permite posicionar o botão 'ver' */
+    position: relative;
 }
 
 #abrir_c {
     position: absolute;
-    right: 0; /* Alinha o botão à direita */
+    right: 0;
     padding: 5px 10px;
     background-color: #071E3D;
     color: white;
@@ -101,7 +97,6 @@
     transform: scale(1.05);
 }
 
-/* --- ÁREA DE CERTIFICADOS (PERFIL MONITOR) --- */
 #area_certificados {
     position: fixed;
     top: 27%;
@@ -139,22 +134,20 @@
 }
 
 #certificado{
-    height: 60px;
+    height: auto; /* Altura automática para caber o texto */
     background-color:beige;
     width: 90%;
     display: flex;
     padding: 10px;
-    flex-direction: row;
-    align-items: start;
+    align-items: center; /* Centraliza verticalmente */
     justify-content: space-between;
     border-radius: 15px;
+    gap: 10px;
 }
 #certificado .icone{
-    height: 100%;
-    display: flex;
-    text-align: center;
-    align-items: center;
-    justify-content: center;
+    height: 40px;
+    width: 40px;
+    flex-shrink: 0;
 }
 
 #certificado .icone img{
@@ -164,26 +157,50 @@
 #certificado span{
     display: flex;
     flex-direction: column;
-    align-items: start;
+    align-items: flex-start;
     justify-content: center;
-    transform: translateX(-30%);
-    
+    flex-grow: 1; /* Permite que o texto ocupe o espaço restante */
 }
 
 #certificado a img{
-    width: 85%;
+    width: 100%;
 }
 
 #certificado a{
     width: 30px;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    justify-self: flex-end;
-
+    height: 30px;
+    flex-shrink: 0;
 }
 
-
-
-
+/* --- Estilos para Telas Menores (Responsividade) --- */
+@media (max-width: 768px) {
+    .perfil_informacao,
+    #area_certificados {
+        position: static; /* Remove o posicionamento fixo */
+        transform: none; /* Reseta a transformação */
+        width: 90%;
+        margin: 20px auto; /* Centraliza e adiciona margem */
+    }
+    
+    .perfil_informacao.mudar {
+        left: 50%; /* Reseta a posição do 'mudar' */
+    }
+    
+    #area_certificados {
+        visibility: visible; /* Sempre visível, mas controlado pelo JS */
+        display: none; /* Começa escondido */
+    }
+    
+    #area_certificados.aparecer {
+        display: flex; /* Aparece quando a classe é adicionada */
+        transform: none; /* Reseta a transformação de 'aparecer' */
+    }
+    
+    .perfil_informacao > img {
+        width: 150px; /* Imagem de perfil menor */
+    }
+    
+    #certificado span {
+        transform: none; /* Reseta o 'translateX' */
+    }
+}

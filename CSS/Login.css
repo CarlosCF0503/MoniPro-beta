@@ -2,28 +2,28 @@
     margin: 0;
     padding: 0;
     font-family: "Inter", sans-serif;
-    box-sizing: border-box; /* Adicionado para um melhor controle de layout */
+    box-sizing: border-box;
 }
 
 body{
     background: linear-gradient(to top,#ffffff,#ACC8FF);
-    min-height: 100vh; /* Usar min-height para garantir que o corpo ocupe pelo menos a tela inteira */
+    min-height: 100vh;
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 5px;
+    padding: 20px 0; /* Adiciona um respiro */
 }
 .logo{
     height: 30vh;
-    max-height: 200px; /* Define uma altura máxima para a logo em telas maiores */
+    max-height: 200px;
 }
 
 form {
     height: auto;
     background-color: #FFFAFA;
     display: grid;
-    /* Adicionada a nova área "profile-title" na ordem correta */
     grid-template-areas: 
     "email"
     "senha"
@@ -32,14 +32,13 @@ form {
     "profile"
     "entrar"
     "cadastro";
-    padding-left: 60px;
-    padding-right: 60px;
-    padding-top: 35px;
-    padding-bottom: 30px;
+    padding: 35px 60px;
     border-radius: 15px;
     font-size: 15px;
     gap: 5px;
     box-shadow: 0 0 100px 0 rgba(0, 0, 0, 0.25);
+    width: auto; /* Garante que o formulário possa encolher */
+    max-width: 520px; /* Define uma largura máxima */
 }
 
 
@@ -60,22 +59,15 @@ form input{
     width: 100%;
 }
 
-.EmailArea{
-    grid-area: email;
+.EmailArea, .SenhaArea {
     margin-top: 15px;
-    margin-left: -25px;
-}
-.SenhaArea{
-    margin-top: 15px;
-    grid-area: senha;
     margin-left: -25px;
 }
 
 .ErroArea{
     grid-area: erro;
-    /* Otimização: Define uma altura mínima para evitar que o layout "pule" */
     min-height: 20px;
-    color: #D8000C; /* Cor de erro mais forte */
+    color: #D8000C;
     font-weight: bold;
 }
 #erro{
@@ -89,26 +81,12 @@ form input{
 .EntrarArea{
     grid-area: entrar;
 }
-.EntrarArea input{
-    width: 200px;
-    padding: 0;
-    color: white;
-    background-color: #071E3D;
-    border: none;
-    font-size: 20px;
-    transition: background-color 0.2s; /* Transição um pouco mais suave */
-    cursor: pointer;
-    margin-bottom: 15px;
-}
 
-.EntrarArea input:hover{
-    background-color: #1F4287;
-}
 .CadastroArea{
     grid-area: cadastro;
-    justify-content: space-between; /* Ajusta o espaçamento */
+    justify-content: center; /* Centraliza em telas maiores */
     font-size: 18px;
-    gap: 200px; /* Reduz o gap entre o texto e o link */
+    gap: 10px;
 }
 
 .icone{
@@ -119,7 +97,6 @@ form input{
     transform: scale(70%);
 }
 
-/* Otimização: Classe para esconder labels de forma acessível */
 .sr-only {
     position: absolute;
     width: 1px;
@@ -136,14 +113,10 @@ input:focus{
     outline: none;
 }
 
-/* ===== INÍCIO DOS ESTILOS ADICIONADOS ===== */
-
-/* Esconde o botão de rádio real */
 .profile-selector input[type="radio"] {
     display: none;
 }
 
-/* Estilo para os labels que funcionarão como botões */
 .btn-profile {
     width: 150px;
     height: 45px;
@@ -159,24 +132,20 @@ input:focus{
     transition: all 0.2s ease-in-out;
 }
 
-/* Estilo do botão quando está selecionado (checado) */
 .profile-selector input[type="radio"]:checked + .btn-profile {
     background-color: #071E3D;
     color: white;
     border-color: #071E3D;
 }
 
-/* Efeito de hover */
 .btn-profile:hover {
     background-color: #ACC8FF;
 }
 
-/* Garante que o hover não substitua a cor do botão selecionado */
 .profile-selector input[type="radio"]:checked + .btn-profile:hover {
     background-color: #1F4287;
 }
 
-/* Ajusta o layout do botão Entrar */
 #entrar {
     width: 200px;
     padding: 0;
@@ -193,22 +162,46 @@ input:focus{
     background-color: #1F4287;
 }
 
-/* ========================================================================= */
-/* ADICIONADO: Regra para posicionar a seleção de perfil na área correta */
 .profile-selector {
     grid-area: profile;
-    gap: 10px; /* Adiciona um espaço entre os botões Aluno/Monitor */
+    gap: 10px;
 }
 
-/* Estilo e posicionamento para o novo título da seleção */
 .profile-selector-title {
     grid-area: profile-title;
     font-weight: bold;
     color: #071E3D;
     font-size: 16px;
-    /* Remove a margem padrão do parágrafo para um melhor alinhamento */
     margin-bottom: -5px; 
 }
 
-/* ========================================================================= */
-/* ===== FIM DOS ESTILOS ADICIONADOS ===== */
+/* --- Estilos para Telas Menores (Responsividade) --- */
+@media (max-width: 768px) {
+    body {
+        gap: 20px;
+    }
+
+    form {
+        width: 90%; /* Formulário ocupa 90% da tela */
+        padding: 20px;
+        box-shadow: none; /* Remove a sombra em telas menores */
+    }
+
+    form input {
+        width: 100%; /* Inputs ocupam 100% do espaço disponível */
+    }
+    
+    .EmailArea, .SenhaArea {
+        margin-left: -15px; /* Reduz o recuo */
+    }
+    
+    .CadastroArea {
+        flex-direction: column; /* Empilha o texto e o link */
+        gap: 5px;
+    }
+    
+    .btn-profile {
+        width: 120px; /* Botões de perfil menores */
+        font-size: 14px;
+    }
+}
