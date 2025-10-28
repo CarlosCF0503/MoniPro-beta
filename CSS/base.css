@@ -247,7 +247,7 @@ button:active {
     z-index: 1000; /* Garante que fique acima de outros elementos */
     
     /* Animação */
-    transform: translateX(120%); /* Começa fora da tela */
+    transform: translateX(200%); /* Começa fora da tela */
     transition: transform 0.4s ease-in-out;
 }
 
@@ -263,3 +263,4 @@ button:active {
 #toast-container.error {
     background-color: #D8000C; /* Vermelho */
 }
+
