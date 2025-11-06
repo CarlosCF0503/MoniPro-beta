@@ -172,6 +172,58 @@
     flex-shrink: 0;
 }
 
+/* ========================================================================= */
+/* --- NOVOS ESTILOS PARA LISTAS DE PERFIL --- */
+/* ========================================================================= */
+.lista-container {
+    width: 100%;
+    padding: 0 10%;
+    margin-top: 10px;
+}
+
+.lista-container h2 {
+    font-size: 20px;
+    color: #071E3D;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 5px;
+}
+
+.lista-itens {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 200px; /* Adiciona uma altura máxima com scroll */
+    overflow-y: auto;
+}
+
+.lista-item {
+    background-color: #f4f4f4;
+    padding: 10px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.lista-item p {
+    margin: 0;
+    font-size: 14px;
+}
+.lista-item strong {
+    font-size: 16px;
+    color: #071E3D;
+}
+
+.status-pendente {
+    color: #FFA500;
+    font-weight: bold;
+}
+.status-realizado {
+    color: #28a745;
+    font-weight: bold;
+}
+
 /* --- Estilos para Telas Menores (Responsividade) --- */
 @media (max-width: 768px) {
     .perfil_informacao,
@@ -203,4 +255,5 @@
     #certificado span {
         transform: none; /* Reseta o 'translateX' */
     }
+
 }
