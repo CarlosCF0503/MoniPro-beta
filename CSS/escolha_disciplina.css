@@ -34,6 +34,13 @@
     gap: 20px; /* Espaçamento entre os itens */
     padding: 10px 0;
 }
+
+.disciplinas span{
+    display:flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
 .disciplinas .opcao {
     box-sizing: border-box;
     border: 5px solid #1F4287;
@@ -78,4 +85,5 @@
     .escolha h1 {
         font-size: 24px;
     }
+
 }
