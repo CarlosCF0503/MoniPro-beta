@@ -109,16 +109,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // <<<<<<<<<<<< CORREÇÃO LÓGICA IMPORTANTE >>>>>>>>>>>>
         // Verifica se o dia clicado TEM monitoria
-        if (!celulaClicada.classList.contains('dia-com-monitoria')) {
-            showToast('Nenhuma monitoria disponível neste dia.', 'error');
-            // Limpa a lista de monitores e a seleção
-            containerMonitores.innerHTML = '<p>Selecione um dia disponível no calendário.</p>';
-            monitoriaSelecionada = null;
-            if (diaSelecionado) {
-                 diaSelecionado.classList.remove('dia-selecionado');
+        if (userData.tipo === 'aluno') {
+            if (!celulaClicada.classList.contains('dia-com-monitoria')) {
+                showToast('Nenhuma monitoria disponível neste dia.', 'error');
+                containerMonitores.innerHTML = '<p>Selecione um dia disponível no calendário.</p>';
+                monitoriaSelecionada = null;
+                if (diaSelecionado) {
+                     diaSelecionado.classList.remove('dia-selecionado');
+                }
+                diaSelecionado = null;
+                return; // Para a execução
             }
-            diaSelecionado = null;
-            return; // Para a execução
         }
         // <<<<<<<<<<<<<< FIM DA CORREÇÃO >>>>>>>>>>>>
 
