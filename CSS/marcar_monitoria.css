@@ -82,6 +82,7 @@ main{
 .monitor{
     display: flex;
     align-items: center;
+    cursor: pointer;
 }
 .monitor p{
     font-size: 20px;
@@ -328,3 +329,4 @@ td:hover {
     }
 
 }
+
