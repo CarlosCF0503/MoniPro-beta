@@ -85,9 +85,9 @@
 
 
 
-    <div class="perfil_informacao" id = "perfil_informacao">
+    <div class="perfil_informacao" id="perfil_informacao">
     <img src="IMG/Icone_perfil_grande.png" alt="Foto de perfil do utilizador">
-    
+
     <h1 id="nomeUsuario">Carregando...</h1>
     <p><span id="tipoUsuario">Monitor</span> - <img src="IMG/Icone_moeda.png" alt=""><strong>15</strong></p>
     <div class="linha"></div>
@@ -106,6 +106,13 @@
             </div>
              <p>Matrícula: <strong id="matriculaUsuario">000000</strong></p>
         </span>
+        
+        <span>
+            <div class="icone">
+                <img src="IMG/Icone_chapeu.png" alt="Ícone de chapéu de formatura">
+            </div>
+             <p>Cursos inscritos</p>
+        </span>
 
         <span class="linha-interativa">
             <div class="icone">
@@ -116,48 +123,27 @@
                 <p>ver</p>
             </div>
         </span>
-
-        <span>
-            <div class="icone">
-                <img src="IMG/Icone_chapeu.png" alt="Ícone de chapéu de formatura">
-            </div>
-             <p>Monitorias marcadas</p>
-        </span>
-
-        
     </div>
-</div>
-    <div id="area_certificados">
-        <div class="titulo">
-            <div class="icone">
-                <img src="IMG/Icone_certificado.png" alt="">
-            </div>
-            <h1>Certificados disponiveis</h1>
+
+    <div class="linha"></div>
+    <div class="lista-container">
+        <h2>Minhas Monitorias Criadas</h2>
+        <div id="lista-monitorias-criadas" class="lista-itens">
+            <p>A carregar monitorias...</p>
         </div>
-        
-                <div id="certificado">
-                    <div class="icone">
-                        <img src="IMG/Icone_certificado_2.png" alt="">
-                    </div>
-                    <span>
-                        <h3>Materia 1</h3>
-                        <p>Data e hora de finalização</p>
-                    </span>
-                    <a href="DOC/Certificando em Branco.pdf" download><img src="IMG/icone_download.png" alt=""></a>
-                    
-                </div>
-        </div>
+    </div>
+    </div>
 
     <div id="toast-container"></div>
     <script src="JS/toast.js" defer></script>
-    
+    <script src="JS/base.js" defer></script>
     <script src="JS/perfil.js" defer></script>
     <script src="JS/perfil_monitor.js" defer></script>
-    <script src="JS/base.js" defer></script>
     
 </body>
 
 </html>
+
 
 
 
