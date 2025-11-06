@@ -56,11 +56,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (userData.tipo === 'aluno') {
         // --- LÓGICA DE ALUNO ---
         viewAluno.style.display = 'flex';
+        viewMonitor.style.display = 'none'; // Garante que a vista de monitor esteja escondida
         await carregarMonitoriasParaAluno();
         btnAgendar.addEventListener('click', salvarAgendamento);
 
     } else if (userData.tipo === 'monitor') {
         // --- LÓGICA DE MONITOR ---
+        // <<<<<<<<<<<<<< CORREÇÃO AQUI >>>>>>>>>>>>
+        viewAluno.style.display = 'none'; // Esconde a vista do aluno
         viewMonitor.style.display = 'flex';
         btnCriarMonitoria.addEventListener('click', salvarNovaMonitoria);
     }
