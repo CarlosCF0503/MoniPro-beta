@@ -29,7 +29,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     
-    // Define o título da página
     if(tituloPagina) tituloPagina.textContent = `Monitoria de ${disciplinaNome}`;
 
     // Decodifica o token para saber quem é o utilizador
@@ -41,7 +40,69 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // --- 2. LÓGICA DE SELEÇÃO DO CALENDÁRIO (Comum a ambos) ---
+    // --- 2. LÓGICA DO CALENDÁRIO (Fundida do calendario.js) ---
+    
+    function getNomeMes(mes) {
+      const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+      return meses[mes];
+    }
+
+    /**
+     * Renderiza o calendário, destacando os dias com monitoria.
+     * @param {number[]} [diasComMonitoria=[]] - Um array de números (dias) que têm monitorias.
+     */
+    function renderCalendario(diasComMonitoria = []) {
+      const dataAtual = new Date();
+      const mesAtual = dataAtual.getMonth();
+      const anoAtual = dataAtual.getFullYear();
+      const diaAtual = dataAtual.getDate();
+
+      const headerElement = document.getElementById('mes-ano');
+      headerElement.textContent = `${getNomeMes(mesAtual)} ${anoAtual}`;
+
+      const primeiroDiaDoMes = new Date(anoAtual, mesAtual, 1).getDay();
+      const ultimoDiaDoMes = new Date(anoAtual, mesAtual + 1, 0).getDate();
+
+      const tbody = document.getElementById('dias-calendario');
+      tbody.innerHTML = ''; 
+      let linha = document.createElement('tr');
+      let diaContador = 1;
+
+      for (let i = 0; i < primeiroDiaDoMes; i++) {
+        linha.appendChild(document.createElement('td'));
+      }
+
+      while (diaContador <= ultimoDiaDoMes) {
+        if (linha.children.length === 7) {
+          tbody.appendChild(linha);
+          linha = document.createElement('tr');
+        }
+
+        const coluna = document.createElement('td');
+        coluna.textContent = diaContador;
+
+        // Marca o dia atual
+        if (diaContador === diaAtual && mesAtual === dataAtual.getMonth()) {
+          coluna.classList.add('dia-atual');
+        }
+        
+        // <<<<<<<<<<<< ATUALIZAÇÃO IMPORTANTE >>>>>>>>>>>>
+        // Destaca se o dia está na lista de dias com monitoria
+        if (diasComMonitoria.includes(diaContador)) {
+            coluna.classList.add('dia-com-monitoria');
+        }
+        // <<<<<<<<<<<<<< FIM DA ATUALIZAÇÃO >>>>>>>>>>>>
+
+        linha.appendChild(coluna);
+        diaContador++;
+      }
+
+      if (linha.children.length > 0) {
+        tbody.appendChild(linha);
+      }
+    }
+
+    // --- 3. LÓGICA DE SELEÇÃO DO CALENDÁRIO (Comum a ambos) ---
     diasCalendario.addEventListener('click', (event) => {
         if (event.target.tagName === 'TD' && event.target.textContent) {
             if (diaSelecionado) {
@@ -52,23 +113,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // --- 3. VERIFICA O TIPO DE UTILIZADOR E EXECUTA A LÓGICA ---
+    // --- 4. VERIFICA O TIPO DE UTILIZADOR E EXECUTA A LÓGICA ---
     if (userData.tipo === 'aluno') {
         // --- LÓGICA DE ALUNO ---
         viewAluno.style.display = 'flex';
-        viewMonitor.style.display = 'none'; // Garante que a vista de monitor esteja escondida
-        await carregarMonitoriasParaAluno();
+        viewMonitor.style.display = 'none';
+        await carregarMonitoriasParaAluno(); // Esta função agora também chama o renderCalendario
         btnAgendar.addEventListener('click', salvarAgendamento);
 
     } else if (userData.tipo === 'monitor') {
         // --- LÓGICA DE MONITOR ---
-        // <<<<<<<<<<<<<< CORREÇÃO AQUI >>>>>>>>>>>>
-        viewAluno.style.display = 'none'; // Esconde a vista do aluno
+        viewAluno.style.display = 'none';
         viewMonitor.style.display = 'flex';
+        renderCalendario(); // Renderiza um calendário simples para o monitor
         btnCriarMonitoria.addEventListener('click', salvarNovaMonitoria);
     }
 
-    // --- 4. FUNÇÕES DE LÓGICA ---
+    // --- 5. FUNÇÕES DE LÓGICA ---
     
     async function carregarMonitoriasParaAluno() {
         try {
@@ -78,15 +139,33 @@ document.addEventListener('DOMContentLoaded', async () => {
             const data = await response.json();
 
             if (data.success && data.monitorias.length > 0) {
-                containerMonitores.innerHTML = ''; // Limpa o "A carregar..."
+                containerMonitores.innerHTML = '';
+                
+                // <<<<<<<<<<<< ATUALIZAÇÃO IMPORTANTE >>>>>>>>>>>>
+                // Mapeia os dias que têm monitorias
+                const datasDisponiveis = data.monitorias.map(monitoria => {
+                    // Converte a data (ex: "2025-11-15T14:00:00Z") para um dia do mês (ex: 15)
+                    return new Date(monitoria.horario).getDate();
+                });
+                
+                // Filtra para ter apenas dias únicos
+                const diasUnicos = [...new Set(datasDisponiveis)];
+                
+                // Agora, renderiza o calendário com os dias destacados
+                renderCalendario(diasUnicos);
+                // <<<<<<<<<<<<<< FIM DA ATUALIZAÇÃO >>>>>>>>>>>>
                 
                 data.monitorias.forEach(monitoria => {
                     const div = document.createElement('div');
                     div.className = 'monitor';
                     div.dataset.monitoriaId = monitoria.monitoria_id; 
+                    
+                    // Mostra a data e hora da monitoria
+                    const dataFormatada = new Date(monitoria.horario).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+                    
                     div.innerHTML = `
                         <div class="icone"><img src="IMG/Icone_monitor.png" alt=""></div>
-                        <p>${monitoria.nome_completo}</p>
+                        <p>${monitoria.nome_completo} (${dataFormatada})</p>
                     `;
                     
                     div.addEventListener('click', () => {
@@ -98,10 +177,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             } else {
                 containerMonitores.innerHTML = '<p>Nenhum monitor disponível para esta disciplina.</p>';
+                renderCalendario(); // Renderiza calendário vazio
             }
         } catch (error) {
             console.error('Erro ao buscar monitorias:', error);
             showToast('Erro ao carregar monitorias.', 'error');
+            renderCalendario(); // Renderiza calendário vazio
         }
     }
 
@@ -111,6 +192,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
         
+        // (No futuro, esta lógica precisa ser mais complexa. Por agora, está ok)
         const dataAtual = new Date();
         const data_agendamento = new Date(dataAtual.getFullYear(), dataAtual.getMonth(), diaSelecionado.textContent, 14, 0, 0).toISOString(); // Horário fixo 14:00
 
@@ -140,7 +222,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function salvarNovaMonitoria() {
         const dia = diaSelecionado ? diaSelecionado.textContent : null;
-        const hora = document.getElementById('monitoria-horario').value; // Ex: "14:30"
+        const hora = document.getElementById('monitoria-horario').value;
         const local = document.getElementById('monitoria-local').value;
         const descricao = document.getElementById('monitoria-descricao').value;
 
