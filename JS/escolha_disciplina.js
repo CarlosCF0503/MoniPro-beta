@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 link.className = 'opcao';
                 
                 // (Aqui pode adicionar ícones baseados no nome, se quiser)
-                link.innerHTML = `<span>${disciplina.nome}</span>`;
+                link.innerHTML = `<span><div class = "icone"><img src="Icone_Disciplina.png"></div>${disciplina.nome}</span>`;
                 
                 containerDisciplinas.appendChild(link);
             });
@@ -41,4 +41,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Erro ao buscar disciplinas:', error);
         showToast('Não foi possível carregar as disciplinas.', 'error');
     }
+
 });
