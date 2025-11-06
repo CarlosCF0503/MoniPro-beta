@@ -1,3 +1,8 @@
+
+
+
+
+
 // Espera o conteúdo da página carregar
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -96,3 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+
+
+

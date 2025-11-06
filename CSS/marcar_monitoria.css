@@ -1,0 +1,312 @@
+/* ... (Todo o seu CSS existente de marcar_monitoria.css permanece o mesmo) ... */
+*{
+    box-sizing: border-box;
+}
+body{
+    height: auto;
+}
+main{
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%,-45%);
+    display: grid;
+    grid-template-areas: 
+    "titulo titulo"
+    "calendario marcar";
+    grid-template-columns: 65%;
+    width: auto;
+    height: 540px;
+    background-color: #FFFAFA;
+    padding: 25px 70px;
+    gap: 20px;
+    box-shadow: 0 10px 20px 0 rgba(0, 0, 0, 0.25);
+    border-radius: 15px;
+}
+.titulo{
+    grid-area: titulo;
+    width: 100%;
+    display: flex;
+    color:#071E3D;
+    align-items: center;
+    justify-content: center;
+    border-bottom: #071E3D solid 4px;
+    border-radius: 4px;
+    padding-top: 0px;
+    margin-top: -15px;
+}
+.areaCalendario{
+    grid-area: calendario;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    margin-left: -15px;
+    margin-top: -5px;
+}
+.areaCalendario p{
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    font-size: 35px;
+    color:#071E3D;
+    margin: -8px;
+}
+.areaMarcar{
+    grid-area: marcar;
+    display: flex;
+    flex-direction: column;
+    margin-top: -5px;
+    height: 100%;
+    align-items: center;
+    justify-content: space-between;
+
+}
+.areaMarcar p{
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    font-size: 30px;
+    color:#071E3D;
+    
+}
+.monitores{
+    display: flex;
+    flex-direction: column;
+    justify-content:space-between;
+    gap: 15px;
+    margin-top: -105px;
+}
+.monitor{
+    display: flex;
+    align-items: center;
+}
+.monitor p{
+    font-size: 20px;
+}
+.icone{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    height: 50px;
+}
+.icone img{
+    height: 100%;
+}
+#marcar{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+    width: 230px;
+    border-radius: 15px;
+    background-color: #071E3D;  
+    color: white;
+    font-size: 25px;
+    cursor: pointer;
+    gap: 5px;
+    justify-self: flex-end;
+}
+#marcar img{
+    width: 40px;
+}
+#marcar.marcado{
+    background-color: greenyellow;
+}
+
+#marcar p{
+    color: white;
+    font-size: 25px;
+}
+
+
+
+.calendario{
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: #FFFAFA;
+    width: 460px;
+    
+    
+}
+.calendario-header {
+  background-color: #4a90e2;
+  color: white;
+  text-align: center;
+  padding: 10px;
+  font-weight: bold;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th {
+  background-color: #f4f4f4;
+  padding: 18px;
+  text-transform: uppercase;
+  font-size: 0.8em;
+  color: #666;
+}
+td {
+  text-align: center;
+  padding: 18px;
+  border: 1px solid #e0e0e0;
+  transition: background-color 0.3s ease;
+}
+td:hover {
+  background-color: #e6f2ff;
+  cursor: pointer;
+}
+.fim-de-semana {
+  color: #888;
+}
+.dia-atual {
+  background-color: #4a90e2;
+  color: white;
+  font-weight: bold;
+  border-radius: 100%;
+}
+
+
+
+/* ========================================================================= */
+/* --- NOVOS ESTILOS PARA CORREÇÃO --- */
+/* ========================================================================= */
+
+/* Estilo para o monitor que o utilizador selecionou */
+.monitor.selecionado {
+    border: #071E3D solid 3px;
+    border-radius: 10px;
+}
+
+/* Estilo para o dia que o utilizador selecionou */
+.dia-selecionado {
+  border: #071E3D solid 3px; /* Cor principal do tema */  /* !important para garantir que sobreponha o .fim-de-semana */
+  font-weight: bold;
+  border-radius: 100%;
+}
+/* ========================================================================= */
+/* --- NOVOS ESTILOS PARA INTERFACE DE MONITOR --- */
+/* ========================================================================= */
+.form-monitor {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+}
+.form-monitor label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #071E3D;
+}
+.form-monitor input,
+.form-monitor textarea {
+    width: 100%;
+    padding: 8px;
+    border: 2px solid #1F4287;
+    border-radius: 10px;
+    font-size: 14px;
+}
+.form-monitor textarea {
+    height: 80px;
+    resize: vertical;
+}
+
+/* Renomeia o ID #marcar para uma classe genérica .btn-acao */
+.btn-acao {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+    width: 230px;
+    border-radius: 15px;
+    background-color: #071E3D;  
+    color: white;
+    font-size: 25px;
+    cursor: pointer;
+    gap: 5px;
+    justify-self: flex-end;
+}
+.btn-acao img{
+    width: 40px;
+}
+.btn-acao.marcado{
+    background-color: #7CFC00; /* Verde do botão de Sair */
+}
+.btn-acao p{
+    color: white;
+    font-size: 25px;
+}
+
+/* --- Otimização para Celular (Monitor) --- */
+@media (max-width: 900px) {
+    .btn-acao {
+        width: 100%;
+        height: 70px;
+        font-size: 20px;
+    }
+    .btn-acao p{
+        font-size: 20px;
+    }
+}
+
+/* Estilo especial para quando o utilizador
+   seleciona o dia de HOJE
+*/
+
+/* --- Otimização para Celular --- */
+@media (max-width: 900px) {
+    main {
+        position: static; /* Remove o posicionamento fixo */
+        transform: none;
+        width: 95%;
+        height: auto;
+        margin: 20px auto;
+        padding: 15px;
+        grid-template-areas: 
+            "titulo"
+            "calendario"
+            "marcar"; /* Empilha tudo */
+        grid-template-columns: 1fr; /* Uma única coluna */
+    }
+
+    .areaCalendario {
+        margin-left: 0;
+    }
+
+    .calendario {
+        width: 100%; /* Calendário ocupa a largura total */
+    }
+    
+    th, td {
+        padding: 10px; /* Células do calendário menores */
+    }
+    
+    .areaCalendario p {
+        font-size: 24px;
+    }
+    
+    .areaMarcar {
+        margin-top: 20px;
+        gap: 20px;
+    }
+    
+    .monitores {
+        margin-top: 0;
+        gap: 20px;
+    }
+    
+    #marcar {
+        width: 100%;
+        height: 70px;
+        font-size: 20px;
+    }
+    #marcar p {
+        font-size: 20px;
+    }
+}

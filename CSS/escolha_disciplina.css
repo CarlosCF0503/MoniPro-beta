@@ -1,0 +1,81 @@
+.escolha{
+    position: fixed;
+    background-color: #FFFAFA;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    height: auto; /* Altura automática para melhor responsividade */
+    width: 700px;
+    max-width: 90%; /* Limite em telas pequenas */
+    border-radius: 15px;
+    display: grid;
+    grid-template-areas: 
+    "titulo"
+    "disciplinas";
+    grid-template-rows: auto 1fr; /* Linhas automáticas */
+    padding: 20px;
+    box-shadow: 0 10px 20px 0 rgba(0, 0, 0, 0.25);
+}
+.escolha h1{
+    grid-area: titulo;
+    color: #071E3D;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    text-align: center; /* Garante centralização em telas menores */
+    font-size: 32px; /* Tamanho de título mais consistente */
+    padding-bottom: 20px;
+}
+.disciplinas{
+    grid-area: disciplinas;
+    display: flex;
+    justify-content: space-around; /* Distribui melhor */
+    align-items: center;
+    gap: 20px; /* Espaçamento entre os itens */
+    padding: 10px 0;
+}
+.disciplinas .opcao {
+    box-sizing: border-box;
+    border: 5px solid #1F4287;
+    width: 150px;
+    height: 150px;
+    padding: 10px 20px;
+    border-radius: 15px;
+    
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    color: #071E3D;
+    font-size: 30px;
+    text-decoration: none;
+
+    transition: transform 0.3s ease, background-color 0.3s ease, gap 0.3s;
+}
+
+.disciplinas .opcao img {
+    transition: transform 0.3s ease;
+    max-height: 70px; 
+}
+
+.disciplinas .opcao:hover {
+    background-color: #ACC8FF;
+    transform: translateY(-10px); 
+}
+
+.disciplinas .opcao:hover img {
+    transform: scale(1.1);
+}
+
+/* --- Otimização para Celular --- */
+@media (max-width: 768px) {
+    .disciplinas {
+        flex-direction: column; /* Empilha os ícones */
+        gap: 25px;
+    }
+    .escolha h1 {
+        font-size: 24px;
+    }
+}

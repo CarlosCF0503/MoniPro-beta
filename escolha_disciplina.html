@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="CSS/base.css">
+    <link rel="stylesheet" href="CSS/escolha_disciplina.css">
     <link rel="icon" href="IMG/MoniPro-mini.png">
     <title>Base - MoniPro</title>
 </head>
@@ -46,13 +47,6 @@
             <p>Perfil</p>
         </div>
 
-        <div class="item monitoria-link">
-            <div class="icone">
-                <img src="IMG/logo_monitoria.png" alt="Ícone de perfil">
-            </div>
-            <p>Monitoria</p>
-        </div>
-
         <div id="sair" class="item">
             <div class="icone">
                 <img src="IMG/Icone_sair.png" alt="Ícone de porta">
@@ -75,11 +69,17 @@
     </div>
 
     <main>
+        <div class="escolha">
+            <h1>Escolha uma disciplina para a monitoria</h1>
+            <div class="disciplinas">
+                <p>A carregar disciplinas...</p>
+            </div>
+        </div>
     </main>
 
     <div id="toast-container"></div>
     <script src="JS/toast.js" defer></script>
-    
     <script src="JS/base.js" defer></script> 
+    <script src="JS/escolha_disciplina.js" defer></script>
 </body>
 </html>

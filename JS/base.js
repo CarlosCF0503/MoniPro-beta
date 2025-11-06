@@ -4,8 +4,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeMenuIcon = document.getElementById('menu_fechar');
     const sidebar = document.getElementById('menuLateral');
     
-    // Links de perfil (agora usando uma classe)
     const profileLinks = document.querySelectorAll('.perfil-link');
+    
+    // <<<<<<<<<<<<<<< ADICIONADO: Seleciona o link de monitoria
+    const monitoriaLink = document.querySelector('.monitoria-link');
     
     const logoutButton = document.getElementById('sair');
     const logoutModal = document.getElementById('aviso_sair');
@@ -25,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
         logoutModal.classList.remove('aparecer');
     };
 
-    // <<<<<<<<<<<<<<< OTIMIZAÇÃO CRÍTICA: Lógica de Perfil >>>>>>>>>>>>>>>
+    // Lógica de Perfil (parseJwt e handleProfileRedirect)
     const parseJwt = (token) => {
         try {
             return JSON.parse(atob(token.split('.')[1]));
@@ -37,7 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleProfileRedirect = () => {
         const token = localStorage.getItem('monipro_token');
         if (!token) {
-            // Se não houver token, envia para a página de login por segurança
             window.location.href = 'index.html';
             return;
         }
@@ -50,42 +51,45 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.location.href = 'perfil_monitor.html';
             }
         } else {
-            // Se o token for inválido, desloga o usuário
             localStorage.removeItem('monipro_token');
             window.location.href = 'index.html';
         }
     };
-    // <<<<<<<<<<<<<<< FIM DA OTIMIZAÇÃO DE PERFIL >>>>>>>>>>>>>>>
 
     // --- Event Listeners ---
-    menuIcon.addEventListener('click', () => showElement(sidebar));
-    closeMenuIcon.addEventListener('click', hideAll);
-    logoutButton.addEventListener('click', () => {
+    if(menuIcon) menuIcon.addEventListener('click', () => showElement(sidebar));
+    if(closeMenuIcon) closeMenuIcon.addEventListener('click', hideAll);
+    if(logoutButton) logoutButton.addEventListener('click', () => {
         sidebar.classList.remove('aparecer');
         showElement(logoutModal);
     });
-    cancelLogoutButton.addEventListener('click', hideAll);
-    overlay.addEventListener('click', hideAll);
+    if(cancelLogoutButton) cancelLogoutButton.addEventListener('click', hideAll);
+    if(overlay) overlay.addEventListener('click', hideAll);
 
-    // Adiciona o evento de clique para TODOS os links de perfil
+    // Links de Perfil
     profileLinks.forEach(link => {
         link.addEventListener('click', (event) => {
-            event.preventDefault(); // Previne a navegação padrão do link
+            event.preventDefault();
             handleProfileRedirect();
         });
     });
 
+    // <<<<<<<<<<<<<<< ADICIONADO: Evento para o link de Monitoria
+    if (monitoriaLink) {
+        monitoriaLink.addEventListener('click', (event) => {
+            event.preventDefault(); // Previne a navegação padrão do link
+            window.location.href = 'escolha_disciplina.html';
+        });
+    }
+
     // Lógica de Logout
-    confirmLogoutButton.addEventListener('click', () => {
-    // 1. Remove o token de autenticação
-    localStorage.removeItem('monipro_token');
-    
-    // 2. Mostra a notificação de sucesso
-    showToast('Sessão encerrada com sucesso!', 'success');
-    
-    // 3. Redireciona para a página de login após um pequeno delay
-    setTimeout(() => {
-        window.location.href = 'index.html';
-    }, 1000); // Redireciona após 1 segundo
-});
+    if(confirmLogoutButton) confirmLogoutButton.addEventListener('click', () => {
+        localStorage.removeItem('monipro_token');
+        if (typeof showToast === 'function') {
+            showToast('Sessão encerrada com sucesso!', 'success');
+        }
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 1000);
+    });
 });
