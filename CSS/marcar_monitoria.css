@@ -259,6 +259,23 @@ td:hover {
    seleciona o dia de HOJE
 */
 
+/* ========================================================================= */
+/* --- NOVO ESTILO PARA DIAS COM MONITORIA --- */
+/* ========================================================================= */
+
+/* Destaca os dias que têm monitorias disponíveis */
+.dia-com-monitoria {
+    background-color: #cceeff; /* Um azul claro para indicar disponibilidade */
+    font-weight: bold;
+    color: #071E3D;
+}
+
+/* Garante que o dia selecionado ainda tenha mais destaque */
+.dia-com-monitoria.dia-selecionado {
+    background-color: #071E3D;
+    color: white !important;
+}
+
 /* --- Otimização para Celular --- */
 @media (max-width: 900px) {
     main {
@@ -309,4 +326,5 @@ td:hover {
     #marcar p {
         font-size: 20px;
     }
+
 }
