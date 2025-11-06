@@ -12,6 +12,9 @@
     align-items: center;
     gap: 10px;
 
+    max-height: 90vh; /* Define a altura máxima como 90% da altura da tela */
+    overflow-y: auto;   /* Adiciona um scroll vertical SE o conteúdo for maior */
+    
     background-color: #FFFAFA;
     color: #071E3D;
     border-radius: 20px;
@@ -257,3 +260,4 @@
     }
 
 }
+
