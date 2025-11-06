@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 link.className = 'opcao';
                 
                 // (Aqui pode adicionar ícones baseados no nome, se quiser)
-                link.innerHTML = `<span><div class = "icone"><img src="Icone_Disciplina.png"></div>${disciplina.nome}</span>`;
+                link.innerHTML = `<span><div class = "icone"><img src="../IMG/Icone_Disciplina.png"></div>${disciplina.nome}</span>`;
                 
                 containerDisciplinas.appendChild(link);
             });
@@ -43,3 +43,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
 });
+
