@@ -287,4 +287,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             const data = await response.json();
             if (data.success) {
                 btnCriarMonitoria.classList.add('marcado');
-                btnCriarMonitoria.
+                btnCriarMonitoria.querySelector('p').textContent = 'Vaga Criada!';
+                showToast('Vaga de monitoria criada com sucesso!', 'success');
+                setTimeout(() => window.location.href = 'base.html', 2000);
+            } else {
+                showToast(data.message || 'Erro ao criar vaga.', 'error');
+            }
+        } catch (error) {
+            console.error('Erro ao criar vaga:', error);
+            showToast('Não foi possível conectar ao servidor.', 'error');
+        }
+    }
+});
