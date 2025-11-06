@@ -16,7 +16,11 @@ const port = process.env.PORT || 3000;
 
 // Configuração de CORS para produção
 const corsOptions = {
-  origin: 'https://moni-pro-beta.vercel.app' // Certifique-se que esta é a URL correta do seu Vercel
+  origin: [
+    'https://moni-pro-beta.vercel.app',
+    'http://localhost:5500', // URL do Live Server
+    'http://127.0.0.1:5500'   // É bom adicionar o IP também
+  ] // Certifique-se que esta é a URL correta do seu Vercel
 };
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -306,3 +310,4 @@ app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
 
 });
+
