@@ -143,6 +143,66 @@ app.get('/perfil', authenticateToken, async (req, res) => {
     }
 });
 
+// <<<<<<<<<<<< NOVA ROTA PARA ALUNOS >>>>>>>>>>>>
+// Busca os agendamentos feitos pelo aluno logado
+app.get('/perfil/agendamentos', authenticateToken, async (req, res) => {
+    // Garante que só alunos podem aceder
+    if (req.user.tipo !== 'aluno') {
+        return res.status(403).json({ success: false, message: 'Acesso negado.' });
+    }
+    
+    try {
+        const query = `
+            SELECT 
+                a.data_hora, 
+                a.status,
+                d.nome AS disciplina_nome,
+                u.nome_completo AS monitor_nome
+            FROM Agendamento a
+            JOIN Monitoria m ON a.id_monitoria = m.id
+            JOIN Disciplina d ON m.id_disciplina = d.id
+            JOIN usuarios u ON m.id_monitor = u.id
+            WHERE a.id_aluno = $1
+            ORDER BY a.data_hora DESC
+        `;
+        const result = await db.query(query, [req.user.id]);
+        res.status(200).json({ success: true, agendamentos: result.rows });
+    } catch (error) {
+        console.error('Erro ao buscar agendamentos:', error);
+        res.status(500).json({ success: false, message: 'Erro interno do servidor.' });
+    }
+});
+
+// <<<<<<<<<<<< NOVA ROTA PARA MONITORES >>>>>>>>>>>>
+// Busca as monitorias (vagas) criadas pelo monitor logado
+app.get('/perfil/monitorias', authenticateToken, async (req, res) => {
+    // Garante que só monitores podem aceder
+    if (req.user.tipo !== 'monitor') {
+        return res.status(403).json({ success: false, message: 'Acesso negado.' });
+    }
+
+    try {
+        const query = `
+            SELECT 
+                m.id, 
+                m.horario, 
+                m.local, 
+                m.status,
+                d.nome AS disciplina_nome
+            FROM Monitoria m
+            JOIN Disciplina d ON m.id_disciplina = d.id
+            WHERE m.id_monitor = $1
+            ORDER BY m.horario DESC
+        `;
+        const result = await db.query(query, [req.user.id]);
+        res.status(200).json({ success: true, monitorias: result.rows });
+    } catch (error) {
+        console.error('Erro ao buscar monitorias criadas:', error);
+        res.status(500).json({ success: false, message: 'Erro interno do servidor.' });
+    }
+});
+
+
 // ========================================================================= //
 // NOVAS ROTAS: Disciplinas, Monitorias e Agendamento
 // ========================================================================= //
@@ -244,4 +304,5 @@ app.post('/agendamento', authenticateToken, async (req, res) => {
 // Inicia o servidor para ouvir na porta definida
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
+
 });
