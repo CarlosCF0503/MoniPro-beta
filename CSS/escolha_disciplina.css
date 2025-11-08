@@ -1,18 +1,23 @@
-.escolha{
+.escolha {
     position: fixed;
     background-color: #FFFAFA;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    height: auto; /* Altura automática para melhor responsividade */
-    width: 700px;
-    max-width: 90%; /* Limite em telas pequenas */
+    
+    /* ATUALIZAÇÃO: A largura agora é 90% da tela, com um máximo */
+    width: 90%;
+    max-width: 900px; /* O limite máximo para 5 colunas */
+    
+    height: auto;
+    max-height: 90vh; /* O card não passa de 90% da altura da tela */
+    
     border-radius: 15px;
     display: grid;
     grid-template-areas: 
     "titulo"
     "disciplinas";
-    grid-template-rows: auto 1fr; /* Linhas automáticas */
+    grid-template-rows: auto 1fr; /* Título automático, grelha preenche o resto */
     padding: 20px;
     box-shadow: 0 10px 20px 0 rgba(0, 0, 0, 0.25);
 }
@@ -22,31 +27,46 @@
     width: 100%;
     display: flex;
     justify-content: center;
-    text-align: center; /* Garante centralização em telas menores */
-    font-size: 32px; /* Tamanho de título mais consistente */
+    text-align: center;
+    font-size: 32px;
     padding-bottom: 20px;
 }
-.disciplinas{
-    grid-area: disciplinas;
-    display: flex;
-    justify-content: space-around; /* Distribui melhor */
-    align-items: center;
-    gap: 20px; /* Espaçamento entre os itens */
-    padding: 10px 0;
-}
 
-.disciplinas span{
-    display:flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    flex-direction: column;
+/* ========================================================================= */
+/* --- ATUALIZAÇÃO PRINCIPAL DA GRELHA DE DISCIPLINAS --- */
+/* ========================================================================= */
+.disciplinas {
+    grid-area: disciplinas;
+    display: grid; 
     
+    /* ATUALIZAÇÃO: Grelha Responsiva Automática 
+      - Tenta criar colunas de 150px (minmax).
+      - 'auto-fit' cria quantas colunas couberem no espaço.
+      - Em telas largas, isto criará 5 colunas. Em telas médias, 4 ou 3.
+      - NUNCA criará scroll horizontal.
+    */
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    
+    /* Define a altura de cada linha */
+    grid-auto-rows: 150px;
+
+    /* ATUALIZAÇÃO: Define altura máxima para 2 linhas visíveis */
+    /* (Altura do item 150px * 2) + (1 vão de 20px) = 320px */
+    max-height: 380px; 
+    
+    /* ATUALIZAÇÃO: Adiciona o scroll vertical se passar da altura máxima */
+    overflow-y: auto; 
+    
+    gap: 20px;
+    padding: 10px;
+    padding-right: 15px; /* Espaço para a barra de scroll */
 }
+/* ========================================================================= */
+
 .disciplinas .opcao {
     box-sizing: border-box;
     border: 5px solid #1F4287;
-    width: 150px;
+    width: 100%; /* Ocupa 100% da coluna da grelha */
     height: 150px;
     padding: 10px 20px;
     border-radius: 15px;
@@ -58,10 +78,10 @@
     gap: 10px;
 
     color: #071E3D;
-    font-size: 30px;
+    font-size: 28px; /* Ajustado para caber em 150px */
     text-decoration: none;
 
-    transition: transform 0.3s ease, background-color 0.3s ease, gap 0.3s;
+    transition: transform 0.3s ease, background-color 0.3s ease;
 }
 
 .disciplinas .opcao img {
@@ -80,13 +100,20 @@
 
 /* --- Otimização para Celular --- */
 @media (max-width: 768px) {
-    .disciplinas {
-        flex-direction: column; /* Empilha os ícones */
-        gap: 25px;
-    }
     .escolha h1 {
         font-size: 24px;
     }
-
 }
 
+@media (max-width: 600px) {
+    .disciplinas {
+        /* Em telas pequenas, força 2 colunas */
+        grid-template-columns: repeat(2, 1fr);
+        max-height: 50vh; /* Permite mais scroll em telas verticais */
+    }
+    
+    .disciplinas .opcao {
+        height: 140px;
+        font-size: 24px;
+    }
+}

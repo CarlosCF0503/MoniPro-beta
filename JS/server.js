@@ -290,20 +290,7 @@ app.post('/agendamento', authenticateToken, async (req, res) => {
     }
 
     try {
-        // ========================================================================= //
-        // CORREÇÃO DE LÓGICA: Verifica se o aluno já está inscrito
-        // ========================================================================= //
-        const checkQuery = `SELECT * FROM Agendamento WHERE id_aluno = $1 AND id_monitoria = $2`;
-        const checkResult = await db.query(checkQuery, [id_aluno, id_monitoria]);
-
-        if (checkResult.rows.length > 0) {
-            // Se encontrou um registo, retorna um erro 409 (Conflict)
-            return res.status(409).json({ success: false, message: 'Você já está inscrito nesta vaga de monitoria.' });
-        }
-        // ========================================================================= //
-        
-
-        // Se não houver conflito, insere o novo agendamento
+        // TODO: Adicionar lógica para verificar se a vaga já está ocupada
         const insertQuery = `
             INSERT INTO Agendamento (id_monitoria, id_aluno, data_hora, status)
             VALUES ($1, $2, $3, 'pendente')
@@ -311,18 +298,16 @@ app.post('/agendamento', authenticateToken, async (req, res) => {
         `;
         const values = [id_monitoria, id_aluno, data_agendamento];
         const result = await db.query(insertQuery, values);
-        
         res.status(201).json({ success: true, agendamento: result.rows[0] });
-
     } catch (error) {
         console.error('Erro ao criar agendamento:', error);
         res.status(500).json({ success: false, message: 'Erro interno do servidor.' });
     }
 });
+
 // Inicia o servidor para ouvir na porta definida
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
 
 });
-
 
