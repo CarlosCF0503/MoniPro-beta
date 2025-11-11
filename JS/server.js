@@ -16,7 +16,7 @@ const port = process.env.PORT || 3000;
 
 // Configuração de CORS para produção
 const corsOptions = {
-  origin: 'https://moni-pro-beta.vercel.app'
+  origin: ['https://moni-pro-beta.vercel.app','http://127.0.0.1:5500']
 };
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -277,3 +277,4 @@ app.post('/agendamento', authenticateToken, async (req, res) => {
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
 });
+
