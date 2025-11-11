@@ -24,8 +24,9 @@ app.use(express.json());
 // Middleware de Autenticação
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; 
+    const token = authHeader && authHeader.split(' ')[1];
     if (token == null) return res.sendStatus(401); 
+
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
         if (err) return res.sendStatus(403); 
         req.user = user; 
@@ -39,7 +40,7 @@ app.get('/teste', (req, res) => {
   res.status(200).json({ success: true, message: 'O servidor está no ar e respondendo!' });
 });
 
-// --- ROTA DE CADASTRO (/cadastro) ---
+// --- ROTAS DE AUTENTICAÇÃO (Cadastro e Login) ---
 app.post('/cadastro', async (req, res) => {
   const { nome_completo, email, senha, tipo_usuario } = req.body;
   const senhaForteRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
@@ -81,7 +82,6 @@ app.post('/cadastro', async (req, res) => {
   }
 });
 
-// --- ROTA DE LOGIN (/login) ---
 app.post('/login', async (req, res) => {
     const { identificador, senha, tipo_usuario } = req.body;
     if (!identificador || !senha || !tipo_usuario) {
@@ -135,8 +135,6 @@ app.get('/perfil', authenticateToken, async (req, res) => {
     }
 });
 
-// <<<<<<<<<<<< ATUALIZAÇÃO AQUI (ALUNOS) >>>>>>>>>>>>
-// Busca os agendamentos feitos pelo aluno logado
 app.get('/perfil/agendamentos', authenticateToken, async (req, res) => {
     if (req.user.tipo !== 'aluno') {
         return res.status(403).json({ success: false, message: 'Acesso negado.' });
@@ -145,7 +143,7 @@ app.get('/perfil/agendamentos', authenticateToken, async (req, res) => {
     try {
         const query = `
             SELECT 
-                a.id AS agendamento_id, -- <<< ADICIONADO ID DO AGENDAMENTO
+                a.id AS agendamento_id,
                 a.data_hora, 
                 a.status,
                 d.nome AS disciplina_nome,
@@ -338,6 +336,3 @@ app.put('/monitoria/:id/cancelar', authenticateToken, async (req, res) => {
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
 });
-
-
-
