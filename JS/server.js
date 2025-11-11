@@ -16,7 +16,7 @@ const port = process.env.PORT || 3000;
 
 // Configuração de CORS para produção
 const corsOptions = {
-  origin: ['https://moni-pro-beta.vercel.app','http://127.0.0.1:5500']
+  origin: 'https://moni-pro-beta.vercel.app'
 };
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -24,9 +24,8 @@ app.use(express.json());
 // Middleware de Autenticação
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+    const token = authHeader && authHeader.split(' ')[1]; 
     if (token == null) return res.sendStatus(401); 
-
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
         if (err) return res.sendStatus(403); 
         req.user = user; 
@@ -40,7 +39,7 @@ app.get('/teste', (req, res) => {
   res.status(200).json({ success: true, message: 'O servidor está no ar e respondendo!' });
 });
 
-// --- ROTAS DE AUTENTICAÇÃO (Cadastro e Login) ---
+// --- ROTA DE CADASTRO (/cadastro) ---
 app.post('/cadastro', async (req, res) => {
   const { nome_completo, email, senha, tipo_usuario } = req.body;
   const senhaForteRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
@@ -82,6 +81,7 @@ app.post('/cadastro', async (req, res) => {
   }
 });
 
+// --- ROTA DE LOGIN (/login) ---
 app.post('/login', async (req, res) => {
     const { identificador, senha, tipo_usuario } = req.body;
     if (!identificador || !senha || !tipo_usuario) {
@@ -139,21 +139,14 @@ app.get('/perfil/agendamentos', authenticateToken, async (req, res) => {
     if (req.user.tipo !== 'aluno') {
         return res.status(403).json({ success: false, message: 'Acesso negado.' });
     }
-    
     try {
         const query = `
-            SELECT 
-                a.id AS agendamento_id,
-                a.data_hora, 
-                a.status,
-                d.nome AS disciplina_nome,
-                u.nome_completo AS monitor_nome
+            SELECT a.data_hora, a.status, d.nome AS disciplina_nome, u.nome_completo AS monitor_nome
             FROM Agendamento a
             JOIN Monitoria m ON a.id_monitoria = m.id
             JOIN Disciplina d ON m.id_disciplina = d.id
             JOIN usuarios u ON m.id_monitor = u.id
-            WHERE a.id_aluno = $1
-            ORDER BY a.data_hora DESC
+            WHERE a.id_aluno = $1 ORDER BY a.data_hora DESC
         `;
         const result = await db.query(query, [req.user.id]);
         res.status(200).json({ success: true, agendamentos: result.rows });
@@ -163,35 +156,16 @@ app.get('/perfil/agendamentos', authenticateToken, async (req, res) => {
     }
 });
 
-// <<<<<<<<<<<< ATUALIZAÇÃO DA LÓGICA DE ORDENAÇÃO AQUI >>>>>>>>>>>>
 app.get('/perfil/monitorias', authenticateToken, async (req, res) => {
     if (req.user.tipo !== 'monitor') {
         return res.status(403).json({ success: false, message: 'Acesso negado.' });
     }
-
     try {
         const query = `
-            SELECT 
-                m.id AS monitoria_id, 
-                m.horario, 
-                m.local, 
-                m.status,
-                d.nome AS disciplina_nome
+            SELECT m.id, m.horario, m.local, m.status, d.nome AS disciplina_nome
             FROM Monitoria m
             JOIN Disciplina d ON m.id_disciplina = d.id
-            WHERE m.id_monitor = $1
-            ORDER BY
-                -- 1. Ordena por status primeiro (ativas e pendentes vêm antes)
-                CASE m.status
-                    WHEN 'ativa' THEN 1
-                    WHEN 'pendente' THEN 2
-                    WHEN 'realizada' THEN 3
-                    WHEN 'concluida' THEN 4
-                    WHEN 'cancelada' THEN 5  -- 'cancelada' é o último
-                    ELSE 6
-                END ASC,
-                -- 2. Dentro de cada grupo de status, ordena pela data mais recente
-                m.horario DESC
+            WHERE m.id_monitor = $1 ORDER BY m.horario DESC
         `;
         const result = await db.query(query, [req.user.id]);
         res.status(200).json({ success: true, monitorias: result.rows });
@@ -216,12 +190,7 @@ app.get('/monitorias/:disciplinaId', authenticateToken, async (req, res) => {
     const { disciplinaId } = req.params;
     try {
         const query = `
-            SELECT 
-                m.id AS monitoria_id, 
-                u.nome_completo,
-                m.horario,
-                m.local,
-                m.descricao
+            SELECT m.id AS monitoria_id, u.nome_completo, m.horario, m.local, m.descricao
             FROM Monitoria m
             JOIN usuarios u ON m.id_monitor = u.id
             WHERE m.id_disciplina = $1 AND u.tipo_usuario = 'monitor' AND m.status = 'ativa'
@@ -258,23 +227,35 @@ app.post('/monitoria', authenticateToken, async (req, res) => {
     }
 });
 
+// ========================================================================= //
+// ATUALIZAÇÃO: ROTA DE AGENDAMENTO COM VERIFICAÇÃO
+// ========================================================================= //
 app.post('/agendamento', authenticateToken, async (req, res) => {
+    // Apenas alunos podem agendar
     if (req.user.tipo !== 'aluno') {
         return res.status(403).json({ success: false, message: 'Apenas alunos podem agendar monitorias.' });
     }
+        
     const { id_monitoria, data_agendamento } = req.body;
-    const id_aluno = req.user.id; 
+    const id_aluno = req.user.id; // O id_aluno é pego do token
+
     if (!id_monitoria || !data_agendamento) {
         return res.status(400).json({ success: false, message: 'ID da monitoria e data são obrigatórios.' });
     }
+
     try {
+        // <<<<<<<<<<<<<<< CORREÇÃO DE LÓGICA ADICIONADA AQUI >>>>>>>>>>>>
+        // 1. Verifica se o aluno já está inscrito nesta vaga
         const checkQuery = `SELECT * FROM Agendamento WHERE id_aluno = $1 AND id_monitoria = $2`;
         const checkResult = await db.query(checkQuery, [id_aluno, id_monitoria]);
 
         if (checkResult.rows.length > 0) {
+            // Se encontrou um registo, retorna um erro 409 (Conflict)
             return res.status(409).json({ success: false, message: 'Você já está inscrito nesta vaga de monitoria.' });
         }
-        
+        // <<<<<<<<<<<<<<< FIM DA CORREÇÃO >>>>>>>>>>>>
+
+        // 2. Se não houver conflito, insere o novo agendamento
         const insertQuery = `
             INSERT INTO Agendamento (id_monitoria, id_aluno, data_hora, status)
             VALUES ($1, $2, $3, 'pendente')
@@ -284,50 +265,10 @@ app.post('/agendamento', authenticateToken, async (req, res) => {
         const result = await db.query(insertQuery, values);
         
         res.status(201).json({ success: true, agendamento: result.rows[0] });
+
     } catch (error) {
+        // Este catch agora irá apanhar outros erros (como falha de conexão)
         console.error('Erro ao criar agendamento:', error);
-        res.status(500).json({ success: false, message: 'Erro interno do servidor.' });
-    }
-});
-
-// --- ROTAS DE CANCELAMENTO ---
-app.delete('/agendamento/:id', authenticateToken, async (req, res) => {
-    const { id } = req.params; // ID do Agendamento
-    const id_aluno = req.user.id; // ID do Aluno (do token)
-    try {
-        const deleteQuery = `
-            DELETE FROM Agendamento
-            WHERE id = $1 AND id_aluno = $2
-            RETURNING *
-        `;
-        const result = await db.query(deleteQuery, [id, id_aluno]);
-        if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, message: 'Agendamento não encontrado ou não pertence a você.' });
-        }
-        res.status(200).json({ success: true, message: 'Você saiu da monitoria.' });
-    } catch (error) {
-        console.error('Erro ao sair do agendamento:', error);
-        res.status(500).json({ success: false, message: 'Erro interno do servidor.' });
-    }
-});
-
-app.put('/monitoria/:id/cancelar', authenticateToken, async (req, res) => {
-    const { id } = req.params; // ID da Monitoria
-    const id_monitor = req.user.id; // ID do Monitor (do token)
-    try {
-        const updateQuery = `
-            UPDATE Monitoria
-            SET status = 'cancelada'
-            WHERE id = $1 AND id_monitor = $2
-            RETURNING *
-        `;
-        const result = await db.query(updateQuery, [id, id_monitor]);
-        if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, message: 'Monitoria não encontrada ou não pertence a você.' });
-        }
-        res.status(200).json({ success: true, message: 'Monitoria cancelada.' });
-    } catch (error) {
-        console.error('Erro ao cancelar monitoria:', error);
         res.status(500).json({ success: false, message: 'Erro interno do servidor.' });
     }
 });

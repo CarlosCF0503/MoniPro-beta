@@ -227,6 +227,55 @@
     font-weight: bold;
 }
 
+/* ========================================================================= */
+/* --- NOVOS ESTILOS PARA BOTÃO DE CANCELAR --- */
+/* ========================================================================= */
+.lista-item {
+    background-color: #f4f4f4;
+    padding: 10px;
+    border-radius: 8px;
+    display: flex;
+    flex-wrap: wrap; /* Permite quebrar a linha em telas pequenas */
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px; /* Adiciona espaço entre os itens */
+}
+
+.lista-item-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.lista-item-info p {
+    margin: 0;
+    font-size: 14px;
+}
+.lista-item-info strong {
+    font-size: 16px;
+    color: #071E3D;
+}
+
+.btn-cancelar {
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+    background-color: #FF0000; /* Vermelho do botão "Não" */
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-cancelar:hover {
+    background-color: #D8000C;
+}
+.btn-cancelar:active {
+    transform: scale(0.95);
+}
+
+
+
 /* --- Estilos para Telas Menores (Responsividade) --- */
 @media (max-width: 768px) {
     .perfil_informacao,

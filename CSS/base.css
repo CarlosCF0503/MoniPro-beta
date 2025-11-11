@@ -153,6 +153,36 @@ header {
     transform: translate(-50%, -50%) scale(1);
 }
 
+.modal-aviso {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    width: 400px;
+    max-width: 90%;
+    background-color: #FFFAFA;
+    border-radius: 25px;
+    box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+    
+    display: grid;
+    grid-template-areas: "icone icone" "areaSim areaNao";
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    
+    z-index: 2;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.modal-aviso.aparecer {
+    opacity: 1;
+    pointer-events: all;
+    transform: translate(-50%, -50%) scale(1);
+}
+/* ========================================================================= */
+
+
 .icone_sair {
     grid-area: icone;
     display: flex;
@@ -206,6 +236,16 @@ button:active {
     background-color: #FF0000;
     color: white;
 }
+
+.btn-confirmar-acao, #btnSim {
+    background-color: #7CFC00;
+    color: black;
+}
+.btn-cancelar-acao, #btnNao {
+    background-color: #FF0000;
+    color: white;
+}
+
 
 /* --- Estilos para Telas Menores (Responsividade) --- */
 @media (max-width: 768px) {

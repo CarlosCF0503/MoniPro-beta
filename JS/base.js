@@ -25,6 +25,11 @@ document.addEventListener('DOMContentLoaded', () => {
         overlay.classList.remove('active');
         sidebar.classList.remove('aparecer');
         logoutModal.classList.remove('aparecer');
+
+        const confirmModal = document.getElementById('modal-confirmacao');
+        if (confirmModal) {
+            confirmModal.classList.remove('aparecer');
+        }
     };
 
     // Lógica de Perfil (parseJwt e handleProfileRedirect)
