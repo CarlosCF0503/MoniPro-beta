@@ -225,39 +225,53 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function salvarAgendamento() {
-        // Agora verificamos o objeto monitoriaSelecionada
-        if (!monitoriaSelecionada) {
-            showToast('Por favor, selecione um monitor da lista.', 'error');
-            return;
-        }
-        
-        // Os dados vêm diretamente do objeto selecionado, garantindo que estão corretos
-        const id_monitoria_para_enviar = monitoriaSelecionada.monitoria_id;
-        const data_agendamento_para_enviar = monitoriaSelecionada.horario; // Esta já é a data/hora exata
-
-        try {
-            const response = await fetch('https://monipro-beta.onrender.com/agendamento', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({
-                    id_monitoria: id_monitoria_para_enviar,
-                    data_agendamento: data_agendamento_para_enviar
-                })
-            });
-            const data = await response.json();
-            if (data.success) {
-                btnAgendar.classList.add('marcado');
-                btnAgendar.querySelector('p').textContent = 'Agendado!';
-                showToast('Monitoria agendada com sucesso!', 'success');
-                setTimeout(() => window.location.href = 'base.html', 2000);
-            } else {
-                showToast(data.message || 'Erro ao agendar monitoria.', 'error');
-            }
-        } catch (error) {
-            console.error('Erro ao agendar:', error);
-            showToast('Não foi possível conectar ao servidor.', 'error');
-        }
+    // Agora verificamos o objeto monitoriaSelecionada
+    if (!monitoriaSelecionada) {
+        showToast('Por favor, selecione um monitor da lista.', 'error');
+        return;
     }
+    
+    // Os dados vêm diretamente do objeto selecionado, garantindo que estão corretos
+    const id_monitoria_para_enviar = monitoriaSelecionada.monitoria_id;
+    const data_agendamento_para_enviar = monitoriaSelecionada.horario; // Esta já é a data/hora exata
+
+    try {
+        const response = await fetch('https://monipro-beta.onrender.com/agendamento', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({
+                id_monitoria: id_monitoria_para_enviar,
+                data_agendamento: data_agendamento_para_enviar
+            })
+        });
+
+        // ========================================================================= //
+        // CORREÇÃO: Trata o erro 409 (Conflito) de forma específica
+        // ========================================================================= //
+        if (response.status === 409) {
+            // Se o status for 409, o servidor enviou a mensagem de duplicidade.
+            const errorData = await response.json();
+            showToast(errorData.message, 'error'); // Exibe "Você já está inscrito..."
+            return; // Para a execução
+        }
+        // ========================================================================= //
+
+        const data = await response.json();
+        
+        if (data.success) {
+            btnAgendar.classList.add('marcado');
+            btnAgendar.querySelector('p').textContent = 'Agendado!';
+            showToast('Monitoria agendada com sucesso!', 'success');
+            setTimeout(() => window.location.href = 'base.html', 2000);
+        } else {
+            // Trata outros erros que podem vir do servidor
+            showToast(data.message || 'Erro ao agendar monitoria.', 'error');
+        }
+    } catch (error) {
+        console.error('Erro ao agendar:', error);
+        showToast('Não foi possível conectar ao servidor.', 'error');
+    }
+}
 
     async function salvarNovaMonitoria() {
         const dia = diaSelecionado ? diaSelecionado.textContent : null;
@@ -300,3 +314,4 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 });
+
