@@ -16,32 +16,20 @@ const port = process.env.PORT || 3000;
 
 // Configuração de CORS para produção
 const corsOptions = {
-  origin:[
-    'https://moni-pro-beta.vercel.app',
-    'http://localhost:5500', // URL do Live Server
-    'http://127.0.0.1:5500'   // É bom adicionar o IP também
-  ]// Certifique-se que esta é a URL correta do seu Vercel
+  origin: 'https://moni-pro-beta.vercel.app'
 };
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// ========================================================================= //
-// Middleware de Autenticação - Protege rotas
-// ========================================================================= //
+// Middleware de Autenticação
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Formato "Bearer TOKEN"
-
-    if (token == null) {
-        return res.sendStatus(401); // Se não há token, não autorizado
-    }
-
+    const token = authHeader && authHeader.split(' ')[1]; 
+    if (token == null) return res.sendStatus(401); 
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) {
-            return res.sendStatus(403); // Se o token não for válido, proibido
-        }
-        req.user = user; // Salva os dados do utilizador na requisição
-        next(); // Passa para a rota principal
+        if (err) return res.sendStatus(403); 
+        req.user = user; 
+        next(); 
     });
 };
 
@@ -132,7 +120,7 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// --- ROTA DE PERFIL ---
+// --- ROTAS DE PERFIL ---
 app.get('/perfil', authenticateToken, async (req, res) => {
     try {
         const findUserQuery = 'SELECT nome_completo, email, tipo_usuario, matricula FROM usuarios WHERE id = $1';
@@ -147,27 +135,18 @@ app.get('/perfil', authenticateToken, async (req, res) => {
     }
 });
 
-// <<<<<<<<<<<< NOVA ROTA PARA ALUNOS >>>>>>>>>>>>
-// Busca os agendamentos feitos pelo aluno logado
 app.get('/perfil/agendamentos', authenticateToken, async (req, res) => {
-    // Garante que só alunos podem aceder
     if (req.user.tipo !== 'aluno') {
         return res.status(403).json({ success: false, message: 'Acesso negado.' });
     }
-    
     try {
         const query = `
-            SELECT 
-                a.data_hora, 
-                a.status,
-                d.nome AS disciplina_nome,
-                u.nome_completo AS monitor_nome
+            SELECT a.data_hora, a.status, d.nome AS disciplina_nome, u.nome_completo AS monitor_nome
             FROM Agendamento a
             JOIN Monitoria m ON a.id_monitoria = m.id
             JOIN Disciplina d ON m.id_disciplina = d.id
             JOIN usuarios u ON m.id_monitor = u.id
-            WHERE a.id_aluno = $1
-            ORDER BY a.data_hora DESC
+            WHERE a.id_aluno = $1 ORDER BY a.data_hora DESC
         `;
         const result = await db.query(query, [req.user.id]);
         res.status(200).json({ success: true, agendamentos: result.rows });
@@ -177,26 +156,16 @@ app.get('/perfil/agendamentos', authenticateToken, async (req, res) => {
     }
 });
 
-// <<<<<<<<<<<< NOVA ROTA PARA MONITORES >>>>>>>>>>>>
-// Busca as monitorias (vagas) criadas pelo monitor logado
 app.get('/perfil/monitorias', authenticateToken, async (req, res) => {
-    // Garante que só monitores podem aceder
     if (req.user.tipo !== 'monitor') {
         return res.status(403).json({ success: false, message: 'Acesso negado.' });
     }
-
     try {
         const query = `
-            SELECT 
-                m.id, 
-                m.horario, 
-                m.local, 
-                m.status,
-                d.nome AS disciplina_nome
+            SELECT m.id, m.horario, m.local, m.status, d.nome AS disciplina_nome
             FROM Monitoria m
             JOIN Disciplina d ON m.id_disciplina = d.id
-            WHERE m.id_monitor = $1
-            ORDER BY m.horario DESC
+            WHERE m.id_monitor = $1 ORDER BY m.horario DESC
         `;
         const result = await db.query(query, [req.user.id]);
         res.status(200).json({ success: true, monitorias: result.rows });
@@ -206,12 +175,7 @@ app.get('/perfil/monitorias', authenticateToken, async (req, res) => {
     }
 });
 
-
-// ========================================================================= //
-// NOVAS ROTAS: Disciplinas, Monitorias e Agendamento
-// ========================================================================= //
-
-// ROTA PARA BUSCAR TODAS AS DISCIPLINAS
+// --- ROTAS DE MONITORIA E AGENDAMENTO ---
 app.get('/disciplinas', authenticateToken, async (req, res) => {
     try {
         const result = await db.query('SELECT id, nome FROM Disciplina ORDER BY nome');
@@ -222,18 +186,11 @@ app.get('/disciplinas', authenticateToken, async (req, res) => {
     }
 });
 
-// ROTA PARA BUSCAR MONITORIAS (VAGAS) DE UMA DISCIPLINA
 app.get('/monitorias/:disciplinaId', authenticateToken, async (req, res) => {
     const { disciplinaId } = req.params;
     try {
-        // Esta query busca o ID da MONITORIA e o NOME do MONITOR que a oferece
         const query = `
-            SELECT 
-                m.id AS monitoria_id, 
-                u.nome_completo,
-                m.horario,
-                m.local,
-                m.descricao
+            SELECT m.id AS monitoria_id, u.nome_completo, m.horario, m.local, m.descricao
             FROM Monitoria m
             JOIN usuarios u ON m.id_monitor = u.id
             WHERE m.id_disciplina = $1 AND u.tipo_usuario = 'monitor' AND m.status = 'ativa'
@@ -246,20 +203,15 @@ app.get('/monitorias/:disciplinaId', authenticateToken, async (req, res) => {
     }
 });
 
-// ROTA PARA MONITORES CRIOREM NOVAS MONITORIAS (VAGAS)
 app.post('/monitoria', authenticateToken, async (req, res) => {
-    // Apenas monitores podem criar
     if (req.user.tipo !== 'monitor') {
         return res.status(403).json({ success: false, message: 'Apenas monitores podem criar monitorias.' });
     }
-    
     const { id_disciplina, horario, descricao, local } = req.body;
-    const id_monitor = req.user.id; // O ID do monitor é pego do token
-
+    const id_monitor = req.user.id; 
     if (!id_disciplina || !horario || !local) {
         return res.status(400).json({ success: false, message: 'Disciplina, horário e local são obrigatórios.' });
     }
-
     try {
         const insertQuery = `
             INSERT INTO Monitoria (id_monitor, id_disciplina, horario, descricao, local, status)
@@ -275,7 +227,9 @@ app.post('/monitoria', authenticateToken, async (req, res) => {
     }
 });
 
-// ROTA PARA ALUNOS CRIAREM NOVOS AGENDAMENTOS (RESERVA)
+// ========================================================================= //
+// ATUALIZAÇÃO: ROTA DE AGENDAMENTO COM VERIFICAÇÃO
+// ========================================================================= //
 app.post('/agendamento', authenticateToken, async (req, res) => {
     // Apenas alunos podem agendar
     if (req.user.tipo !== 'aluno') {
@@ -290,7 +244,18 @@ app.post('/agendamento', authenticateToken, async (req, res) => {
     }
 
     try {
-        // TODO: Adicionar lógica para verificar se a vaga já está ocupada
+        // <<<<<<<<<<<<<<< CORREÇÃO DE LÓGICA ADICIONADA AQUI >>>>>>>>>>>>
+        // 1. Verifica se o aluno já está inscrito nesta vaga
+        const checkQuery = `SELECT * FROM Agendamento WHERE id_aluno = $1 AND id_monitoria = $2`;
+        const checkResult = await db.query(checkQuery, [id_aluno, id_monitoria]);
+
+        if (checkResult.rows.length > 0) {
+            // Se encontrou um registo, retorna um erro 409 (Conflict)
+            return res.status(409).json({ success: false, message: 'Você já está inscrito nesta vaga de monitoria.' });
+        }
+        // <<<<<<<<<<<<<<< FIM DA CORREÇÃO >>>>>>>>>>>>
+
+        // 2. Se não houver conflito, insere o novo agendamento
         const insertQuery = `
             INSERT INTO Agendamento (id_monitoria, id_aluno, data_hora, status)
             VALUES ($1, $2, $3, 'pendente')
@@ -298,8 +263,11 @@ app.post('/agendamento', authenticateToken, async (req, res) => {
         `;
         const values = [id_monitoria, id_aluno, data_agendamento];
         const result = await db.query(insertQuery, values);
+        
         res.status(201).json({ success: true, agendamento: result.rows[0] });
+
     } catch (error) {
+        // Este catch agora irá apanhar outros erros (como falha de conexão)
         console.error('Erro ao criar agendamento:', error);
         res.status(500).json({ success: false, message: 'Erro interno do servidor.' });
     }
@@ -308,6 +276,4 @@ app.post('/agendamento', authenticateToken, async (req, res) => {
 // Inicia o servidor para ouvir na porta definida
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
-
 });
-
