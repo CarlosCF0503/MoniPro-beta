@@ -135,18 +135,27 @@ app.get('/perfil', authenticateToken, async (req, res) => {
     }
 });
 
+// <<<<<<<<<<<< ATUALIZAÇÃO AQUI (ALUNOS) >>>>>>>>>>>>
+// Busca os agendamentos feitos pelo aluno logado
 app.get('/perfil/agendamentos', authenticateToken, async (req, res) => {
     if (req.user.tipo !== 'aluno') {
         return res.status(403).json({ success: false, message: 'Acesso negado.' });
     }
+    
     try {
         const query = `
-            SELECT a.data_hora, a.status, d.nome AS disciplina_nome, u.nome_completo AS monitor_nome
+            SELECT 
+                a.id AS agendamento_id, -- <<< ADICIONADO ID DO AGENDAMENTO
+                a.data_hora, 
+                a.status,
+                d.nome AS disciplina_nome,
+                u.nome_completo AS monitor_nome
             FROM Agendamento a
             JOIN Monitoria m ON a.id_monitoria = m.id
             JOIN Disciplina d ON m.id_disciplina = d.id
             JOIN usuarios u ON m.id_monitor = u.id
-            WHERE a.id_aluno = $1 ORDER BY a.data_hora DESC
+            WHERE a.id_aluno = $1
+            ORDER BY a.data_hora DESC
         `;
         const result = await db.query(query, [req.user.id]);
         res.status(200).json({ success: true, agendamentos: result.rows });
@@ -156,16 +165,25 @@ app.get('/perfil/agendamentos', authenticateToken, async (req, res) => {
     }
 });
 
+// <<<<<<<<<<<< ATUALIZAÇÃO AQUI (MONITORES) >>>>>>>>>>>>
+// Busca as monitorias (vagas) criadas pelo monitor logado
 app.get('/perfil/monitorias', authenticateToken, async (req, res) => {
     if (req.user.tipo !== 'monitor') {
         return res.status(403).json({ success: false, message: 'Acesso negado.' });
     }
+
     try {
         const query = `
-            SELECT m.id, m.horario, m.local, m.status, d.nome AS disciplina_nome
+            SELECT 
+                m.id AS monitoria_id, -- <<< "m.id" RENOMEADO PARA CLAREZA
+                m.horario, 
+                m.local, 
+                m.status,
+                d.nome AS disciplina_nome
             FROM Monitoria m
             JOIN Disciplina d ON m.id_disciplina = d.id
-            WHERE m.id_monitor = $1 ORDER BY m.horario DESC
+            WHERE m.id_monitor = $1
+            ORDER BY m.horario DESC
         `;
         const result = await db.query(query, [req.user.id]);
         res.status(200).json({ success: true, monitorias: result.rows });
@@ -273,8 +291,68 @@ app.post('/agendamento', authenticateToken, async (req, res) => {
     }
 });
 
+// ========================================================================= //
+// NOVAS ROTAS: Cancelamento de Agendamento e Monitoria
+// ========================================================================= //
+
+// <<<<<<<<<<<< NOVA ROTA (ALUNO) >>>>>>>>>>>>
+// Aluno "sai" de um agendamento (APAGA O AGENDAMENTO)
+app.delete('/agendamento/:id', authenticateToken, async (req, res) => {
+    const { id } = req.params; // ID do Agendamento
+    const id_aluno = req.user.id; // ID do Aluno (do token)
+
+    try {
+        // Verifica se o agendamento pertence ao aluno logado antes de apagar
+        const deleteQuery = `
+            DELETE FROM Agendamento
+            WHERE id = $1 AND id_aluno = $2
+            RETURNING *
+        `;
+        const result = await db.query(deleteQuery, [id, id_aluno]);
+
+        if (result.rows.length === 0) {
+            // Se não apagou nada, ou o agendamento não existe ou não pertence ao aluno
+            return res.status(404).json({ success: false, message: 'Agendamento não encontrado ou não pertence a você.' });
+        }
+
+        res.status(200).json({ success: true, message: 'Você saiu da monitoria.' });
+    } catch (error) {
+        console.error('Erro ao sair do agendamento:', error);
+        res.status(500).json({ success: false, message: 'Erro interno do servidor.' });
+    }
+});
+
+// <<<<<<<<<<<< NOVA ROTA (MONITOR) >>>>>>>>>>>>
+// Monitor "cancela" uma monitoria (MUDA O STATUS)
+app.put('/monitoria/:id/cancelar', authenticateToken, async (req, res) => {
+    const { id } = req.params; // ID da Monitoria
+    const id_monitor = req.user.id; // ID do Monitor (do token)
+
+    try {
+        // Verifica se a monitoria pertence ao monitor logado antes de atualizar
+        const updateQuery = `
+            UPDATE Monitoria
+            SET status = 'cancelada'
+            WHERE id = $1 AND id_monitor = $2
+            RETURNING *
+        `;
+        const result = await db.query(updateQuery, [id, id_monitor]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Monitoria não encontrada ou não pertence a você.' });
+        }
+
+        // TODO: No futuro, você pode querer notificar os alunos inscritos
+        res.status(200).json({ success: true, message: 'Monitoria cancelada.' });
+    } catch (error) {
+        console.error('Erro ao cancelar monitoria:', error);
+        res.status(500).json({ success: false, message: 'Erro interno do servidor.' });
+    }
+});
+
 // Inicia o servidor para ouvir na porta definida
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
 });
+
 
