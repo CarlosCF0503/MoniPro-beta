@@ -42,35 +42,35 @@ app.get('/teste', (req, res) => {
 
 // --- ROTAS DE AUTENTICAÇÃO (Cadastro e Login) ---
 app.post('/cadastro', async (req, res) => {
-  const { nome_completo, email, senha, tipo_usuario } = req.body;
+  const { nome_completo, email, senha, tipo_usuario, matricula } = req.body;
   const senhaForteRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
+  
   if (!senha || !senhaForteRegex.test(senha)) {
       return res.status(400).json({ success: false, message: 'A senha deve ter no mínimo 8 caracteres, com pelo menos uma letra e um número.' });
   }
+  
   try {
-    let matriculaParaSalvar;
-    const findUserByEmailQuery = 'SELECT * FROM usuarios WHERE email = $1 LIMIT 1';
-    const existingUser = await db.query(findUserByEmailQuery, [email]);
-    if (existingUser.rows.length > 0) {
-        matriculaParaSalvar = existingUser.rows[0].matricula;
-    } else {
-        const newMatriculaResult = await db.query("SELECT nextval('matricula_seq') AS nova_matricula");
-        matriculaParaSalvar = newMatriculaResult.rows[0].nova_matricula;
-    }
     const checkUserQuery = 'SELECT * FROM usuarios WHERE email = $1 AND tipo_usuario = $2';
     const existingProfile = await db.query(checkUserQuery, [email, tipo_usuario]);
+    
     if (existingProfile.rows.length > 0) {
         return res.status(409).json({ success: false, message: `Este e-mail já está cadastrado como ${tipo_usuario}.` });
     }
+    
     const saltRounds = 10;
     const senhaHash = await bcrypt.hash(senha, saltRounds);
+    
+    // Se a matrícula não for enviada ou vier vazia, definimos como null
+    const matriculaFinal = matricula ? matricula : null;
+
     const insertQuery = `
       INSERT INTO usuarios (nome_completo, email, senha, tipo_usuario, matricula)
       VALUES ($1, $2, $3, $4, $5)
       RETURNING id, email, matricula;
     `;
-    const values = [nome_completo, email, senhaHash, tipo_usuario, matriculaParaSalvar];
+    const values = [nome_completo, email, senhaHash, tipo_usuario, matriculaFinal];
     const result = await db.query(insertQuery, values);
+    
     res.status(201).json({
       success: true,
       message: 'Usuário cadastrado com sucesso!',
@@ -163,7 +163,6 @@ app.get('/perfil/agendamentos', authenticateToken, async (req, res) => {
     }
 });
 
-// <<<<<<<<<<<< ATUALIZAÇÃO DA LÓGICA DE ORDENAÇÃO AQUI >>>>>>>>>>>>
 app.get('/perfil/monitorias', authenticateToken, async (req, res) => {
     if (req.user.tipo !== 'monitor') {
         return res.status(403).json({ success: false, message: 'Acesso negado.' });
@@ -181,16 +180,14 @@ app.get('/perfil/monitorias', authenticateToken, async (req, res) => {
             JOIN Disciplina d ON m.id_disciplina = d.id
             WHERE m.id_monitor = $1
             ORDER BY
-                -- 1. Ordena por status primeiro (ativas e pendentes vêm antes)
                 CASE m.status
                     WHEN 'ativa' THEN 1
                     WHEN 'pendente' THEN 2
                     WHEN 'realizada' THEN 3
                     WHEN 'concluida' THEN 4
-                    WHEN 'cancelada' THEN 5  -- 'cancelada' é o último
+                    WHEN 'cancelada' THEN 5
                     ELSE 6
                 END ASC,
-                -- 2. Dentro de cada grupo de status, ordena pela data mais recente
                 m.horario DESC
         `;
         const result = await db.query(query, [req.user.id]);
