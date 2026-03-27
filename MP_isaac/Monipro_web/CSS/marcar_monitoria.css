@@ -1,0 +1,265 @@
+/* CSS/marcar_monitoria.css */
+
+* { box-sizing: border-box; }
+
+/* CORREÇÃO: era position:fixed + top/left/transform — causava overflow escondido em telas
+   pequenas e impedia o scroll. Substituído por layout de fluxo normal centralizado. */
+main {
+    display: grid;
+    grid-template-areas:
+        "titulo    titulo"
+        "calendario marcar";
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    width: 90%;
+    max-width: 1000px;
+    margin: 40px auto;
+    background-color: #FFFAFA;
+    padding: 25px 40px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    border-radius: 15px;
+}
+
+/* ========================================================================= */
+/* TÍTULO                                                                     */
+/* ========================================================================= */
+.titulo {
+    grid-area: titulo;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #071E3D;
+    border-bottom: 4px solid #071E3D;
+    border-radius: 4px;
+    padding-bottom: 10px;
+    margin-bottom: 5px;
+}
+
+.titulo h1 { font-size: 26px; }
+
+/* ========================================================================= */
+/* CALENDÁRIO                                                                 */
+/* ========================================================================= */
+.areaCalendario {
+    grid-area: calendario;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+.calendario {
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: #FFFAFA;
+    width: 100%;
+    border: 1px solid #e0e0e0;
+}
+
+.calendario .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #071E3D;
+    padding: 10px 15px;
+}
+
+.calendario .header h2 {
+    color: white;
+    font-size: 18px;
+}
+
+.calendario .header button {
+    background: transparent;
+    color: white;
+    border: 1px solid white;
+    border-radius: 8px;
+    padding: 4px 12px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.calendario .header button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+table { width: 100%; border-collapse: collapse; }
+
+th {
+    background-color: #f4f4f4;
+    padding: 10px;
+    text-transform: uppercase;
+    font-size: 0.75em;
+    color: #666;
+}
+
+td {
+    text-align: center;
+    padding: 12px 8px;
+    border: 1px solid #e0e0e0;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 14px;
+}
+
+td:hover              { background-color: #e6f2ff; }
+td:empty              { cursor: default; }
+td:empty:hover        { background-color: transparent; }
+
+.dia-atual {
+    background-color: #4a90e2;
+    color: white;
+    font-weight: bold;
+    border-radius: 50%;
+}
+
+.dia-selecionado {
+    border: 3px solid #071E3D !important;
+    font-weight: bold;
+    border-radius: 50%;
+}
+
+.dia-com-monitoria {
+    background-color: #cceeff;
+    font-weight: bold;
+    color: #071E3D;
+}
+
+.dia-com-monitoria.dia-selecionado {
+    background-color: #071E3D;
+    color: white;
+}
+
+/* ========================================================================= */
+/* ÁREA DE AÇÃO (ALUNO E MONITOR)                                             */
+/* ========================================================================= */
+.areaMarcar {
+    grid-area: marcar;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    min-height: 300px;
+}
+
+.areaMarcar > p {
+    font-size: 22px;
+    font-weight: bold;
+    color: #071E3D;
+    text-align: center;
+    width: 100%;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 8px;
+}
+
+/* Lista de monitores disponíveis */
+.monitores {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-height: 220px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.monitor-item {
+    background-color: #f0f4ff;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 10px;
+    transition: border-color 0.2s, background-color 0.2s;
+    cursor: pointer;
+}
+
+.monitor-item:hover     { background-color: #e0eaff; }
+.monitor-item.selecionado {
+    border-color: #071E3D;
+    background-color: #d0dcf5;
+}
+
+.monitor-item hr { display: none; }
+
+/* Formulário do monitor */
+.form-monitor {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+}
+
+.form-monitor label {
+    font-size: 13px;
+    font-weight: bold;
+    color: #071E3D;
+}
+
+.form-monitor input,
+.form-monitor textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 2px solid #1F4287;
+    border-radius: 10px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.form-monitor input:focus,
+.form-monitor textarea:focus { border-color: #4a90e2; }
+
+.form-monitor textarea {
+    height: 70px;
+    resize: vertical;
+}
+
+/* Botão de ação */
+.btn-acao {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 80px;
+    width: 100%;
+    max-width: 240px;
+    border-radius: 15px;
+    background-color: #071E3D;
+    color: white;
+    cursor: pointer;
+    gap: 5px;
+    transition: background-color 0.2s, transform 0.2s;
+    margin-top: auto;
+}
+
+.btn-acao:hover   { background-color: #1F4287; transform: translateY(-2px); }
+.btn-acao:active  { transform: scale(0.97); }
+.btn-acao.marcado { background-color: #28a745; }
+
+.btn-acao img { width: 30px; filter: brightness(0) invert(1); }
+.btn-acao p   { color: white; font-size: 18px; font-weight: bold; }
+
+/* ========================================================================= */
+/* RESPONSIVIDADE                                                             */
+/* ========================================================================= */
+@media (max-width: 900px) {
+    main {
+        grid-template-areas:
+            "titulo"
+            "calendario"
+            "marcar";
+        grid-template-columns: 1fr;
+        width: 95%;
+        padding: 15px;
+        margin: 15px auto;
+    }
+
+    .areaMarcar { min-height: auto; }
+    .monitores  { max-height: 300px; }
+    .btn-acao   { max-width: 100%; }
+
+    th, td { padding: 8px 4px; font-size: 13px; }
+}

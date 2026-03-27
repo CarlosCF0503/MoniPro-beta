@@ -1,0 +1,80 @@
+/* CSS/cadastro.css */
+
+.text1 {
+    color: #071E3D;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    background-color: #f0f4ff;
+    border: 2px solid #071E3D;
+    border-radius: 10px;
+    padding: 5px 15px;
+    height: 55px;
+    width: 100%;
+    position: relative;
+    transition: border-color 0.2s;
+}
+
+.input-group:focus-within { border-color: #4a90e2; }
+
+.input-group input {
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 16px;
+    width: 100%;
+    color: #071E3D;
+}
+
+.input-group-senha { padding-right: 50px; }
+
+.olho {
+    position: absolute;
+    right: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background: none;
+    border: none;
+    padding: 0;
+    color: #071E3D;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+}
+
+.olho:hover { opacity: 1; }
+.olho svg { display: block; pointer-events: none; }
+
+.link-voltar {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 10px;
+}
+
+.link-voltar a {
+    color: #1F4287;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.link-voltar a:hover { text-decoration: underline; }
+
+/* Botão submit do formulário de cadastro */
+#entrar:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
