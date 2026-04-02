@@ -17,7 +17,8 @@ app.use(cors({
         'https://moni-pro-b-orm.vercel.app',
         'http://127.0.0.1:5500',
         'http://localhost:5500',
-        'http://localhost:3000'
+        'http://localhost:3000',
+        'https://moni-pro-beta-git-carlos-carlos-cruzs-projects-38b28e08.vercel.app'
     ]
 }));
 app.use(express.json());
