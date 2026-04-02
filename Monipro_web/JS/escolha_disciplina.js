@@ -49,3 +49,4 @@ try {
         console.error('Erro ao carregar disciplinas:', error);
         containerDisciplinas.innerHTML = '<p>Erro ao carregar disciplinas. Tente novamente.</p>';
     }
+});
