@@ -19,6 +19,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const response = await fetch(`${MB_BETA_ORM}/disciplinas`);
         const disciplinas = await response.json();
 
+        console.log("O que veio do banco de dados:", disciplinas);
+        
         if (!Array.isArray(disciplinas) || disciplinas.length === 0) {
             containerDisciplinas.innerHTML = '<p>Nenhuma disciplina disponível no momento.</p>';
             return;
