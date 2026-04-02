@@ -14,21 +14,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     const containerDisciplinas = document.querySelector('.disciplinas');
     if (!containerDisciplinas) return;
 
-    try {
+try {
         // GET /disciplinas — não exige autenticação (rota pública)
         const response = await fetch(`${MB_BETA_ORM}/disciplinas`);
-        const disciplinas = await response.json();
+        const dadosDaApi = await response.json(); // Pega o objeto { success: true, disciplinas: [...] }
 
-        console.log("O que veio do banco de dados:", disciplinas);
-        
-        if (!Array.isArray(disciplinas) || disciplinas.length === 0) {
+        // Extrai apenas o array que está DENTRO do objeto
+        const listaDisciplinas = dadosDaApi.disciplinas;
+
+        // Agora sim verificamos se a LISTA está vazia
+        if (!Array.isArray(listaDisciplinas) || listaDisciplinas.length === 0) {
             containerDisciplinas.innerHTML = '<p>Nenhuma disciplina disponível no momento.</p>';
             return;
         }
 
         containerDisciplinas.innerHTML = '';
 
-        disciplinas.forEach(disc => {
+        // Faz o loop na lista correta
+        listaDisciplinas.forEach(disc => {
             const card = document.createElement('a');
             card.className = 'disciplina-card';
             // Passa o ID e o nome pela URL para a página de monitorias
@@ -46,4 +49,3 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Erro ao carregar disciplinas:', error);
         containerDisciplinas.innerHTML = '<p>Erro ao carregar disciplinas. Tente novamente.</p>';
     }
-});
