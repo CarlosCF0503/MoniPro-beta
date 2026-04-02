@@ -1,14 +1,1 @@
-# Dependências do Node.js
 node_modules/
-
-# Arquivos de variáveis de ambiente (onde ficam senhas de banco de dados)
-.env
-
-# Logs do NPM
-npm-debug.log*
-yarn-error.log*
-yarn-debug.log*
-
-# Pastas de build/distribuição
-dist/
-build/

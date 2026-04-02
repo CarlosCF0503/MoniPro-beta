@@ -28,5 +28,8 @@ app.use('/agendamentos', agendamentoRotas);
 app.use('/disciplinas',  disciplinaRotas);
 app.use('/monitorias',   monitoriaRotas);
 app.use('/perfil',       perfilRotas);
-
+// Rota de teste
+app.get('/teste', (req, res) => {
+    res.json({ mensagem: 'O servidor atualizado está respondendo!' });
+});
 module.exports = app;
