@@ -1,0 +1,261 @@
+/* CSS/perfil.css */
+
+/* CORREÇÃO: era position:fixed + top/left/transform — causava clipping em mobile.
+   Substituído por layout de fluxo normal com scroll próprio. */
+.perfil_informacao {
+    width: 500px;
+    max-width: 95%;
+    margin: 40px auto;
+    padding: 25px 20px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+
+    background-color: #FFFAFA;
+    color: #071E3D;
+    border-radius: 20px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+
+    /* Animação de deslize para os certificados ainda funciona via JS */
+    transition: margin-left 0.3s ease-in-out;
+}
+
+/* Em desktop, quando os certificados abrem, desloca o card para a esquerda */
+@media (min-width: 769px) {
+    .perfil_informacao.mudar {
+        margin-left: calc(50vw - 500px);
+    }
+}
+
+.perfil_informacao > img {
+    width: 160px;
+    border-radius: 50%;
+    border: 5px solid #071E3D;
+}
+
+.perfil_informacao h1 { margin-top: 10px; font-size: 24px; }
+
+.perfil_informacao > p {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 18px;
+}
+
+.perfil_informacao > p img { width: 22px; }
+
+.linha {
+    width: 90%;
+    height: 3px;
+    background-color: #071E3D;
+    border-radius: 15px;
+    margin: 8px 0;
+}
+
+/* ========================================================================= */
+/* INFORMAÇÕES DE CONTACTO                                                    */
+/* ========================================================================= */
+.informacoes {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 0 10%;
+}
+
+.informacoes span {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.informacoes span .icone {
+    width: 25px;
+    flex-shrink: 0;
+}
+
+.informacoes span .icone img { width: 100%; }
+
+.linha-interativa { position: relative; cursor: default; }
+
+#abrir_c {
+    position: absolute;
+    right: 0;
+    padding: 5px 12px;
+    background-color: #071E3D;
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+#abrir_c:hover {
+    background-color: #1F4287;
+    transform: scale(1.05);
+}
+
+/* ========================================================================= */
+/* PAINEL DE CERTIFICADOS                                                     */
+/* ========================================================================= */
+#area_certificados {
+    position: fixed;
+    top: 50%;
+    left: 70%;
+    transform: translate(-50%, -50%) scale(0);
+    visibility: hidden;
+
+    width: 460px;
+    max-width: 90vw;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+
+    background-color: #FFFAFA;
+    color: #071E3D;
+    border-radius: 20px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, visibility 0.3s;
+    z-index: 50;
+}
+
+#area_certificados.aparecer {
+    transform: translate(-50%, -50%) scale(1);
+    visibility: visible;
+}
+
+.titulo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+#certificado {
+    background-color: #fdf5e6;
+    width: 90%;
+    display: flex;
+    padding: 12px;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 15px;
+    gap: 12px;
+    border: 1px solid #e0d5c0;
+}
+
+#certificado .icone     { height: 40px; width: 40px; flex-shrink: 0; }
+#certificado .icone img { height: 100%; }
+
+#certificado span {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+#certificado a     { width: 28px; height: 28px; flex-shrink: 0; }
+#certificado a img { width: 100%; }
+
+/* ========================================================================= */
+/* LISTAS DE AGENDAMENTOS / MONITORIAS                                       */
+/* ========================================================================= */
+.lista-container {
+    width: 100%;
+    padding: 0 5%;
+    margin-top: 10px;
+}
+
+.lista-container h2 {
+    font-size: 18px;
+    color: #071E3D;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 5px;
+}
+
+.lista-itens {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    /* CORREÇÃO: era max-height: 200px — muito restritivo, cortava itens.
+       Aumentado e com transição suave */
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.lista-item {
+    background-color: #f4f4f4;
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    border-left: 4px solid #071E3D;
+}
+
+.lista-item-info { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.lista-item-info p        { margin: 0; font-size: 13px; color: #444; }
+.lista-item-info strong   { font-size: 15px; color: #071E3D; }
+
+/* Status badges */
+.status-pendente  { color: #FFA500; font-weight: bold; }
+.status-realizado { color: #28a745; font-weight: bold; }
+.status-ativa     { color: #1F4287; font-weight: bold; }
+.status-cancelada { color: #D8000C; font-weight: bold; }
+
+/* ========================================================================= */
+/* BOTÃO CANCELAR                                                             */
+/* ========================================================================= */
+.btn-cancelar {
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+    background-color: #FF0000;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    white-space: nowrap;
+}
+
+.btn-cancelar:hover  { background-color: #D8000C; }
+.btn-cancelar:active { transform: scale(0.95); }
+
+/* ========================================================================= */
+/* RESPONSIVIDADE                                                             */
+/* ========================================================================= */
+@media (max-width: 768px) {
+    .perfil_informacao {
+        width: 95%;
+        margin: 15px auto;
+    }
+
+    .perfil_informacao.mudar { margin-left: auto; }
+
+    #area_certificados {
+        position: static;
+        transform: none;
+        visibility: visible;
+        display: none;
+        width: 95%;
+        margin: 15px auto;
+    }
+
+    #area_certificados.aparecer {
+        display: flex;
+        transform: none;
+    }
+
+    .perfil_informacao > img { width: 120px; }
+
+    .lista-itens { max-height: none; }
+}
