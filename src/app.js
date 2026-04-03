@@ -17,7 +17,8 @@ app.use(cors({
         'https://moni-pro-b-orm.vercel.app',
         'http://127.0.0.1:5500',
         'http://localhost:5500',
-        'http://localhost:3000'
+        'http://localhost:3000',
+        'https://moni-pro-beta-git-carlos-carlos-cruzs-projects-38b28e08.vercel.app'
     ]
 }));
 app.use(express.json());
@@ -28,5 +29,8 @@ app.use('/agendamentos', agendamentoRotas);
 app.use('/disciplinas',  disciplinaRotas);
 app.use('/monitorias',   monitoriaRotas);
 app.use('/perfil',       perfilRotas);
-
+// Rota de teste
+app.get('/teste', (req, res) => {
+    res.json({ mensagem: 'O servidor atualizado está respondendo!' });
+});
 module.exports = app;

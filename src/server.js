@@ -1,5 +1,6 @@
 // src/server.js
 require('dotenv').config();
+console.log("URL DO BANCO:", process.env.DATABASE_URL);
 const app    = require('./app');
 const prisma = require('./config/bancoDeDados');
 

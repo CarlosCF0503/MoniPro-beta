@@ -32,15 +32,20 @@ enum StatusAgendamento {
 model Usuario {
   id            Int         @id @default(autoincrement())
   nome_completo String
-  email         String      @unique
+  email         String     
   senha         String
   tipo_usuario  TipoUsuario
-  matricula     Int         @unique
+  matricula     Int         
 
   // Relacionamentos: O Prisma entende quem cria vagas e quem se inscreve nelas
   // AJUSTE: Alterado de MonitoriaService para Monitoria
   monitorias_criadas Monitoria[]   @relation("MonitorParaMonitoria")
   meus_agendamentos  Agendamento[] @relation("AlunoParaAgendamento")
+
+// Garante que não existam dois "alunos" com o mesmo e-mail, mas permite 1 aluno e 1 monitor.
+  @@unique([email, tipo_usuario]) 
+  // Garante o mesmo bloqueio para a matrícula (já que no sistema da faculdade a matrícula é única por cargo)
+  @@unique([matricula, tipo_usuario])
 
   @@map("usuarios") // Nome exato da tabela no Postgres
 }
