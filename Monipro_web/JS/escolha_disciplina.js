@@ -1,21 +1,19 @@
-// monipro-web/JS/escolha_disciplina.js
-
+// JS/escolha_disciplina.js
 document.addEventListener('DOMContentLoaded', async () => {
     const containerDisciplinas = document.querySelector('.disciplinas');
     if (!containerDisciplinas) return;
 
     try {
-        // Padronizado para seguir o estilo do cadastro.js e a nova rota /auth
-        const response = await fetch(`${MB_BETA_ORM}/auth/disciplinas`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-                // Se a rota for pública, não precisa do Authorization aqui
-            }
-        });
+        // ✅ Usa a função centralizada (já trata JSON, token e erros de rede)
+        const dados = await chamadaApi('/auth/disciplinas');
 
-        const dadosDaApi = await response.json();
-        const listaDisciplinas = dadosDaApi.disciplinas;
+        // ✅ Verifica se o servidor retornou erro (status 4xx/5xx)
+        if (dados.erro || dados.statusHttp >= 400) {
+            throw new Error(dados.mensagem || `Erro ${dados.statusHttp}`);
+        }
+
+        // ✅ Suporta tanto { disciplinas: [...] } quanto array direto
+        const listaDisciplinas = Array.isArray(dados) ? dados : dados.disciplinas;
 
         if (!Array.isArray(listaDisciplinas) || listaDisciplinas.length === 0) {
             containerDisciplinas.innerHTML = '<p>Nenhuma disciplina disponível no momento.</p>';
@@ -23,7 +21,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         containerDisciplinas.innerHTML = '';
-
         listaDisciplinas.forEach(disc => {
             const card = document.createElement('a');
             card.className = 'disciplina-card';
@@ -38,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
     } catch (error) {
-        console.error('Erro ao carregar disciplinas:', error);
-        containerDisciplinas.innerHTML = '<p>Erro ao carregar disciplinas. Tente novamente.</p>';
+        console.error('Erro ao carregar disciplinas:', error.message);
+        containerDisciplinas.innerHTML = `<p>Erro ao carregar disciplinas: ${error.message}</p>`;
     }
 });
