@@ -4,29 +4,40 @@ const usuarioRepository = require('../repositories/usuarioRepository');
 
 class AutenticacaoService {
     async cadastrar(dados) {
+        // 1. Verifica se já existe ALGUÉM com este e-mail neste MESMO CARGO
+        const usuarioExistente = await usuarioRepository.buscarPorEmail(dados.email, dados.tipo_usuario);
+        if (usuarioExistente) {
+            throw new Error(`Este e-mail já está cadastrado como ${dados.tipo_usuario}.`);
+        }
+
+        // Você também pode fazer a mesma verificação para a matrícula se quiser!
+        const matriculaExistente = await usuarioRepository.buscarPorMatricula(dados.matricula, dados.tipo_usuario);
+        if (matriculaExistente) {
+            throw new Error(`Esta matrícula já está cadastrada como ${dados.tipo_usuario}.`);
+        }
+
+        // 2. Se passou pelas validações, cria o cadastro
         const hashSenha = await bcrypt.hash(dados.senha, 10);
         return await usuarioRepository.criar({ ...dados, senha: hashSenha });
     }
 
     async login(identificador, senha, tipo_usuario) {
-        // 1. Descobre se o identificador é um e-mail (tem '@') ou matrícula
         const isEmail = identificador.includes('@');
         let usuario;
 
-        // 2. Faz a busca usando o método correto do repositório
+        // AGORA PASSAMOS O TIPO_USUARIO PARA A BUSCA!
         if (isEmail) {
-            usuario = await usuarioRepository.buscarPorEmail(identificador);
+            usuario = await usuarioRepository.buscarPorEmail(identificador, tipo_usuario);
         } else {
-            // Converte para número, pois a matrícula costuma ser Int no Prisma
-            usuario = await usuarioRepository.buscarPorMatricula(Number(identificador));
+            usuario = await usuarioRepository.buscarPorMatricula(Number(identificador), tipo_usuario);
         }
 
-        // 3. Validações de segurança
         if (!usuario) {
-            throw new Error('Usuário não encontrado. Verifique suas credenciais.');
+            // Ajustamos a mensagem para ficar mais clara
+            throw new Error(`Nenhum ${tipo_usuario} encontrado com essas credenciais.`);
         }
 
-        // Verifica se o usuário está tentando entrar com o perfil correto (Aluno vs Monitor)
+        // Como a busca já filtrou pelo tipo, essa linha abaixo virou apenas uma garantia extra de segurança
         if (usuario.tipo_usuario !== tipo_usuario) {
             throw new Error(`Este usuário não está cadastrado como ${tipo_usuario}.`);
         }
@@ -36,7 +47,6 @@ class AutenticacaoService {
             throw new Error('Senha incorreta.');
         }
 
-        // 4. Cria o Token JWT com os dados exatos que o seu frontend espera ler
         const token = jwt.sign(
             { 
                 id: usuario.id, 
@@ -48,7 +58,6 @@ class AutenticacaoService {
             { expiresIn: '24h' }
         );
 
-        // Retorna success: true para o frontend saber que deu tudo certo
         return { success: true, token, usuario: { id: usuario.id, nome: usuario.nome_completo, tipo: usuario.tipo_usuario } };
     }
 }

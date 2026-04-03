@@ -4,12 +4,28 @@ class UsuarioRepository {
     async criar(dados) {
         return await prisma.usuario.create({ data: dados });
     }
-    async buscarPorEmail(email) {
-        return await prisma.usuario.findUnique({ where: { email } });
+
+    // Trocado para findFirst e adicionado o tipo_usuario
+    async buscarPorEmail(email, tipo_usuario) {
+        return await prisma.usuario.findFirst({ 
+            where: { 
+                email: email,
+                tipo_usuario: tipo_usuario
+            } 
+        });
     }
-    async buscarPorMatricula(matricula) {
-        return await prisma.usuario.findUnique({ where: { matricula: parseInt(matricula) } });
+
+    // Trocado para findFirst e adicionado o tipo_usuario
+    async buscarPorMatricula(matricula, tipo_usuario) {
+        return await prisma.usuario.findFirst({ 
+            where: { 
+                matricula: parseInt(matricula),
+                tipo_usuario: tipo_usuario
+            } 
+        });
     }
+
+    // O ID continua sendo único no banco, então o findUnique continua funcionando perfeitamente aqui!
     async buscarPorId(id) {
         return await prisma.usuario.findUnique({
             where: { id: parseInt(id) },
@@ -17,4 +33,5 @@ class UsuarioRepository {
         });
     }
 }
+
 module.exports = new UsuarioRepository();
