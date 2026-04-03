@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-module.exports = (req, res, next) => {
+const autenticar = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).json({ erro: 'Token não fornecido' });
 
@@ -15,4 +15,18 @@ module.exports = (req, res, next) => {
         req.usuario = decodificado;
         return next();
     });
+}; // ⬅️ FALTAVA FECHAR ESSA CHAVE AQUI!
+
+// verificando se a propriedade do perfil no token decodificado bate com o que queremos
+const isMonitor = (req, res, next) => {
+    if (req.usuario && req.usuario.tipo === 'monitor') {
+        return next();
+    }
+
+    return res.status(403).json({ erro: 'Acesso negado. Apenas Monitores podem cadastrar disciplinas.' });
+};
+
+module.exports = {
+    autenticar,
+    isMonitor
 };

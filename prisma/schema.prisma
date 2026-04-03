@@ -52,7 +52,7 @@ model Usuario {
 
 model Disciplina {
   id         Int         @id @default(autoincrement())
-  nome       String
+  nome       String      @unique
   // AJUSTE: Alterado de MonitoriaService para Monitoria
   monitorias Monitoria[]
 
