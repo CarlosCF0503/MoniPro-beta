@@ -1,7 +1,7 @@
 // JS/api.js
 
 // URL base do seu servidor. Se for testar localmente, pode alterar para "http://localhost:3000"
-const MB_BETA_ORM = "https://monipro-b-orm-1.onrender.com";
+const MB_BETA_ORM = "https://monipro-beta.onrender.com";
 /**
  * Função centralizada para realizar pedidos ao backend.
  * @param {string} endpoint - O caminho da rota (ex: '/auth/login', '/perfil')
