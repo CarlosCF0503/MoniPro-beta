@@ -1,0 +1,108 @@
+/* CSS/perfil_monitor.css */
+
+body { background-color: #f4f7f6; font-family: 'Inter', sans-serif; }
+
+main.dashboard-wrapper {
+    display: block !important; 
+    width: 100%;
+    min-height: 100vh;
+    padding-top: 80px; 
+}
+
+.dashboard-container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 40px 30px; position: relative; }
+
+.page-header { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #e2e8f0; }
+.title-area h1 { color: #071E3D; font-size: 28px; margin-bottom: 5px; }
+.title-area p { color: #64748b; font-size: 15px; }
+
+.perfil-grid { display: grid; grid-template-columns: 350px 1fr; gap: 30px; align-items: start; }
+
+.perfil-card { background-color: #ffffff; border-radius: 12px; padding: 30px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); border: 1px solid #e2e8f0; }
+
+/* Coluna Esquerda */
+.identity-card { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.foto-area img { width: 160px; height: 160px; object-fit: cover; border-radius: 50%; border: 4px solid #071E3D; padding: 4px; margin-bottom: 15px; }
+.identity-card h2 { color: #071E3D; font-size: 22px; margin-bottom: 10px; }
+
+.badge-area { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+.badge-tipo { background-color: #e0eaff; color: #071E3D; padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: 700; text-transform: uppercase; }
+
+/* EXCLUSIVO DO MONITOR: Badge Escuro */
+.monitor-color { background-color: #071E3D; color: #ffffff; }
+
+.badge-moedas { display: flex; align-items: center; gap: 5px; font-size: 16px; color: #FFA500; }
+.badge-moedas img { width: 20px; }
+
+.divisor { width: 100%; border: none; border-top: 1px solid #e2e8f0; margin: 20px 0; }
+
+.informacoes { width: 100%; display: flex; flex-direction: column; gap: 15px; }
+.info-item { display: flex; align-items: center; gap: 12px; text-align: left; width: 100%; color: #334155; font-size: 14px; }
+.info-item .icone { width: 36px; height: 36px; background-color: #f0f4ff; border-radius: 8px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
+.info-item .icone img { width: 18px; opacity: 0.8; }
+
+/* Coluna Direita */
+.lista-header h2 { font-size: 18px; color: #071E3D; margin-bottom: 20px; font-weight: 600; }
+.lista-itens { display: flex; flex-direction: column; gap: 12px; max-height: 500px; overflow-y: auto; padding-right: 5px; }
+.loading-text { color: #64748b; font-size: 14px; }
+
+.lista-item { background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; gap: 15px; transition: background-color 0.2s; }
+.lista-item:hover { background-color: #f1f5f9; }
+.lista-item-info p { margin: 0 0 5px 0; font-size: 13px; color: #64748b; }
+.lista-item-info strong { font-size: 16px; color: #071E3D; }
+
+.status-pendente { color: #FFA500; font-weight: bold; }
+.status-realizado { color: #28a745; font-weight: bold; }
+
+.btn-cancelar { padding: 8px 16px; font-size: 13px; font-weight: 600; color: #D8000C; background-color: #ffeef0; border: 1px solid #ffdce0; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+.btn-cancelar:hover { background-color: #D8000C; color: #ffffff; }
+
+/* ==============================================
+   EXCLUSIVO DO MONITOR: MODAL DE CERTIFICADOS
+   ============================================== */
+.linha-interativa { justify-content: space-between; }
+.btn-pequeno { background-color: #071E3D; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: background-color 0.2s; }
+.btn-pequeno:hover { background-color: #1F4287; }
+
+/* Modal Escondido no Centro */
+#area_certificados {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9); 
+    width: 90%;
+    max-width: 500px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Classe ativada pelo seu JS */
+#area_certificados.aparecer {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Estilo do item de certificado gerado no JS */
+#certificado { background-color: #f0f4ff; width: 100%; display: flex; padding: 15px; align-items: center; justify-content: space-between; border-radius: 8px; gap: 15px; border: 1px solid #e2e8f0;}
+#certificado .icone { height: 35px; width: 35px; flex-shrink: 0; }
+#certificado .icone img { height: 100%; }
+#certificado span { display: flex; flex-direction: column; align-items: flex-start; flex-grow: 1; color: #071E3D; font-weight: 600; font-size: 14px;}
+#certificado a { width: 25px; height: 25px; flex-shrink: 0; opacity: 0.8; transition: opacity 0.2s;}
+#certificado a:hover { opacity: 1; }
+#certificado a img { width: 100%; }
+
+@media (max-width: 900px) {
+    main.dashboard-wrapper { padding-top: 60px; }
+    .perfil-grid { grid-template-columns: 1fr; }
+    .lista-item { flex-direction: column; align-items: flex-start; }
+    .btn-cancelar { width: 100%; margin-top: 10px; }
+}

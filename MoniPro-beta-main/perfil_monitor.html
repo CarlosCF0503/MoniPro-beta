@@ -1,75 +1,125 @@
-<!-- ... (Seu header, nav e modals de sair continuam os mesmos) ... -->
-
-<!-- CONTAINER DO DASHBOARD -->
-<main class="dashboard-container">
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="CSS/base.css">
+    <link rel="icon" href="IMG/MoniPro-mini.png">
     
-    <!-- Cabeçalho da Página -->
-    <div class="page-header">
-        <div class="title-area">
-            <h1>Painel do Monitor</h1>
-            <p>Gerencie seu perfil, monitorias criadas e certificados.</p>
+    <!-- CSS Exclusivo do Monitor -->
+    <link rel="stylesheet" href="CSS/perfil_monitor.css">
+    
+    <title>Perfil - Monitor - MoniPro</title>
+</head>
+<body>
+    
+    <!-- HEADER, NAV E MODAIS AQUI (Copie igualzinho o do aluno) -->
+    <header>
+        <div class="logo"><a href="base.html"><img src="IMG/MoniPro_logo-menor.png" alt="Logo MoniPro"></a></div>
+        <div class="header-actions">
+            <div id="perfil" class="header-icon"><img src="IMG/Icone_Perfil.png" alt="Ver perfil"></div>
+            <div id="menu" class="header-icon"><img src="IMG/Menu_hamburguer.png" alt="Abrir menu"></div>
         </div>
+    </header>
+
+    <div id="overlay"></div>
+
+    <nav id="menuLateral">
+        <!-- ... (Mesmo código de menu do aluno) ... -->
+        <div class="logo_fechar"><img src="IMG/Logo.png" alt=""><div id="menu_fechar"><img src="IMG/Icone_menu_fechar.png" alt=""></div></div>
+        <div id="perfil" class="item"><div class="icone"><img src="IMG/Icone_perfil_menu.png" alt=""></div><p>Perfil</p></div>
+        <div class="item monitoria-link"><div class="icone"><img src="IMG/logo_monitoria.png" alt=""></div><p>Monitoria</p></div>
+        <div id="sair" class="item"><div class="icone"><img src="IMG/Icone_sair.png" alt=""></div><p>Sair</p></div>
+    </nav>
+
+    <!-- Modais de sair -->
+    <div id="aviso_sair">
+        <div class="icone_sair"><img src="IMG/Icone_aviso.png" alt=""><p>Tem certeza que quer sair?</p></div>
+        <div class="areaSim"><button id="btnSim">Sim</button></div><div class="areaNao"><button id="btnNao">Não</button></div>
+    </div>
+    <div id="modal-confirmacao" class="modal-aviso">
+        <div class="icone_sair"><img src="IMG/Icone_aviso.png" alt=""><p id="modal-confirmacao-texto">Tem certeza?</p></div>
+        <div class="areaSim"><button id="btnConfirmarSim" class="btn-confirmar-acao">Sim</button></div><div class="areaNao"><button id="btnConfirmarNao" class="btn-cancelar-acao">Não</button></div>
     </div>
 
-    <!-- GRID DO PERFIL (Divide em duas colunas no PC) -->
-    <div class="perfil-grid">
-        
-        <!-- COLUNA ESQUERDA: Identidade (Foto e Dados) -->
-        <section class="perfil-card identity-card" id="perfil_informacao">
-            <div class="foto-area">
-                <img src="IMG/Icone_perfil_grande.png" alt="Foto de perfil">
+    <!-- ==========================================
+         NOVO DASHBOARD DO MONITOR 
+         ========================================== -->
+    <main class="dashboard-wrapper">
+        <div class="dashboard-container">
+            
+            <div class="page-header">
+                <div class="title-area">
+                    <h1>Painel do Monitor</h1>
+                    <p>Gerencie seu perfil, monitorias criadas e certificados.</p>
+                </div>
+            </div>
+
+            <div class="perfil-grid">
+                <!-- IDENTIDADE DO MONITOR -->
+                <section class="perfil-card identity-card" id="perfil_informacao">
+                    <div class="foto-area">
+                        <img src="IMG/Icone_perfil_grande.png" alt="Foto de perfil">
+                    </div>
+                    
+                    <h2 id="nomeUsuario">Carregando...</h2>
+                    
+                    <div class="badge-area">
+                        <!-- CLASSE EXCLUSIVA DO MONITOR: .monitor-color -->
+                        <span id="tipoUsuario" class="badge-tipo monitor-color">Monitor</span>
+                        <span class="badge-moedas">
+                            <img src="IMG/Icone_moeda.png" alt="Moedas"> <strong>15</strong>
+                        </span>
+                    </div>
+
+                    <hr class="divisor">
+
+                    <div class="informacoes">
+                        <div class="info-item">
+                            <div class="icone"><img src="IMG/Icone Email.png" alt="E-mail"></div>
+                            <p id="emailUsuario">carregando@email.com</p>
+                        </div>
+                        <div class="info-item">
+                            <div class="icone"><img src="IMG/Icone_matricula.png" alt="Matrícula"></div>
+                            <p>Matrícula: <strong id="matriculaUsuario">000000</strong></p>
+                        </div>
+                        
+                        <!-- BOTÃO DE CERTIFICADOS -->
+                        <div class="info-item linha-interativa">
+                            <div class="icone"><img src="IMG/Icone_certificado.png" alt="Certificado"></div>
+                            <p>Meus Certificados</p>
+                            <button id="abrir_c" class="btn-pequeno">Ver</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- LISTA DE MONITORIAS CRIADAS -->
+                <section class="perfil-card content-card">
+                    <div class="lista-container">
+                        <div class="lista-header">
+                            <h2>Minhas Monitorias Criadas</h2>
+                        </div>
+                        <div id="lista-monitorias-criadas" class="lista-itens">
+                            <p class="loading-text">A carregar monitorias...</p>
+                        </div>
+                    </div>
+                </section>
+
             </div>
             
-            <h2 id="nomeUsuario">Carregando...</h2>
-            
-            <div class="badge-area">
-                <span id="tipoUsuario" class="badge-tipo monitor-color">Monitor</span>
-                <span class="badge-moedas">
-                    <img src="IMG/Icone_moeda.png" alt="Moedas"> <strong>15</strong>
-                </span>
+            <!-- MODAL DE CERTIFICADOS (Fica escondido até o JS chamar) -->
+            <div id="area_certificados" class="modal-certificados">
+                <h3 style="margin-bottom: 15px; color: #071E3D; border-bottom: 1px solid #ddd; padding-bottom: 10px;">Meus Certificados</h3>
+                <!-- JS vai injetar os <div id="certificado"> aqui -->
             </div>
 
-            <hr class="divisor">
+        </div>
+    </main>
 
-            <div class="informacoes">
-                <div class="info-item">
-                    <div class="icone"><img src="IMG/Icone Email.png" alt="E-mail"></div>
-                    <p id="emailUsuario">carregando@email.com</p>
-                </div>
-                <div class="info-item">
-                    <div class="icone"><img src="IMG/Icone_matricula.png" alt="Matrícula"></div>
-                    <p>Matrícula: <strong id="matriculaUsuario">000000</strong></p>
-                </div>
-                
-                <!-- LINHA DE CERTIFICADOS (Exclusiva do Monitor) -->
-                <div class="info-item linha-interativa">
-                    <div class="icone"><img src="IMG/Icone_certificado.png" alt="Certificado"></div>
-                    <p>Meus Certificados</p>
-                    <button id="abrir_c" class="btn-pequeno">Ver</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- COLUNA DIREITA: Listas e Ações -->
-        <section class="perfil-card content-card">
-            <div class="lista-container">
-                <div class="lista-header">
-                    <h2>Minhas Monitorias Criadas</h2>
-                </div>
-                
-                <!-- AQUI O SEU JS INJETA AS MONITORIAS CRIADAS -->
-                <div id="lista-monitorias-criadas" class="lista-itens">
-                    <p class="loading-text">A carregar monitorias...</p>
-                </div>
-            </div>
-        </section>
-
-    </div>
-</main>
-
-<!-- SEU JS PROVAVELMENTE INJETA ISSO, SE NÃO INJETAR, ADICIONE AQUI NO HTML -->
-<div id="area_certificados" class="modal-certificados">
-    <!-- Conteúdo dos certificados gerado via JS -->
-</div>
-
-<!-- ... (Seus scripts continuam aqui) ... -->
+    <div id="toast-container"></div>
+    <script src="JS/toast.js" defer></script>
+    <script src="JS/base.js" defer></script>
+    <script src="JS/perfil.js" defer></script>
+    <script src="JS/perfil_monitor.js" defer></script>
+</body>
+</html>
