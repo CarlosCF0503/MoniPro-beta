@@ -1,81 +1,222 @@
-.text1 {
-    font-size: 35px;
-    color: #071E3D;
-    margin-bottom: 0px; 
-    margin-top: -15px;
+/* ==============================================
+   RESET BÁSICO (Retira margens nativas do browser)
+   ============================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
-#formCadastro {
+body, html {
+    width: 100%;
+    height: 100%;
+    background-color: #ffffff; /* Fundo limpo, cara de site moderno */
+}
+
+/* ==============================================
+   ESTRUTURA SPLIT SCREEN (A mágica da divisão)
+   ============================================== */
+.split-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* LADO ESQUERDO: Formulário */
+.form-side {
+    width: 45%;
     display: flex;
     flex-direction: column;
+    justify-content: center;
     align-items: center;
-    gap: 10px;
+    padding: 2rem;
+    background-color: #ffffff;
 }
 
-.input-group {
+.form-container {
+    width: 100%;
+    max-width: 420px; /* Evita que o formulário estique na tela larga */
+}
+
+/* LADO DIREITO: A parte visual/colorida */
+.visual-side {
+    width: 55%;
+    /* Usei os tons de azul do seu CSS (#1F4287 e #071E3D) para o degradê */
+    background: linear-gradient(135deg, #4a90e2 0%, #071E3D 100%);
     display: flex;
+    justify-content: center;
     align-items: center;
-    position: relative;
-    width: 100%; /* Garante que o grupo ocupe a largura do form */
-}
-
-.input-group .icone {
-    transform: scale(60%);
-    width: 50px;
+    color: white;
+    padding: 3rem;
     text-align: center;
 }
 
+.visual-content h2 {
+    font-size: 2.5rem;
+    font-weight: 600;
+    opacity: 0.95;
+    max-width: 500px;
+}
+
+/* ==============================================
+   AJUSTES DO CABEÇALHO DO FORMULÁRIO E LOGO
+   ============================================== */
+.logo {
+    height: 100px;
+    margin-bottom: 2rem;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.header-text {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.text1 {
+    color: #071E3D;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.header-text p {
+    color: #666;
+    font-size: 0.95rem;
+}
+
+/* ==============================================
+   SEU CSS ORIGINAL DOS INPUTS (Mantido e ajustado espaçamento)
+   ============================================== */
+.input-group {
+    display: flex;
+    align-items: center;
+    background-color: #f0f4ff;
+    border: 2px solid #071E3D;
+    border-radius: 8px; /* Deixei levemente menos arredondado (estava 10) para ficar mais web */
+    padding: 5px 15px;
+    height: 55px;
+    width: 100%;
+    margin-bottom: 15px; /* Adicionado para dar espaço entre os inputs */
+    position: relative;
+    transition: border-color 0.2s;
+}
+
+.input-group:focus-within { 
+    border-color: #4a90e2; 
+}
+
+/* Ajuste nos seus ícones das imagens dentro do input */
+.icone img {
+    width: 22px;
+    margin-right: 12px;
+    opacity: 0.7;
+    display: block;
+}
+
+.input-group input {
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 15px;
+    width: 100%;
+    color: #071E3D;
+}
+
+.input-group-senha { 
+    padding-right: 50px; 
+}
+
+/* SEU CSS DO OLHO DE SENHA */
 .olho {
     position: absolute;
-    right: 10px;
+    right: 12px;
     cursor: pointer;
     display: flex;
     align-items: center;
+    justify-content: center;
     height: 100%;
-}
-.olho img{
-    transform: scale(55%);
+    background: none;
+    border: none;
+    padding: 0;
+    color: #071E3D;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
 }
 
+.olho:hover { opacity: 1; }
+.olho svg { display: block; pointer-events: none; }
+
+/* O SEU BOTÃO CADASTRAR (Adicionei estilo para ele pois não estava no seu CSS) */
 #entrar {
-    width: 200px;
-    padding: 0;
-    color: white;
+    width: 100%;
+    height: 55px;
     background-color: #071E3D;
+    color: #ffffff;
     border: none;
-    font-size: 20px;
-    height: 50px;
-    border-radius: 15px;
-    transition: background-color 0.2s;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
     cursor: pointer;
-    margin-top: 0px;
+    margin-top: 10px;
+    transition: background-color 0.3s;
 }
 
 #entrar:hover {
     background-color: #1F4287;
 }
 
-.link-voltar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px; /* Reduzido para um valor seguro */
-    font-size: 18px;
+#entrar:disabled { 
+    opacity: 0.6; 
+    cursor: not-allowed; 
 }
 
-/* --- Estilos para Telas Menores (Responsividade) --- */
-@media (max-width: 768px) {
-    .text1 {
-        font-size: 28px; /* Título um pouco menor */
-        margin-top: 0;
+/* LINK VOLTAR */
+.link-voltar {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 20px;
+    font-size: 0.95rem;
+    color: #666;
+}
+
+.link-voltar a {
+    color: #1F4287;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.link-voltar a:hover { 
+    text-decoration: underline; 
+}
+
+/* ACESSIBILIDADE */
+.sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+/* ==============================================
+   RESPONSIVIDADE (Para o celular, o azul some)
+   ============================================== */
+@media (max-width: 900px) {
+    .split-layout {
+        flex-direction: column;
     }
     
-    .input-group {
-        margin-left: -15px; /* Reduz o recuo */
+    .visual-side {
+        display: none; /* Esconde a parte com o texto e fundo degradê */
     }
-    
-    .link-voltar {
-        flex-direction: column; /* Empilha o texto e o link */
-        gap: 5px;
+
+    .form-side {
+        width: 100%;
+        min-height: 100vh;
+        padding: 2rem 1rem;
     }
 }

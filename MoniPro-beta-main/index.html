@@ -8,47 +8,74 @@
     <title>Login - MoniPro</title>
 </head>
 <body>
-    <img src="IMG/MoniPro-Logo.png" alt="Logo MoniPro" class="logo">
-    <form id="formLogin">
 
-            <div class="EmailArea" id="bloco">
-                <div class="icone"><img src="IMG/Icone Email.png" alt="" class="inputEmail"></div>
-                <label for="inputIdentificador" class="sr-only">E-mail ou Matrícula</label>
-                <input type="text" id="inputIdentificador" name="identificador" placeholder="E-mail ou Matrícula" class="inputEmail">
-            </div>
+<!-- CONTAINER PRINCIPAL: Divide a tela -->
+<main class="split-layout">
+
+    <!-- LADO ESQUERDO: Formulário Brancão e Limpo -->
+    <section class="form-side">
+        <div class="form-container">
             
-            <div class="SenhaArea" id="bloco">
-                <div class="icone"><img src="IMG/Icone Cadeado.png" alt=""></div>
-                <input type="password" id="inputSenha" name="password" placeholder="Password" class="input">
+            <img src="IMG/MoniPro-Logo.png" alt="Logo MoniPro" class="logo">
+
+            <div class="header-text">
+                <h1 class="text1">Bem-vindo de volta!</h1>
+                <p>Faça login para acessar o seu painel.</p>
             </div>
 
-            <div class="ErroArea" id="bloco"><p id="erro"></p></div>
+            <form id="formLogin">
+                
+                <!-- SELETOR DE PERFIL (Sua lógica de rádio mantida) -->
+                <div class="profile-section">
+                    <p class="profile-title">Escolha como deseja entrar:</p>
+                    <div class="profile-selector">
+                        <input type="radio" id="radioAluno" name="tipo_usuario" value="aluno" checked>
+                        <label for="radioAluno" class="btn-profile">Aluno</label>
 
-            <div class="profile-selector-title" id="bloco">
-                <p>Escolha como deseja entrar</p>
-            </div>
+                        <input type="radio" id="radioMonitor" name="tipo_usuario" value="monitor">
+                        <label for="radioMonitor" class="btn-profile">Monitor</label>
+                    </div>
+                </div>
 
-            <div class="profile-selector" id="bloco">
-                <input type="radio" id="radioAluno" name="tipo_usuario" value="aluno" checked>
-                <label for="radioAluno" class="btn-profile">Aluno</label>
+                <!-- INPUTS (Mesmo estilo do Cadastro para ter padrão) -->
+                <div class="input-group">
+                    <div class="icone"><img src="IMG/Icone Email.png" alt="Ícone de Email"></div>
+                    <label for="inputIdentificador" class="sr-only">E-mail ou Matrícula</label>
+                    <input type="text" id="inputIdentificador" name="identificador" placeholder="E-mail ou Matrícula" required>
+                </div>
+                
+                <div class="input-group">
+                    <div class="icone"><img src="IMG/Icone Cadeado.png" alt="Ícone de Senha"></div>
+                    <label for="inputSenha" class="sr-only">Senha</label>
+                    <input type="password" id="inputSenha" name="password" placeholder="Senha" required>
+                </div>
 
-                <input type="radio" id="radioMonitor" name="tipo_usuario" value="monitor">
-                <label for="radioMonitor" class="btn-profile">Monitor</label>
-            </div>
-            
-            <div class="EntrarArea" id="bloco">
-                <input type="submit" id="entrar" value="Entrar">
-            </div>
-            <div id="bloco" class="CadastroArea" ><p class="cadastro">Não tem cadastro? </p><a href="escolha_cadastro.html">cadastre-se</a></div>
-            
-    </form>
-    
-    <div id="toast-container"></div>
-    <script src="JS/toast.js" defer></script>
-    
-    <script src="JS/login.js" defer></script>
+                <!-- MENSAGEM DE ERRO (Com sua lógica de opacidade) -->
+                <p id="erro"></p>
+
+                <!-- BOTÃO ENTRAR E LINK DE CADASTRO -->
+                <input type="submit" id="entrar" value="Acessar Sistema">
+                
+                <div class="link-cadastro">
+                    <p class="cadastro">Não tem cadastro?</p>
+                    <a href="escolha_cadastro.html">Cadastre-se</a>
+                </div>
+                
+            </form>
+        </div>
+    </section>
+
+    <!-- LADO DIREITO: Identidade Visual -->
+    <section class="visual-side">
+        <div class="visual-content">
+            <h2>Sua jornada acadêmica, mais organizada.</h2>
+        </div>
+    </section>
+
+</main>
+
+<div id="toast-container"></div>
+<script src="JS/toast.js" defer></script>
+<script src="JS/login.js" defer></script>
 </body>
 </html>
-
-
-

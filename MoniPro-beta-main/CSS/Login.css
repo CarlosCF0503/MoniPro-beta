@@ -1,116 +1,107 @@
-*{
+/* ==============================================
+   RESET BÁSICO (Fonte Inter adicionada como você pediu)
+   ============================================== */
+* {
     margin: 0;
     padding: 0;
-    font-family: "Inter", sans-serif;
     box-sizing: border-box;
+    font-family: "Inter", sans-serif;
 }
 
-body{
-    background: linear-gradient(to top,#ffffff,#ACC8FF);
-    min-height: 100vh;
+body, html {
     width: 100%;
+    height: 100%;
+    background-color: #ffffff;
+}
+
+/* ==============================================
+   ESTRUTURA SPLIT SCREEN (A tela dividida)
+   ============================================== */
+.split-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Lado do Formulário */
+.form-side {
+    width: 45%;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 5px;
-    padding: 10px 0; /* Adiciona um respiro */
-}
-.logo{
-    height: 30vh;
-    max-height: 200px;
-}
-
-form {
-    height: auto;
-    background-color: #FFFAFA;
-    display: grid;
-    grid-template-areas: 
-    "email"
-    "senha"
-    "erro"
-    "profile-title" 
-    "profile"
-    "entrar"
-    "cadastro";
-    padding: 35px 60px;
-    border-radius: 15px;
-    font-size: 15px;
-    gap: 5px;
-    box-shadow: 0 0 100px 0 rgba(0, 0, 0, 0.25);
-    width: auto; /* Garante que o formulário possa encolher */
-    max-width: 520px; /* Define uma largura máxima */
-}
-
-
-form input{
-    border-radius: 15px;
-    width: 400px;
-    padding-left: 20px;
-    height: 50px;
-    border: 2px solid #1F4287;
-    font-size: 15px;
-}
-
-
-#bloco{
-    display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
+    padding: 2rem;
+}
+
+.form-container {
     width: 100%;
+    max-width: 420px;
 }
 
-.EmailArea, .SenhaArea {
-    margin-top: 15px;
-    margin-left: -25px;
-}
-
-.ErroArea{
-    grid-area: erro;
-    min-height: 20px;
-    color: #D8000C;
-    font-weight: bold;
-}
-#erro{
-    opacity: 0;
-    transition: opacity 0.3s ease-in-out;
-}
-#erro.aparecer{
-    opacity: 1;
-}
-
-.EntrarArea{
-    grid-area: entrar;
-}
-
-.CadastroArea{
-    grid-area: cadastro;
-    justify-content: center; /* Centraliza em telas maiores */
-    font-size: 18px;
-    gap: 10px;
-}
-
-.icone{
-    width: 50px;
+/* Lado Visual Colorido */
+.visual-side {
+    width: 55%;
+    background: linear-gradient(135deg, #4a90e2 0%, #071E3D 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    padding: 3rem;
     text-align: center;
 }
-.icone img{
-    transform: scale(70%);
+
+.visual-content h2 {
+    font-size: 2.5rem;
+    font-weight: 600;
+    opacity: 0.95;
+    max-width: 500px;
 }
 
-.sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
+/* ==============================================
+   TEXTOS E LOGO
+   ============================================== */
+.logo {
+    height: 100px;
+    margin-bottom: 2rem;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 }
-input:focus{
-    border: 2px solid #FFA500;
-    outline: none;
+
+.header-text {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.text1 {
+    color: #071E3D;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.header-text p {
+    color: #666;
+    font-size: 0.95rem;
+}
+
+/* ==============================================
+   SELETOR DE PERFIL (Sua lógica de rádio)
+   ============================================== */
+.profile-section {
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.profile-title {
+    font-weight: bold;
+    color: #071E3D;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.profile-selector {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
 }
 
 .profile-selector input[type="radio"] {
@@ -118,13 +109,14 @@ input:focus{
 }
 
 .btn-profile {
-    width: 150px;
+    flex: 1; /* Faz os botões dividirem o espaço por igual */
     height: 45px;
-    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border: 2px solid #071E3D;
-    border-radius: 10px;
-    text-align: center;
-    font-size: 16px;
+    border-radius: 8px; /* Padronizado com o novo design */
+    font-size: 15px;
     font-weight: bold;
     color: #071E3D;
     background-color: #FFF;
@@ -132,108 +124,156 @@ input:focus{
     transition: all 0.2s ease-in-out;
 }
 
+/* Efeito quando clica no Rádio Button */
 .profile-selector input[type="radio"]:checked + .btn-profile {
     background-color: #071E3D;
     color: white;
-    border-color: #071E3D;
 }
 
 .btn-profile:hover {
-    background-color: #ACC8FF;
+    background-color: #e0eaff; /* Azul clarinho sutil */
 }
 
-.profile-selector input[type="radio"]:checked + .btn-profile:hover {
-    background-color: #1F4287;
+/* ==============================================
+   INPUTS (Mesmo estilo padronizado da tela de Cadastro)
+   ============================================== */
+.input-group {
+    display: flex;
+    align-items: center;
+    background-color: #f0f4ff;
+    border: 2px solid #071E3D;
+    border-radius: 8px;
+    padding: 5px 15px;
+    height: 55px;
+    width: 100%;
+    margin-bottom: 15px;
+    transition: border-color 0.2s;
+}
+
+.input-group:focus-within {
+    border-color: #4a90e2;
+}
+
+.icone img {
+    width: 22px;
+    margin-right: 12px;
+    opacity: 0.7;
+    display: block;
+}
+
+.input-group input {
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 15px;
+    width: 100%;
+    color: #071E3D;
+}
+
+/* ==============================================
+   ERRO, BOTÕES E LINKS
+   ============================================== */
+#erro {
+    color: #D8000C;
+    font-weight: bold;
+    text-align: center;
+    min-height: 20px;
+    font-size: 14px;
+    margin-bottom: 10px;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+#erro.aparecer {
+    opacity: 1;
 }
 
 #entrar {
-    width: 200px;
-    padding: 0;
-    color: white;
+    width: 100%;
+    height: 55px;
     background-color: #071E3D;
+    color: white;
     border: none;
-    font-size: 20px;
-    transition: background-color 0.1s;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
     cursor: pointer;
-    margin-top: 15px;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
+    transition: background-color 0.3s;
 }
-#entrar:hover{
+
+#entrar:hover {
     background-color: #1F4287;
 }
 
-.profile-selector {
-    grid-area: profile;
-    gap: 10px;
+.link-cadastro {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    font-size: 0.95rem;
+    color: #666;
 }
 
-.profile-selector-title {
-    grid-area: profile-title;
+.link-cadastro a {
+    color: #1F4287;
     font-weight: bold;
-    color: #071E3D;
-    font-size: 16px;
-    margin-bottom: -5px; 
+    text-decoration: none;
 }
 
-/* --- Estilos para Telas Menores (Responsividade) --- */
-@media (max-width: 768px) {
-    body {
-        gap: 20px;
+.link-cadastro a:hover {
+    text-decoration: underline;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;
+}
+
+/* ==============================================
+   RESPONSIVIDADE (Celular)
+   ============================================== */
+@media (max-width: 900px) {
+    .split-layout {
+        flex-direction: column;
+    }
+    
+    .visual-side {
+        display: none;
     }
 
-    form {
-        width: 90%; /* Formulário ocupa 90% da tela */
-        padding: 20px;
-        box-shadow: none; /* Remove a sombra em telas menores */
-    }
-
-    form input {
-        width: 100%; /* Inputs ocupam 100% do espaço disponível */
-    }
-    
-    .EmailArea, .SenhaArea {
-        margin-left: -15px; /* Reduz o recuo */
-    }
-    
-    .CadastroArea {
-        flex-direction: column; /* Empilha o texto e o link */
-        gap: 5px;
-    }
-    
-    .btn-profile {
-        width: 120px; /* Botões de perfil menores */
-        font-size: 14px;
+    .form-side {
+        width: 100%;
+        min-height: 100vh;
+        padding: 2rem 1rem;
     }
 }
 
-/* ========================================================================= */
-/* --- ESTILOS PARA AS NOTIFICAÇÕES TOAST --- */
-/* ========================================================================= */
+/* ==============================================
+   O SEU TOAST ORIGINAL (Mantido 100% igual)
+   ============================================== */
 #toast-container {
-    position: fixed; /* Fica fixo na tela */
+    position: fixed;
     bottom: 25px;
     right: 25px;
-    background-color: #071E3D; /* Cor padrão */
+    background-color: #071E3D;
     color: white;
     padding: 16px 24px;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    z-index: 1000; /* Garante que fique acima de outros elementos */
-    
-    /* Animação */
-    transform: translateX(200%); /* Começa fora da tela */
+    z-index: 1000;
+    transform: translateX(200%);
     transition: transform 0.4s ease-in-out;
 }
 
 #toast-container.show {
-    transform: translateX(0); /* Move para dentro da tela */
+    transform: translateX(0);
 }
 
-/* Modificadores de cor para sucesso e erro */
 #toast-container.success {
-    background-color: #28a745; /* Verde */
+    background-color: #28a745;
 }
 
 #toast-container.error {
-    background-color: #D8000C; /* Vermelho */
+    background-color: #D8000C;
 }

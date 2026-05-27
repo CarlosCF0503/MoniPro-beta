@@ -1,312 +1,292 @@
-.perfil_informacao {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -47%);
-    width: 500px;
-    max-width: 95%;
-    padding: 20px;
-    
+/* ==============================================
+   ESTRUTURA BASE DO DASHBOARD
+   ============================================== */
+body {
+    background-color: #f4f7f6; /* Fundo cinza do dashboard */
+    font-family: 'Inter', sans-serif;
+}
+
+.dashboard-container {
+    width: 100%;
+    max-width: 1200px; /* Alinhado com o dashboard de disciplinas */
+    margin: 0 auto;
+    padding: 40px 30px;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 80px);
+}
+
+/* CABEÇALHO DA PÁGINA */
+.page-header {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.title-area h1 {
+    color: #071E3D;
+    font-size: 28px;
+    margin-bottom: 5px;
+}
+
+.title-area p {
+    color: #64748b;
+    font-size: 15px;
+}
+
+/* ==============================================
+   GRID DO PERFIL (A mágica da divisão)
+   ============================================== */
+.perfil-grid {
+    display: grid;
+    grid-template-columns: 350px 1fr; /* Esquerda fixa, direita flexível */
+    gap: 30px;
+    align-items: start;
+}
+
+/* ESTILO DOS CARTOES BRANCOS */
+.perfil-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    border: 1px solid #e2e8f0;
+}
+
+/* ==============================================
+   COLUNA ESQUERDA: IDENTIDADE
+   ============================================== */
+.identity-card {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
-
-    max-height: 90vh; /* Define a altura máxima como 90% da altura da tela */
-    overflow-y: auto;   /* Adiciona um scroll vertical SE o conteúdo for maior */
-
-    background-color: #FFFAFA;
-    color: #071E3D;
-    border-radius: 20px;
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
-    
-    transition: left 0.3s ease-in-out;
+    text-align: center;
 }
 
-.perfil_informacao.mudar {
-    left: 30%;
-}
-
-.perfil_informacao > img {
-    width: 200px;
+.foto-area img {
+    width: 160px;
+    height: 160px;
+    object-fit: cover;
     border-radius: 50%;
-    border: 5px solid #071E3D;
+    border: 4px solid #4a90e2; /* Cor mais moderna que o azul escuro duro */
+    padding: 4px;
+    margin-bottom: 15px;
 }
 
-.perfil_informacao h1 {
-    margin-top: 10px;
+.identity-card h2 {
+    color: #071E3D;
+    font-size: 22px;
+    margin-bottom: 10px;
 }
 
-.perfil_informacao > p {
+/* Badges (Moedas e Tipo de Usuário) */
+.badge-area {
     display: flex;
     align-items: center;
-    font-size: 18px;
+    gap: 15px;
+    margin-bottom: 20px;
 }
 
-.perfil_informacao > p img {
-    width: 25px;
-    margin-left: 5px;
+.badge-tipo {
+    background-color: #e0eaff;
+    color: #071E3D;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
 }
 
-.linha {
-    width: 90%;
-    height: 3px;
+/* Se for monitor, muda a cor do badge */
+.monitor-color {
     background-color: #071E3D;
-    border-radius: 15px;
-    margin: 10px 0;
+    color: #ffffff;
 }
 
+.badge-moedas {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 16px;
+    color: #FFA500;
+}
+
+.badge-moedas img {
+    width: 20px;
+}
+
+.divisor {
+    width: 100%;
+    border: none;
+    border-top: 1px solid #e2e8f0;
+    margin: 20px 0;
+}
+
+/* Informações Pessoais (Email, matricula) */
 .informacoes {
     width: 100%;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
     gap: 15px;
-    padding: 0 10%;
 }
 
-.informacoes span {
+.info-item {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
+    text-align: left;
     width: 100%;
+    color: #334155;
+    font-size: 14px;
 }
 
-.informacoes span .icone {
-    width: 25px; 
-    flex-shrink: 0;
-}
-
-.informacoes span .icone img {
-    width: 100%; 
-}
-
-.linha-interativa {
-    position: relative;
-}
-
-#abrir_c {
-    position: absolute;
-    right: 0;
-    padding: 5px 10px;
-    background-color: #071E3D;
-    color: white;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-#abrir_c:hover {
-    background-color: #1F4287;
-    transform: scale(1.05);
-}
-
-#area_certificados {
-    position: fixed;
-    top: 27%;
-    left: 70%;
-    transform: translate(-50%, -50%) scale(0); 
-    
-    width: 500px;
-    max-width: 95%;
-    padding: 20px;
-    
+.info-item .icone {
+    width: 36px;
+    height: 36px;
+    background-color: #f0f4ff;
+    border-radius: 8px;
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-
-    background-color: #FFFAFA;
-    color: #071E3D;
-    border-radius: 20px;
-    
-    visibility: hidden;
-    transition: transform 0.3s ease, visibility 0.3s;
-}
-
-#area_certificados.aparecer {
-    transform: translate(-50%, -50%) scale(1);
-    visibility: visible;
-}
-
-
-.titulo{
-    display: flex;
-    align-items: center;
-    margin: 5px;
-    margin-bottom: 15px;
-}
-
-#certificado{
-    height: auto; /* Altura automática para caber o texto */
-    background-color:beige;
-    width: 90%;
-    display: flex;
-    padding: 10px;
-    align-items: center; /* Centraliza verticalmente */
-    justify-content: space-between;
-    border-radius: 15px;
-    gap: 10px;
-}
-#certificado .icone{
-    height: 40px;
-    width: 40px;
-    flex-shrink: 0;
-}
-
-#certificado .icone img{
-    height: 100%;
-}
-
-#certificado span{
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
     justify-content: center;
-    flex-grow: 1; /* Permite que o texto ocupe o espaço restante */
-}
-
-#certificado a img{
-    width: 100%;
-}
-
-#certificado a{
-    width: 30px;
-    height: 30px;
+    align-items: center;
     flex-shrink: 0;
 }
 
-/* ========================================================================= */
-/* --- NOVOS ESTILOS PARA LISTAS DE PERFIL --- */
-/* ========================================================================= */
-.lista-container {
-    width: 100%;
-    padding: 0 10%;
-    margin-top: 10px;
+.info-item .icone img {
+    width: 18px;
+    opacity: 0.8;
 }
 
-.lista-container h2 {
-    font-size: 20px;
+/* ==============================================
+   COLUNA DIREITA: LISTAS (Monitorias)
+   ============================================== */
+.lista-header h2 {
+    font-size: 18px;
     color: #071E3D;
-    margin-bottom: 10px;
-    border-bottom: 2px solid #ddd;
-    padding-bottom: 5px;
+    margin-bottom: 20px;
+    font-weight: 600;
 }
 
 .lista-itens {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    max-height: 200px; /* Adiciona uma altura máxima com scroll */
+    gap: 12px;
+    /* Adiciona scroll apenas se houver muitas monitorias */
+    max-height: 500px; 
     overflow-y: auto;
+    padding-right: 5px; /* Espaço pro scrollbar */
 }
 
+/* Estilo do item gerado pelo JS */
 .lista-item {
-    background-color: #f4f4f4;
-    padding: 10px;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 15px;
     border-radius: 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 15px;
+    transition: background-color 0.2s;
 }
 
-.lista-item p {
-    margin: 0;
-    font-size: 14px;
-}
-.lista-item strong {
-    font-size: 16px;
-    color: #071E3D;
-}
-
-.status-pendente {
-    color: #FFA500;
-    font-weight: bold;
-}
-.status-realizado {
-    color: #28a745;
-    font-weight: bold;
-}
-
-/* ========================================================================= */
-/* --- NOVOS ESTILOS PARA BOTÃO DE CANCELAR --- */
-/* ========================================================================= */
-.lista-item {
-    background-color: #f4f4f4;
-    padding: 10px;
-    border-radius: 8px;
-    display: flex;
-    flex-wrap: wrap; /* Permite quebrar a linha em telas pequenas */
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px; /* Adiciona espaço entre os itens */
-}
-
-.lista-item-info {
-    display: flex;
-    flex-direction: column;
+.lista-item:hover {
+    background-color: #f1f5f9;
 }
 
 .lista-item-info p {
-    margin: 0;
-    font-size: 14px;
+    margin: 0 0 5px 0;
+    font-size: 13px;
+    color: #64748b;
 }
+
 .lista-item-info strong {
     font-size: 16px;
     color: #071E3D;
 }
 
+/* Cores de status e botão cancelar */
+.status-pendente { color: #FFA500; font-weight: bold; }
+.status-realizado { color: #28a745; font-weight: bold; }
+
 .btn-cancelar {
-    padding: 5px 10px;
-    font-size: 12px;
-    font-weight: bold;
-    color: white;
-    background-color: #FF0000; /* Vermelho do botão "Não" */
-    border: none;
-    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #D8000C;
+    background-color: #ffeef0; /* Fundo vermelho bem claro */
+    border: 1px solid #ffdce0;
+    border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.2s, transform 0.1s;
+    transition: all 0.2s;
 }
 
 .btn-cancelar:hover {
     background-color: #D8000C;
-}
-.btn-cancelar:active {
-    transform: scale(0.95);
+    color: #ffffff;
 }
 
-
-
-/* --- Estilos para Telas Menores (Responsividade) --- */
-@media (max-width: 768px) {
-    .perfil_informacao,
-    #area_certificados {
-        position: static; /* Remove o posicionamento fixo */
-        transform: none; /* Reseta a transformação */
-        width: 90%;
-        margin: 20px auto; /* Centraliza e adiciona margem */
-    }
-    
-    .perfil_informacao.mudar {
-        left: 50%; /* Reseta a posição do 'mudar' */
-    }
-    
-    #area_certificados {
-        visibility: visible; /* Sempre visível, mas controlado pelo JS */
-        display: none; /* Começa escondido */
-    }
-    
-    #area_certificados.aparecer {
-        display: flex; /* Aparece quando a classe é adicionada */
-        transform: none; /* Reseta a transformação de 'aparecer' */
-    }
-    
-    .perfil_informacao > img {
-        width: 150px; /* Imagem de perfil menor */
-    }
-    
-    #certificado span {
-        transform: none; /* Reseta o 'translateX' */
-    }
-
+/* ==============================================
+   CERTIFICADOS (Modal/Overlay)
+   ============================================== */
+.linha-interativa {
+    justify-content: space-between;
 }
 
+.btn-pequeno {
+    background-color: #071E3D;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-pequeno:hover {
+    background-color: #1F4287;
+}
+
+/* Substituindo a lógica antiga de mover o perfil para o lado. 
+   Agora certificados abrem como um modal flutuante bonito centralizado */
+#area_certificados {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9); 
+    width: 90%;
+    max-width: 600px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+#area_certificados.aparecer {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ==============================================
+   RESPONSIVIDADE (Celular e Tablet)
+   ============================================== */
+@media (max-width: 900px) {
+    .perfil-grid {
+        grid-template-columns: 1fr; /* Quebra em apenas 1 coluna */
+    }
+
+    .lista-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .btn-cancelar {
+        width: 100%; /* Botão ocupa tudo no celular */
+        margin-top: 10px;
+    }
+}

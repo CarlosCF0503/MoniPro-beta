@@ -6,88 +6,85 @@
     <link rel="stylesheet" href="CSS/base.css">
     <link rel="stylesheet" href="CSS/escolha_disciplina.css">
     <link rel="icon" href="IMG/MoniPro-mini.png">
-    <title>Base - MoniPro</title>
+    <title>Disciplinas - MoniPro</title>
 </head>
 <body>
-    
-    <header>
-        <div class="logo">
-            <a href="base.html">
-                <img src="IMG/MoniPro_logo-menor.png" alt="Logo MoniPro" >
-            </a>
-        </div>
-        
 
-        <div class="header-actions">
-            <div class="header-icon perfil-link">
-                <img src="IMG/Icone_Perfil.png" alt="Ver perfil do usuário">
-            </div>
-
-            <div id="menu" class="header-icon">
-                <img src="IMG/Menu_hamburguer.png" alt="Abrir menu de navegação">
-            </div>
-        </div>
-    </header>
-
-    <div id="overlay"></div>
-
-    <nav id="menuLateral">
-        <div class="logo_fechar">
-            <img src="IMG/Logo.png" alt="Logo completo MoniPro">
-            <div id="menu_fechar">
-                <img src="IMG/Icone_menu_fechar.png" alt="Fechar menu">
-            </div>   
-        </div>
-
-
-        <div class="item perfil-link">
-            <div class="icone">
-                <img src="IMG/Icone_perfil_menu.png" alt="Ícone de perfil">
-            </div>
-            <p>Perfil</p>
-        </div>
-
-        <div class="item monitoria-link">
-            <div class="icone">
-                <img src="IMG/logo_monitoria.png" alt="Ícone de perfil">
-            </div>
-            <p>Monitoria</p>
-        </div>
-
-        <div id="sair" class="item">
-            <div class="icone">
-                <img src="IMG/Icone_sair.png" alt="Ícone de porta">
-            </div>
-            <p>Sair</p>
-        </div>
-    </nav>
-
-    <div id="aviso_sair">
-        <div class="icone_sair">
-            <img src="IMG/Icone_aviso.png" alt="Ícone de aviso">
-            <p>Tem certeza que quer sair?</p>
-        </div>
-        <div class="areaSim">
-            <button id="btnSim">Sim</button>
-        </div>
-        <div class="areaNao">
-            <button id="btnNao">Não</button>
-        </div>
+<!-- SEU HEADER E NAV ORIGINAIS (Intactos) -->
+<header>
+    <div class="logo">
+        <a href="base.html"><img src="IMG/MoniPro_logo-menor.png" alt="Logo MoniPro"></a>
     </div>
+    <div class="header-actions">
+        <div class="header-icon perfil-link"><img src="IMG/Icone_Perfil.png" alt="Ver perfil"></div>
+        <div id="menu" class="header-icon"><img src="IMG/Menu_hamburguer.png" alt="Abrir menu"></div>
+    </div>
+</header>
 
-    <main>
-        <div class="escolha">
-            <h1>Escolha uma disciplina para a monitoria</h1>
-            <div class="disciplinas">
-                <p>A carregar disciplinas...</p>
+<div id="overlay"></div>
+
+<nav id="menuLateral">
+    <div class="logo_fechar">
+        <img src="IMG/Logo.png" alt="Logo MoniPro">
+        <div id="menu_fechar"><img src="IMG/Icone_menu_fechar.png" alt="Fechar menu"></div>
+    </div>
+    <div class="item perfil-link">
+        <div class="icone"><img src="IMG/Icone_perfil_menu.png" alt="Perfil"></div>
+        <p>Perfil</p>
+    </div>
+    <div class="item monitoria-link">
+        <div class="icone"><img src="IMG/logo_monitoria.png" alt="Monitoria"></div>
+        <p>Monitoria</p>
+    </div>
+    <div id="sair" class="item">
+        <div class="icone"><img src="IMG/Icone_sair.png" alt="Sair"></div>
+        <p>Sair</p>
+    </div>
+</nav>
+
+<div id="aviso_sair">
+    <div class="icone_sair">
+        <img src="IMG/Icone_aviso.png" alt="Ícone de aviso">
+        <p>Tem certeza que quer sair?</p>
+    </div>
+    <div class="areaSim"><button id="btnSim">Sim</button></div>
+    <div class="areaNao"><button id="btnNao">Não</button></div>
+</div>
+
+<!-- ==========================================
+     NOVO DASHBOARD 
+     ========================================== -->
+<main class="dashboard-wrapper">
+    <div class="dashboard-container">
+        
+        <!-- Cabeçalho -->
+        <div class="page-header">
+            <div class="title-area">
+                <h1>Minhas Disciplinas</h1>
+                <p>Selecione uma disciplina para gerenciar a monitoria.</p>
+            </div>
+
+            <!-- Busca -->
+            <div class="search-area">
+                <div class="search-box">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" placeholder="Buscar disciplina...">
+                </div>
             </div>
         </div>
-    </main>
 
-    <div id="toast-container"></div>
-    <script src="JS/toast.js" defer></script>
-    <script src="JS/base.js" defer></script> 
-    <script src="JS/escolha_disciplina.js" defer></script>
+        <!-- CLASSE CORRIGIDA: O seu JS precisa dessa div exatamente com o class="disciplinas" -->
+        <div class="disciplinas">
+            <p class="loading-text">A carregar disciplinas...</p>
+        </div>
+
+    </div>
+</main>
+
+<div id="toast-container"></div>
+<script src="JS/toast.js"></script>
+<script src="JS/api.js"></script>
+<script src="JS/base.js"></script>
+<script src="JS/escolha_disciplina.js"></script>
 </body>
 </html>
-

@@ -1,119 +1,166 @@
-.escolha {
-    position: fixed;
-    background-color: #FFFAFA;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    
-    /* ATUALIZAÇÃO: A largura agora é 90% da tela, com um máximo */
-    width: 90%;
-    max-width: 900px; /* O limite máximo para 5 colunas */
-    
-    height: auto;
-    max-height: 90vh; /* O card não passa de 90% da altura da tela */
-    
-    border-radius: 15px;
-    display: grid;
-    grid-template-areas: 
-    "titulo"
-    "disciplinas";
-    grid-template-rows: auto 1fr; /* Título automático, grelha preenche o resto */
-    padding: 20px;
-    box-shadow: 0 10px 20px 0 rgba(0, 0, 0, 0.25);
+/* ==============================================
+   CORREÇÃO DE CONFLITOS COM O BASE.CSS
+   ============================================== */
+body {
+    background-color: #f4f7f6; 
 }
-.escolha h1{
-    grid-area: titulo;
-    color: #071E3D;
+
+/* Isso impede que a tela fique espremida no meio e empurra pra baixo do header */
+main.dashboard-wrapper {
+    display: block !important; 
     width: 100%;
+    min-height: 100vh;
+    padding-top: 80px; /* Espaço para o header não cobrir o título */
+}
+
+/* ==============================================
+   ESTRUTURA DO DASHBOARD
+   ============================================== */
+.dashboard-container {
+    width: 100%;
+    max-width: 1300px; 
+    margin: 0 auto;    
+    padding: 40px 30px;
+}
+
+/* ==============================================
+   CABEÇALHO DA PÁGINA (Título e Busca)
+   ============================================== */
+.page-header {
     display: flex;
-    justify-content: center;
-    text-align: center;
-    font-size: 32px;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 30px;
     padding-bottom: 20px;
-}
-
-/* ========================================================================= */
-/* --- ATUALIZAÇÃO PRINCIPAL DA GRELHA DE DISCIPLINAS --- */
-/* ========================================================================= */
-.disciplinas {
-    grid-area: disciplinas;
-    display: grid; 
-    
-    /* ATUALIZAÇÃO: Grelha Responsiva Automática 
-      - Tenta criar colunas de 150px (minmax).
-      - 'auto-fit' cria quantas colunas couberem no espaço.
-      - Em telas largas, isto criará 5 colunas. Em telas médias, 4 ou 3.
-      - NUNCA criará scroll horizontal.
-    */
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    
-    /* Define a altura de cada linha */
-    grid-auto-rows: 150px;
-
-    /* ATUALIZAÇÃO: Define altura máxima para 2 linhas visíveis */
-    /* (Altura do item 150px * 2) + (1 vão de 20px) = 320px */
-    max-height: 380px; 
-    
-    /* ATUALIZAÇÃO: Adiciona o scroll vertical se passar da altura máxima */
-    overflow-y: auto; 
-    
+    border-bottom: 1px solid #e2e8f0;
+    flex-wrap: wrap;
     gap: 20px;
-    padding: 10px;
-    padding-right: 15px; /* Espaço para a barra de scroll */
 }
-/* ========================================================================= */
 
-.disciplinas .opcao {
-    box-sizing: border-box;
-    border: 5px solid #1F4287;
-    width: 100%; /* Ocupa 100% da coluna da grelha */
-    height: 150px;
-    padding: 10px 20px;
-    border-radius: 15px;
-    
+.title-area h1 {
+    color: #071E3D;
+    font-size: 28px;
+    margin-bottom: 5px;
+}
+
+.title-area p {
+    color: #64748b;
+    font-size: 15px;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 8px 15px;
+    width: 300px;
+}
+
+.search-box svg {
+    color: #94a3b8;
+    margin-right: 10px;
+}
+
+.search-box input {
+    border: none;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    font-size: 14px;
+    color: #334155;
+}
+
+/* ==============================================
+   GRID DE DISCIPLINAS (Classe corrigida para o JS)
+   ============================================== */
+.disciplinas {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 25px;
+    width: 100%;
+}
+
+.loading-text, .disciplinas > p {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: #64748b;
+    padding: 40px;
+    font-size: 16px;
+}
+
+/* ==============================================
+   ESTILO DO CARD INJETADO PELO JS
+   ============================================== */
+.disciplina-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    overflow: hidden; 
+    text-decoration: none;
+    color: #334155;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    border: 1px solid #e2e8f0;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     display: flex;
     flex-direction: column;
-    align-items: center;
+}
+
+.disciplina-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* A faixa colorida que guarda o ícone */
+.icone-disciplina {
+    height: 100px; 
+    width: 100%;
+    background: linear-gradient(135deg, #4a90e2 0%, #071E3D 100%);
+    display: flex;
     justify-content: center;
-    gap: 10px;
+    align-items: center;
+}
 
+/* Transforma o ícone para branco */
+.icone-disciplina img {
+    height: 40px;
+    width: auto;
+    filter: brightness(0) invert(1);
+    opacity: 0.9;
+}
+
+/* Título gerado pelo JS */
+.disciplina-card h2 {
+    padding: 20px;
+    font-size: 16px;
+    font-weight: 600;
     color: #071E3D;
-    font-size: 28px; /* Ajustado para caber em 150px */
-    text-decoration: none;
-
-    transition: transform 0.3s ease, background-color 0.3s ease;
+    text-align: left;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;  
+    overflow: hidden;
 }
 
-.disciplinas .opcao img {
-    transition: transform 0.3s ease;
-    max-height: 70px; 
-}
-
-.disciplinas .opcao:hover {
-    background-color: #ACC8FF;
-    transform: translateY(-10px); 
-}
-
-.disciplinas .opcao:hover img {
-    transform: scale(1.1);
-}
-
-/* --- Otimização para Celular --- */
+/* ==============================================
+   RESPONSIVIDADE (Tablets e Celulares)
+   ============================================== */
 @media (max-width: 768px) {
-    .escolha h1 {
-        font-size: 24px;
+    main.dashboard-wrapper {
+        padding-top: 60px; /* Ajuste para celular */
     }
-}
-
-@media (max-width: 600px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .search-box {
+        width: 100%; 
+    }
+    .dashboard-container {
+        padding: 20px 15px;
+    }
     .disciplinas {
-        /* Em telas pequenas, força 2 colunas */
-        grid-template-columns: repeat(2, 1fr);
-        max-height: 50vh; /* Permite mais scroll em telas verticais */
-    }
-    
-    .disciplinas .opcao {
-        height: 140px;
-        font-size: 24px;
+        grid-template-columns: 1fr; /* 1 card por linha no celular */
     }
 }

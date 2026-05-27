@@ -1,128 +1,186 @@
-/* Estilos para o container principal da página de escolha */
-.escolha-container {
-    /* Herda o alinhamento do body, mas podemos garantir aqui também */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-    padding: 20px 0; /* Adiciona um respiro */
+/* ==============================================
+   RESET BÁSICO E ESTRUTURA SPLIT SCREEN
+   (Mesma base da tela de Cadastro para consistência)
+   ============================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* Estiliza o card central onde ficam as opções */
-.card-escolha {
+body, html {
+    width: 100%;
+    height: 100%;
+    background-color: #ffffff;
+}
+
+.split-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.form-side {
+    width: 45%;
     display: flex;
     flex-direction: column;
-    align-items: center;
     justify-content: center;
-    gap: 5px; /* Espaçamento entre os elementos internos */
-    padding: 20px 50px;
-    background-color: rgba(255, 255, 255, 0.8); /* Fundo branco semi-transparente para destacar */
-    border-radius: 20px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    align-items: center;
+    padding: 2rem;
+    background-color: #ffffff;
 }
 
-/* Título principal dentro do card */
-.card-escolha h1 {
-    font-size: 40px;
+.form-container {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centraliza tudo dentro da coluna esquerda */
+}
+
+.visual-side {
+    width: 55%;
+    background: linear-gradient(135deg, #4a90e2 0%, #071E3D 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    padding: 3rem;
+    text-align: center;
+}
+
+.visual-content h2 {
+    font-size: 2.5rem;
+    font-weight: 600;
+    opacity: 0.95;
+    max-width: 500px;
+}
+
+/* ==============================================
+   TEXTOS E LOGO
+   ============================================== */
+.logo {
+    height: 100px;
+    margin-bottom: 2rem;
+}
+
+.header-text {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.text1 {
     color: #071E3D;
-    margin-bottom: 10px; /* Adiciona um espaço extra abaixo do título */
-    text-align: center; /* Garante a centralização em telas menores */
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
 }
 
-/* Container para as duas opções (Aluno e Monitor) */
+.header-text p {
+    color: #666;
+    font-size: 1rem;
+}
+
+/* ==============================================
+   BOTÕES DE ESCOLHA DE PERFIL
+   ============================================== */
 .opcoes {
     display: flex;
-    gap: 70px;
+    justify-content: center;
+    gap: 20px; /* Espaço entre os botões */
+    margin-bottom: 2.5rem;
+    width: 100%;
 }
 
-/* Estilo individual para cada link de opção */
-.opcoes .opcao {
-    box-sizing: border-box;
-    border: 5px solid #1F4287;
-    width: 200px;
-    height: 200px;
-    padding: 10px 20px;
-    border-radius: 15px;
-    
+.opcao {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px; /* Espaço entre a imagem e o texto */
-
+    width: 160px;
+    height: 160px;
+    background-color: #f0f4ff;
+    border: 2px solid #071E3D;
+    border-radius: 12px; /* Cantos um pouco menos arredondados para web */
+    text-decoration: none;
     color: #071E3D;
-    font-size: 35px;
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Efeito ao passar o mouse */
+.opcao:hover {
+    transform: translateY(-5px); /* Sobe um pouquinho (mais elegante que -10px) */
+    background-color: #e0eaff;
+    box-shadow: 0 8px 15px rgba(7, 30, 61, 0.1);
+}
+
+.opcao img { 
+    width: 60px; 
+    margin-bottom: 12px; 
+    opacity: 0.9;
+}
+
+.opcao span { 
+    font-size: 18px; 
+    font-weight: 700; 
+}
+
+/* ==============================================
+   LINK VOLTAR
+   ============================================== */
+.link-voltar {
+    margin-top: 1rem;
+}
+
+.link-voltar a {
+    color: #666;
+    font-weight: 600;
     text-decoration: none;
-
-    /* Transições suaves para a interação */
-    transition: transform 0.3s ease, background-color 0.3s ease;
+    font-size: 1rem;
+    transition: color 0.2s;
 }
 
-.opcoes .opcao img {
-    transition: transform 0.3s ease;
-    max-width: 80px; /* Garante que a imagem não fique muito grande */
+.link-voltar a:hover { 
+    color: #071E3D;
+    text-decoration: underline; 
 }
 
-/* Efeito de hover para as opções */
-.opcoes .opcao:hover {
-    background-color: #ACC8FF;
-    transform: translateY(-10px); /* Efeito de "levantar" o card */
-}
-
-.opcoes .opcao:hover img {
-    transform: scale(1.1); /* Aumenta um pouco a imagem */
-}
-
-/* Botão de "Voltar" estilizado a partir de um link */
-.btn-voltar {
-    width: 225px;
-    height: 50px; /* Altura padrão de botão */
-    padding: 0;
-    border-radius: 15px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
+/* ==============================================
+   RESPONSIVIDADE (Celular)
+   ============================================== */
+@media (max-width: 900px) {
+    .split-layout {
+        flex-direction: column;
+    }
     
-    color: white;
-    background-color: #071E3D;
-    border: none;
+    .visual-side {
+        display: none;
+    }
 
-    font-size: 25px;
-    text-decoration: none;
+    .form-side {
+        width: 100%;
+        min-height: 100vh;
+        padding: 2rem 1rem;
+    }
+}
+
+/* Adaptação dos botões para telas muito pequenas */
+@media (max-width: 400px) {
+    .opcoes { 
+        flex-direction: column; 
+        align-items: center; 
+    }
     
-    transition: background-color 0.2s;
-    cursor: pointer;
-    margin-top: 15px; /* Espaço acima do botão */
-}
-
-.btn-voltar:hover {
-    background-color: #1F4287;
-}
-
-
-/* ========================================================================= */
-/* --- Estilos para Telas Menores (Responsividade) --- */
-/* ========================================================================= */
-@media (max-width: 768px) {
-    .card-escolha {
-        width: 90%;
-        padding: 20px 10px;
-        gap: 20px;
+    /* Transforma os quadrados em retângulos horizontais no celular */
+    .opcao  { 
+        width: 100%; 
+        max-width: 280px; 
+        height: 90px; 
+        flex-direction: row; 
+        gap: 20px; 
     }
-
-    .card-escolha h1 {
-        font-size: 28px; /* Reduz o tamanho do título */
-    }
-
-    .opcoes {
-        flex-direction: column; /* Empilha as opções na vertical */
-        gap: 20px; /* Reduz o espaçamento entre elas */
-    }
-
-    .opcoes .opcao {
-        width: 180px; /* Reduz o tamanho dos cards de opção */
-        height: 180px;
-        font-size: 28px;
+    
+    .opcao img { 
+        margin-bottom: 0; 
+        width: 40px; 
     }
 }
