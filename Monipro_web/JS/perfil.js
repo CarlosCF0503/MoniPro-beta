@@ -49,20 +49,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         const data = await chamadaApi('/perfil');
 
-        if (!data.erro && data.user) {
-            document.getElementById('nomeUsuario').textContent     = data.user.nome_completo || 'Utilizador';
-            document.getElementById('emailUsuario').textContent    = data.user.email || '';
+        if (data.success && data.user) {
+            document.getElementById('nomeUsuario').textContent      = data.user.nome_completo || 'Utilizador';
+            document.getElementById('emailUsuario').textContent     = data.user.email || '';
             document.getElementById('matriculaUsuario').textContent = data.user.matricula || '';
 
             const tipo = String(data.user.tipo_usuario);
             document.getElementById('tipoUsuario').textContent = tipo.charAt(0).toUpperCase() + tipo.slice(1);
         } else {
-            // Se der erro 404 ou 500, o toast vai mostrar o motivo real!
-            if (typeof showToast === 'function') showToast(data.mensagem || data.erro || 'Erro ao carregar perfil.', 'error');
-            console.error("Erro detalhado do servidor:", data);
+            // Exibe a mensagem real retornada pelo servidor (erro 401, 404, 500, etc.)
+            const msgErro = data.mensagem || data.erro || 'Erro ao carregar perfil.';
+            if (typeof showToast === 'function') showToast(msgErro, 'error');
+            console.error('Erro detalhado do servidor:', data);
+
+            // Se token inválido/expirado, redireciona para login
+            if (data.statusHttp === 401) {
+                localStorage.removeItem('monipro_token');
+                setTimeout(() => { window.location.href = 'index.html'; }, 1500);
+            }
         }
     } catch (error) {
-        if (typeof showToast === 'function') showToast('Falha na comunicação com o servidor.', 'error');
+        // Erro de REDE (servidor offline, CORS, sem internet)
+        const msg = error.message || 'Falha na comunicação com o servidor.';
+        if (typeof showToast === 'function') showToast(msg, 'error');
+        console.error('Erro de rede ao carregar perfil:', error);
     }
 
     // ==========================================
@@ -196,10 +206,11 @@ async function handleSairMonitoria(agendamentoId, itemElement) {
     try {
         const data = await chamadaApi(`/agendamentos/${agendamentoId}`, { method: 'DELETE' });
         if (!data.erro && data.success) {
-            if (typeof showToast === 'function') showToast(data.message || 'Cancelado com sucesso', 'success');
+            // Backend retorna 'mensagem' (pt), não 'message'
+            if (typeof showToast === 'function') showToast(data.mensagem || data.message || 'Cancelado com sucesso', 'success');
             itemElement.remove();
         } else {
-            if (typeof showToast === 'function') showToast(data.mensagem || data.message || 'Erro ao cancelar.', 'error');
+            if (typeof showToast === 'function') showToast(data.mensagem || data.message || data.erro || 'Erro ao cancelar.', 'error');
         }
     } catch (error) {
         if (typeof showToast === 'function') showToast('Erro de rede.', 'error');
