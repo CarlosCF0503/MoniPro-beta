@@ -1,37 +1,133 @@
-/* CSS/cadastro.css */
+/* ==============================================
+   RESET BÁSICO (Retira margens nativas do browser)
+   ============================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    background-color: #ffffff; /* Fundo limpo, cara de site moderno */
+}
+
+/* ==============================================
+   ESTRUTURA SPLIT SCREEN (A mágica da divisão)
+   ============================================== */
+.split-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* LADO ESQUERDO: Formulário */
+.form-side {
+    width: 45%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    background-color: #ffffff;
+}
+
+.form-container {
+    width: 100%;
+    max-width: 420px; /* Evita que o formulário estique na tela larga */
+}
+
+/* LADO DIREITO: A parte visual/colorida */
+.visual-side {
+    width: 55%;
+    /* Usei os tons de azul do seu CSS (#1F4287 e #071E3D) para o degradê */
+    background: linear-gradient(135deg, #4a90e2 0%, #071E3D 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    padding: 3rem;
+    text-align: center;
+}
+
+.visual-content h2 {
+    font-size: 2.5rem;
+    font-weight: 600;
+    opacity: 0.95;
+    max-width: 500px;
+}
+
+/* ==============================================
+   AJUSTES DO CABEÇALHO DO FORMULÁRIO E LOGO
+   ============================================== */
+.logo {
+    height: 100px;
+    margin-bottom: 2rem;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.header-text {
+    text-align: center;
+    margin-bottom: 2rem;
+}
 
 .text1 {
     color: #071E3D;
-    text-align: center;
-    margin-bottom: 10px;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
 }
 
+.header-text p {
+    color: #666;
+    font-size: 0.95rem;
+}
+
+/* ==============================================
+   SEU CSS ORIGINAL DOS INPUTS (Mantido e ajustado espaçamento)
+   ============================================== */
 .input-group {
     display: flex;
     align-items: center;
     background-color: #f0f4ff;
     border: 2px solid #071E3D;
-    border-radius: 10px;
+    border-radius: 8px; /* Deixei levemente menos arredondado (estava 10) para ficar mais web */
     padding: 5px 15px;
     height: 55px;
     width: 100%;
+    margin-bottom: 15px; /* Adicionado para dar espaço entre os inputs */
     position: relative;
     transition: border-color 0.2s;
 }
 
-.input-group:focus-within { border-color: #4a90e2; }
+.input-group:focus-within { 
+    border-color: #4a90e2; 
+}
+
+/* Ajuste nos seus ícones das imagens dentro do input */
+.icone img {
+    width: 22px;
+    margin-right: 12px;
+    opacity: 0.7;
+    display: block;
+}
 
 .input-group input {
     border: none;
     background: transparent;
     outline: none;
-    font-size: 16px;
+    font-size: 15px;
     width: 100%;
     color: #071E3D;
 }
 
-.input-group-senha { padding-right: 50px; }
+.input-group-senha { 
+    padding-right: 50px; 
+}
 
+/* SEU CSS DO OLHO DE SENHA */
 .olho {
     position: absolute;
     right: 12px;
@@ -52,11 +148,38 @@
 .olho:hover { opacity: 1; }
 .olho svg { display: block; pointer-events: none; }
 
+/* O SEU BOTÃO CADASTRAR (Adicionei estilo para ele pois não estava no seu CSS) */
+#entrar {
+    width: 100%;
+    height: 55px;
+    background-color: #071E3D;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.3s;
+}
+
+#entrar:hover {
+    background-color: #1F4287;
+}
+
+#entrar:disabled { 
+    opacity: 0.6; 
+    cursor: not-allowed; 
+}
+
+/* LINK VOLTAR */
 .link-voltar {
     display: flex;
     justify-content: center;
     gap: 5px;
-    margin-top: 10px;
+    margin-top: 20px;
+    font-size: 0.95rem;
+    color: #666;
 }
 
 .link-voltar a {
@@ -65,11 +188,11 @@
     text-decoration: none;
 }
 
-.link-voltar a:hover { text-decoration: underline; }
+.link-voltar a:hover { 
+    text-decoration: underline; 
+}
 
-/* Botão submit do formulário de cadastro */
-#entrar:disabled { opacity: 0.6; cursor: not-allowed; }
-
+/* ACESSIBILIDADE */
 .sr-only {
     position: absolute;
     width: 1px; height: 1px;
@@ -77,4 +200,23 @@
     overflow: hidden;
     clip: rect(0, 0, 0, 0);
     border: 0;
+}
+
+/* ==============================================
+   RESPONSIVIDADE (Para o celular, o azul some)
+   ============================================== */
+@media (max-width: 900px) {
+    .split-layout {
+        flex-direction: column;
+    }
+    
+    .visual-side {
+        display: none; /* Esconde a parte com o texto e fundo degradê */
+    }
+
+    .form-side {
+        width: 100%;
+        min-height: 100vh;
+        padding: 2rem 1rem;
+    }
 }
