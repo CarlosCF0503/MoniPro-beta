@@ -1,6 +1,27 @@
 // monipro-web/JS/login.js
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Toggle mostrar/ocultar senha
+    document.querySelectorAll('.olho').forEach(olho => {
+        olho.addEventListener('click', function () {
+            const targetId = this.dataset.target;
+            const input    = targetId ? document.getElementById(targetId) : this.parentElement.querySelector('input');
+            const fechado  = this.querySelector('.olho-fechado');
+            const aberto   = this.querySelector('.olho-aberto');
+            if (input.type === 'password') {
+                input.type = 'text';
+                if (fechado) fechado.style.display = 'none';
+                if (aberto)  aberto.style.display  = 'block';
+                this.setAttribute('aria-label', 'Esconder senha');
+            } else {
+                input.type = 'password';
+                if (fechado) fechado.style.display = 'block';
+                if (aberto)  aberto.style.display  = 'none';
+                this.setAttribute('aria-label', 'Mostrar senha');
+            }
+        });
+    });
+
     // IDs alinhados com o index.html: formLogin, inputIdentificador, inputSenha
     const formLogin = document.getElementById('formLogin');
 

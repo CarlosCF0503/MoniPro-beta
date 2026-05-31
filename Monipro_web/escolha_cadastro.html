@@ -4,27 +4,56 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="IMG/MoniPro-mini.png">
-    <link rel="stylesheet" href="CSS/login.css">
+    
+    <!-- Apenas o CSS da escolha de cadastro (sem o login.css antigo) -->
     <link rel="stylesheet" href="CSS/escolha_cadastro.css">
+    
     <title>Escolha de Perfil - MoniPro</title>
 </head>
 <body>
-<main class="escolha-container">
-    <img src="IMG/MoniPro-Logo.png" alt="Logo da MoniPro" class="logo">
-    <section class="card-escolha">
-        <h1>Escolha o seu perfil</h1>
-        <div class="opcoes">
-            <a href="cadastro.html?tipo=aluno" class="opcao">
-                <img src="IMG/Icone_aluno.png" alt="Ícone de Aluno">
-                <span>Aluno</span>
-            </a>
-            <a href="cadastro.html?tipo=monitor" class="opcao">
-                <img src="IMG/Icone_monitor.png" alt="Ícone de Monitor">
-                <span>Monitor</span>
-            </a>
+
+<!-- CONTAINER PRINCIPAL: Divide a tela -->
+<main class="split-layout">
+
+    <!-- LADO ESQUERDO: Fundo branco, com as opções -->
+    <section class="form-side">
+        <div class="form-container text-center">
+            
+            <img src="IMG/MoniPro-Logo.png" alt="Logo da MoniPro" class="logo">
+            
+            <div class="header-text">
+                <h1 class="text1">Qual é o seu perfil?</h1>
+                <p>Selecione como você deseja utilizar o sistema.</p>
+            </div>
+
+            <!-- BOTÕES DE ESCOLHA -->
+            <div class="opcoes">
+                <a href="cadastro.html?tipo=aluno" class="opcao">
+                    <img src="IMG/Icone_aluno.png" alt="Ícone de Aluno">
+                    <span>Aluno</span>
+                </a>
+                <a href="cadastro.html?tipo=monitor" class="opcao">
+                    <img src="IMG/Icone_monitor.png" alt="Ícone de Monitor">
+                    <span>Monitor</span>
+                </a>
+            </div>
+
+            <!-- LINK DE VOLTAR -->
+            <div class="link-voltar">
+                <a href="index.html">← Voltar para o Login</a>
+            </div>
+
         </div>
-        <a href="index.html" class="btn-voltar">Voltar</a>
     </section>
+
+    <!-- LADO DIREITO: Identidade Visual -->
+    <section class="visual-side">
+        <div class="visual-content">
+            <h2>Comece sua jornada acadêmica com a gente.</h2>
+        </div>
+    </section>
+
 </main>
+
 </body>
 </html>

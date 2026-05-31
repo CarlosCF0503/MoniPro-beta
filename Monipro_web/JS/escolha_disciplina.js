@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         // ✅ Usa a função centralizada (já trata JSON, token e erros de rede)
-        const dados = await chamadaApi('/auth/disciplinas');
+        const dados = await chamadaApi('/disciplinas');
 
         // ✅ Verifica se o servidor retornou erro (status 4xx/5xx)
         if (dados.erro || dados.statusHttp >= 400) {

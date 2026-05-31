@@ -1,0 +1,77 @@
+/* CSS/perfil_aluno.css */
+
+body { background-color: #f4f7f6; font-family: 'Inter', sans-serif; }
+
+main.dashboard-wrapper {
+    display: block !important; 
+    width: 100%;
+    min-height: 100vh;
+    padding-top: 80px; 
+}
+
+.dashboard-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 30px;
+}
+
+.page-header { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #e2e8f0; }
+.title-area h1 { color: #071E3D; font-size: 28px; margin-bottom: 5px; }
+.title-area p { color: #64748b; font-size: 15px; }
+
+.perfil-grid {
+    display: grid;
+    grid-template-columns: 350px 1fr; 
+    gap: 30px;
+    align-items: start;
+}
+
+.perfil-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    border: 1px solid #e2e8f0;
+}
+
+/* Coluna Esquerda */
+.identity-card { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.foto-area img { width: 160px; height: 160px; object-fit: cover; border-radius: 50%; border: 4px solid #4a90e2; padding: 4px; margin-bottom: 15px; }
+.identity-card h2 { color: #071E3D; font-size: 22px; margin-bottom: 10px; }
+
+.badge-area { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+.badge-tipo { background-color: #e0eaff; color: #071E3D; padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: 700; text-transform: uppercase; }
+.badge-moedas { display: flex; align-items: center; gap: 5px; font-size: 16px; color: #FFA500; }
+.badge-moedas img { width: 20px; }
+
+.divisor { width: 100%; border: none; border-top: 1px solid #e2e8f0; margin: 20px 0; }
+
+.informacoes { width: 100%; display: flex; flex-direction: column; gap: 15px; }
+.info-item { display: flex; align-items: center; gap: 12px; text-align: left; width: 100%; color: #334155; font-size: 14px; }
+.info-item .icone { width: 36px; height: 36px; background-color: #f0f4ff; border-radius: 8px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
+.info-item .icone img { width: 18px; opacity: 0.8; }
+
+/* Coluna Direita - Listas */
+.lista-header h2 { font-size: 18px; color: #071E3D; margin-bottom: 20px; font-weight: 600; }
+.lista-itens { display: flex; flex-direction: column; gap: 12px; max-height: 500px; overflow-y: auto; padding-right: 5px; }
+.loading-text { color: #64748b; font-size: 14px; }
+
+/* Item gerado pelo JS */
+.lista-item { background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; gap: 15px; transition: background-color 0.2s; }
+.lista-item:hover { background-color: #f1f5f9; }
+.lista-item-info p { margin: 0 0 5px 0; font-size: 13px; color: #64748b; }
+.lista-item-info strong { font-size: 16px; color: #071E3D; }
+
+.status-pendente { color: #FFA500; font-weight: bold; }
+.status-realizado { color: #28a745; font-weight: bold; }
+
+.btn-cancelar { padding: 8px 16px; font-size: 13px; font-weight: 600; color: #D8000C; background-color: #ffeef0; border: 1px solid #ffdce0; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+.btn-cancelar:hover { background-color: #D8000C; color: #ffffff; }
+
+@media (max-width: 900px) {
+    main.dashboard-wrapper { padding-top: 60px; }
+    .perfil-grid { grid-template-columns: 1fr; }
+    .lista-item { flex-direction: column; align-items: flex-start; }
+    .btn-cancelar { width: 100%; margin-top: 10px; }
+}

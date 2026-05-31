@@ -42,14 +42,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Redireciona sempre para o novo ecrã inteligente de Perfil
+    // Redireciona de forma dinâmica para o ecrã correto baseado no perfil
     const handleProfileRedirect = () => {
         const token = localStorage.getItem('monipro_token');
         if (!token) {
             window.location.href = 'index.html';
             return;
         }
-        window.location.href = 'perfil.html';
+        
+        const user = parseJwt(token);
+        if (user) {
+            const tipo = user.tipo || user.tipo_usuario;
+            if (String(tipo).toLowerCase() === 'monitor') {
+                window.location.href = 'perfil_monitor.html';
+            } else {
+                window.location.href = 'perfil_aluno.html';
+            }
+        } else {
+            window.location.href = 'index.html';
+        }
     };
 
     // --- 4. EVENT LISTENERS (CLIQUES) ---
@@ -106,8 +117,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 dashNomeUsuario.textContent = (user.nome_completo)
                     ? String(user.nome_completo).split(' ')[0]
                     : String(user.email).split('@')[0];
+                
+                // Define o link correto dinamicamente para evitar o erro 404
+                const tipo = user.tipo || user.tipo_usuario;
+                if (String(tipo).toLowerCase() === 'monitor') {
+                    dashLinkPerfil.href = 'perfil_monitor.html';
+                } else {
+                    dashLinkPerfil.href = 'perfil_aluno.html';
+                }
             }
-            dashLinkPerfil.href = 'perfil.html';
         } else {
             window.location.href = 'index.html';
         }
