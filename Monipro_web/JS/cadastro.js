@@ -1,28 +1,23 @@
 // monipro-web/JS/cadastro.js
 
+const SVG_OLHO_ABERTO  = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+const SVG_OLHO_FECHADO = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`;
+
 document.addEventListener('DOMContentLoaded', () => {
     const formCadastro = document.getElementById('formCadastro');
-    const olhos        = document.querySelectorAll('.olho');
 
-    // Mostrar/esconder senha (SVG inline — sem dependência de arquivo de imagem)
-    olhos.forEach(olho => {
+    document.querySelectorAll('.olho').forEach(olho => {
         olho.addEventListener('click', function () {
-            const targetId = this.dataset.target;
-            const input    = targetId
-                ? document.getElementById(targetId)
-                : this.parentElement.querySelector('input');
-            const fechado  = this.querySelector('.olho-fechado');
-            const aberto   = this.querySelector('.olho-aberto');
-
+            const input = document.getElementById(this.dataset.target)
+                       || this.parentElement.querySelector('input');
+            const svg = this.querySelector('svg');
             if (input.type === 'password') {
                 input.type = 'text';
-                if (fechado) fechado.style.display = 'none';
-                if (aberto)  aberto.style.display  = 'block';
+                svg.innerHTML = SVG_OLHO_FECHADO;
                 this.setAttribute('aria-label', 'Esconder senha');
             } else {
                 input.type = 'password';
-                if (fechado) fechado.style.display = 'block';
-                if (aberto)  aberto.style.display  = 'none';
+                svg.innerHTML = SVG_OLHO_ABERTO;
                 this.setAttribute('aria-label', 'Mostrar senha');
             }
         });

@@ -17,8 +17,8 @@
     <header>
         <div class="logo"><a href="base.html"><img src="IMG/MoniPro_logo-menor.png" alt="Logo MoniPro"></a></div>
         <div class="header-actions">
-            <div class="perfil-link header-icon" role="button" tabindex="0" aria-label="Ver perfil do usuário"><img src="IMG/Icone_Perfil.png" alt=""></div>
-            <div id="menu" class="header-icon" role="button" tabindex="0" aria-label="Abrir menu de navegação" aria-expanded="false" aria-controls="menuLateral"><img src="IMG/Menu_hamburguer.png" alt=""></div>
+            <div class="perfil-link header-icon" role="button" tabindex="0" aria-label="Ver perfil do usuário"><svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#071E3D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+            <div id="menu" class="header-icon" role="button" tabindex="0" aria-label="Abrir menu de navegação" aria-expanded="false" aria-controls="menuLateral"><svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#071E3D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></div>
         </div>
     </header>
 
@@ -36,11 +36,11 @@
 
     <!-- Modais de sair -->
     <div id="aviso_sair">
-        <div class="icone_sair"><img src="IMG/Icone_aviso.png" alt="Ícone de aviso"><p>Tem certeza que quer sair?</p></div>
+        <div class="icone_sair"><svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><p>Tem certeza que quer sair?</p></div>
         <div class="areaSim"><button id="btnSim">Sim</button></div><div class="areaNao"><button id="btnNao">Não</button></div>
     </div>
     <div id="modal-confirmacao" class="modal-aviso">
-        <div class="icone_sair"><img src="IMG/Icone_aviso.png" alt="Ícone de aviso"><p id="modal-confirmacao-texto">Tem certeza?</p></div>
+        <div class="icone_sair"><svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><p id="modal-confirmacao-texto">Tem certeza?</p></div>
         <div class="areaSim"><button id="btnConfirmarSim" class="btn-confirmar-acao">Sim</button></div><div class="areaNao"><button id="btnConfirmarNao" class="btn-cancelar-acao">Não</button></div>
     </div>
 
@@ -65,7 +65,9 @@
                 <!-- IDENTIDADE DO MONITOR -->
                 <section class="perfil-card identity-card" id="perfil_informacao">
                     <div class="foto-area">
-                        <img src="IMG/Icone_perfil_grande.png" alt="Foto de perfil">
+                        <div class="avatar-placeholder" aria-label="Foto de perfil padrão">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4.5" fill="rgba(255,255,255,0.18)"/><path d="M3 21c0-5.5 4-9 9-9s9 3.5 9 9"/></svg>
+                        </div>
                     </div>
                     
                     <h2 id="nomeUsuario">Carregando...</h2>
@@ -74,7 +76,8 @@
                         <!-- CLASSE EXCLUSIVA DO MONITOR: .monitor-color -->
                         <span id="tipoUsuario" class="badge-tipo monitor-color">Monitor</span>
                         <span class="badge-moedas">
-                            <img src="IMG/Icone_moeda.png" alt="Moedas"> <strong>15</strong>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFA500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 10h6M9 14h6"/></svg>
+                            <strong>15</strong>
                         </span>
                     </div>
 
@@ -82,17 +85,17 @@
 
                     <div class="informacoes">
                         <div class="info-item">
-                            <div class="icone"><img src="IMG/Icone Email.png" alt="E-mail"></div>
+                            <div class="icone"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></div>
                             <p id="emailUsuario">carregando@email.com</p>
                         </div>
                         <div class="info-item">
-                            <div class="icone"><img src="IMG/Icone_matricula.png" alt="Matrícula"></div>
+                            <div class="icone"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="9" cy="12" r="2.5"/><path d="M14 10h4M14 14h4"/></svg></div>
                             <p>Matrícula: <strong id="matriculaUsuario">000000</strong></p>
                         </div>
-                        
+
                         <!-- BOTÃO DE CERTIFICADOS -->
                         <div class="info-item linha-interativa">
-                            <div class="icone"><img src="IMG/Icone_certificado.png" alt="Certificado"></div>
+                            <div class="icone"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg></div>
                             <p>Meus Certificados</p>
                             <button id="abrir_c" class="btn-pequeno" aria-label="Ver meus certificados">Ver</button>
                         </div>
@@ -115,9 +118,27 @@
             
             <!-- MODAL DE CERTIFICADOS (Fica escondido até o JS chamar) -->
             <div id="area_certificados" class="modal-certificados">
-                <h3 class="modal-certificados-titulo">Meus Certificados</h3>
-                <!-- JS vai injetar os <div id="certificado"> aqui -->
+                <div class="modal-cert-header">
+                    <div class="modal-cert-titulo-area">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#071E3D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+                        <h3 class="modal-certificados-titulo">Meus Certificados</h3>
+                    </div>
+                    <button id="fechar_c" class="btn-fechar-modal" aria-label="Fechar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>
+                <div id="cert-lista">
+                    <!-- Estado vazio padrão -->
+                    <div class="cert-vazio">
+                        <div class="cert-vazio-icone">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#c7d2e6" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+                        </div>
+                        <p class="cert-vazio-titulo">Nenhum certificado ainda</p>
+                        <p class="cert-vazio-sub">Seus certificados aparecerão aqui após a conclusão de monitorias.</p>
+                    </div>
+                </div>
             </div>
+            <div id="overlay-cert"></div>
 
         </div>
     </main>

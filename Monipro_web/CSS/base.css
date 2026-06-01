@@ -212,6 +212,11 @@ header {
 .icone_sair p {
     font-size: 22px;
 }
+.icone_sair svg {
+    flex-shrink: 0;
+    margin-bottom: 10px;
+}
+
 .icone_sair img {
     height: 60px;
     margin-bottom: 10px;

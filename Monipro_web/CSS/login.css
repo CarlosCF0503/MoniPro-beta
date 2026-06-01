@@ -173,7 +173,11 @@ body, html {
 }
 
 .olho:hover { opacity: 1; }
-.olho svg { display: block; pointer-events: none; }
+.olho svg { pointer-events: none; }
+
+/* Esconde o botão nativo de revelar senha do Edge/IE */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear { display: none; }
 
 .input-group:focus-within {
     border-color: #4a90e2;

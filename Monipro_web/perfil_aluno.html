@@ -19,8 +19,8 @@
             <a href="base.html"><img src="IMG/MoniPro_logo-menor.png" alt="Logo MoniPro"></a>
         </div>
         <div class="header-actions">
-            <div class="perfil-link header-icon" role="button" tabindex="0" aria-label="Ver perfil do usuário"><img src="IMG/Icone_Perfil.png" alt=""></div>
-            <div id="menu" class="header-icon" role="button" tabindex="0" aria-label="Abrir menu de navegação" aria-expanded="false" aria-controls="menuLateral"><img src="IMG/Menu_hamburguer.png" alt=""></div>
+            <div class="perfil-link header-icon" role="button" tabindex="0" aria-label="Ver perfil do usuário"><svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#071E3D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+            <div id="menu" class="header-icon" role="button" tabindex="0" aria-label="Abrir menu de navegação" aria-expanded="false" aria-controls="menuLateral"><svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#071E3D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></div>
         </div>
     </header>
 
@@ -48,7 +48,7 @@
     <!-- MODAIS DE AVISO INTACTOS -->
     <div id="aviso_sair">
         <div class="icone_sair">
-            <img src="IMG/Icone_aviso.png" alt="Ícone de aviso">
+            <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             <p>Tem certeza que quer sair?</p>
         </div>
         <div class="areaSim"><button id="btnSim">Sim</button></div>
@@ -57,7 +57,7 @@
 
     <div id="modal-confirmacao" class="modal-aviso">
         <div class="icone_sair">
-            <img src="IMG/Icone_aviso.png" alt="Ícone de aviso">
+            <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             <p id="modal-confirmacao-texto">Tem certeza?</p>
         </div>
         <div class="areaSim"><button id="btnConfirmarSim" class="btn-confirmar-acao">Sim</button></div>
@@ -85,7 +85,9 @@
                 <!-- IDENTIDADE DO ALUNO -->
                 <section class="perfil-card identity-card" id="perfil_informacao">
                     <div class="foto-area">
-                        <img src="IMG/Icone_perfil_grande.png" alt="Foto de perfil">
+                        <div class="avatar-placeholder" aria-label="Foto de perfil padrão">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4.5" fill="rgba(255,255,255,0.18)"/><path d="M3 21c0-5.5 4-9 9-9s9 3.5 9 9"/></svg>
+                        </div>
                     </div>
                     
                     <h2 id="nomeUsuario">Carregando...</h2>
@@ -93,7 +95,8 @@
                     <div class="badge-area">
                         <span id="tipoUsuario" class="badge-tipo">Aluno</span>
                         <span class="badge-moedas">
-                            <img src="IMG/Icone_moeda.png" alt="Moedas"> <strong>15</strong>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFA500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 10h6M9 14h6"/></svg>
+                            <strong>15</strong>
                         </span>
                     </div>
 
@@ -101,11 +104,11 @@
 
                     <div class="informacoes">
                         <div class="info-item">
-                            <div class="icone"><img src="IMG/Icone Email.png" alt="E-mail"></div>
+                            <div class="icone"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></div>
                             <p id="emailUsuario">carregando@email.com</p>
                         </div>
                         <div class="info-item">
-                            <div class="icone"><img src="IMG/Icone_matricula.png" alt="Matrícula"></div>
+                            <div class="icone"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="9" cy="12" r="2.5"/><path d="M14 10h4M14 14h4"/></svg></div>
                             <p>Matrícula: <strong id="matriculaUsuario">000000</strong></p>
                         </div>
                     </div>

@@ -113,17 +113,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Painel de certificados
         const verCertificadosBtn = document.getElementById('abrir_c');
-        const perfilCard         = document.getElementById('perfil_informacao');
+        const fecharCertBtn      = document.getElementById('fechar_c');
         const certificadosArea   = document.getElementById('area_certificados');
+        const overlayCert        = document.getElementById('overlay-cert');
 
-        if (verCertificadosBtn && certificadosArea && perfilCard) {
-            verCertificadosBtn.addEventListener('click', () => {
-                certificadosArea.classList.toggle('aparecer');
-                perfilCard.classList.toggle('mudar');
-                const p = verCertificadosBtn.querySelector('p');
-                if (p) p.textContent = certificadosArea.classList.contains('aparecer') ? 'voltar' : 'ver';
-            });
-        }
+        const abrirCert = () => {
+            certificadosArea?.classList.add('aparecer');
+            overlayCert?.classList.add('ativo');
+            verCertificadosBtn.textContent = 'Fechar';
+        };
+        const fecharCert = () => {
+            certificadosArea?.classList.remove('aparecer');
+            overlayCert?.classList.remove('ativo');
+            verCertificadosBtn.textContent = 'Ver';
+        };
+
+        verCertificadosBtn?.addEventListener('click', () => {
+            certificadosArea?.classList.contains('aparecer') ? fecharCert() : abrirCert();
+        });
+        fecharCertBtn?.addEventListener('click', fecharCert);
+        overlayCert?.addEventListener('click', fecharCert);
     }
 });
 
