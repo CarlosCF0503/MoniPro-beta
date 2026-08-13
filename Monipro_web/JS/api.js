@@ -1,7 +1,7 @@
 // JS/api.js
 
 // URL base do seu servidor. Se for testar localmente, pode alterar para "http://localhost:3000"
-const MB_BETA_ORM = "https://moni-pro.app.br";
+const MB_BETA_ORM = "http://moni-pro.app.br";
 /**
  * Função centralizada para realizar pedidos ao backend.
  * @param {string} endpoint - O caminho da rota (ex: '/auth/login', '/perfil')
