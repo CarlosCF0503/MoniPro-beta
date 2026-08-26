@@ -1,0 +1,151 @@
+/* ========================================================= */
+/* CSS/disciplinas.css                                       */
+/* ========================================================= */
+
+/* Removemos o reset do body para deixar o base.css agir com o fundo gradiente bonito */
+
+/* Container principal no estilo "Cartão Branco" do seu projeto */
+/* Container principal - Agora com limite de altura e alinhamento ao topo */
+main.container {
+    background-color: #FFFAFA; 
+    width: 90%;
+    max-width: 1000px;
+    margin: 40px auto;
+    /* Tiramos o padding daqui para o cabeçalho encostar no teto */
+    padding: 0; 
+    border-radius: 15px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column; 
+    justify-content: flex-start; /* 🔥 Garante que tudo comece colado no topo */
+    max-height: 80vh; /* Limita a altura do quadrado para não quebrar a tela toda */
+    overflow: hidden; /* Segura as bordas arredondadas */
+}
+
+/* Cabeçalho Fixo - A mágica do Sticky */
+.cabecalho-disciplinas {
+    display: flex;
+    width: 100%; 
+    justify-content: space-between; 
+    align-items: center; 
+    /* Colocamos o padding de volta aqui dentro */
+    padding: 30px 40px 15px 40px; 
+    background-color: #FFFAFA; /* Fundo sólido para cobrir os itens ao rolar */
+    border-bottom: 3px solid #071E3D; 
+    position: sticky; /* 🔥 Mágica: Prende este bloco no topo do quadrado! */
+    top: 0;
+    z-index: 10;
+}
+
+.cabecalho-disciplinas h1 {
+    font-size: 26px;
+    color: #071E3D;
+    margin: 0;
+}
+
+/* Grid com barra de rolagem (Scroll) independente */
+.grid-disciplinas {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+    /* Padding para a lista respirar */
+    padding: 25px 40px 40px 40px; 
+    overflow-y: auto; /* 🔥 Cria uma barra de rolagem APENAS na lista de disciplinas */
+}
+
+/* Estilo dos Cartões de Disciplina */
+.card-disciplina {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    text-align: center;
+    font-weight: bold;
+    color: #071E3D;
+    border-left: 6px solid #4CAF50;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card-disciplina:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+/* ========================================================= */
+/* BOTÕES                                                    */
+/* ========================================================= */
+.btn-primario {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.btn-primario:hover { 
+    background-color: #45a049; 
+}
+
+.btn-secundario {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* ========================================================= */
+/* MODAL (CAIXA DE CADASTRO)                                 */
+/* ========================================================= */
+.fundo-modal {
+    display: none; 
+    position: fixed; top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background-color: rgba(0, 0, 0, 0.6);
+    justify-content: center; align-items: center; z-index: 1000;
+}
+
+.caixa-modal {
+    background-color: #ffffff; padding: 30px;
+    border-radius: 10px; width: 350px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    display: flex; flex-direction: column; gap: 15px;
+}
+
+.caixa-modal h2 { 
+    color: #071E3D; 
+    margin: 0; 
+    font-size: 22px; 
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+}
+
+.caixa-modal label { 
+    font-weight: bold; 
+    color: #333; 
+}
+
+.caixa-modal input { 
+    padding: 10px; 
+    border: 2px solid #ccc; 
+    border-radius: 5px; 
+    font-size: 14px; 
+}
+
+.caixa-modal input:focus { 
+    border-color: #071E3D; 
+    outline: none; 
+}
+
+.botoes-modal { 
+    display: flex; 
+    justify-content: space-between; 
+    margin-top: 15px; 
+}

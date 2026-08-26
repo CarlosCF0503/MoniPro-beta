@@ -15,7 +15,7 @@ const autenticar = (req, res, next) => {
         req.usuario = decodificado;
         return next();
     });
-}; // ⬅️ FALTAVA FECHAR ESSA CHAVE AQUI!
+}; 
 
 // verificando se a propriedade do perfil no token decodificado bate com o que queremos
 const isMonitor = (req, res, next) => {

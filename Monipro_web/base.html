@@ -30,21 +30,23 @@
 
 <nav id="menuLateral">
     <div class="logo_fechar">
-        <img src="IMG/Logo.png" alt="Logo completo MoniPro">
-        <div id="menu_fechar">
-            <img src="IMG/Icone_menu_fechar.png" alt="Fechar menu">
-        </div>
+        <img src="IMG/Logo.png" alt="Logo MoniPro">
+        <div id="menu_fechar"><img src="IMG/Icone_menu_fechar.png" alt="Fechar menu"></div>
     </div>
     <div class="item perfil-link">
-        <div class="icone"><img src="IMG/Icone_perfil_menu.png" alt="Ícone de perfil"></div>
+        <div class="icone"><img src="IMG/Icone_perfil_menu.png" alt="Perfil"></div>
         <p>Perfil</p>
     </div>
     <div class="item monitoria-link">
-        <div class="icone"><img src="IMG/logo_monitoria.png" alt="Ícone de monitoria"></div>
+        <div class="icone"><img src="IMG/logo_monitoria.png" alt="Monitoria"></div>
         <p>Monitoria</p>
     </div>
+    <div class="item disciplinas-link">
+        <div class="icone"><img src="IMG/Icone_livro.png" alt="📚" onerror="this.style.display='none'; this.parentNode.innerHTML='📚'"></div>
+        <p>Disciplinas</p>
+    </div>
     <div id="sair" class="item">
-        <div class="icone"><img src="IMG/Icone_sair.png" alt="Ícone de sair"></div>
+        <div class="icone"><img src="IMG/Icone_sair.png" alt="Sair"></div>
         <p>Sair</p>
     </div>
 </nav>
@@ -76,14 +78,18 @@
 
         <div class="dashboard-cards">
             <a href="escolha_disciplina.html" class="dash-card">
-                <!-- CORREÇÃO: imagem correta disponível nos assets -->
                 <img src="IMG/logo_monitoria.png" alt="Monitoria">
                 <h3>Área de Monitorias</h3>
                 <p>Agende uma nova monitoria ou crie vagas para os alunos.</p>
             </a>
 
+            <a href="disciplinas.html" class="dash-card">
+                <img src="IMG/Icone_livro.png" alt="Disciplinas" onerror="this.src='IMG/logo_monitoria.png'">
+                <h3>Disciplinas</h3>
+                <p>Visualize as disciplinas ou cadastre novas (exclusivo para monitores).</p>
+            </a>
+
             <a href="perfil.html" id="dash-link-perfil" class="dash-card">
-                <!-- CORREÇÃO: era Icone_perfil_grande.png (inexistente) → Icone_perfil_grande.png (correto) -->
                 <img src="IMG/Icone_perfil_grande.png" alt="Meu Perfil">
                 <h3>Meu Perfil</h3>
                 <p>Gerencie seus dados, histórico e certificados.</p>

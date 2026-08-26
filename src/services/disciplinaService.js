@@ -13,5 +13,9 @@ class DisciplinaService {
     async listar() {
         return await disciplinaRepository.buscarTodas();
     }
+
+    async listar() {
+        return await disciplinaRepository.listar();
+    }
 }
 module.exports = new DisciplinaService();

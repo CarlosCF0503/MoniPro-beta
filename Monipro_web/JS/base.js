@@ -8,6 +8,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const profileLinks = document.querySelectorAll('.perfil-link');
     const monitoriaLink = document.querySelector('.monitoria-link');
+    
+    // 🔥 NOVO: Selecionando o botão de disciplinas que adicionamos no HTML
+    const disciplinasLink = document.querySelector('.disciplinas-link');
 
     const logoutButton = document.getElementById('sair');
     const logoutModal = document.getElementById('aviso_sair');
@@ -77,6 +80,14 @@ document.addEventListener('DOMContentLoaded', () => {
         monitoriaLink.addEventListener('click', (event) => {
             event.preventDefault();
             window.location.href = 'escolha_disciplina.html';
+        });
+    }
+
+    // 🔥 NOVO: Ação de clique do botão de Disciplinas
+    if (disciplinasLink) {
+        disciplinasLink.addEventListener('click', (event) => {
+            event.preventDefault(); // Evita recarregar a página do zero
+            window.location.href = 'disciplinas.html'; // Redireciona para a nossa nova tela!
         });
     }
 

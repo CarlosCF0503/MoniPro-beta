@@ -12,5 +12,13 @@ class DisciplinaRepository {
     async buscarTodas() {
         return await prisma.disciplina.findMany({ orderBy: { nome: 'asc' } });
     }
+
+    async listar() {
+        return await prisma.disciplina.findMany({
+            orderBy: {
+                nome: 'asc' // Traz em ordem alfabética (A-Z) 
+            }
+        });
+    }
 }
 module.exports = new DisciplinaRepository();
