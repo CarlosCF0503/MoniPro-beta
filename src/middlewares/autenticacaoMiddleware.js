@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { JWT_SECRET } = require('../config/env');
 
 const autenticar = (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -10,7 +11,7 @@ const autenticar = (req, res, next) => {
     const [esquema, token] = partes;
     if (!/^Bearer$/i.test(esquema)) return res.status(401).json({ erro: 'Token mal formatado' });
 
-    jwt.verify(token, process.env.JWT_SECRET || 'segredo_padrao', (err, decodificado) => {
+    jwt.verify(token, JWT_SECRET, (err, decodificado) => {
         if (err) return res.status(401).json({ erro: 'Token inválido' });
         req.usuario = decodificado;
         return next();

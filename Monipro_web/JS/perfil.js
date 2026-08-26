@@ -42,64 +42,70 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (btnConfirmarSim) btnConfirmarSim.addEventListener('click', () => { if (typeof acaoPendente === 'function') acaoPendente(); hideConfirmModal(); });
     if (btnConfirmarNao) btnConfirmarNao.addEventListener('click', hideConfirmModal);
 
-    // --- DADOS DO PERFIL ---
-    // GET /perfil → resposta: { success: true, user: { ... } }
-    try {
-        const response = await fetch(`${MB_BETA_ORM}/perfil`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
 
-        if (data.success) {
-            document.getElementById('nomeUsuario').textContent     = data.user.nome_completo || 'Utilizador';
-            document.getElementById('emailUsuario').textContent    = data.user.email || '';
+    // ==========================================
+    // 1. CARREGAR DADOS DE IDENTIDADE (Usando chamadaApi)
+    // ==========================================
+    try {
+        const data = await chamadaApi('/perfil');
+
+        if (data.success && data.user) {
+            document.getElementById('nomeUsuario').textContent      = data.user.nome_completo || 'Utilizador';
+            document.getElementById('emailUsuario').textContent     = data.user.email || '';
             document.getElementById('matriculaUsuario').textContent = data.user.matricula || '';
 
             const tipo = String(data.user.tipo_usuario);
             document.getElementById('tipoUsuario').textContent = tipo.charAt(0).toUpperCase() + tipo.slice(1);
         } else {
-            if (typeof showToast === 'function') showToast(data.erro || 'Erro ao carregar perfil.', 'error');
-            return;
+            // Exibe a mensagem real retornada pelo servidor (erro 401, 404, 500, etc.)
+            const msgErro = data.mensagem || data.erro || 'Erro ao carregar perfil.';
+            if (typeof showToast === 'function') showToast(msgErro, 'error');
+            console.error('Erro detalhado do servidor:', data);
+
+            // Se token inválido/expirado, redireciona para login
+            if (data.statusHttp === 401) {
+                localStorage.removeItem('monipro_token');
+                setTimeout(() => { window.location.href = 'index.html'; }, 1500);
+            }
         }
     } catch (error) {
-        if (typeof showToast === 'function') showToast('Não foi possível carregar os dados do perfil.', 'error');
-        return;
+        // Erro de REDE (servidor offline, CORS, sem internet)
+        const msg = error.message || 'Falha na comunicação com o servidor.';
+        if (typeof showToast === 'function') showToast(msg, 'error');
+        console.error('Erro de rede ao carregar perfil:', error);
     }
 
-    // --- INTERFACE POR TIPO DE UTILIZADOR ---
+    // ==========================================
+    // 2. RENDERIZAR LISTAS POR TIPO DE UTILIZADOR
+    // ==========================================
     if (userData.tipo === 'aluno') {
-        const areaAluno = document.getElementById('area-aluno');
-        if (areaAluno) areaAluno.style.display = 'block';
-
         const container = document.getElementById('lista-agendamentos');
         if (container) {
-            await carregarAgendamentos(token, container);
+            await carregarAgendamentos(container);
 
             container.addEventListener('click', (event) => {
                 if (event.target.classList.contains('btn-cancelar')) {
                     const agendamentoId = event.target.dataset.agendamentoId;
                     const itemElement   = event.target.closest('.lista-item');
-                    acaoPendente = () => handleSairMonitoria(agendamentoId, itemElement, token);
+                    acaoPendente = () => handleSairMonitoria(agendamentoId, itemElement);
                     showConfirmModal('Tem a certeza que deseja cancelar a sua inscrição nesta monitoria?');
                 }
             });
         }
 
     } else if (userData.tipo === 'monitor') {
-        const areaMonitor    = document.getElementById('area-monitor');
         const btnCertificados = document.getElementById('btn-certificados');
-        if (areaMonitor)     areaMonitor.style.display    = 'block';
         if (btnCertificados) btnCertificados.style.display = 'flex';
 
         const container = document.getElementById('lista-monitorias-criadas');
         if (container) {
-            await carregarMonitoriasCriadas(token, container);
+            await carregarMonitoriasCriadas(container);
 
             container.addEventListener('click', (event) => {
                 if (event.target.classList.contains('btn-cancelar')) {
                     const monitoriaId = event.target.dataset.monitoriaId;
                     const itemElement = event.target.closest('.lista-item');
-                    acaoPendente = () => handleCancelarMonitoria(monitoriaId, itemElement, token);
+                    acaoPendente = () => handleCancelarMonitoria(monitoriaId, itemElement);
                     showConfirmModal('Tem a certeza que deseja cancelar esta vaga de monitoria?');
                 }
             });
@@ -107,39 +113,43 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Painel de certificados
         const verCertificadosBtn = document.getElementById('abrir_c');
-        const perfilCard         = document.getElementById('perfil_informacao');
+        const fecharCertBtn      = document.getElementById('fechar_c');
         const certificadosArea   = document.getElementById('area_certificados');
+        const overlayCert        = document.getElementById('overlay-cert');
 
-        if (verCertificadosBtn && certificadosArea && perfilCard) {
-            verCertificadosBtn.addEventListener('click', () => {
-                certificadosArea.classList.toggle('aparecer');
-                perfilCard.classList.toggle('mudar');
-                const p = verCertificadosBtn.querySelector('p');
-                if (p) p.textContent = certificadosArea.classList.contains('aparecer') ? 'voltar' : 'ver';
-            });
-        }
+        const abrirCert = () => {
+            certificadosArea?.classList.add('aparecer');
+            overlayCert?.classList.add('ativo');
+            verCertificadosBtn.textContent = 'Fechar';
+        };
+        const fecharCert = () => {
+            certificadosArea?.classList.remove('aparecer');
+            overlayCert?.classList.remove('ativo');
+            verCertificadosBtn.textContent = 'Ver';
+        };
+
+        verCertificadosBtn?.addEventListener('click', () => {
+            certificadosArea?.classList.contains('aparecer') ? fecharCert() : abrirCert();
+        });
+        fecharCertBtn?.addEventListener('click', fecharCert);
+        overlayCert?.addEventListener('click', fecharCert);
     }
 });
 
-// --- FUNÇÕES DE API ---
+// ==========================================
+// FUNÇÕES DE API (Todas atualizadas com chamadaApi)
+// ==========================================
 
-async function carregarAgendamentos(token, container) {
+async function carregarAgendamentos(container) {
     try {
-        // GET /perfil/agendamentos → { success: true, agendamentos: [...] }
-        const response = await fetch(`${MB_BETA_ORM}/perfil/agendamentos`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
+        const data = await chamadaApi('/perfil/agendamentos');
         const lista = data.agendamentos || [];
 
-        if (data.success && lista.length > 0) {
+        if (!data.erro && lista.length > 0) {
             container.innerHTML = '';
             lista.forEach(ag => {
-                const dataFormatada = new Date(ag.data_hora)
-                    .toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
-
+                const dataFormatada = new Date(ag.data_hora).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
                 const nomeDisciplina = ag.monitoria?.disciplina?.nome || 'Disciplina Indefinida';
-                // Campo correto do Prisma: ag.monitoria.monitor.nome_completo
                 const nomeMonitor    = ag.monitoria?.monitor?.nome_completo || 'Monitor';
                 const statusStr      = String(ag.status);
 
@@ -154,6 +164,8 @@ async function carregarAgendamentos(token, container) {
                 `;
                 container.appendChild(div);
             });
+        } else if (data.erro) {
+            container.innerHTML = `<p style="color:#D8000C;">Falha do servidor: ${data.mensagem}</p>`;
         } else {
             container.innerHTML = '<p>Ainda não se inscreveu em nenhuma monitoria.</p>';
         }
@@ -162,21 +174,15 @@ async function carregarAgendamentos(token, container) {
     }
 }
 
-async function carregarMonitoriasCriadas(token, container) {
+async function carregarMonitoriasCriadas(container) {
     try {
-        // GET /perfil/monitorias → { success: true, monitorias: [...] }
-        const response = await fetch(`${MB_BETA_ORM}/perfil/monitorias`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
+        const data = await chamadaApi('/perfil/monitorias');
         const lista = data.monitorias || [];
 
-        if (data.success && lista.length > 0) {
+        if (!data.erro && lista.length > 0) {
             container.innerHTML = '';
             lista.forEach(m => {
-                const dataFormatada = new Date(m.horario)
-                    .toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
-
+                const dataFormatada = new Date(m.horario).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
                 const nomeDisciplina = m.disciplina?.nome || 'Disciplina Indefinida';
                 const statusStr      = String(m.status);
                 const ativa          = ['ativa', 'pendente'].includes(statusStr.toLowerCase());
@@ -195,6 +201,8 @@ async function carregarMonitoriasCriadas(token, container) {
                 `;
                 container.appendChild(div);
             });
+        } else if (data.erro) {
+            container.innerHTML = `<p style="color:#D8000C;">Falha do servidor: ${data.mensagem}</p>`;
         } else {
             container.innerHTML = '<p>Ainda não criou nenhuma vaga de monitoria.</p>';
         }
@@ -203,39 +211,26 @@ async function carregarMonitoriasCriadas(token, container) {
     }
 }
 
-async function handleSairMonitoria(agendamentoId, itemElement, token) {
+async function handleSairMonitoria(agendamentoId, itemElement) {
     try {
-        // DELETE /agendamentos/:id
-        const response = await fetch(`${MB_BETA_ORM}/agendamentos/${agendamentoId}`, {
-            method:  'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-
-        if (data.success) {
-            if (typeof showToast === 'function') showToast(data.message, 'success');
+        const data = await chamadaApi(`/agendamentos/${agendamentoId}`, { method: 'DELETE' });
+        if (!data.erro && data.success) {
+            // Backend retorna 'mensagem' (pt), não 'message'
+            if (typeof showToast === 'function') showToast(data.mensagem || data.message || 'Cancelado com sucesso', 'success');
             itemElement.remove();
         } else {
-            if (typeof showToast === 'function') showToast(data.message || 'Erro ao cancelar.', 'error');
+            if (typeof showToast === 'function') showToast(data.mensagem || data.message || data.erro || 'Erro ao cancelar.', 'error');
         }
     } catch (error) {
-        if (typeof showToast === 'function') showToast('Erro ao comunicar com o servidor.', 'error');
+        if (typeof showToast === 'function') showToast('Erro de rede.', 'error');
     }
 }
 
-async function handleCancelarMonitoria(monitoriaId, itemElement, token) {
+async function handleCancelarMonitoria(monitoriaId, itemElement) {
     try {
-        // PUT /monitorias/:id/cancelar
-        const response = await fetch(`${MB_BETA_ORM}/monitorias/${monitoriaId}/cancelar`, {
-            method:  'PUT',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-
-        if (data.success) {
+        const data = await chamadaApi(`/monitorias/${monitoriaId}/cancelar`, { method: 'PUT' });
+        if (!data.erro && data.success) {
             if (typeof showToast === 'function') showToast(data.message, 'success');
-
-            // Atualiza o status visualmente sem recarregar a página
             const statusEl = itemElement.querySelector('.lista-item-info p:nth-child(2)');
             if (statusEl) {
                 const partes = statusEl.innerHTML.split('—');
@@ -244,9 +239,9 @@ async function handleCancelarMonitoria(monitoriaId, itemElement, token) {
             const btn = itemElement.querySelector('.btn-cancelar');
             if (btn) btn.remove();
         } else {
-            if (typeof showToast === 'function') showToast(data.message || 'Erro ao cancelar.', 'error');
+            if (typeof showToast === 'function') showToast(data.mensagem || data.message || 'Erro ao cancelar.', 'error');
         }
     } catch (error) {
-        if (typeof showToast === 'function') showToast('Erro ao comunicar com o servidor.', 'error');
+        if (typeof showToast === 'function') showToast('Erro de rede.', 'error');
     }
 }

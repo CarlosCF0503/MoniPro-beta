@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const usuarioRepository = require('../repositories/usuarioRepository');
+const { JWT_SECRET } = require('../config/env');
 
 class AutenticacaoService {
     async cadastrar(dados) {
@@ -54,7 +55,7 @@ class AutenticacaoService {
                 email: usuario.email,
                 tipo: usuario.tipo_usuario 
             },
-            process.env.JWT_SECRET || 'segredo_padrao',
+            JWT_SECRET,
             { expiresIn: '24h' }
         );
 

@@ -1,3 +1,4 @@
+
 // JS/api.js
 
 // URL base do seu servidor. Se for testar localmente, pode alterar para "http://localhost:3000"
