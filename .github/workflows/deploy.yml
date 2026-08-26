@@ -3,7 +3,7 @@ name: Deploy Main (MoniPro Produção)
 on:
   push:
     branches:
-      - main # Roda SOMENTE quando houver push ou merge aprovado na main
+      - main # Roda SOMENTE quando houver push ou merge aprovado na branch main
 
 jobs:
   deploy:
@@ -19,15 +19,12 @@ jobs:
           key: ${{ secrets.ORACLE_SSH_KEY }}
           script: |
             echo "Iniciando atualização do ambiente de PRODUÇÃO (Main)..."
-            
-            # Entra na pasta do ambiente de produção
             cd ~/MoniPro-beta
             
             # Atualiza o código pegando as novidades do GitHub
             git pull origin main
             
-            # Reconstrói as imagens e reinicia os containers de produção
-            # (Note que aqui não usamos o -p monipro-dev)
+            # Reconstrói as imagens do Docker e reinicia os containers da produção
             docker-compose up -d --build
             
             echo "Deploy de Produção concluído com sucesso!"

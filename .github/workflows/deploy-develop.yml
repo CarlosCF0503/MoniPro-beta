@@ -1,0 +1,30 @@
+name: Deploy Develop (MoniPro Beta)
+
+on:
+  push:
+    branches:
+      - develop # Isso faz o script rodar SOMENTE quando houver push na branch develop
+
+jobs:
+  deploy:
+    name: Deploy to Oracle Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Executar comandos via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.ORACLE_HOST }}
+          username: ${{ secrets.ORACLE_USERNAME }}
+          key: ${{ secrets.ORACLE_SSH_KEY }}
+          script: |
+            echo "Iniciando atualização do ambiente de testes (Develop)..."
+            cd ~/moni-pro-beta-develop
+            
+            # Atualiza o código pegando as novidades do GitHub
+            git pull origin develop
+            
+            # Reconstrói as imagens do Docker e reinicia os containers
+            docker-compose -p monipro-dev up -d --build
+            
+            echo "Deploy concluído com sucesso!"
