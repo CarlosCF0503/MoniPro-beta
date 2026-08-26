@@ -19,7 +19,7 @@ jobs:
           key: ${{ secrets.ORACLE_SSH_KEY }}
           script: |
             echo "Iniciando atualização do ambiente de PRODUÇÃO (Main)..."
-            cd ~/MoniPro-beta
+            cd ~/moni-pro-beta
             
             # Atualiza o código pegando as novidades do GitHub
             git pull origin main
