@@ -1,6 +1,7 @@
 // src/app.js
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 
 const app = express();
 
@@ -12,8 +13,21 @@ const monitoriaRotas    = require('./routes/monitoriaRotas');
 const perfilRotas       = require('./routes/perfilRotas');
 
 // Middlewares globais
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((origem) => origem.trim())
+    .filter(Boolean);
+
+app.use(helmet());
 app.use(cors({
-   origin: '*'
+    origin(origem, callback) {
+        // Requisições sem Origin (server-to-server, apps mobile, curl) são permitidas
+        if (!origem || allowedOrigins.includes(origem)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Não permitido pelo CORS'));
+        }
+    }
 }));
 app.use(express.json());
 
