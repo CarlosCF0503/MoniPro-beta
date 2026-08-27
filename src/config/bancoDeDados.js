@@ -8,14 +8,17 @@ require('dotenv').config();
 const isProducao = process.env.DATABASE_URL?.includes('aivencloud.com') ||
     process.env.NODE_ENV === 'production';
 
-if (isProducao) {
-    // Produção (Aiven): aceita certificado SSL
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+// Produção (Aiven): valida o certificado SSL contra a CA fornecida via env,
+// em vez de desativar a verificação (NODE_TLS_REJECT_UNAUTHORIZED / rejectUnauthorized: false).
+if (isProducao && !process.env.DB_CA_CERT) {
+    throw new Error('DB_CA_CERT não definido: obrigatório para validar a conexão SSL com o Postgres em produção.');
 }
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: isProducao ? { rejectUnauthorized: false } : false
+    ssl: isProducao
+        ? { rejectUnauthorized: true, ca: process.env.DB_CA_CERT.replace(/\\n/g, '\n') }
+        : false
 });
 
 const adapter = new PrismaPg(pool);
