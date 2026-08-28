@@ -34,8 +34,7 @@ class AutenticacaoService {
         }
 
         if (!usuario) {
-            // Ajustamos a mensagem para ficar mais clara
-            throw new Error(`Nenhum ${tipo_usuario} encontrado com essas credenciais.`);
+            throw new Error(`Usuário do tipo ${tipo_usuario} não encontrado.`);
         }
 
         // Como a busca já filtrou pelo tipo, essa linha abaixo virou apenas uma garantia extra de segurança
