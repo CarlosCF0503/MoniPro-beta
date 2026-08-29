@@ -14,8 +14,8 @@ class AgendamentoService {
         return await agendamentoRepository.criar(dados);
     }
 
-    async listarPorAluno(idAluno) {
-        return await agendamentoRepository.buscarPorAluno(idAluno);
+    async listarPorAluno(idAluno, paginacao) {
+        return await agendamentoRepository.buscarPorAluno(idAluno, paginacao);
     }
 
     async deletar(id, idAluno) {

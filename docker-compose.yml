@@ -41,6 +41,10 @@ services:
 
       - "127.0.0.1:8080:80"
 
+    environment:
+
+      - API_BASE_URL=${API_BASE_URL:-https://moni-pro.app.br}
+
     depends_on:
 
       - backend

@@ -76,6 +76,8 @@ model Monitoria {
 
   inscricoes Agendamento[]
 
+  @@index([id_monitor])
+  @@index([id_disciplina])
   @@map("monitorias")
 }
 
@@ -92,5 +94,7 @@ model Agendamento {
   id_aluno Int
   aluno    Usuario @relation("AlunoParaAgendamento", fields: [id_aluno], references: [id])
 
+  @@index([id_monitoria])
+  @@index([id_aluno])
   @@map("agendamentos")
 }

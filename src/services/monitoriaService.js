@@ -6,12 +6,12 @@ class MonitoriaService {
         return await monitoriaRepository.criar(dados);
     }
 
-    async listarPorDisciplina(idDisciplina) {
-        return await monitoriaRepository.buscarPorDisciplina(Number(idDisciplina));
+    async listarPorDisciplina(idDisciplina, paginacao) {
+        return await monitoriaRepository.buscarPorDisciplina(Number(idDisciplina), paginacao);
     }
 
-    async buscarAgendamentosPorMonitor(monitorId) {
-        return await monitoriaRepository.buscarAgendamentos(monitorId);
+    async buscarAgendamentosPorMonitor(monitorId, paginacao) {
+        return await monitoriaRepository.buscarAgendamentos(monitorId, paginacao);
     }
 
     async cancelar(id, monitorId) {
@@ -25,8 +25,8 @@ class MonitoriaService {
         return await monitoriaRepository.cancelar(id);
     }
 
-    async listarPorMonitor(monitorId) {
-        return await monitoriaRepository.buscarPorMonitor(monitorId);
+    async listarPorMonitor(monitorId, paginacao) {
+        return await monitoriaRepository.buscarPorMonitor(monitorId, paginacao);
     }
 }
 

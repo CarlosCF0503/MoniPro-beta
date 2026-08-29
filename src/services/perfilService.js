@@ -12,12 +12,12 @@ class PerfilService {
         return perfil;
     }
 
-    async obterAgendamentos(idAluno) {
-        return await agendamentoRepository.buscarPorAluno(idAluno);
+    async obterAgendamentos(idAluno, paginacao) {
+        return await agendamentoRepository.buscarPorAluno(idAluno, paginacao);
     }
 
-    async obterMonitorias(idMonitor) {
-        return await monitoriaRepository.buscarPorMonitor(idMonitor);
+    async obterMonitorias(idMonitor, paginacao) {
+        return await monitoriaRepository.buscarPorMonitor(idMonitor, paginacao);
     }
 }
 

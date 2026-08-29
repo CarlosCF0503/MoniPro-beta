@@ -127,12 +127,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function carregarMonitoriasParaAluno() {
         try {
-            const response = await fetch(`${MB_BETA_ORM}/monitorias/${disciplinaID}`, {
+            // limit=100 garante que o calendário receba todas as vagas do mês, não só a 1ª página
+            const response = await fetch(`${MB_BETA_ORM}/monitorias/${disciplinaID}?limit=100`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await response.json();
 
-            // Backend retorna array puro; fallback defensivo
+            // Backend retorna array puro (versões antigas) ou { monitorias: [...] }; fallback defensivo
             const lista = Array.isArray(data) ? data : (data.monitorias || []);
 
             if (lista.length > 0) {

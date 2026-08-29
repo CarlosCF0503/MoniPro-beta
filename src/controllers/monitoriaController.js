@@ -1,6 +1,7 @@
 // src/controllers/monitoriaController.js
 const monitoriaService = require('../services/monitoriaService');
 const tratarErro       = require('../utils/tratarErro');
+const { obterParametrosPaginacao, montarPaginacao } = require('../utils/paginacao');
 
 class MonitoriaController {
     async criar(req, res) {
@@ -31,9 +32,9 @@ class MonitoriaController {
 
     async listar(req, res) {
         try {
-            const monitorias = await monitoriaService.listarPorDisciplina(req.params.idDisciplina);
-            // Retorna array direto — frontend trata com Array.isArray()
-            res.json(monitorias);
+            const paginacao = obterParametrosPaginacao(req.query);
+            const { dados, total } = await monitoriaService.listarPorDisciplina(req.params.idDisciplina, paginacao);
+            res.json({ monitorias: dados, paginacao: montarPaginacao(paginacao, total) });
         } catch (error) {
             console.error('❌ Erro ao listar monitorias:', error);
             res.status(500).json({
@@ -45,8 +46,9 @@ class MonitoriaController {
 
     async listarAgendamentosDoMonitor(req, res) {
         try {
-            const agendamentos = await monitoriaService.buscarAgendamentosPorMonitor(req.usuario.id);
-            res.json({ success: true, agendamentos });
+            const paginacao = obterParametrosPaginacao(req.query);
+            const { dados, total } = await monitoriaService.buscarAgendamentosPorMonitor(req.usuario.id, paginacao);
+            res.json({ success: true, agendamentos: dados, paginacao: montarPaginacao(paginacao, total) });
         } catch (error) {
             console.error('❌ Erro ao buscar agendamentos do monitor:', error);
             res.status(500).json({
