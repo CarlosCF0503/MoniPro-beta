@@ -6,19 +6,28 @@ class AgendamentoRepository {
         return await prisma.agendamento.create({ data: dados });
     }
 
-    async buscarPorAluno(idAluno) {
-        return await prisma.agendamento.findMany({
-            where: { id_aluno: parseInt(idAluno) },
-            include: {
-                monitoria: {
-                    include: {
-                        disciplina: true,
-                        monitor: { select: { nome_completo: true } }
+    async buscarPorAluno(idAluno, { skip, take } = {}) {
+        const where = { id_aluno: parseInt(idAluno) };
+
+        const [dados, total] = await Promise.all([
+            prisma.agendamento.findMany({
+                where,
+                include: {
+                    monitoria: {
+                        include: {
+                            disciplina: true,
+                            monitor: { select: { nome_completo: true } }
+                        }
                     }
-                }
-            },
-            orderBy: { data_hora: 'desc' }
-        });
+                },
+                orderBy: { data_hora: 'desc' },
+                skip,
+                take
+            }),
+            prisma.agendamento.count({ where })
+        ]);
+
+        return { dados, total };
     }
 
     async buscarPorId(id) {

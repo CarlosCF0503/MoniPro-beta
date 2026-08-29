@@ -1,8 +1,11 @@
 
 // JS/api.js
+// Depende de: JS/config.js (deve ser carregado antes deste ficheiro)
 
-// URL base do seu servidor. Se for testar localmente, pode alterar para "http://localhost:3000"
-const MB_BETA_ORM = "https://moni-pro.app.br";
+// URL base do servidor, definida em JS/config.js — gerada por ambiente no arranque do
+// container Nginx (ver Monipro_web/JS/config.js.template). Fallback abaixo cobre o caso de
+// config.js não ter sido carregado (ex.: script bloqueado ou faltando na página).
+const MB_BETA_ORM = (window.MONIPRO_CONFIG && window.MONIPRO_CONFIG.API_BASE_URL) || "https://moni-pro.app.br";
 /**
  * Função centralizada para realizar pedidos ao backend.
  * @param {string} endpoint - O caminho da rota (ex: '/auth/login', '/perfil')

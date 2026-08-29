@@ -1,6 +1,7 @@
 // src/controllers/agendamentoController.js
 const agendamentoService = require('../services/agendamentoService');
 const tratarErro         = require('../utils/tratarErro');
+const { obterParametrosPaginacao, montarPaginacao } = require('../utils/paginacao');
 
 class AgendamentoController {
     async criar(req, res) {
@@ -35,8 +36,9 @@ class AgendamentoController {
 
     async listar(req, res) {
         try {
-            const agendamentos = await agendamentoService.listarPorAluno(req.usuario.id);
-            res.json({ success: true, agendamentos });
+            const paginacao = obterParametrosPaginacao(req.query);
+            const { dados, total } = await agendamentoService.listarPorAluno(req.usuario.id, paginacao);
+            res.json({ success: true, agendamentos: dados, paginacao: montarPaginacao(paginacao, total) });
         } catch (error) {
             console.error('❌ Erro ao buscar agendamentos:', error);
             res.status(500).json({

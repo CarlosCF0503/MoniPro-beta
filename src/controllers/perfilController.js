@@ -1,6 +1,7 @@
 // src/controllers/perfilController.js
 const perfilService = require('../services/perfilService');
 const tratarErro    = require('../utils/tratarErro');
+const { obterParametrosPaginacao, montarPaginacao } = require('../utils/paginacao');
 
 class PerfilController {
     async exibir(req, res) {
@@ -19,8 +20,9 @@ class PerfilController {
 
     async listarAgendamentos(req, res) {
         try {
-            const agendamentos = await perfilService.obterAgendamentos(req.usuario.id);
-            res.json({ success: true, agendamentos });
+            const paginacao = obterParametrosPaginacao(req.query);
+            const { dados, total } = await perfilService.obterAgendamentos(req.usuario.id, paginacao);
+            res.json({ success: true, agendamentos: dados, paginacao: montarPaginacao(paginacao, total) });
         } catch (error) {
             console.error('❌ Erro ao listar agendamentos do perfil:', error);
             res.status(500).json({
@@ -32,8 +34,9 @@ class PerfilController {
 
     async listarMonitorias(req, res) {
         try {
-            const monitorias = await perfilService.obterMonitorias(req.usuario.id);
-            res.json({ success: true, monitorias });
+            const paginacao = obterParametrosPaginacao(req.query);
+            const { dados, total } = await perfilService.obterMonitorias(req.usuario.id, paginacao);
+            res.json({ success: true, monitorias: dados, paginacao: montarPaginacao(paginacao, total) });
         } catch (error) {
             console.error('❌ Erro ao listar monitorias do perfil:', error);
             res.status(500).json({
