@@ -29,9 +29,8 @@ jobs:
       - name: Rodar testes automatizados (Tarefa 7)
         run: npm test
 
-      # TODO (Tarefa 10): substituir por `npm run lint` assim que o lint estiver configurado.
-      - name: Smoke test mínimo
-        run: node -e "require('./src/app')"
+      - name: Lint e formatação (ESLint + Prettier — Tarefa 10)
+        run: npm run lint
 
   deploy:
     name: Deploy to Oracle Server (Production)
