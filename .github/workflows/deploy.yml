@@ -6,8 +6,36 @@ on:
       - main # Roda SOMENTE quando houver push ou merge aprovado na branch main
 
 jobs:
+  test:
+    name: Gate de Qualidade (Testes)
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgres://usuario:senha@localhost:5432/teste
+      JWT_SECRET: segredo-de-ci
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Rodar testes automatizados (Tarefa 7)
+        run: npm test
+
+      # TODO (Tarefa 10): substituir por `npm run lint` assim que o lint estiver configurado.
+      - name: Smoke test mínimo
+        run: node -e "require('./src/app')"
+
   deploy:
     name: Deploy to Oracle Server (Production)
+    needs: test
     runs-on: ubuntu-latest
 
     steps:
@@ -20,11 +48,11 @@ jobs:
           script: |
             echo "Iniciando atualização do ambiente de PRODUÇÃO (Main)..."
             cd ~/moni-pro-beta
-            
+
             # Atualiza o código pegando as novidades do GitHub
             git pull origin main
-            
+
             # Reconstrói as imagens do Docker e reinicia os containers da produção
             docker-compose up -d --build
-            
+
             echo "Deploy de Produção concluído com sucesso!"
