@@ -6,13 +6,19 @@ const { JWT_SECRET } = require('../config/env');
 class AutenticacaoService {
     async cadastrar(dados) {
         // 1. Verifica se já existe ALGUÉM com este e-mail neste MESMO CARGO
-        const usuarioExistente = await usuarioRepository.buscarPorEmail(dados.email, dados.tipo_usuario);
+        const usuarioExistente = await usuarioRepository.buscarPorEmail(
+            dados.email,
+            dados.tipo_usuario
+        );
         if (usuarioExistente) {
             throw new Error(`Este e-mail já está cadastrado como ${dados.tipo_usuario}.`);
         }
 
         // Você também pode fazer a mesma verificação para a matrícula se quiser!
-        const matriculaExistente = await usuarioRepository.buscarPorMatricula(dados.matricula, dados.tipo_usuario);
+        const matriculaExistente = await usuarioRepository.buscarPorMatricula(
+            dados.matricula,
+            dados.tipo_usuario
+        );
         if (matriculaExistente) {
             throw new Error(`Esta matrícula já está cadastrada como ${dados.tipo_usuario}.`);
         }
@@ -30,7 +36,10 @@ class AutenticacaoService {
         if (isEmail) {
             usuario = await usuarioRepository.buscarPorEmail(identificador, tipo_usuario);
         } else {
-            usuario = await usuarioRepository.buscarPorMatricula(Number(identificador), tipo_usuario);
+            usuario = await usuarioRepository.buscarPorMatricula(
+                Number(identificador),
+                tipo_usuario
+            );
         }
 
         if (!usuario) {
@@ -48,17 +57,21 @@ class AutenticacaoService {
         }
 
         const token = jwt.sign(
-            { 
-                id: usuario.id, 
+            {
+                id: usuario.id,
                 nome_completo: usuario.nome_completo,
                 email: usuario.email,
-                tipo: usuario.tipo_usuario 
+                tipo: usuario.tipo_usuario
             },
             JWT_SECRET,
             { expiresIn: '24h' }
         );
 
-        return { success: true, token, usuario: { id: usuario.id, nome: usuario.nome_completo, tipo: usuario.tipo_usuario } };
+        return {
+            success: true,
+            token,
+            usuario: { id: usuario.id, nome: usuario.nome_completo, tipo: usuario.tipo_usuario }
+        };
     }
 }
 

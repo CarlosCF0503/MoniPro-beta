@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 jest.mock('../src/config/bancoDeDados', () => ({
     usuario: { create: jest.fn(), findFirst: jest.fn(), findUnique: jest.fn() },
     monitoria: {},
-    agendamento: {},
+    agendamento: {}
 }));
 
 const prisma = require('../src/config/bancoDeDados');
@@ -22,7 +22,7 @@ describe('POST /auth/cadastro', () => {
             email: 'ana@exemplo.com',
             matricula: 12345,
             senha: 'senha123',
-            tipo_usuario: 'aluno',
+            tipo_usuario: 'aluno'
         });
 
         expect(resposta.status).toBe(201);
@@ -31,7 +31,9 @@ describe('POST /auth/cadastro', () => {
     });
 
     it('retorna 400 quando faltam campos obrigatórios', async () => {
-        const resposta = await request(app).post('/auth/cadastro').send({ email: 'ana@exemplo.com' });
+        const resposta = await request(app)
+            .post('/auth/cadastro')
+            .send({ email: 'ana@exemplo.com' });
 
         expect(resposta.status).toBe(400);
         expect(prisma.usuario.create).not.toHaveBeenCalled();
@@ -47,7 +49,7 @@ describe('POST /auth/login', () => {
         const resposta = await request(app).post('/auth/login').send({
             identificador: 'naoexiste@exemplo.com',
             senha: 'qualquer',
-            tipo_usuario: 'aluno',
+            tipo_usuario: 'aluno'
         });
 
         expect(resposta.status).toBe(401);
@@ -61,13 +63,13 @@ describe('POST /auth/login', () => {
             nome_completo: 'Ana Aluna',
             email: 'ana@exemplo.com',
             senha: hash,
-            tipo_usuario: 'aluno',
+            tipo_usuario: 'aluno'
         });
 
         const resposta = await request(app).post('/auth/login').send({
             identificador: 'ana@exemplo.com',
             senha: 'senhaErrada',
-            tipo_usuario: 'aluno',
+            tipo_usuario: 'aluno'
         });
 
         expect(resposta.status).toBe(401);
@@ -81,13 +83,13 @@ describe('POST /auth/login', () => {
             nome_completo: 'Ana Aluna',
             email: 'ana@exemplo.com',
             senha: hash,
-            tipo_usuario: 'aluno',
+            tipo_usuario: 'aluno'
         });
 
         const resposta = await request(app).post('/auth/login').send({
             identificador: 'ana@exemplo.com',
             senha: 'senhaCorreta',
-            tipo_usuario: 'aluno',
+            tipo_usuario: 'aluno'
         });
 
         expect(resposta.status).toBe(200);

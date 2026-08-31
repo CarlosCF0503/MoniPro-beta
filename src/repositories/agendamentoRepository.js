@@ -39,7 +39,7 @@ class AgendamentoRepository {
     async buscarPorAlunoEMonitoria(idAluno, idMonitoria) {
         return await prisma.agendamento.findFirst({
             where: {
-                id_aluno:     parseInt(idAluno),
+                id_aluno: parseInt(idAluno),
                 id_monitoria: parseInt(idMonitoria)
             }
         });

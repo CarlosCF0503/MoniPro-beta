@@ -10,8 +10,8 @@ jest.mock('../src/config/bancoDeDados', () => ({
         count: jest.fn(),
         findUnique: jest.fn(),
         findFirst: jest.fn(),
-        delete: jest.fn(),
-    },
+        delete: jest.fn()
+    }
 }));
 
 const prisma = require('../src/config/bancoDeDados');

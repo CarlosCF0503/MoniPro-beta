@@ -1,6 +1,6 @@
 // src/controllers/perfilController.js
 const perfilService = require('../services/perfilService');
-const tratarErro    = require('../utils/tratarErro');
+const tratarErro = require('../utils/tratarErro');
 const { obterParametrosPaginacao, montarPaginacao } = require('../utils/paginacao');
 
 class PerfilController {
@@ -12,7 +12,7 @@ class PerfilController {
             console.error('❌ Erro ao buscar perfil:', error);
             const mensagem = tratarErro(error, {
                 naoEncontrado: 'Perfil não encontrado. Faça login novamente.',
-                default:       'Não foi possível carregar o perfil. Tente novamente.'
+                default: 'Não foi possível carregar o perfil. Tente novamente.'
             });
             res.status(404).json({ success: false, erro: mensagem });
         }
@@ -21,8 +21,15 @@ class PerfilController {
     async listarAgendamentos(req, res) {
         try {
             const paginacao = obterParametrosPaginacao(req.query);
-            const { dados, total } = await perfilService.obterAgendamentos(req.usuario.id, paginacao);
-            res.json({ success: true, agendamentos: dados, paginacao: montarPaginacao(paginacao, total) });
+            const { dados, total } = await perfilService.obterAgendamentos(
+                req.usuario.id,
+                paginacao
+            );
+            res.json({
+                success: true,
+                agendamentos: dados,
+                paginacao: montarPaginacao(paginacao, total)
+            });
         } catch (error) {
             console.error('❌ Erro ao listar agendamentos do perfil:', error);
             res.status(500).json({
@@ -36,7 +43,11 @@ class PerfilController {
         try {
             const paginacao = obterParametrosPaginacao(req.query);
             const { dados, total } = await perfilService.obterMonitorias(req.usuario.id, paginacao);
-            res.json({ success: true, monitorias: dados, paginacao: montarPaginacao(paginacao, total) });
+            res.json({
+                success: true,
+                monitorias: dados,
+                paginacao: montarPaginacao(paginacao, total)
+            });
         } catch (error) {
             console.error('❌ Erro ao listar monitorias do perfil:', error);
             res.status(500).json({

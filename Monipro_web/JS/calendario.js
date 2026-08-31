@@ -5,9 +5,18 @@
 
 (function () {
     const MESES = [
-        'Janeiro', 'Fevereiro', 'Março', 'Abril',
-        'Maio', 'Junho', 'Julho', 'Agosto',
-        'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+        'Janeiro',
+        'Fevereiro',
+        'Março',
+        'Abril',
+        'Maio',
+        'Junho',
+        'Julho',
+        'Agosto',
+        'Setembro',
+        'Outubro',
+        'Novembro',
+        'Dezembro'
     ];
 
     // Offset de mês navegado pelo utilizador (0 = mês atual, 1 = próximo, -1 = anterior)
@@ -19,21 +28,21 @@
      * @param {Function} onDiaClick - Callback chamado com (diaNum, mesExibido, anoExibido) ao clicar num dia.
      */
     window.renderCalendario = function (diasComMonitoria = [], onDiaClick = null) {
-        const hoje       = new Date();
-        const baseData   = new Date(hoje.getFullYear(), hoje.getMonth() + mesOffset, 1);
+        const hoje = new Date();
+        const baseData = new Date(hoje.getFullYear(), hoje.getMonth() + mesOffset, 1);
         const mesExibido = baseData.getMonth();
         const anoExibido = baseData.getFullYear();
-        const diaHoje    = hoje.getDate();
-        const mesHoje    = hoje.getMonth();
-        const anoHoje    = hoje.getFullYear();
+        const diaHoje = hoje.getDate();
+        const mesHoje = hoje.getMonth();
+        const anoHoje = hoje.getFullYear();
 
         // Atualiza cabeçalho
         const headerEl = document.getElementById('mes-ano');
         if (headerEl) headerEl.textContent = `${MESES[mesExibido]} ${anoExibido}`;
 
         const primeiroDia = new Date(anoExibido, mesExibido, 1).getDay();
-        const ultimoDia   = new Date(anoExibido, mesExibido + 1, 0).getDate();
-        const tbody       = document.getElementById('dias-calendario');
+        const ultimoDia = new Date(anoExibido, mesExibido + 1, 0).getDate();
+        const tbody = document.getElementById('dias-calendario');
         if (!tbody) return;
 
         tbody.innerHTML = '';
@@ -50,11 +59,11 @@
                 linha = document.createElement('tr');
             }
 
-            const td        = document.createElement('td');
-            td.textContent  = String(dia);
-            td.dataset.dia  = String(dia);
-            td.dataset.mes  = String(mesExibido);
-            td.dataset.ano  = String(anoExibido);
+            const td = document.createElement('td');
+            td.textContent = String(dia);
+            td.dataset.dia = String(dia);
+            td.dataset.mes = String(mesExibido);
+            td.dataset.ano = String(anoExibido);
 
             // Dia atual
             if (dia === diaHoje && mesExibido === mesHoje && anoExibido === anoHoje) {
@@ -94,7 +103,9 @@
     /**
      * Retorna o mesOffset atual (usado pelo marcar_monitoria.js para filtrar monitorias).
      */
-    window.getMesOffset = function () { return mesOffset; };
+    window.getMesOffset = function () {
+        return mesOffset;
+    };
 
     /**
      * Inicializa os botões de navegação do calendário.
@@ -102,7 +113,7 @@
      */
     window.iniciarNavegacaoCalendario = function (onMudancaMes) {
         const btnAnterior = document.getElementById('mes-anterior');
-        const btnProximo  = document.getElementById('proximo-mes');
+        const btnProximo = document.getElementById('proximo-mes');
 
         if (btnAnterior) {
             btnAnterior.addEventListener('click', () => {
@@ -129,6 +140,7 @@
         if (td) td.classList.add('dia-selecionado');
     };
 
-    window.getTdSelecionado = function () { return tdSelecionado; };
-
+    window.getTdSelecionado = function () {
+        return tdSelecionado;
+    };
 })();

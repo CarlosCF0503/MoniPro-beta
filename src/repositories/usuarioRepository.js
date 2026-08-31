@@ -7,21 +7,21 @@ class UsuarioRepository {
 
     // Trocado para findFirst e adicionado o tipo_usuario
     async buscarPorEmail(email, tipo_usuario) {
-        return await prisma.usuario.findFirst({ 
-            where: { 
+        return await prisma.usuario.findFirst({
+            where: {
                 email: email,
                 tipo_usuario: tipo_usuario
-            } 
+            }
         });
     }
 
     // Trocado para findFirst e adicionado o tipo_usuario
     async buscarPorMatricula(matricula, tipo_usuario) {
-        return await prisma.usuario.findFirst({ 
-            where: { 
+        return await prisma.usuario.findFirst({
+            where: {
                 matricula: parseInt(matricula),
                 tipo_usuario: tipo_usuario
-            } 
+            }
         });
     }
 
@@ -29,7 +29,13 @@ class UsuarioRepository {
     async buscarPorId(id) {
         return await prisma.usuario.findUnique({
             where: { id: parseInt(id) },
-            select: { id: true, nome_completo: true, email: true, matricula: true, tipo_usuario: true }
+            select: {
+                id: true,
+                nome_completo: true,
+                email: true,
+                matricula: true,
+                tipo_usuario: true
+            }
         });
     }
 }

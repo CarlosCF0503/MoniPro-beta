@@ -1,0 +1,16 @@
+node_modules
+package-lock.json
+prisma/migrations
+*.pem
+.idea
+
+# Fora do escopo da Tarefa 10 (lint/format do código JS): evita reformatar
+# HTML/CSS do frontend, que não passa pelo ESLint e tem maior risco de
+# mudanças de whitespace afetarem o layout.
+Monipro_web/**/*.html
+Monipro_web/**/*.css
+
+# Mantém a indentação de 2 espaços convencional do YAML (Actions, docker-compose etc.),
+# fora do escopo desta tarefa (lint/format do código JS).
+*.yml
+*.yaml
