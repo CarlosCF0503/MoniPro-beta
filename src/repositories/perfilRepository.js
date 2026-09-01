@@ -9,7 +9,7 @@ class PerfilRepository {
                 nome_completo: true,
                 email: true,
                 matricula: true,
-                tipo_usuario: true,
+                tipo_usuario: true
                 // Pode incluir os agendamentos do utilizador se a relação existir no schema.prisma
                 // agendamentos: true
             }

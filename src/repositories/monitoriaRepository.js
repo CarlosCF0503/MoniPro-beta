@@ -6,11 +6,11 @@ class MonitoriaRepository {
         return await prisma.monitoria.create({
             data: {
                 id_disciplina: Number(dados.id_disciplina),
-                id_monitor:    dados.id_monitor,
-                local:         dados.local,
-                descricao:     dados.descricao,
-                status:        dados.status || 'ativa',
-                horario:       dados.horario
+                id_monitor: dados.id_monitor,
+                local: dados.local,
+                descricao: dados.descricao,
+                status: dados.status || 'ativa',
+                horario: dados.horario
             }
         });
     }
@@ -76,7 +76,7 @@ class MonitoriaRepository {
     async cancelar(id) {
         return await prisma.monitoria.update({
             where: { id: parseInt(id) },
-            data:  { status: 'cancelada' }
+            data: { status: 'cancelada' }
         });
     }
 

@@ -1,7 +1,7 @@
 // src/controllers/autenticacaoController.js
 const autenticacaoService = require('../services/autenticacaoService');
-const tratarErro          = require('../utils/tratarErro');
-console.log('✅ autenticacaoController v2 carregado');
+const tratarErro = require('../utils/tratarErro');
+const logger = require('../utils/logger');
 
 class AutenticacaoController {
     async cadastrar(req, res) {
@@ -16,15 +16,17 @@ class AutenticacaoController {
 
         try {
             const usuario = await autenticacaoService.cadastrar(req.body);
+            logger.info({ id: usuario.id, tipo_usuario }, 'Usuário cadastrado');
             res.status(201).json({
                 success: true,
                 mensagem: 'Conta criada com sucesso!',
                 id: usuario.id
             });
         } catch (error) {
-            console.log('❌ ERRO CADASTRO código:', error.code);
-            console.log('❌ ERRO CADASTRO mensagem:', error.message);
-            console.log('❌ ERRO CADASTRO meta:', error.meta);
+            logger.error(
+                { code: error.code, message: error.message, meta: error.meta },
+                'Erro ao cadastrar usuário'
+            );
             const mensagem = tratarErro(error, {
                 default: 'Não foi possível criar a conta. Tente novamente.'
             });
@@ -46,9 +48,10 @@ class AutenticacaoController {
             const resultado = await autenticacaoService.login(identificador, senha, tipo_usuario);
             res.json(resultado);
         } catch (error) {
+            logger.warn({ identificador, tipo_usuario }, 'Tentativa de login falhou');
             const mensagem = tratarErro(error, {
                 naoEncontrado: 'Usuário não encontrado. Verifique suas credenciais.',
-                default:       'Não foi possível realizar o login. Tente novamente.'
+                default: 'Não foi possível realizar o login. Tente novamente.'
             });
             res.status(401).json({ success: false, erro: mensagem });
         }

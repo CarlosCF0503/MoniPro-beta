@@ -2,11 +2,14 @@
 
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('monipro_token');
-    let userData = null;
+    let userData;
 
     if (!token) {
-        if (typeof showToast === 'function') showToast('Sessão expirada. Faça login novamente.', 'error');
-        setTimeout(() => { window.location.href = 'index.html'; }, 1500);
+        if (typeof showToast === 'function')
+            showToast('Sessão expirada. Faça login novamente.', 'error');
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 1500);
         return;
     }
 
@@ -19,11 +22,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // --- MODAL DE CONFIRMAÇÃO ---
-    const confirmModal     = document.getElementById('modal-confirmacao');
+    const confirmModal = document.getElementById('modal-confirmacao');
     const confirmModalText = document.getElementById('modal-confirmacao-texto');
-    const btnConfirmarSim  = document.getElementById('btnConfirmarSim');
-    const btnConfirmarNao  = document.getElementById('btnConfirmarNao');
-    const overlay          = document.getElementById('overlay');
+    const btnConfirmarSim = document.getElementById('btnConfirmarSim');
+    const btnConfirmarNao = document.getElementById('btnConfirmarNao');
+    const overlay = document.getElementById('overlay');
     let acaoPendente = null;
 
     const showConfirmModal = (texto) => {
@@ -39,9 +42,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         acaoPendente = null;
     };
 
-    if (btnConfirmarSim) btnConfirmarSim.addEventListener('click', () => { if (typeof acaoPendente === 'function') acaoPendente(); hideConfirmModal(); });
+    if (btnConfirmarSim)
+        btnConfirmarSim.addEventListener('click', () => {
+            if (typeof acaoPendente === 'function') acaoPendente();
+            hideConfirmModal();
+        });
     if (btnConfirmarNao) btnConfirmarNao.addEventListener('click', hideConfirmModal);
-
 
     // ==========================================
     // 1. CARREGAR DADOS DE IDENTIDADE (Usando chamadaApi)
@@ -50,12 +56,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         const data = await chamadaApi('/perfil');
 
         if (data.success && data.user) {
-            document.getElementById('nomeUsuario').textContent      = data.user.nome_completo || 'Utilizador';
-            document.getElementById('emailUsuario').textContent     = data.user.email || '';
+            document.getElementById('nomeUsuario').textContent =
+                data.user.nome_completo || 'Utilizador';
+            document.getElementById('emailUsuario').textContent = data.user.email || '';
             document.getElementById('matriculaUsuario').textContent = data.user.matricula || '';
 
             const tipo = String(data.user.tipo_usuario);
-            document.getElementById('tipoUsuario').textContent = tipo.charAt(0).toUpperCase() + tipo.slice(1);
+            document.getElementById('tipoUsuario').textContent =
+                tipo.charAt(0).toUpperCase() + tipo.slice(1);
         } else {
             // Exibe a mensagem real retornada pelo servidor (erro 401, 404, 500, etc.)
             const msgErro = data.mensagem || data.erro || 'Erro ao carregar perfil.';
@@ -65,7 +73,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Se token inválido/expirado, redireciona para login
             if (data.statusHttp === 401) {
                 localStorage.removeItem('monipro_token');
-                setTimeout(() => { window.location.href = 'index.html'; }, 1500);
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
             }
         }
     } catch (error) {
@@ -86,13 +96,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             container.addEventListener('click', (event) => {
                 if (event.target.classList.contains('btn-cancelar')) {
                     const agendamentoId = event.target.dataset.agendamentoId;
-                    const itemElement   = event.target.closest('.lista-item');
+                    const itemElement = event.target.closest('.lista-item');
                     acaoPendente = () => handleSairMonitoria(agendamentoId, itemElement);
-                    showConfirmModal('Tem a certeza que deseja cancelar a sua inscrição nesta monitoria?');
+                    showConfirmModal(
+                        'Tem a certeza que deseja cancelar a sua inscrição nesta monitoria?'
+                    );
                 }
             });
         }
-
     } else if (userData.tipo === 'monitor') {
         const btnCertificados = document.getElementById('btn-certificados');
         if (btnCertificados) btnCertificados.style.display = 'flex';
@@ -113,9 +124,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Painel de certificados
         const verCertificadosBtn = document.getElementById('abrir_c');
-        const fecharCertBtn      = document.getElementById('fechar_c');
-        const certificadosArea   = document.getElementById('area_certificados');
-        const overlayCert        = document.getElementById('overlay-cert');
+        const fecharCertBtn = document.getElementById('fechar_c');
+        const certificadosArea = document.getElementById('area_certificados');
+        const overlayCert = document.getElementById('overlay-cert');
 
         const abrirCert = () => {
             certificadosArea?.classList.add('aparecer');
@@ -147,11 +158,14 @@ async function carregarAgendamentos(container) {
 
         if (!data.erro && lista.length > 0) {
             container.innerHTML = '';
-            lista.forEach(ag => {
-                const dataFormatada = new Date(ag.data_hora).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+            lista.forEach((ag) => {
+                const dataFormatada = new Date(ag.data_hora).toLocaleString('pt-BR', {
+                    dateStyle: 'short',
+                    timeStyle: 'short'
+                });
                 const nomeDisciplina = ag.monitoria?.disciplina?.nome || 'Disciplina Indefinida';
-                const nomeMonitor    = ag.monitoria?.monitor?.nome_completo || 'Monitor';
-                const statusStr      = String(ag.status);
+                const nomeMonitor = ag.monitoria?.monitor?.nome_completo || 'Monitor';
+                const statusStr = String(ag.status);
 
                 const div = document.createElement('div');
                 div.className = 'lista-item';
@@ -181,11 +195,14 @@ async function carregarMonitoriasCriadas(container) {
 
         if (!data.erro && lista.length > 0) {
             container.innerHTML = '';
-            lista.forEach(m => {
-                const dataFormatada = new Date(m.horario).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+            lista.forEach((m) => {
+                const dataFormatada = new Date(m.horario).toLocaleString('pt-BR', {
+                    dateStyle: 'short',
+                    timeStyle: 'short'
+                });
                 const nomeDisciplina = m.disciplina?.nome || 'Disciplina Indefinida';
-                const statusStr      = String(m.status);
-                const ativa          = ['ativa', 'pendente'].includes(statusStr.toLowerCase());
+                const statusStr = String(m.status);
+                const ativa = ['ativa', 'pendente'].includes(statusStr.toLowerCase());
 
                 const div = document.createElement('div');
                 div.className = 'lista-item';
@@ -194,9 +211,10 @@ async function carregarMonitoriasCriadas(container) {
                         <p><strong>${nomeDisciplina}</strong> (${m.local || 'Local Indefinido'})</p>
                         <p>${dataFormatada} — <span class="status-${statusStr.toLowerCase()}">${statusStr.toUpperCase()}</span></p>
                     </div>
-                    ${ativa
-                        ? `<button class="btn-cancelar" data-monitoria-id="${m.id}">Cancelar Vaga</button>`
-                        : `<span class="status-${statusStr.toLowerCase()}">${statusStr.toUpperCase()}</span>`
+                    ${
+                        ativa
+                            ? `<button class="btn-cancelar" data-monitoria-id="${m.id}">Cancelar Vaga</button>`
+                            : `<span class="status-${statusStr.toLowerCase()}">${statusStr.toUpperCase()}</span>`
                     }
                 `;
                 container.appendChild(div);
@@ -216,10 +234,15 @@ async function handleSairMonitoria(agendamentoId, itemElement) {
         const data = await chamadaApi(`/agendamentos/${agendamentoId}`, { method: 'DELETE' });
         if (!data.erro && data.success) {
             // Backend retorna 'mensagem' (pt), não 'message'
-            if (typeof showToast === 'function') showToast(data.mensagem || data.message || 'Cancelado com sucesso', 'success');
+            if (typeof showToast === 'function')
+                showToast(data.mensagem || data.message || 'Cancelado com sucesso', 'success');
             itemElement.remove();
         } else {
-            if (typeof showToast === 'function') showToast(data.mensagem || data.message || data.erro || 'Erro ao cancelar.', 'error');
+            if (typeof showToast === 'function')
+                showToast(
+                    data.mensagem || data.message || data.erro || 'Erro ao cancelar.',
+                    'error'
+                );
         }
     } catch (error) {
         if (typeof showToast === 'function') showToast('Erro de rede.', 'error');
@@ -239,7 +262,8 @@ async function handleCancelarMonitoria(monitoriaId, itemElement) {
             const btn = itemElement.querySelector('.btn-cancelar');
             if (btn) btn.remove();
         } else {
-            if (typeof showToast === 'function') showToast(data.mensagem || data.message || 'Erro ao cancelar.', 'error');
+            if (typeof showToast === 'function')
+                showToast(data.mensagem || data.message || 'Erro ao cancelar.', 'error');
         }
     } catch (error) {
         if (typeof showToast === 'function') showToast('Erro de rede.', 'error');

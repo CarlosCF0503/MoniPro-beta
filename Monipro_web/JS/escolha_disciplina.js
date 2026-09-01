@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         containerDisciplinas.innerHTML = '';
-        listaDisciplinas.forEach(disc => {
+        listaDisciplinas.forEach((disc) => {
             const card = document.createElement('a');
             card.className = 'disciplina-card';
             card.href = `marcar_monitoria.html?disciplinaID=${disc.id}&disciplinaNome=${encodeURIComponent(disc.nome)}`;
@@ -33,7 +33,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             `;
             containerDisciplinas.appendChild(card);
         });
-
     } catch (error) {
         console.error('Erro ao carregar disciplinas:', error.message);
         containerDisciplinas.innerHTML = `<p>Erro ao carregar disciplinas: ${error.message}</p>`;

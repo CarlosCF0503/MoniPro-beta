@@ -1,6 +1,6 @@
 // src/server.js
 require('./config/env');
-const app    = require('./app');
+const app = require('./app');
 const prisma = require('./config/bancoDeDados');
 
 const PORTA = process.env.PORT || 3000;
@@ -23,7 +23,6 @@ async function iniciarServidor() {
                 process.exit(0);
             });
         });
-
     } catch (erro) {
         console.error('❌ Falha crítica ao conectar no banco de dados:', erro);
         await prisma.$disconnect();

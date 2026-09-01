@@ -1,6 +1,6 @@
 // src/controllers/agendamentoController.js
 const agendamentoService = require('../services/agendamentoService');
-const tratarErro         = require('../utils/tratarErro');
+const tratarErro = require('../utils/tratarErro');
 const { obterParametrosPaginacao, montarPaginacao } = require('../utils/paginacao');
 
 class AgendamentoController {
@@ -18,16 +18,16 @@ class AgendamentoController {
         try {
             const agendamento = await agendamentoService.criar({
                 id_monitoria: parseInt(id_monitoria),
-                id_aluno:     req.usuario.id,
-                status:       req.body.status || 'pendente',
-                data_hora:    dataFinal
+                id_aluno: req.usuario.id,
+                status: req.body.status || 'pendente',
+                data_hora: dataFinal
             });
             res.status(201).json({ success: true, agendamento });
         } catch (error) {
             console.error('❌ Erro ao criar agendamento:', error);
             const mensagem = tratarErro(error, {
-                P2003:   'A monitoria selecionada não existe ou foi cancelada.',
-                P2025:   'A monitoria selecionada não foi encontrada.',
+                P2003: 'A monitoria selecionada não existe ou foi cancelada.',
+                P2025: 'A monitoria selecionada não foi encontrada.',
                 default: 'Não foi possível realizar o agendamento. Tente novamente.'
             });
             res.status(400).json({ success: false, erro: mensagem });
@@ -37,8 +37,15 @@ class AgendamentoController {
     async listar(req, res) {
         try {
             const paginacao = obterParametrosPaginacao(req.query);
-            const { dados, total } = await agendamentoService.listarPorAluno(req.usuario.id, paginacao);
-            res.json({ success: true, agendamentos: dados, paginacao: montarPaginacao(paginacao, total) });
+            const { dados, total } = await agendamentoService.listarPorAluno(
+                req.usuario.id,
+                paginacao
+            );
+            res.json({
+                success: true,
+                agendamentos: dados,
+                paginacao: montarPaginacao(paginacao, total)
+            });
         } catch (error) {
             console.error('❌ Erro ao buscar agendamentos:', error);
             res.status(500).json({
@@ -55,9 +62,9 @@ class AgendamentoController {
         } catch (error) {
             console.error('❌ Erro ao deletar agendamento:', error);
             const mensagem = tratarErro(error, {
-                naoEncontrado:  'Agendamento não encontrado.',
-                naoAutorizado:  'Você não tem permissão para cancelar este agendamento.',
-                default:        'Não foi possível cancelar o agendamento. Tente novamente.'
+                naoEncontrado: 'Agendamento não encontrado.',
+                naoAutorizado: 'Você não tem permissão para cancelar este agendamento.',
+                default: 'Não foi possível cancelar o agendamento. Tente novamente.'
             });
             const status = error.message?.includes('autorizado') ? 403 : 400;
             res.status(status).json({ success: false, erro: mensagem });

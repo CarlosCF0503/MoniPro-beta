@@ -5,10 +5,11 @@ const SVG_OLHO_FECHADO = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-
 
 document.addEventListener('DOMContentLoaded', () => {
     // Toggle de senha — troca o conteúdo do SVG ao clicar
-    document.querySelectorAll('.olho').forEach(olho => {
+    document.querySelectorAll('.olho').forEach((olho) => {
         olho.addEventListener('click', function () {
-            const input = document.getElementById(this.dataset.target)
-                       || this.parentElement.querySelector('input');
+            const input =
+                document.getElementById(this.dataset.target) ||
+                this.parentElement.querySelector('input');
             const svg = this.querySelector('svg');
             if (input.type === 'password') {
                 input.type = 'text';
@@ -31,8 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
 
         const identificadorInput = document.getElementById('inputIdentificador');
-        const senhaInput         = document.getElementById('inputSenha');
-        const tipoUsuarioInput   = document.querySelector('input[name="tipo_usuario"]:checked');
+        const senhaInput = document.getElementById('inputSenha');
+        const tipoUsuarioInput = document.querySelector('input[name="tipo_usuario"]:checked');
 
         if (!identificadorInput?.value.trim() || !senhaInput?.value || !tipoUsuarioInput) {
             if (typeof showToast === 'function') showToast('Preencha todos os campos.', 'error');
@@ -40,18 +41,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const btnSubmit = document.getElementById('entrar');
-        btnSubmit.value    = 'Aguarde...';
+        btnSubmit.value = 'Aguarde...';
         btnSubmit.disabled = true;
 
         try {
             // Usa MB_BETA_ORM definido em api.js — rota: POST /auth/login
             const resposta = await fetch(`${MB_BETA_ORM}/auth/login`, {
-                method:  'POST',
+                method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     identificador: identificadorInput.value.trim(),
-                    senha:         senhaInput.value,
-                    tipo_usuario:  tipoUsuarioInput.value
+                    senha: senhaInput.value,
+                    tipo_usuario: tipoUsuarioInput.value
                 })
             });
 
@@ -59,20 +60,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (resposta.ok && dados.success) {
                 // Chave padrão do app: 'monipro_token'
-                localStorage.setItem('monipro_token',   dados.token);
+                localStorage.setItem('monipro_token', dados.token);
                 localStorage.setItem('monipro_usuario', JSON.stringify(dados.usuario));
 
-                if (typeof showToast === 'function') showToast('Login realizado com sucesso!', 'success');
-                setTimeout(() => { window.location.href = 'base.html'; }, 1000);
+                if (typeof showToast === 'function')
+                    showToast('Login realizado com sucesso!', 'success');
+                setTimeout(() => {
+                    window.location.href = 'base.html';
+                }, 1000);
             } else {
                 const msg = dados.detalhe || dados.erro || 'Credenciais inválidas.';
                 if (typeof showToast === 'function') showToast(msg, 'error');
             }
         } catch (error) {
             console.error('Erro ao fazer login:', error);
-            if (typeof showToast === 'function') showToast('Erro de conexão com o servidor.', 'error');
+            if (typeof showToast === 'function')
+                showToast('Erro de conexão com o servidor.', 'error');
         } finally {
-            btnSubmit.value    = 'Entrar';
+            btnSubmit.value = 'Entrar';
             btnSubmit.disabled = false;
         }
     });
