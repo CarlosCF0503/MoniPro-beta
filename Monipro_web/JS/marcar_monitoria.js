@@ -45,7 +45,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Callback chamado sempre que o mês muda (botões < >)
     function aoMudarMes(mesOffset) {
-        // Recalcula quais dias do novo mês têm monitorias
         const hoje = new Date();
         const baseData = new Date(hoje.getFullYear(), hoje.getMonth() + mesOffset, 1);
         const mesAlvo = baseData.getMonth();
@@ -55,8 +54,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         renderCalendario(diasComMonitoria, aoDiaClicar);
 
-        // Limpa seleção ao mudar de mês
+        // Limpa seleção e oculta sugestão ao mudar de mês
         monitoriaSelecionada = null;
+        atualizarSugestaoMonitor(null);
         if (containerMonitores) {
             containerMonitores.innerHTML = '<p>Selecione um dia disponível (marcado a azul).</p>';
         }
@@ -80,6 +80,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 containerMonitores.innerHTML =
                     '<p>Selecione um dia disponível (marcado a azul).</p>';
             monitoriaSelecionada = null;
+            atualizarSugestaoMonitor(null);
             selecionarDia(null);
             return;
         }
@@ -100,7 +101,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     );
             }
         }
-        // Monitor: apenas seleciona o dia para usar no formulário
     }
 
     // Inicializa navegação (botões < >) — calendário.js
@@ -115,7 +115,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if (userData.tipo === 'monitor') {
         if (viewAluno) viewAluno.style.display = 'none';
         if (viewMonitor) viewMonitor.style.display = 'flex';
-        // Monitor vê o calendário sem marcações de monitorias
         renderCalendario([], aoDiaClicar);
         if (btnCriarMonitoria) btnCriarMonitoria.addEventListener('click', salvarNovaMonitoria);
     }
@@ -135,23 +134,53 @@ document.addEventListener('DOMContentLoaded', async () => {
         ];
     }
 
+    // Atualiza/Exibe a sugestão do primeiro monitor disponível do dia
+    function atualizarSugestaoMonitor(monitoriaSugerida) {
+        const cardSugestao = document.getElementById('card-sugestao');
+        const btnSugestao = document.getElementById('btn-selecionar-sugestao');
+        if (!cardSugestao) return;
+
+        if (!monitoriaSugerida) {
+            cardSugestao.style.display = 'none';
+            return;
+        }
+
+        const horaFormatada = new Date(monitoriaSugerida.horario).toLocaleString('pt-BR', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        const nomeMonitor = monitoriaSugerida.monitor?.nome_completo || 'Monitor Recomendado';
+
+        document.getElementById('sugestao-nome').textContent = nomeMonitor;
+        document.getElementById('sugestao-info').textContent = `Horário: ${horaFormatada} - Local: ${monitoriaSugerida.local || 'A definir'}`;
+        
+        cardSugestao.style.display = 'flex';
+
+        if (btnSugestao) {
+            btnSugestao.onclick = () => {
+                const monId = String(monitoriaSugerida.id);
+                const inputRadio = document.getElementById(`mon-${monId}`);
+                if (inputRadio) {
+                    inputRadio.click();
+                    inputRadio.closest('.monitor-item')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            };
+        }
+    }
+
     // --- 5. FUNÇÕES DE API ---
 
     async function carregarMonitoriasParaAluno() {
         try {
-            // limit=100 garante que o calendário receba todas as vagas do mês, não só a 1ª página
             const response = await fetch(`${MB_BETA_ORM}/monitorias/${disciplinaID}?limit=100`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             const data = await response.json();
-
-            // Backend retorna array puro (versões antigas) ou { monitorias: [...] }; fallback defensivo
             const lista = Array.isArray(data) ? data : data.monitorias || [];
 
             if (lista.length > 0) {
                 todasAsMonitorias = lista;
 
-                // Renderiza o mês atual com os dias que têm monitorias
                 const hoje = new Date();
                 const diasCom = calcularDiasComMonitoria(hoje.getMonth(), hoje.getFullYear());
                 renderCalendario(diasCom, aoDiaClicar);
@@ -185,8 +214,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (lista.length === 0) {
             containerMonitores.innerHTML = '<p>Nenhuma monitoria encontrada para este dia.</p>';
+            atualizarSugestaoMonitor(null);
             return;
         }
+
+        // Define a sugestão como o primeiro monitor da lista filtrada
+        atualizarSugestaoMonitor(lista[0]);
 
         lista.forEach((monitoria) => {
             const horaFormatada = new Date(monitoria.horario).toLocaleString('pt-BR', {
