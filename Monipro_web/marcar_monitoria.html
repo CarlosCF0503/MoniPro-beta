@@ -88,16 +88,31 @@
             </div>
         </div>
 
-        <div class="areaMarcar" id="view-aluno">
-            <p>Monitores Disponíveis</p>
-            <div class="monitores" id="lista-monitores">
-                <p>A carregar monitores...</p>
-            </div>
-            <div id="marcar-agendamento" class="btn-acao" role="button" tabindex="0" aria-label="Agendar Monitoria">
-                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                <p>Agendar Monitoria</p>
-            </div>
+<div class="areaMarcar" id="view-aluno">
+    <p>Monitores Disponíveis</p>
+
+    <!-- CARD DE SUGESTÃO AUTOMÁTICA -->
+    <div id="card-sugestao" class="sugestao-container" style="display: none;">
+        <div class="sugestao-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4a90e2" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            <span>Sugestão Recomendada</span>
         </div>
+        <div class="sugestao-body">
+            <strong id="sugestao-nome">Monitor Recomendado</strong>
+            <small id="sugestao-info">Disponível no dia selecionado</small>
+        </div>
+        <button type="button" id="btn-selecionar-sugestao" class="btn-sugestao">Selecionar</button>
+    </div>
+
+    <div class="monitores" id="lista-monitores">
+        <p>A carregar monitores...</p>
+    </div>
+
+    <div id="marcar-agendamento" class="btn-acao" role="button" tabindex="0" aria-label="Agendar Monitoria">
+        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <p>Agendar Monitoria</p>
+    </div>
+</div>
 
         <div class="areaMarcar" id="view-monitor" style="display: none;">
             <p>Criar Vaga de Monitoria</p>
