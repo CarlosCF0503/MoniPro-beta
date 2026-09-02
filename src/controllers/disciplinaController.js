@@ -29,3 +29,19 @@ exports.criar = async (req, res) => {
         return res.status(500).json({ erro: true, mensagem: 'Erro interno ao criar disciplina.' });
     }
 };
+
+exports.obterRanking = async (req, res) => {
+    try {
+        const idDisciplina = parseInt(req.params.id, 10);
+
+        if (isNaN(idDisciplina)) {
+            return res.status(400).json({ erro: true, mensagem: 'ID de disciplina inválido.' });
+        }
+
+        const ranking = await disciplinaRepository.buscarRankingPorDisciplina(idDisciplina);
+        return res.status(200).json({ success: true, ranking });
+    } catch (erro) {
+        console.error('Erro ao buscar ranking da disciplina:', erro);
+        return res.status(500).json({ erro: true, mensagem: 'Erro interno ao buscar ranking.' });
+    }
+};
