@@ -1,4 +1,3 @@
-// src/services/agendamentoService.js
 const agendamentoRepository = require('../repositories/agendamentoRepository');
 
 class AgendamentoService {
@@ -27,6 +26,19 @@ class AgendamentoService {
             throw new Error('Não autorizado: este agendamento não pertence a você.');
         }
         return await agendamentoRepository.deletar(id);
+    }
+
+    async concluir(id, idAluno) {
+        const agendamento = await agendamentoRepository.buscarPorId(id);
+        if (!agendamento) {
+            throw new Error('Agendamento não encontrado.');
+        }
+        if (agendamento.status === 'concluido') {
+            throw new Error('Este agendamento já foi concluído.');
+        }
+        
+        const [agendamentoAtualizado] = await agendamentoRepository.concluirEIncrementarPontos(id, idAluno);
+        return agendamentoAtualizado;
     }
 }
 
