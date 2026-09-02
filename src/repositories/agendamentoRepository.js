@@ -52,4 +52,17 @@ class AgendamentoRepository {
     }
 }
 
+async concluirEIncrementarPontos(idAgendamento, idAluno) {
+    return await prisma.$transaction([
+        prisma.agendamento.update({
+            where: { id: idAgendamento },
+            data: { status: 'concluido' }
+        }),
+        prisma.usuario.update({
+            where: { id: idAluno },
+            data: { pontos: { increment: 10 } }
+        })
+    ]);
+}
+
 module.exports = new AgendamentoRepository();
