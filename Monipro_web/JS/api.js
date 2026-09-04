@@ -3,6 +3,26 @@
 
 // URL base do seu servidor. Se for testar localmente, pode alterar para "http://localhost:3000"
 const MB_BETA_ORM = "http://localhost:3000";
+
+const HTML_ESCAPE_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+
+function escapeHtml(valor) {
+    return String(valor).replace(/[&<>"']/g, (ch) => HTML_ESCAPE_MAP[ch]);
+}
+
+/**
+ * Template tag para montar HTML com interpolação segura: as partes literais do
+ * template passam intactas, mas cada `${valor}` interpolado é escapado antes de
+ * entrar na string final. Use sempre que for atribuir dados vindos da API (ou do
+ * utilizador) a `.innerHTML`/`insertAdjacentHTML`.
+ */
+function html(partesEstaticas, ...valores) {
+    return partesEstaticas.reduce(
+        (acumulado, parte, indice) =>
+            acumulado + parte + (indice < valores.length ? escapeHtml(valores[indice]) : ''),
+        ''
+    );
+}
 /**
  * Função centralizada para realizar pedidos ao backend.
  * @param {string} endpoint - O caminho da rota (ex: '/auth/login', '/perfil')

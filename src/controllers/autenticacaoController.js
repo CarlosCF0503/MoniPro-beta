@@ -1,7 +1,8 @@
 // src/controllers/autenticacaoController.js
 const autenticacaoService = require('../services/autenticacaoService');
 const tratarErro          = require('../utils/tratarErro');
-console.log('✅ autenticacaoController v2 carregado');
+const { validarNomeCompleto } = require('../utils/validadores');
+console.log('✅ autenticacaoController carregado');
 
 class AutenticacaoController {
     async cadastrar(req, res) {
@@ -14,8 +15,16 @@ class AutenticacaoController {
             });
         }
 
+        const nomeValidado = validarNomeCompleto(nome_completo);
+        if (!nomeValidado.valido) {
+            return res.status(400).json({ success: false, erro: nomeValidado.erro });
+        }
+
         try {
-            const usuario = await autenticacaoService.cadastrar(req.body);
+            const usuario = await autenticacaoService.cadastrar({
+                ...req.body,
+                nome_completo: nomeValidado.nome
+            });
             res.status(201).json({
                 success: true,
                 mensagem: 'Conta criada com sucesso!',

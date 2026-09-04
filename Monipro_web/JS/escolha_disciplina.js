@@ -25,7 +25,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const card = document.createElement('a');
             card.className = 'disciplina-card';
             card.href = `marcar_monitoria.html?disciplinaID=${disc.id}&disciplinaNome=${encodeURIComponent(disc.nome)}`;
-            card.innerHTML = `
+            // XSS: disc.nome vem da API sem sanitização no backend.
+            card.innerHTML = html`
                 <div class="icone-disciplina">
                     <img src="IMG/Icone_Disciplina.png" alt="${disc.nome}">
                 </div>
@@ -36,6 +37,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     } catch (error) {
         console.error('Erro ao carregar disciplinas:', error.message);
-        containerDisciplinas.innerHTML = `<p>Erro ao carregar disciplinas: ${error.message}</p>`;
+        containerDisciplinas.innerHTML = html`<p>Erro ao carregar disciplinas: ${error.message}</p>`;
     }
 });
