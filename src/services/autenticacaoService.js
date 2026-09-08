@@ -3,6 +3,10 @@ const jwt = require('jsonwebtoken');
 const usuarioRepository = require('../repositories/usuarioRepository');
 const { JWT_SECRET } = require('../config/env');
 
+// Marca falhas de credenciais (401) para diferenciá-las de erros
+// inesperados como falha de conexão com o banco (que devem virar 500).
+class ErroCredenciaisInvalidas extends Error {}
+
 class AutenticacaoService {
     async cadastrar(dados) {
         // 1. Verifica se já existe ALGUÉM com este e-mail neste MESMO CARGO
@@ -43,17 +47,19 @@ class AutenticacaoService {
         }
 
         if (!usuario) {
-            throw new Error(`Usuário do tipo ${tipo_usuario} não encontrado.`);
+            throw new ErroCredenciaisInvalidas(`Usuário do tipo ${tipo_usuario} não encontrado.`);
         }
 
         // Como a busca já filtrou pelo tipo, essa linha abaixo virou apenas uma garantia extra de segurança
         if (usuario.tipo_usuario !== tipo_usuario) {
-            throw new Error(`Este usuário não está cadastrado como ${tipo_usuario}.`);
+            throw new ErroCredenciaisInvalidas(
+                `Este usuário não está cadastrado como ${tipo_usuario}.`
+            );
         }
 
         const senhaValida = await bcrypt.compare(senha, usuario.senha);
         if (!senhaValida) {
-            throw new Error('Senha incorreta.');
+            throw new ErroCredenciaisInvalidas('Senha incorreta.');
         }
 
         const token = jwt.sign(
@@ -75,4 +81,4 @@ class AutenticacaoService {
     }
 }
 
-module.exports = new AutenticacaoService();
+module.exports = Object.assign(new AutenticacaoService(), { ErroCredenciaisInvalidas });

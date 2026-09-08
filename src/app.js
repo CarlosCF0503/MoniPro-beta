@@ -5,6 +5,11 @@ const helmet = require('helmet');
 
 const app = express();
 
+// Atrás do Nginx (reverse proxy) em produção/dev — necessário para que
+// express-rate-limit e o CORS leiam corretamente IP/Origin reais dos clientes
+// a partir do cabeçalho X-Forwarded-For.
+app.set('trust proxy', 1);
+
 // Rotas
 const autenticacaoRotas = require('./routes/autenticacaoRotas');
 const agendamentoRotas = require('./routes/agendamentoRotas');

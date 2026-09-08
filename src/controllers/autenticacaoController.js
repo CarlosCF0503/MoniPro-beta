@@ -48,12 +48,24 @@ class AutenticacaoController {
             const resultado = await autenticacaoService.login(identificador, senha, tipo_usuario);
             res.json(resultado);
         } catch (error) {
-            logger.warn({ identificador, tipo_usuario }, 'Tentativa de login falhou');
-            const mensagem = tratarErro(error, {
-                naoEncontrado: 'Usuário não encontrado. Verifique suas credenciais.',
-                default: 'Não foi possível realizar o login. Tente novamente.'
+            if (error instanceof autenticacaoService.ErroCredenciaisInvalidas) {
+                logger.warn({ identificador, tipo_usuario }, 'Tentativa de login falhou');
+                const mensagem = tratarErro(error, {
+                    naoEncontrado: 'Usuário não encontrado. Verifique suas credenciais.',
+                    default: error.message
+                });
+                return res.status(401).json({ success: false, erro: mensagem });
+            }
+
+            // Erro inesperado (ex.: falha de conexão com o banco) — não é 401
+            logger.error(
+                { code: error.code, message: error.message },
+                'Erro inesperado ao realizar login'
+            );
+            res.status(500).json({
+                success: false,
+                erro: 'Não foi possível realizar o login. Tente novamente mais tarde.'
             });
-            res.status(401).json({ success: false, erro: mensagem });
         }
     }
 }
