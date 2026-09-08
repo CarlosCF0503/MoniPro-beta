@@ -70,26 +70,27 @@ class AgendamentoController {
             res.status(status).json({ success: false, erro: mensagem });
         }
     }
-}
-async concluir(req, res) {
-    try {
-        const idAgendamento = parseInt(req.params.id, 10);
-        const resultado = await agendamentoService.concluir(idAgendamento, req.usuario.id);
-        
-        res.json({
-            success: true,
-            mensagem: 'Agendamento concluído e 10 pontos creditados com sucesso!',
-            agendamento: resultado
-        });
-    } catch (error) {
-        console.error('❌ Erro ao concluir agendamento:', error);
-        const mensagem = tratarErro(error, {
-            naoEncontrado: 'Agendamento não encontrado.',
-            jaConcluido: 'Este agendamento já foi concluído.',
-            default: 'Não foi possível concluir o agendamento.'
-        });
-        res.status(400).json({ success: false, erro: mensagem });
+
+    async concluir(req, res) {
+        try {
+            const idAgendamento = parseInt(req.params.id, 10);
+            const resultado = await agendamentoService.concluir(idAgendamento, req.usuario.id);
+            
+            res.json({
+                success: true,
+                mensagem: 'Agendamento concluído e 10 pontos creditados com sucesso!',
+                agendamento: resultado
+            });
+        } catch (error) {
+            console.error('❌ Erro ao concluir agendamento:', error);
+            const mensagem = tratarErro(error, {
+                naoEncontrado: 'Agendamento não encontrado.',
+                jaConcluido: 'Este agendamento já foi concluído.',
+                default: 'Não foi possível concluir o agendamento.'
+            });
+            res.status(400).json({ success: false, erro: mensagem });
+        }
     }
-}
+} // <- Agora a chave que fecha a classe fica AQUI no final
 
 module.exports = new AgendamentoController();
