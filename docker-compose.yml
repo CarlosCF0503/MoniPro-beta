@@ -5,26 +5,20 @@ services:
   backend:
 
     build:
-
       context: .
-
       dockerfile: Dockerfile
 
     ports:
+      - "127.0.0.1:${BACKEND_PORT:-3000}:3000"
 
-      - "127.0.0.1:3000:3000"
     environment:
-
       - DATABASE_URL=${DATABASE_URL}
 
     dns:
-
       - 8.8.8.8
-
       - 1.1.1.1
 
     env_file:
-
       - .env
 
     restart: always
@@ -32,21 +26,16 @@ services:
   frontend:
 
     build:
-
       context: ./Monipro_web
-
       dockerfile: Dockerfile
 
     ports:
-
-      - "127.0.0.1:8080:80"
+      - "127.0.0.1:${FRONTEND_PORT:-8080}:80"
 
     environment:
-
       - API_BASE_URL=${API_BASE_URL:-https://moni-pro.app.br}
 
     depends_on:
-
       - backend
 
     restart: always
