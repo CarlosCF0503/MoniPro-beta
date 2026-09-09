@@ -1,4 +1,5 @@
 const agendamentoRepository = require('../repositories/agendamentoRepository');
+const { validarAntecedenciaCancelamento } = require('../utils/validarAntecedencia');
 
 class AgendamentoService {
     async criar(dados) {
@@ -25,6 +26,7 @@ class AgendamentoService {
         if (agendamento.id_aluno !== idAluno) {
             throw new Error('Não autorizado: este agendamento não pertence a você.');
         }
+        validarAntecedenciaCancelamento(agendamento.data_hora);
         return await agendamentoRepository.deletar(id);
     }
 

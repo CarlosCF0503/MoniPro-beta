@@ -1,5 +1,6 @@
 // src/services/monitoriaService.js
 const monitoriaRepository = require('../repositories/monitoriaRepository');
+const { validarAntecedenciaCancelamento } = require('../utils/validarAntecedencia');
 
 class MonitoriaService {
     async criar(dados) {
@@ -22,6 +23,7 @@ class MonitoriaService {
         if (monitoria.id_monitor !== monitorId) {
             throw new Error('Não autorizado: esta monitoria não pertence ao utilizador.');
         }
+        validarAntecedenciaCancelamento(monitoria.horario);
         return await monitoriaRepository.cancelar(id);
     }
 
