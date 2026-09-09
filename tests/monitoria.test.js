@@ -80,8 +80,16 @@ describe('GET /monitorias/:idDisciplina (Tarefa 22 — exigir autenticação na 
 describe('PUT /monitorias/:id/cancelar', () => {
     beforeEach(() => jest.clearAllMocks());
 
-    it('retorna 200 quando o monitor dono da vaga cancela', async () => {
-        prisma.monitoria.findUnique.mockResolvedValue({ id: 1, id_monitor: 10, status: 'ativa' });
+    const em48h = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+    const em10h = new Date(Date.now() + 10 * 60 * 60 * 1000).toISOString();
+
+    it('retorna 200 quando o monitor dono da vaga cancela com mais de 24h de antecedência', async () => {
+        prisma.monitoria.findUnique.mockResolvedValue({
+            id: 1,
+            id_monitor: 10,
+            status: 'ativa',
+            horario: em48h
+        });
         prisma.monitoria.update.mockResolvedValue({ id: 1, id_monitor: 10, status: 'cancelada' });
 
         const resposta = await request(app)
@@ -93,13 +101,35 @@ describe('PUT /monitorias/:id/cancelar', () => {
     });
 
     it('retorna 403 quando quem tenta cancelar não é o monitor dono da vaga', async () => {
-        prisma.monitoria.findUnique.mockResolvedValue({ id: 1, id_monitor: 999, status: 'ativa' });
+        prisma.monitoria.findUnique.mockResolvedValue({
+            id: 1,
+            id_monitor: 999,
+            status: 'ativa',
+            horario: em48h
+        });
 
         const resposta = await request(app)
             .put('/monitorias/1/cancelar')
             .set('Authorization', `Bearer ${tokenMonitor}`);
 
         expect(resposta.status).toBe(403);
+        expect(prisma.monitoria.update).not.toHaveBeenCalled();
+    });
+
+    it('retorna 400 (RN-001) quando faltam menos de 24h para o horário da monitoria', async () => {
+        prisma.monitoria.findUnique.mockResolvedValue({
+            id: 1,
+            id_monitor: 10,
+            status: 'ativa',
+            horario: em10h
+        });
+
+        const resposta = await request(app)
+            .put('/monitorias/1/cancelar')
+            .set('Authorization', `Bearer ${tokenMonitor}`);
+
+        expect(resposta.status).toBe(400);
+        expect(resposta.body.erro).toMatch(/24h/);
         expect(prisma.monitoria.update).not.toHaveBeenCalled();
     });
 });

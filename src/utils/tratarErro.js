@@ -36,6 +36,7 @@ function tratarErro(error, mapaPersonalizado = {}) {
     if (msg.includes('Não autorizado'))
         return mapaPersonalizado.naoAutorizado || 'Você não tem permissão para realizar esta ação.';
     if (msg.includes('não está cadastrado como')) return msg; // mensagem clara, manter
+    if (msg.includes('antecedência')) return msg; // RN-001: mensagem clara, manter
     if (msg.includes('Senha incorreta')) return 'Senha incorreta.';
     if (msg.includes('não encontrado'))
         return mapaPersonalizado.naoEncontrado || 'Registro não encontrado.';
