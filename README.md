@@ -1,8 +1,8 @@
 - Demonstração e Acesso ao Sistema
-URL de Produção: https://moni-pro.app.br (Login - MoniPro)
+  URL de Produção: https://moni-pro.app.br (Login - MoniPro)
 
 - Visão Geral da Arquitetura e Decisões de Projeto
-Domínio de Aplicação: Sistema web para agendamento, gestão e acompanhamento de monitorias acadêmicas.
+  Domínio de Aplicação: Sistema web para agendamento, gestão e acompanhamento de monitorias acadêmicas.
 
 Módulos Próximos (Roadmap):
 
@@ -40,15 +40,14 @@ perfil_monitor.html: Painel exclusivo do monitor. Exibe as vagas criadas, agenda
 
 ## Tabela de Status de RF e RN (Código Real)
 
-| Código | Descrição | Tipo | Status Atual | Observações / Mapeamento |
-| :--- | :--- | :--- | :--- | :--- |
-| **RF-001** | Autenticação JWT e Controle de Acesso | Requisito Funcional | **Concluído** | Rotas `/autenticacao` e middlewares ativos no Express. |
-| **RF-002** | Agendamento de Monitorias via Calendário | Requisito Funcional | **Concluído** | Interface interativa em `marcar_monitoria.html`. |
-| **RF-003** | Gestão de Perfil (Aluno / Monitor) | Requisito Funcional | **Concluído** | Integrado às rotas `/perfil`, `/agendamentos` e `/monitorias`. |
-| **RF-004** | Sistema de Gamificação (Ranking/Pontos) | Requisito Funcional | **Planejado** | Estruturado para ser finalizado nas Tarefas 14 e 15. |
-| **RN-001** | Cancelamento Prévio com 24h de Antecedência | Regra de Negócio | **Planejado** | Validação no backend em desenvolvimento para as Tarefas 14 e 15. |
-| **RN-002** | Isolamento de Perfis e Permissões | Regra de Negócio | **Concluído** | Controle de acesso via middleware de autenticação JWT. |
-
+| Código     | Descrição                                   | Tipo                | Status Atual  | Observações / Mapeamento                                         |
+| :--------- | :------------------------------------------ | :------------------ | :------------ | :--------------------------------------------------------------- |
+| **RF-001** | Autenticação JWT e Controle de Acesso       | Requisito Funcional | **Concluído** | Rotas `/autenticacao` e middlewares ativos no Express.           |
+| **RF-002** | Agendamento de Monitorias via Calendário    | Requisito Funcional | **Concluído** | Interface interativa em `marcar_monitoria.html`.                 |
+| **RF-003** | Gestão de Perfil (Aluno / Monitor)          | Requisito Funcional | **Concluído** | Integrado às rotas `/perfil`, `/agendamentos` e `/monitorias`.   |
+| **RF-004** | Sistema de Gamificação (Ranking/Pontos)     | Requisito Funcional | **Planejado** | Estruturado para ser finalizado nas Tarefas 14 e 15.             |
+| **RN-001** | Cancelamento Prévio com 24h de Antecedência | Regra de Negócio    | **Planejado** | Validação no backend em desenvolvimento para as Tarefas 14 e 15. |
+| **RN-002** | Isolamento de Perfis e Permissões           | Regra de Negócio    | **Concluído** | Controle de acesso via middleware de autenticação JWT.           |
 
 Seções Acadêmicas (24 a 27)
 Seção 24: Qualidade de Código

@@ -75,7 +75,7 @@ class AgendamentoController {
         try {
             const idAgendamento = parseInt(req.params.id, 10);
             const resultado = await agendamentoService.concluir(idAgendamento, req.usuario.id);
-            
+
             res.json({
                 success: true,
                 mensagem: 'Agendamento concluído e 10 pontos creditados com sucesso!',

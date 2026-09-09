@@ -61,7 +61,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('emailUsuario').textContent = data.user.email || '';
             document.getElementById('matriculaUsuario').textContent = data.user.matricula || '';
 
-            const tipo = String(data.user.tipo_usuario);
+            const elPontos = document.getElementById('pontosUsuario');
+            if (elPontos) elPontos.textContent = `${data.user.pontos || 0} pts`;
+
+            const tipo = String(data.user.tipo_usuario || userData.tipo || 'aluno');
             document.getElementById('tipoUsuario').textContent =
                 tipo.charAt(0).toUpperCase() + tipo.slice(1);
         } else {
@@ -267,23 +270,5 @@ async function handleCancelarMonitoria(monitoriaId, itemElement) {
         }
     } catch (error) {
         if (typeof showToast === 'function') showToast('Erro de rede.', 'error');
-    }
-}
-
-if (data.success && data.user) {
-    const elNome = document.getElementById('nomeUsuario');
-    const elEmail = document.getElementById('emailUsuario');
-    const elMatricula = document.getElementById('matriculaUsuario');
-    const elTipo = document.getElementById('tipoUsuario');
-    const elPontos = document.getElementById('pontosUsuario'); // <-- ELEMENTO DE PONTOS
-
-    if (elNome) elNome.textContent = data.user.nome_completo || 'Utilizador';
-    if (elEmail) elEmail.textContent = data.user.email || '';
-    if (elMatricula) elMatricula.textContent = data.user.matricula || '';
-    if (elPontos) elPontos.textContent = `${data.user.pontos || 0} pts`;
-
-    if (elTipo) {
-        const tipo = String(data.user.tipo_usuario || userData.tipo || 'aluno');
-        elTipo.textContent = tipo.charAt(0).toUpperCase() + tipo.slice(1);
     }
 }
