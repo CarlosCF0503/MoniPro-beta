@@ -152,8 +152,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const nomeMonitor = monitoriaSugerida.monitor?.nome_completo || 'Monitor Recomendado';
 
         document.getElementById('sugestao-nome').textContent = nomeMonitor;
-        document.getElementById('sugestao-info').textContent = `Horário: ${horaFormatada} - Local: ${monitoriaSugerida.local || 'A definir'}`;
-        
+        document.getElementById('sugestao-info').textContent =
+            `Horário: ${horaFormatada} - Local: ${monitoriaSugerida.local || 'A definir'}`;
+
         cardSugestao.style.display = 'flex';
 
         if (btnSugestao) {
@@ -162,7 +163,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const inputRadio = document.getElementById(`mon-${monId}`);
                 if (inputRadio) {
                     inputRadio.click();
-                    inputRadio.closest('.monitor-item')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    inputRadio
+                        .closest('.monitor-item')
+                        ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }
             };
         }

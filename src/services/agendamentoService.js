@@ -36,8 +36,11 @@ class AgendamentoService {
         if (agendamento.status === 'concluido') {
             throw new Error('Este agendamento já foi concluído.');
         }
-        
-        const [agendamentoAtualizado] = await agendamentoRepository.concluirEIncrementarPontos(id, idAluno);
+
+        const [agendamentoAtualizado] = await agendamentoRepository.concluirEIncrementarPontos(
+            id,
+            idAluno
+        );
         return agendamentoAtualizado;
     }
 }
