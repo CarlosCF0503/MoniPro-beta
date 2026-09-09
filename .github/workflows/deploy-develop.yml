@@ -19,13 +19,13 @@ jobs:
           key: ${{ secrets.ORACLE_SSH_KEY }}
           script: |
             set -e
-            echo "Iniciando atualização do ambiente de PRODUÇÃO (Main)..."
-            cd ~/moni-pro-beta
+            echo "Iniciando atualização do ambiente de testes (Develop)..."
+            cd ~/moni-pro-beta-develop
         
             # Atualiza o código pegando as novidades do GitHub
-            git pull origin main
+            git pull origin develop
         
-            # Reconstrói as imagens do Docker e reinicia os containers da produção
-            docker-compose up -d --build
+            # Reconstrói as imagens do Docker e reinicia os containers
+            docker-compose -p monipro-dev up -d --build
         
-            echo "Deploy de Produção concluído com sucesso!"
+            echo "Deploy concluído com sucesso!"
