@@ -48,11 +48,12 @@ jobs:
             set -e
             echo "Iniciando atualização do ambiente de PRODUÇÃO (Main)..."
             cd ~/moni-pro-beta
-        
-            # Atualiza o código pegando as novidades do GitHub
-            git pull origin main
-        
+
+            # Sincroniza com o GitHub, descartando qualquer estado local divergente
+            git fetch origin main
+            git reset --hard origin/main
+
             # Reconstrói as imagens do Docker e reinicia os containers da produção
             docker-compose up -d --build
-        
+
             echo "Deploy de Produção concluído com sucesso!"
