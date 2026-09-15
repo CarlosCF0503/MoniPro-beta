@@ -77,6 +77,41 @@ describe('GET /monitorias/:idDisciplina (Tarefa 22 — exigir autenticação na 
     });
 });
 
+describe('GET /monitorias/:idDisciplina (Tarefa 23 — vagas_disponiveis)', () => {
+    beforeEach(() => jest.clearAllMocks());
+
+    it('calcula vagas_disponiveis a partir da capacidade e dos agendamentos já feitos', async () => {
+        prisma.monitoria.findMany.mockResolvedValue([
+            { id: 1, local: 'Sala 12', capacidade: 3, _count: { inscricoes: 1 } },
+            { id: 2, local: 'Sala 13', capacidade: 2, _count: { inscricoes: 2 } }
+        ]);
+        prisma.monitoria.count.mockResolvedValue(2);
+
+        const resposta = await request(app)
+            .get('/monitorias/1')
+            .set('Authorization', `Bearer ${tokenAluno}`);
+
+        expect(resposta.status).toBe(200);
+        expect(resposta.body.monitorias[0].vagas_disponiveis).toBe(2);
+        expect(resposta.body.monitorias[1].vagas_disponiveis).toBe(0);
+        expect(resposta.body.monitorias[0]._count).toBeUndefined();
+    });
+
+    it('assume capacidade 1 quando o campo não vem preenchido (compatibilidade)', async () => {
+        prisma.monitoria.findMany.mockResolvedValue([
+            { id: 1, local: 'Sala 12', _count: { inscricoes: 0 } }
+        ]);
+        prisma.monitoria.count.mockResolvedValue(1);
+
+        const resposta = await request(app)
+            .get('/monitorias/1')
+            .set('Authorization', `Bearer ${tokenAluno}`);
+
+        expect(resposta.status).toBe(200);
+        expect(resposta.body.monitorias[0].vagas_disponiveis).toBe(1);
+    });
+});
+
 describe('PUT /monitorias/:id/cancelar', () => {
     beforeEach(() => jest.clearAllMocks());
 

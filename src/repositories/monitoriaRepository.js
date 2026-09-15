@@ -10,7 +10,10 @@ class MonitoriaRepository {
                 local: dados.local,
                 descricao: dados.descricao,
                 status: dados.status || 'ativa',
-                horario: dados.horario
+                horario: dados.horario,
+                // Tarefa 23: capacidade é opcional no corpo da requisição; quando ausente,
+                // o Prisma aplica o @default(1) definido no schema.
+                ...(dados.capacidade !== undefined && { capacidade: Number(dados.capacidade) })
             }
         });
     }
@@ -25,7 +28,10 @@ class MonitoriaRepository {
             prisma.monitoria.findMany({
                 where,
                 include: {
-                    monitor: { select: { nome_completo: true } }
+                    monitor: { select: { nome_completo: true } },
+                    // Tarefa 23: total de agendamentos já feitos nesta vaga, usado para
+                    // calcular vagas_disponiveis em monitoriaService.listarPorDisciplina.
+                    _count: { select: { inscricoes: true } }
                 },
                 orderBy: { horario: 'asc' },
                 skip,
@@ -67,8 +73,8 @@ class MonitoriaRepository {
         return { dados, total };
     }
 
-    async buscarPorId(id) {
-        return await prisma.monitoria.findUnique({
+    async buscarPorId(id, tx = prisma) {
+        return await tx.monitoria.findUnique({
             where: { id: parseInt(id) }
         });
     }

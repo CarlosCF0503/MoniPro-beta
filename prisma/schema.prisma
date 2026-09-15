@@ -57,6 +57,7 @@ model Monitoria {
   descricao     String?
   local         String
   status        StatusMonitoria @default(ativa)
+  capacidade    Int             @default(1)
 
   id_monitor    Int
   monitor       Usuario         @relation("MonitorParaMonitoria", fields: [id_monitor], references: [id])

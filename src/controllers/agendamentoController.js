@@ -30,7 +30,9 @@ class AgendamentoController {
                 P2025: 'A monitoria selecionada não foi encontrada.',
                 default: 'Não foi possível realizar o agendamento. Tente novamente.'
             });
-            res.status(400).json({ success: false, erro: mensagem });
+            // Tarefa 23: vaga lotada retorna 409 (conflito), diferenciando do 400 genérico
+            const status = error.message?.includes('lotada') ? 409 : 400;
+            res.status(status).json({ success: false, erro: mensagem });
         }
     }
 

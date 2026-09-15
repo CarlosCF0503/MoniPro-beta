@@ -151,9 +151,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         const nomeMonitor = monitoriaSugerida.monitor?.nome_completo || 'Monitor Recomendado';
 
+        const vagasInfo = formatarVagasTexto(monitoriaSugerida);
+
         document.getElementById('sugestao-nome').textContent = nomeMonitor;
         document.getElementById('sugestao-info').textContent =
-            `Horário: ${horaFormatada} - Local: ${monitoriaSugerida.local || 'A definir'}`;
+            `Horário: ${horaFormatada} - Local: ${monitoriaSugerida.local || 'A definir'}` +
+            (vagasInfo ? ` - ${vagasInfo}` : '');
 
         cardSugestao.style.display = 'flex';
 
@@ -221,8 +224,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        // Define a sugestão como o primeiro monitor da lista filtrada
-        atualizarSugestaoMonitor(lista[0]);
+        // Define a sugestão como o primeiro monitor da lista filtrada que ainda tenha vaga
+        atualizarSugestaoMonitor(lista.find((m) => !estaLotada(m)) || null);
 
         lista.forEach((monitoria) => {
             const horaFormatada = new Date(monitoria.horario).toLocaleString('pt-BR', {
@@ -231,21 +234,29 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             const nomeMonitor = monitoria.monitor?.nome_completo || 'Monitor';
             const monId = String(monitoria.id);
+            const lotada = estaLotada(monitoria);
+            const vagasTexto = formatarVagasTexto(monitoria);
 
             const div = document.createElement('div');
-            div.className = 'monitor-item';
+            div.className = 'monitor-item' + (lotada ? ' lotado' : '');
             div.innerHTML = `
-                <input type="radio" name="monitoriaEscolhida" value="${monId}" id="mon-${monId}" style="display:none;">
-                <label for="mon-${monId}" style="cursor:pointer;width:100%;display:flex;align-items:center;gap:15px;">
+                <input type="radio" name="monitoriaEscolhida" value="${monId}" id="mon-${monId}" style="display:none;" ${lotada ? 'disabled' : ''}>
+                <label for="mon-${monId}" style="cursor:${lotada ? 'not-allowed' : 'pointer'};width:100%;display:flex;align-items:center;gap:15px;opacity:${lotada ? '0.6' : '1'};">
                     <div class="icone"><img src="IMG/Icone_monitor.png" alt="Monitor"></div>
                     <div>
                         <strong>${nomeMonitor}</strong><br>
                         <small>Local: ${monitoria.local || 'A definir'}</small><br>
                         <small style="color:#071E3D;font-weight:bold;">Horário: ${horaFormatada}</small>
+                        ${vagasTexto ? `<br><small style="color:${lotada ? '#B00020' : '#1B7F3A'};font-weight:bold;">${vagasTexto}</small>` : ''}
                     </div>
                 </label>
             `;
             div.addEventListener('click', () => {
+                if (lotada) {
+                    if (typeof showToast === 'function')
+                        showToast('Esta vaga de monitoria está lotada.', 'error');
+                    return;
+                }
                 document
                     .querySelectorAll('.monitor-item.selecionado')
                     .forEach((m) => m.classList.remove('selecionado'));
@@ -257,6 +268,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             containerMonitores.appendChild(div);
         });
+    }
+
+    // Tarefa 23: helpers de ocupação de vaga, com base em vagas_disponiveis
+    // retornado por GET /monitorias/:idDisciplina
+    function estaLotada(monitoria) {
+        return typeof monitoria.vagas_disponiveis === 'number' && monitoria.vagas_disponiveis <= 0;
+    }
+
+    function formatarVagasTexto(monitoria) {
+        if (typeof monitoria.vagas_disponiveis !== 'number') return '';
+        if (monitoria.vagas_disponiveis <= 0) return 'Vagas esgotadas';
+        const plural = monitoria.vagas_disponiveis === 1 ? '' : 's';
+        return `${monitoria.vagas_disponiveis} vaga${plural} disponível${plural}`;
     }
 
     async function salvarAgendamento() {

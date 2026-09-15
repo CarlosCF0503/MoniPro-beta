@@ -3,8 +3,8 @@
 const prisma = require('../config/bancoDeDados');
 
 class AgendamentoRepository {
-    async criar(dados) {
-        return await prisma.agendamento.create({ data: dados });
+    async criar(dados, tx = prisma) {
+        return await tx.agendamento.create({ data: dados });
     }
 
     async buscarPorAluno(idAluno, { skip, take } = {}) {
@@ -43,13 +43,21 @@ class AgendamentoRepository {
         });
     }
 
-    async buscarPorAlunoEMonitoria(idAluno, idMonitoria) {
-        return await prisma.agendamento.findFirst({
+    async buscarPorAlunoEMonitoria(idAluno, idMonitoria, tx = prisma) {
+        return await tx.agendamento.findFirst({
             where: {
                 id_aluno: parseInt(idAluno),
 
                 id_monitoria: parseInt(idMonitoria)
             }
+        });
+    }
+
+    // Tarefa 23: conta quantos agendamentos já existem para a vaga, usada dentro
+    // da transação de agendamentoService.criar para validar o limite de capacidade.
+    async contarPorMonitoria(idMonitoria, tx = prisma) {
+        return await tx.agendamento.count({
+            where: { id_monitoria: parseInt(idMonitoria) }
         });
     }
 
