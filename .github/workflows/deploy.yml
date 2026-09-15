@@ -48,11 +48,30 @@ jobs:
             set -e
             echo "Iniciando atualização do ambiente de PRODUÇÃO (Main)..."
             cd ~/moni-pro-beta
-        
-            # Atualiza o código pegando as novidades do GitHub
-            git pull origin main
-        
-            # Reconstrói as imagens do Docker e reinicia os containers da produção
-            docker-compose up -d --build
-        
+
+            # Sincroniza com o GitHub, descartando qualquer estado local divergente
+            git fetch origin main
+            git reset --hard origin/main
+
+            # 1) Reconstrói a imagem (sem subir ainda) — precisamos dela pronta
+            #    para rodar a migration com as mesmas dependências do app.
+            docker-compose build backend
+
+            # 2) Checagem de segurança ANTES de aplicar qualquer coisa: "migrate status"
+            #    só lê o estado das migrations, não altera nada no banco. A engine de
+            #    conexão do Prisma CLI é diferente do adapter customizado (pg.Pool + DB_CA_CERT)
+            #    usado em runtime pelo app — então esse passo também serve pra detectar cedo
+            #    (e sem risco) se o Aiven vai recusar a conexão TLS da engine de migration.
+            #    Se falhar aqui (ex.: certificado autoassinado), o "set -e" já interrompe o
+            #    deploy antes de tentar aplicar de verdade ou trocar os containers.
+            docker-compose run --rm backend npx prisma migrate status
+
+            # 3) Aplica as migrations pendentes do Prisma ANTES de trocar os containers,
+            #    usando --rm para rodar num container descartável com o mesmo ambiente/rede
+            #    já definidos no serviço "backend" (DATABASE_URL vem do .env via env_file).
+            docker-compose run --rm backend npx prisma migrate deploy
+
+            # 4) Só agora sobe os containers, já com o schema atualizado no banco
+            docker-compose up -d
+
             echo "Deploy de Produção concluído com sucesso!"
