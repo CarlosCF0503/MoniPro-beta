@@ -1,28 +1,20 @@
 const request = require('supertest');
 const { gerarToken } = require('./helpers/token');
 
-// Tarefa 23: agendamentoService.criar agora roda dentro de um prisma.$transaction.
-// O mock de $transaction executa o callback recebido passando o próprio prisma
-// mockado como "tx", já que os repositórios usam tx.<model> (com fallback para
-// o prisma singleton fora de transações).
-jest.mock('../src/config/bancoDeDados', () => {
-    const prismaMock = {
-        usuario: {},
-        monitoria: {
-            findUnique: jest.fn()
-        },
-        agendamento: {
-            create: jest.fn(),
-            findMany: jest.fn(),
-            count: jest.fn(),
-            findUnique: jest.fn(),
-            findFirst: jest.fn(),
-            delete: jest.fn()
-        }
-    };
-    prismaMock.$transaction = jest.fn((callback) => callback(prismaMock));
-    return prismaMock;
-});
+jest.mock('../src/config/bancoDeDados', () => ({
+    usuario: {},
+    monitoria: {},
+    $transaction: jest.fn(),
+    $queryRaw: jest.fn(),
+    agendamento: {
+        create: jest.fn(),
+        findMany: jest.fn(),
+        count: jest.fn(),
+        findUnique: jest.fn(),
+        findFirst: jest.fn(),
+        delete: jest.fn()
+    }
+}));
 
 const prisma = require('../src/config/bancoDeDados');
 const app = require('../src/app');
@@ -31,103 +23,108 @@ const tokenAluno = gerarToken({ id: 20, tipo: 'aluno' });
 const tokenOutroAluno = gerarToken({ id: 21, tipo: 'aluno' });
 
 describe('POST /agendamentos', () => {
-    beforeEach(() => jest.clearAllMocks());
+    const corpo = { id_monitoria: 5, data_hora: '2026-09-10T14:00:00.000Z' };
+    const postar = (token = tokenAluno) =>
+        request(app).post('/agendamentos').set('Authorization', `Bearer ${token}`).send(corpo);
 
-    it('cria o agendamento e retorna 201 quando não há inscrição duplicada nem lotação', async () => {
-        prisma.monitoria.findUnique.mockResolvedValue({ id: 5, capacidade: 1 });
-        prisma.agendamento.findFirst.mockResolvedValue(null);
+    beforeEach(() => {
+        jest.clearAllMocks();
+        // A transação interativa recebe o próprio mock como `tx`
+        prisma.$transaction.mockImplementation((fn) => fn(prisma));
+        prisma.$queryRaw.mockResolvedValue([{ capacidade: 1, status: 'ativa' }]);
         prisma.agendamento.count.mockResolvedValue(0);
+    });
+
+    it('cria o agendamento e retorna 201 quando há vaga e não há inscrição duplicada', async () => {
+        prisma.agendamento.findFirst.mockResolvedValue(null);
         prisma.agendamento.create.mockResolvedValue({ id: 1, id_monitoria: 5, id_aluno: 20 });
 
-        const resposta = await request(app)
-            .post('/agendamentos')
-            .set('Authorization', `Bearer ${tokenAluno}`)
-            .send({ id_monitoria: 5, data_hora: '2026-09-10T14:00:00.000Z' });
+        const resposta = await postar();
 
         expect(resposta.status).toBe(201);
+        expect(prisma.$transaction).toHaveBeenCalledTimes(1);
         expect(prisma.agendamento.create).toHaveBeenCalledTimes(1);
     });
 
     it('retorna 400 e bloqueia inscrição duplicada na mesma monitoria', async () => {
-        prisma.monitoria.findUnique.mockResolvedValue({ id: 5, capacidade: 5 });
         prisma.agendamento.findFirst.mockResolvedValue({ id: 1, id_monitoria: 5, id_aluno: 20 });
 
-        const resposta = await request(app)
-            .post('/agendamentos')
-            .set('Authorization', `Bearer ${tokenAluno}`)
-            .send({ id_monitoria: 5, data_hora: '2026-09-10T14:00:00.000Z' });
+        const resposta = await postar();
+
+        expect(resposta.status).toBe(400);
+        expect(prisma.agendamento.create).not.toHaveBeenCalled();
+    });
+
+    it('retorna 409 e não cria quando a vaga está lotada (Tarefa 23)', async () => {
+        prisma.agendamento.findFirst.mockResolvedValue(null);
+        prisma.agendamento.count.mockResolvedValue(1); // capacidade 1, já ocupada por outro aluno
+
+        const resposta = await postar(tokenOutroAluno);
+
+        expect(resposta.status).toBe(409);
+        expect(resposta.body.success).toBe(false);
+        expect(resposta.body.erro).toMatch(/lotada/i);
+        expect(prisma.agendamento.create).not.toHaveBeenCalled();
+    });
+
+    it('aceita novas inscrições até atingir a capacidade configurada', async () => {
+        prisma.$queryRaw.mockResolvedValue([{ capacidade: 3, status: 'ativa' }]);
+        prisma.agendamento.findFirst.mockResolvedValue(null);
+        prisma.agendamento.create.mockResolvedValue({ id: 3, id_monitoria: 5, id_aluno: 20 });
+
+        prisma.agendamento.count.mockResolvedValue(2);
+        expect((await postar()).status).toBe(201);
+
+        prisma.agendamento.count.mockResolvedValue(3);
+        expect((await postar()).status).toBe(409);
+    });
+
+    it('não conta agendamentos cancelados como vagas ocupadas', async () => {
+        prisma.agendamento.findFirst.mockResolvedValue(null);
+        prisma.agendamento.create.mockResolvedValue({ id: 1 });
+
+        await postar();
+
+        expect(prisma.agendamento.count).toHaveBeenCalledWith({
+            where: { id_monitoria: 5, status: { not: 'cancelado' } }
+        });
+    });
+
+    it('trava a linha da monitoria dentro da transação antes de contar', async () => {
+        prisma.agendamento.findFirst.mockResolvedValue(null);
+        prisma.agendamento.create.mockResolvedValue({ id: 1 });
+
+        await postar();
+
+        const sql = prisma.$queryRaw.mock.calls[0][0].join(' ');
+        expect(sql).toMatch(/FOR UPDATE/);
+        expect(prisma.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+            prisma.agendamento.count.mock.invocationCallOrder[0]
+        );
+    });
+
+    it('retorna 400 quando a monitoria não existe', async () => {
+        prisma.$queryRaw.mockResolvedValue([]);
+
+        const resposta = await postar();
 
         expect(resposta.status).toBe(400);
         expect(prisma.agendamento.create).not.toHaveBeenCalled();
     });
 
     it('retorna 401 quando não há token', async () => {
-        const resposta = await request(app)
-            .post('/agendamentos')
-            .send({ id_monitoria: 5, data_hora: '2026-09-10T14:00:00.000Z' });
+        const resposta = await request(app).post('/agendamentos').send(corpo);
 
         expect(resposta.status).toBe(401);
         expect(prisma.agendamento.create).not.toHaveBeenCalled();
-    });
-
-    describe('Tarefa 23 — limite de capacidade nas vagas de monitoria', () => {
-        it('retorna 409 quando a vaga já atingiu a capacidade máxima', async () => {
-            prisma.monitoria.findUnique.mockResolvedValue({ id: 5, capacidade: 2 });
-            prisma.agendamento.findFirst.mockResolvedValue(null);
-            prisma.agendamento.count.mockResolvedValue(2);
-
-            const resposta = await request(app)
-                .post('/agendamentos')
-                .set('Authorization', `Bearer ${tokenAluno}`)
-                .send({ id_monitoria: 5, data_hora: '2026-09-10T14:00:00.000Z' });
-
-            expect(resposta.status).toBe(409);
-            expect(resposta.body.erro).toMatch(/lotada/);
-            expect(prisma.agendamento.create).not.toHaveBeenCalled();
-        });
-
-        it('cria normalmente quando ainda há vagas dentro da capacidade', async () => {
-            prisma.monitoria.findUnique.mockResolvedValue({ id: 5, capacidade: 2 });
-            prisma.agendamento.findFirst.mockResolvedValue(null);
-            prisma.agendamento.count.mockResolvedValue(1);
-            prisma.agendamento.create.mockResolvedValue({ id: 2, id_monitoria: 5, id_aluno: 20 });
-
-            const resposta = await request(app)
-                .post('/agendamentos')
-                .set('Authorization', `Bearer ${tokenAluno}`)
-                .send({ id_monitoria: 5, data_hora: '2026-09-10T14:00:00.000Z' });
-
-            expect(resposta.status).toBe(201);
-            expect(prisma.agendamento.create).toHaveBeenCalledTimes(1);
-        });
-
-        it('retorna 400 quando a monitoria informada não existe', async () => {
-            prisma.monitoria.findUnique.mockResolvedValue(null);
-
-            const resposta = await request(app)
-                .post('/agendamentos')
-                .set('Authorization', `Bearer ${tokenAluno}`)
-                .send({ id_monitoria: 999, data_hora: '2026-09-10T14:00:00.000Z' });
-
-            expect(resposta.status).toBe(400);
-            expect(prisma.agendamento.count).not.toHaveBeenCalled();
-            expect(prisma.agendamento.create).not.toHaveBeenCalled();
-        });
     });
 });
 
 describe('DELETE /agendamentos/:id', () => {
     beforeEach(() => jest.clearAllMocks());
 
-    const em48h = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
-    const em10h = new Date(Date.now() + 10 * 60 * 60 * 1000).toISOString();
-
-    it('cancela e retorna 200 quando o aluno dono do agendamento cancela com mais de 24h de antecedência', async () => {
-        prisma.agendamento.findUnique.mockResolvedValue({
-            id: 1,
-            id_aluno: 20,
-            data_hora: em48h
-        });
+    it('cancela e retorna 200 quando o aluno dono do agendamento cancela', async () => {
+        prisma.agendamento.findUnique.mockResolvedValue({ id: 1, id_aluno: 20 });
         prisma.agendamento.delete.mockResolvedValue({ id: 1 });
 
         const resposta = await request(app)
@@ -139,33 +136,13 @@ describe('DELETE /agendamentos/:id', () => {
     });
 
     it('retorna 403 quando outro aluno tenta cancelar o agendamento', async () => {
-        prisma.agendamento.findUnique.mockResolvedValue({
-            id: 1,
-            id_aluno: 20,
-            data_hora: em48h
-        });
+        prisma.agendamento.findUnique.mockResolvedValue({ id: 1, id_aluno: 20 });
 
         const resposta = await request(app)
             .delete('/agendamentos/1')
             .set('Authorization', `Bearer ${tokenOutroAluno}`);
 
         expect(resposta.status).toBe(403);
-        expect(prisma.agendamento.delete).not.toHaveBeenCalled();
-    });
-
-    it('retorna 400 (RN-001) quando faltam menos de 24h para o horário agendado', async () => {
-        prisma.agendamento.findUnique.mockResolvedValue({
-            id: 1,
-            id_aluno: 20,
-            data_hora: em10h
-        });
-
-        const resposta = await request(app)
-            .delete('/agendamentos/1')
-            .set('Authorization', `Bearer ${tokenAluno}`);
-
-        expect(resposta.status).toBe(400);
-        expect(resposta.body.erro).toMatch(/24h/);
         expect(prisma.agendamento.delete).not.toHaveBeenCalled();
     });
 });

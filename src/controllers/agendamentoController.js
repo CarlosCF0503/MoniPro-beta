@@ -24,15 +24,18 @@ class AgendamentoController {
             });
             res.status(201).json({ success: true, agendamento });
         } catch (error) {
+            // Vaga lotada: conflito de estado, não erro de validação da requisição
+            if (error.code === 'MONITORIA_LOTADA') {
+                return res.status(409).json({ success: false, erro: error.message });
+            }
             console.error('❌ Erro ao criar agendamento:', error);
             const mensagem = tratarErro(error, {
                 P2003: 'A monitoria selecionada não existe ou foi cancelada.',
                 P2025: 'A monitoria selecionada não foi encontrada.',
+                naoEncontrado: 'A monitoria selecionada não foi encontrada.',
                 default: 'Não foi possível realizar o agendamento. Tente novamente.'
             });
-            // Tarefa 23: vaga lotada retorna 409 (conflito), diferenciando do 400 genérico
-            const status = error.message?.includes('lotada') ? 409 : 400;
-            res.status(status).json({ success: false, erro: mensagem });
+            res.status(400).json({ success: false, erro: mensagem });
         }
     }
 

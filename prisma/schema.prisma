@@ -57,7 +57,7 @@ model Monitoria {
   descricao     String?
   local         String
   status        StatusMonitoria @default(ativa)
-  capacidade    Int             @default(1)
+  capacidade    Int             @default(1) // nº máximo de alunos inscritos simultaneamente na vaga
 
   id_monitor    Int
   monitor       Usuario         @relation("MonitorParaMonitoria", fields: [id_monitor], references: [id])

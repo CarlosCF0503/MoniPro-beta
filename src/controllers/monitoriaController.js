@@ -14,6 +14,14 @@ class MonitoriaController {
             });
         }
 
+        const { capacidade } = req.body;
+        if (capacidade !== undefined && (!Number.isInteger(capacidade) || capacidade < 1)) {
+            return res.status(400).json({
+                success: false,
+                erro: 'A capacidade da vaga deve ser um número inteiro maior ou igual a 1.'
+            });
+        }
+
         try {
             const monitoria = await monitoriaService.criar({
                 ...req.body,

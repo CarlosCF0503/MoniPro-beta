@@ -415,3 +415,22 @@ td:hover {
 
 }
 
+
+/* Vaga de monitoria sem vagas disponíveis */
+.monitor-item.lotada {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.monitor-item.lotada label {
+    cursor: not-allowed !important;
+}
+
+.monitor-item .vagas-info {
+    color: #2e7d32;
+    font-weight: bold;
+}
+
+.monitor-item.lotada .vagas-info {
+    color: #c62828;
+}

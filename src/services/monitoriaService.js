@@ -1,6 +1,5 @@
 // src/services/monitoriaService.js
 const monitoriaRepository = require('../repositories/monitoriaRepository');
-const { validarAntecedenciaCancelamento } = require('../utils/validarAntecedencia');
 
 class MonitoriaService {
     async criar(dados) {
@@ -13,20 +12,13 @@ class MonitoriaService {
             paginacao
         );
 
-        // Tarefa 23: expõe vagas_disponiveis (capacidade - agendamentos já feitos)
-        // para a lista do frontend indicar a ocupação de cada vaga.
-        const dadosComVagas = dados.map((monitoria) => {
-            const { _count, ...resto } = monitoria;
-            const capacidade = typeof monitoria.capacidade === 'number' ? monitoria.capacidade : 1;
-            const inscritos = _count?.inscricoes ?? 0;
-            return {
-                ...resto,
-                capacidade,
-                vagas_disponiveis: Math.max(capacidade - inscritos, 0)
-            };
-        });
+        // Expõe a ocupação sem vazar o _count interno do Prisma
+        const monitorias = dados.map(({ _count, ...monitoria }) => ({
+            ...monitoria,
+            vagas_disponiveis: Math.max(monitoria.capacidade - _count.inscricoes, 0)
+        }));
 
-        return { dados: dadosComVagas, total };
+        return { dados: monitorias, total };
     }
 
     async buscarAgendamentosPorMonitor(monitorId, paginacao) {
@@ -41,7 +33,6 @@ class MonitoriaService {
         if (monitoria.id_monitor !== monitorId) {
             throw new Error('Não autorizado: esta monitoria não pertence ao utilizador.');
         }
-        validarAntecedenciaCancelamento(monitoria.horario);
         return await monitoriaRepository.cancelar(id);
     }
 

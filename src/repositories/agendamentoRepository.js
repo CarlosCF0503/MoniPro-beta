@@ -3,8 +3,37 @@
 const prisma = require('../config/bancoDeDados');
 
 class AgendamentoRepository {
-    async criar(dados, tx = prisma) {
-        return await tx.agendamento.create({ data: dados });
+    // Executa `fn` dentro de uma transação interativa. `fn` recebe o cliente da transação (tx),
+    // que deve ser repassado aos métodos abaixo via parâmetro `db`.
+    async emTransacao(fn) {
+        return await prisma.$transaction(fn);
+    }
+
+    // Trava a linha da monitoria (SELECT ... FOR UPDATE) até o fim da transação, serializando
+    // inscrições concorrentes na mesma vaga. Sem isso, duas requisições simultâneas poderiam
+    // contar a mesma ocupação e ultrapassar a capacidade.
+    async bloquearMonitoria(idMonitoria, db = prisma) {
+        const linhas = await db.$queryRaw`
+            SELECT "capacidade", "status"::text AS "status"
+            FROM "monitorias"
+            WHERE "id" = ${parseInt(idMonitoria)}
+            FOR UPDATE
+        `;
+        return linhas[0] || null;
+    }
+
+    // Inscrições que ocupam vaga: tudo que não foi cancelado.
+    async contarOcupadas(idMonitoria, db = prisma) {
+        return await db.agendamento.count({
+            where: {
+                id_monitoria: parseInt(idMonitoria),
+                status: { not: 'cancelado' }
+            }
+        });
+    }
+
+    async criar(dados, db = prisma) {
+        return await db.agendamento.create({ data: dados });
     }
 
     async buscarPorAluno(idAluno, { skip, take } = {}) {
@@ -43,21 +72,13 @@ class AgendamentoRepository {
         });
     }
 
-    async buscarPorAlunoEMonitoria(idAluno, idMonitoria, tx = prisma) {
-        return await tx.agendamento.findFirst({
+    async buscarPorAlunoEMonitoria(idAluno, idMonitoria, db = prisma) {
+        return await db.agendamento.findFirst({
             where: {
                 id_aluno: parseInt(idAluno),
 
                 id_monitoria: parseInt(idMonitoria)
             }
-        });
-    }
-
-    // Tarefa 23: conta quantos agendamentos já existem para a vaga, usada dentro
-    // da transação de agendamentoService.criar para validar o limite de capacidade.
-    async contarPorMonitoria(idMonitoria, tx = prisma) {
-        return await tx.agendamento.count({
-            where: { id_monitoria: parseInt(idMonitoria) }
         });
     }
 
