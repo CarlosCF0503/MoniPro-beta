@@ -2,12 +2,13 @@
 const perfilRepository = require('../repositories/perfilRepository');
 const agendamentoRepository = require('../repositories/agendamentoRepository');
 const monitoriaRepository = require('../repositories/monitoriaRepository');
+const { ErroNaoEncontrado } = require('../utils/erros');
 
 class PerfilService {
     async obter(id) {
         const perfil = await perfilRepository.buscarPerfilCompleto(id);
         if (!perfil) {
-            throw new Error('Perfil não encontrado na base de dados.');
+            throw new ErroNaoEncontrado('Perfil não encontrado. Faça login novamente.');
         }
         return perfil;
     }

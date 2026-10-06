@@ -2,6 +2,8 @@
 // RN-001: Cancelamentos só são permitidos com no mínimo 24h de antecedência
 // do horário agendado. Usado por agendamentoService.deletar e monitoriaService.cancelar.
 
+const { ErroRegraNegocio } = require('./erros');
+
 const HORAS_MINIMAS_CANCELAMENTO = 24;
 
 /**
@@ -17,7 +19,7 @@ function validarAntecedenciaCancelamento(dataAgendada, horasMinimas = HORAS_MINI
     const diferencaEmHoras = (data.getTime() - agora.getTime()) / (1000 * 60 * 60);
 
     if (diferencaEmHoras < horasMinimas) {
-        throw new Error(
+        throw new ErroRegraNegocio(
             `Cancelamento não permitido: é necessário cancelar com no mínimo ${horasMinimas}h de antecedência do horário agendado.`
         );
     }

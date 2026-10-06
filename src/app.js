@@ -16,6 +16,8 @@ const agendamentoRotas = require('./routes/agendamentoRotas');
 const disciplinaRotas = require('./routes/disciplinaRotas');
 const monitoriaRotas = require('./routes/monitoriaRotas');
 const perfilRotas = require('./routes/perfilRotas');
+const tratadorDeErros = require('./middlewares/tratadorDeErros');
+const { ErroNaoAutorizado } = require('./utils/erros');
 
 // Middlewares globais
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
@@ -31,7 +33,7 @@ app.use(
             if (!origem || allowedOrigins.includes(origem)) {
                 callback(null, true);
             } else {
-                callback(new Error('Não permitido pelo CORS'));
+                callback(new ErroNaoAutorizado('Origem não permitida pelo CORS.'));
             }
         }
     })
@@ -48,4 +50,8 @@ app.use('/perfil', perfilRotas);
 app.get('/teste', (req, res) => {
     res.json({ mensagem: 'O servidor atualizado está respondendo!' });
 });
+
+// Tarefa 8: middleware central de erro — sempre o último registrado
+app.use(tratadorDeErros);
+
 module.exports = app;

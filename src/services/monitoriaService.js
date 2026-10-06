@@ -1,9 +1,21 @@
 // src/services/monitoriaService.js
 const monitoriaRepository = require('../repositories/monitoriaRepository');
+const { validarAntecedenciaCancelamento } = require('../utils/validarAntecedencia');
+const { ErroValidacao, ErroNaoAutorizado, ErroNaoEncontrado } = require('../utils/erros');
 
 class MonitoriaService {
     async criar(dados) {
-        return await monitoriaRepository.criar(dados);
+        try {
+            return await monitoriaRepository.criar(dados);
+        } catch (error) {
+            // P2003: violação de FK — a disciplina informada no corpo não existe
+            if (error.code === 'P2003') {
+                throw new ErroValidacao('A disciplina informada não existe.', {
+                    id_disciplina: 'A disciplina informada não existe.'
+                });
+            }
+            throw error;
+        }
     }
 
     async listarPorDisciplina(idDisciplina, paginacao) {
@@ -28,11 +40,12 @@ class MonitoriaService {
     async cancelar(id, monitorId) {
         const monitoria = await monitoriaRepository.buscarPorId(id);
         if (!monitoria) {
-            throw new Error('Monitoria não encontrada.');
+            throw new ErroNaoEncontrado('Vaga de monitoria não encontrada.');
         }
         if (monitoria.id_monitor !== monitorId) {
-            throw new Error('Não autorizado: esta monitoria não pertence ao utilizador.');
+            throw new ErroNaoAutorizado('Você não tem permissão para cancelar esta vaga.');
         }
+        validarAntecedenciaCancelamento(monitoria.horario);
         return await monitoriaRepository.cancelar(id);
     }
 

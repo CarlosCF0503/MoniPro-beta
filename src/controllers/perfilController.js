@@ -1,60 +1,32 @@
 // src/controllers/perfilController.js
+// Tarefa 8: erros sobem para o middleware central (src/middlewares/tratadorDeErros.js).
 const perfilService = require('../services/perfilService');
-const tratarErro = require('../utils/tratarErro');
 const { obterParametrosPaginacao, montarPaginacao } = require('../utils/paginacao');
 
 class PerfilController {
     async exibir(req, res) {
-        try {
-            const perfil = await perfilService.obter(req.usuario.id);
-            res.json({ success: true, user: perfil });
-        } catch (error) {
-            console.error('❌ Erro ao buscar perfil:', error);
-            const mensagem = tratarErro(error, {
-                naoEncontrado: 'Perfil não encontrado. Faça login novamente.',
-                default: 'Não foi possível carregar o perfil. Tente novamente.'
-            });
-            res.status(404).json({ success: false, erro: mensagem });
-        }
+        const perfil = await perfilService.obter(req.usuario.id);
+        res.json({ success: true, user: perfil });
     }
 
     async listarAgendamentos(req, res) {
-        try {
-            const paginacao = obterParametrosPaginacao(req.query);
-            const { dados, total } = await perfilService.obterAgendamentos(
-                req.usuario.id,
-                paginacao
-            );
-            res.json({
-                success: true,
-                agendamentos: dados,
-                paginacao: montarPaginacao(paginacao, total)
-            });
-        } catch (error) {
-            console.error('❌ Erro ao listar agendamentos do perfil:', error);
-            res.status(500).json({
-                success: false,
-                erro: 'Não foi possível carregar seus agendamentos. Tente novamente.'
-            });
-        }
+        const paginacao = obterParametrosPaginacao(req.query);
+        const { dados, total } = await perfilService.obterAgendamentos(req.usuario.id, paginacao);
+        res.json({
+            success: true,
+            agendamentos: dados,
+            paginacao: montarPaginacao(paginacao, total)
+        });
     }
 
     async listarMonitorias(req, res) {
-        try {
-            const paginacao = obterParametrosPaginacao(req.query);
-            const { dados, total } = await perfilService.obterMonitorias(req.usuario.id, paginacao);
-            res.json({
-                success: true,
-                monitorias: dados,
-                paginacao: montarPaginacao(paginacao, total)
-            });
-        } catch (error) {
-            console.error('❌ Erro ao listar monitorias do perfil:', error);
-            res.status(500).json({
-                success: false,
-                erro: 'Não foi possível carregar suas monitorias. Tente novamente.'
-            });
-        }
+        const paginacao = obterParametrosPaginacao(req.query);
+        const { dados, total } = await perfilService.obterMonitorias(req.usuario.id, paginacao);
+        res.json({
+            success: true,
+            monitorias: dados,
+            paginacao: montarPaginacao(paginacao, total)
+        });
     }
 }
 
