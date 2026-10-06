@@ -1,101 +1,47 @@
 // src/controllers/agendamentoController.js
+// Tarefa 8: erros sobem para o middleware central (src/middlewares/tratadorDeErros.js).
+// Tarefa 9: o corpo de criar já chega validado por schemas/agendamentoSchemas.js.
 const agendamentoService = require('../services/agendamentoService');
-const tratarErro = require('../utils/tratarErro');
 const { obterParametrosPaginacao, montarPaginacao } = require('../utils/paginacao');
 
 class AgendamentoController {
     async criar(req, res) {
         const { id_monitoria, data_hora, data_agendamento } = req.body;
-        const dataFinal = data_hora || data_agendamento;
 
-        if (!id_monitoria) {
-            return res.status(400).json({
-                success: false,
-                erro: 'Selecione uma monitoria antes de agendar.'
-            });
-        }
-
-        try {
-            const agendamento = await agendamentoService.criar({
-                id_monitoria: parseInt(id_monitoria),
-                id_aluno: req.usuario.id,
-                status: req.body.status || 'pendente',
-                data_hora: dataFinal
-            });
-            res.status(201).json({ success: true, agendamento });
-        } catch (error) {
-            // Vaga lotada: conflito de estado, não erro de validação da requisição
-            if (error.code === 'MONITORIA_LOTADA') {
-                return res.status(409).json({ success: false, erro: error.message });
-            }
-            console.error('❌ Erro ao criar agendamento:', error);
-            const mensagem = tratarErro(error, {
-                P2003: 'A monitoria selecionada não existe ou foi cancelada.',
-                P2025: 'A monitoria selecionada não foi encontrada.',
-                naoEncontrado: 'A monitoria selecionada não foi encontrada.',
-                default: 'Não foi possível realizar o agendamento. Tente novamente.'
-            });
-            res.status(400).json({ success: false, erro: mensagem });
-        }
+        const agendamento = await agendamentoService.criar({
+            id_monitoria,
+            id_aluno: req.usuario.id,
+            status: 'pendente',
+            data_hora: data_hora || data_agendamento
+        });
+        res.status(201).json({ success: true, agendamento });
     }
 
     async listar(req, res) {
-        try {
-            const paginacao = obterParametrosPaginacao(req.query);
-            const { dados, total } = await agendamentoService.listarPorAluno(
-                req.usuario.id,
-                paginacao
-            );
-            res.json({
-                success: true,
-                agendamentos: dados,
-                paginacao: montarPaginacao(paginacao, total)
-            });
-        } catch (error) {
-            console.error('❌ Erro ao buscar agendamentos:', error);
-            res.status(500).json({
-                success: false,
-                erro: 'Não foi possível carregar seus agendamentos. Tente novamente.'
-            });
-        }
+        const paginacao = obterParametrosPaginacao(req.query);
+        const { dados, total } = await agendamentoService.listarPorAluno(req.usuario.id, paginacao);
+        res.json({
+            success: true,
+            agendamentos: dados,
+            paginacao: montarPaginacao(paginacao, total)
+        });
     }
 
     async deletar(req, res) {
-        try {
-            await agendamentoService.deletar(parseInt(req.params.id), req.usuario.id);
-            res.json({ success: true, mensagem: 'Inscrição cancelada com sucesso.' });
-        } catch (error) {
-            console.error('❌ Erro ao deletar agendamento:', error);
-            const mensagem = tratarErro(error, {
-                naoEncontrado: 'Agendamento não encontrado.',
-                naoAutorizado: 'Você não tem permissão para cancelar este agendamento.',
-                default: 'Não foi possível cancelar o agendamento. Tente novamente.'
-            });
-            const status = error.message?.includes('autorizado') ? 403 : 400;
-            res.status(status).json({ success: false, erro: mensagem });
-        }
+        await agendamentoService.deletar(parseInt(req.params.id), req.usuario.id);
+        res.json({ success: true, mensagem: 'Inscrição cancelada com sucesso.' });
     }
 
     async concluir(req, res) {
-        try {
-            const idAgendamento = parseInt(req.params.id, 10);
-            const resultado = await agendamentoService.concluir(idAgendamento, req.usuario.id);
+        const idAgendamento = parseInt(req.params.id, 10);
+        const resultado = await agendamentoService.concluir(idAgendamento, req.usuario.id);
 
-            res.json({
-                success: true,
-                mensagem: 'Agendamento concluído e 10 pontos creditados com sucesso!',
-                agendamento: resultado
-            });
-        } catch (error) {
-            console.error('❌ Erro ao concluir agendamento:', error);
-            const mensagem = tratarErro(error, {
-                naoEncontrado: 'Agendamento não encontrado.',
-                jaConcluido: 'Este agendamento já foi concluído.',
-                default: 'Não foi possível concluir o agendamento.'
-            });
-            res.status(400).json({ success: false, erro: mensagem });
-        }
+        res.json({
+            success: true,
+            mensagem: 'Agendamento concluído e 10 pontos creditados com sucesso!',
+            agendamento: resultado
+        });
     }
-} // <- Agora a chave que fecha a classe fica AQUI no final
+}
 
 module.exports = new AgendamentoController();

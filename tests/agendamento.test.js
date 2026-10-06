@@ -123,8 +123,11 @@ describe('POST /agendamentos', () => {
 describe('DELETE /agendamentos/:id', () => {
     beforeEach(() => jest.clearAllMocks());
 
+    const em48h = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+    const em10h = new Date(Date.now() + 10 * 60 * 60 * 1000).toISOString();
+
     it('cancela e retorna 200 quando o aluno dono do agendamento cancela', async () => {
-        prisma.agendamento.findUnique.mockResolvedValue({ id: 1, id_aluno: 20 });
+        prisma.agendamento.findUnique.mockResolvedValue({ id: 1, id_aluno: 20, data_hora: em48h });
         prisma.agendamento.delete.mockResolvedValue({ id: 1 });
 
         const resposta = await request(app)
@@ -136,13 +139,25 @@ describe('DELETE /agendamentos/:id', () => {
     });
 
     it('retorna 403 quando outro aluno tenta cancelar o agendamento', async () => {
-        prisma.agendamento.findUnique.mockResolvedValue({ id: 1, id_aluno: 20 });
+        prisma.agendamento.findUnique.mockResolvedValue({ id: 1, id_aluno: 20, data_hora: em48h });
 
         const resposta = await request(app)
             .delete('/agendamentos/1')
             .set('Authorization', `Bearer ${tokenOutroAluno}`);
 
         expect(resposta.status).toBe(403);
+        expect(prisma.agendamento.delete).not.toHaveBeenCalled();
+    });
+
+    it('retorna 400 (RN-001) quando faltam menos de 24h para o horário agendado', async () => {
+        prisma.agendamento.findUnique.mockResolvedValue({ id: 1, id_aluno: 20, data_hora: em10h });
+
+        const resposta = await request(app)
+            .delete('/agendamentos/1')
+            .set('Authorization', `Bearer ${tokenAluno}`);
+
+        expect(resposta.status).toBe(400);
+        expect(resposta.body.erro).toMatch(/24h/);
         expect(prisma.agendamento.delete).not.toHaveBeenCalled();
     });
 });

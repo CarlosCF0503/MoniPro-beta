@@ -2,10 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const usuarioRepository = require('../repositories/usuarioRepository');
 const { JWT_SECRET } = require('../config/env');
-
-// Marca falhas de credenciais (401) para diferenciá-las de erros
-// inesperados como falha de conexão com o banco (que devem virar 500).
-class ErroCredenciaisInvalidas extends Error {}
+const { ErroCredenciaisInvalidas, ErroConflito } = require('../utils/erros');
 
 class AutenticacaoService {
     async cadastrar(dados) {
@@ -15,7 +12,7 @@ class AutenticacaoService {
             dados.tipo_usuario
         );
         if (usuarioExistente) {
-            throw new Error(`Este e-mail já está cadastrado como ${dados.tipo_usuario}.`);
+            throw new ErroConflito(`Este e-mail já está cadastrado como ${dados.tipo_usuario}.`);
         }
 
         // Você também pode fazer a mesma verificação para a matrícula se quiser!
@@ -24,7 +21,7 @@ class AutenticacaoService {
             dados.tipo_usuario
         );
         if (matriculaExistente) {
-            throw new Error(`Esta matrícula já está cadastrada como ${dados.tipo_usuario}.`);
+            throw new ErroConflito(`Esta matrícula já está cadastrada como ${dados.tipo_usuario}.`);
         }
 
         // 2. Se passou pelas validações, cria o cadastro
@@ -47,7 +44,9 @@ class AutenticacaoService {
         }
 
         if (!usuario) {
-            throw new ErroCredenciaisInvalidas(`Usuário do tipo ${tipo_usuario} não encontrado.`);
+            throw new ErroCredenciaisInvalidas(
+                'Usuário não encontrado. Verifique suas credenciais.'
+            );
         }
 
         // Como a busca já filtrou pelo tipo, essa linha abaixo virou apenas uma garantia extra de segurança
@@ -81,4 +80,4 @@ class AutenticacaoService {
     }
 }
 
-module.exports = Object.assign(new AutenticacaoService(), { ErroCredenciaisInvalidas });
+module.exports = new AutenticacaoService();

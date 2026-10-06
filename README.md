@@ -34,6 +34,19 @@ perfil_aluno.html: Painel exclusivo do aluno. Exibe informações da conta, sald
 
 perfil_monitor.html: Painel exclusivo do monitor. Exibe as vagas criadas, agendamentos sob sua responsabilidade, opções de cancelamento de horários e modal de certificados.
 
+# Como executar localmente
+
+Pré-requisitos: Node.js 22 e um banco PostgreSQL acessível.
+
+1. Copie `.env.example` para `.env` e preencha ao menos `DATABASE_URL` e `JWT_SECRET`.
+2. Instale as dependências com `npm install`. O `postinstall` já gera o Prisma Client.
+3. Se alterar `prisma/schema.prisma`, gere o client de novo com `npm run generate`. O client gerado não é versionado no repositório.
+4. Aplique as migrations no banco **local** com `npx prisma migrate dev`.
+5. Suba a API com `npm run dev` (com reload) ou `npm start`.
+6. Rode os testes e o lint com `npm test` e `npm run lint`.
+
+Com Docker, `docker compose up --build` sobe o backend (porta 3000) e o frontend (porta 8080) usando o `.env`.
+
 # Especificação Acadêmica
 
 ## Tabela de Status de RF e RN (Código Real)

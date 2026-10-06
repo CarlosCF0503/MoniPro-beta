@@ -1,12 +1,12 @@
 const agendamentoRepository = require('../repositories/agendamentoRepository');
-
-class MonitoriaLotadaError extends Error {
-    constructor() {
-        super('Esta vaga de monitoria está lotada.');
-        this.name = 'MonitoriaLotadaError';
-        this.code = 'MONITORIA_LOTADA';
-    }
-}
+const { validarAntecedenciaCancelamento } = require('../utils/validarAntecedencia');
+const {
+    ErroValidacao,
+    ErroRegraNegocio,
+    ErroNaoAutorizado,
+    ErroNaoEncontrado,
+    ErroConflito
+} = require('../utils/erros');
 
 class AgendamentoService {
     async criar(dados) {
@@ -15,7 +15,10 @@ class AgendamentoService {
         return await agendamentoRepository.emTransacao(async (tx) => {
             const monitoria = await agendamentoRepository.bloquearMonitoria(dados.id_monitoria, tx);
             if (!monitoria) {
-                throw new Error('Monitoria não encontrada.');
+                // A monitoria vem do corpo da requisição, não da URL: é dado inválido (400), não 404
+                throw new ErroValidacao('A monitoria selecionada não foi encontrada.', {
+                    id_monitoria: 'A monitoria selecionada não foi encontrada.'
+                });
             }
 
             // Impede agendamento duplicado para a mesma monitoria
@@ -25,12 +28,13 @@ class AgendamentoService {
                 tx
             );
             if (jaExiste) {
-                throw new Error('Você já está inscrito nesta monitoria.');
+                throw new ErroRegraNegocio('Você já está inscrito nesta monitoria.');
             }
 
             const ocupadas = await agendamentoRepository.contarOcupadas(dados.id_monitoria, tx);
             if (ocupadas >= monitoria.capacidade) {
-                throw new MonitoriaLotadaError();
+                // Vaga lotada: conflito de estado, não erro de validação da requisição
+                throw new ErroConflito('Esta vaga de monitoria está lotada.');
             }
 
             return await agendamentoRepository.criar(dados, tx);
@@ -44,21 +48,22 @@ class AgendamentoService {
     async deletar(id, idAluno) {
         const agendamento = await agendamentoRepository.buscarPorId(id);
         if (!agendamento) {
-            throw new Error('Agendamento não encontrado.');
+            throw new ErroNaoEncontrado('Agendamento não encontrado.');
         }
         if (agendamento.id_aluno !== idAluno) {
-            throw new Error('Não autorizado: este agendamento não pertence a você.');
+            throw new ErroNaoAutorizado('Você não tem permissão para cancelar este agendamento.');
         }
+        validarAntecedenciaCancelamento(agendamento.data_hora);
         return await agendamentoRepository.deletar(id);
     }
 
     async concluir(id, idAluno) {
         const agendamento = await agendamentoRepository.buscarPorId(id);
         if (!agendamento) {
-            throw new Error('Agendamento não encontrado.');
+            throw new ErroNaoEncontrado('Agendamento não encontrado.');
         }
         if (agendamento.status === 'concluido') {
-            throw new Error('Este agendamento já foi concluído.');
+            throw new ErroRegraNegocio('Este agendamento já foi concluído.');
         }
 
         const [agendamentoAtualizado] = await agendamentoRepository.concluirEIncrementarPontos(

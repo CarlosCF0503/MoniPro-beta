@@ -1,3 +1,5 @@
 node_modules/
 .env
 ca.pem
+# Prisma Client gerado: recriado por "npm run generate" (ou pelo postinstall) em cada ambiente
+prisma/.prisma/
