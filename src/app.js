@@ -1,10 +1,16 @@
 // src/app.js
 const express = require('express');
-const helmet = require('helmet');
-const cors = require('cors');
+const helmet  = require('helmet');
+const cors    = require('cors');
+const helmet  = require('helmet');
 
 const app = express();
 app.use(express.json());
+
+// Atrás do Nginx (reverse proxy) em produção/dev — necessário para que
+// express-rate-limit e o CORS leiam corretamente IP/Origin reais dos clientes
+// a partir do cabeçalho X-Forwarded-For.
+app.set('trust proxy', 1);
 
 // Rotas
 const autenticacaoRotas = require('./routes/autenticacaoRotas');
@@ -14,37 +20,26 @@ const monitoriaRotas    = require('./routes/monitoriaRotas');
 const perfilRotas       = require('./routes/perfilRotas');
 
 
-app.use(helmet());
-
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-    ? process.env.ALLOWED_ORIGINS.split(',')
-    :[];
-
-const CorsOptions = {
-    origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error('Acesso bloqueado pela política de CORS'));
-        }
-    }
-};
-
 // Middlewares globais
-app.use(cors({
-    origin: [
-       // 'https://moni-pro-b-orm.vercel.app',
-        'http://127.0.0.1:5500',
-        'http://localhost:5500',
-        'http://127.0.0.1:5501', 
-        'http://localhost:5501',  
-        'http://localhost:3000',
-        'https://moni-pro-beta-git-carlos-carlos-cruzs-projects-38b28e08.vercel.app',
-        'https://moni-pro-beta-git-orm-carlos-cruzs-projects-38b28e08.vercel.app',
-        'http://172.29.64.1:5500/'
-    ]
-}));
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((origem) => origem.trim())
+    .filter(Boolean);
 
+app.use(helmet());
+app.use(
+    cors({
+        origin(origem, callback) {
+            // Requisições sem Origin (server-to-server, apps mobile, curl) são permitidas
+            if (!origem || allowedOrigins.includes(origem)) {
+                callback(null, true);
+            } else {
+                callback(new Error('Não permitido pelo CORS'));
+            }
+        }
+    })
+);
+app.use(express.json());
 
 // Endpoints
 app.use('/auth',         autenticacaoRotas);

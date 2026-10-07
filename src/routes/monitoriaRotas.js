@@ -2,10 +2,10 @@
 const express = require('express');
 const router = express.Router();
 const monitoriaController = require('../controllers/monitoriaController');
-const { autenticar } = require('../middlewares/autenticacaoMiddleware');
+const { autenticar, isMonitor } = require('../middlewares/autenticacaoMiddleware');
 
 // app.js registra: app.use('/monitorias', monitoriaRotas)
-router.post('/', autenticar, monitoriaController.criar);
+router.post('/', autenticar, isMonitor, monitoriaController.criar);
 
 // Rotas específicas ANTES da rota com parâmetro (ordem importa no Express)
 router.get('/monitor/agendamentos', autenticar, monitoriaController.listarAgendamentosDoMonitor);
@@ -14,6 +14,6 @@ router.get('/monitor/agendamentos', autenticar, monitoriaController.listarAgenda
 router.put('/:id/cancelar', autenticar, monitoriaController.cancelar);
 
 // Rota com parâmetro por último
-router.get('/:idDisciplina', monitoriaController.listar);
+router.get('/:idDisciplina', autenticar, monitoriaController.listar);
 
 module.exports = router;

@@ -1,0 +1,6 @@
+// JS/config.js — gerado automaticamente no arranque do container Nginx
+// (envsubst substitui ${API_BASE_URL} pelo valor definido no docker-compose.yml / ambiente).
+// Não editar o resultado (JS/config.js) diretamente — editar este template.
+window.MONIPRO_CONFIG = {
+    API_BASE_URL: "${API_BASE_URL}"
+};

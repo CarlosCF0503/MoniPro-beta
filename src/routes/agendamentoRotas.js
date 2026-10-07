@@ -9,5 +9,6 @@ const { autenticar } = require('../middlewares/autenticacaoMiddleware');
 router.post('/', autenticar, agendamentoController.criar);
 router.get('/', autenticar, agendamentoController.listar);
 router.delete('/:id', autenticar, agendamentoController.deletar);
+router.patch('/:id/concluir', autenticar, agendamentoController.concluir);
 
 module.exports = router;

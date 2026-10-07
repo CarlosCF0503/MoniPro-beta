@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = 'index.html';
             return;
         }
-        
+
         const user = parseJwt(token);
         if (user) {
             const tipo = user.tipo || user.tipo_usuario;
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Ações dos links do menu lateral
-    profileLinks.forEach(link => {
+    profileLinks.forEach((link) => {
         link.addEventListener('click', (event) => {
             event.preventDefault();
             handleProfileRedirect();
@@ -125,10 +125,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const user = parseJwt(token);
             if (user) {
                 // Removemos a variável redundante e garantimos que o split opera numa string válida
-                dashNomeUsuario.textContent = (user.nome_completo)
+                dashNomeUsuario.textContent = user.nome_completo
                     ? String(user.nome_completo).split(' ')[0]
                     : String(user.email).split('@')[0];
-                
+
                 // Define o link correto dinamicamente para evitar o erro 404
                 const tipo = user.tipo || user.tipo_usuario;
                 if (String(tipo).toLowerCase() === 'monitor') {

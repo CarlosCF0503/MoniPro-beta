@@ -307,6 +307,60 @@ td:hover {
     background-color: #071E3D;
     color: white !important;
 }
+/* Card de Sugestão Recomendada */
+.sugestao-container {
+    width: 100%;
+    background: #f0f7ff;
+    border: 1px solid #bbe0ff;
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+}
+
+.sugestao-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #1F4287;
+    text-transform: uppercase;
+}
+
+.sugestao-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.sugestao-body strong {
+    font-size: 15px;
+    color: #071E3D;
+}
+
+.sugestao-body small {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.btn-sugestao {
+    margin-top: 4px;
+    background-color: #4a90e2;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-sugestao:hover {
+    background-color: #1F4287;
+}
 
 /* --- Otimização para Celular --- */
 @media (max-width: 900px) {

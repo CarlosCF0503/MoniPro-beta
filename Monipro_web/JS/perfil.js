@@ -61,7 +61,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('emailUsuario').textContent = data.user.email || '';
             document.getElementById('matriculaUsuario').textContent = data.user.matricula || '';
 
-            const tipo = String(data.user.tipo_usuario);
+            const elPontos = document.getElementById('pontosUsuario');
+            if (elPontos) elPontos.textContent = `${data.user.pontos || 0} pts`;
+
+            const tipo = String(data.user.tipo_usuario || userData.tipo || 'aluno');
             document.getElementById('tipoUsuario').textContent =
                 tipo.charAt(0).toUpperCase() + tipo.slice(1);
         } else {
@@ -236,6 +239,11 @@ async function carregarMonitoriasCriadas(container) {
                             >
                         </p>
                     </div>
+                    ${
+                        ativa
+                            ? `<button class="btn-cancelar" data-monitoria-id="${m.id}">Cancelar Vaga</button>`
+                            : `<span class="status-${statusStr.toLowerCase()}">${statusStr.toUpperCase()}</span>`
+                    }
                 `;
                 div.insertAdjacentHTML('beforeend', rodapeHtml);
                 container.appendChild(div);

@@ -1,28 +1,7 @@
-
 // JS/api.js
 
 // URL base do seu servidor. Se for testar localmente, pode alterar para "http://localhost:3000"
-const MB_BETA_ORM = "http://localhost:3000";
-
-const HTML_ESCAPE_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-
-function escapeHtml(valor) {
-    return String(valor).replace(/[&<>"']/g, (ch) => HTML_ESCAPE_MAP[ch]);
-}
-
-/**
- * Template tag para montar HTML com interpolação segura: as partes literais do
- * template passam intactas, mas cada `${valor}` interpolado é escapado antes de
- * entrar na string final. Use sempre que for atribuir dados vindos da API (ou do
- * utilizador) a `.innerHTML`/`insertAdjacentHTML`.
- */
-function html(partesEstaticas, ...valores) {
-    return partesEstaticas.reduce(
-        (acumulado, parte, indice) =>
-            acumulado + parte + (indice < valores.length ? escapeHtml(valores[indice]) : ''),
-        ''
-    );
-}
+const MB_BETA_ORM = "https://moni-pro.app.br";
 /**
  * Função centralizada para realizar pedidos ao backend.
  * @param {string} endpoint - O caminho da rota (ex: '/auth/login', '/perfil')
@@ -52,18 +31,18 @@ async function chamadaApi(endpoint, opcoes = {}) {
         const resposta = await fetch(`${MB_BETA_ORM}${endpoint}`, configuracao);
 
         // Verifica o tipo de conteúdo retornado pelo servidor
-        const contentType = resposta.headers.get("content-type");
+        const contentType = resposta.headers.get('content-type');
         let dados = {};
 
         // Se a resposta for JSON, faz o parse normalmente
-        if (contentType && contentType.includes("application/json")) {
+        if (contentType && contentType.includes('application/json')) {
             dados = await resposta.json();
         } else {
-            // Se NÃO for JSON (ex: página HTML de erro 404 ou 500), 
+            // Se NÃO for JSON (ex: página HTML de erro 404 ou 500),
             // cria um objeto de erro manual para evitar o crash "Unexpected token '<'"
-            dados = { 
-                erro: true, 
-                mensagem: `Erro inesperado no servidor. A rota pode não existir (${resposta.status}).` 
+            dados = {
+                erro: true,
+                mensagem: `Erro inesperado no servidor. A rota pode não existir (${resposta.status}).`
             };
         }
 
@@ -79,6 +58,9 @@ async function chamadaApi(endpoint, opcoes = {}) {
     } catch (erro) {
         console.error(`Erro de rede no pedido para ${endpoint}:`, erro);
         // Lança um erro padronizado para o bloco 'catch' dos outros scripts (ex: falha de internet, CORS ou servidor offline)
-        throw new Error('Não foi possível conectar ao servidor. Verifique se o backend está online.');
+        throw new Error(
+            'Não foi possível conectar ao servidor. Verifique se o backend está online.',
+            { cause: erro }
+        );
     }
 }

@@ -3,10 +3,10 @@
 
 document.addEventListener('DOMContentLoaded', async () => {
     // --- 1. CONFIGURAÇÃO INICIAL ---
-    const urlParams = new URLSearchParams(window.location.search);
-    const disciplinaID = urlParams.get('disciplinaID');
+    const urlParams      = new URLSearchParams(window.location.search);
+    const disciplinaID   = urlParams.get('disciplinaID');
     const disciplinaNome = urlParams.get('disciplinaNome');
-    const token = localStorage.getItem('monipro_token');
+    const token          = localStorage.getItem('monipro_token');
 
     if (!disciplinaID || !token) {
         if (typeof showToast === 'function')
@@ -18,12 +18,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Elementos da UI
-    const tituloPagina = document.getElementById('titulo-pagina');
-    const viewAluno = document.getElementById('view-aluno');
-    const viewMonitor = document.getElementById('view-monitor');
+    const tituloPagina       = document.getElementById('titulo-pagina');
+    const viewAluno          = document.getElementById('view-aluno');
+    const viewMonitor        = document.getElementById('view-monitor');
     const containerMonitores = document.getElementById('lista-monitores');
-    const btnAgendar = document.getElementById('marcar-agendamento');
-    const btnCriarMonitoria = document.getElementById('criar-monitoria');
+    const btnAgendar         = document.getElementById('marcar-agendamento');
+    const btnCriarMonitoria  = document.getElementById('criar-monitoria');
 
     // Estado
     let monitoriaSelecionada = null;
@@ -45,10 +45,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Callback chamado sempre que o mês muda (botões < >)
     function aoMudarMes(mesOffset) {
-        const hoje = new Date();
+        const hoje     = new Date();
         const baseData = new Date(hoje.getFullYear(), hoje.getMonth() + mesOffset, 1);
-        const mesAlvo = baseData.getMonth();
-        const anoAlvo = baseData.getFullYear();
+        const mesAlvo  = baseData.getMonth();
+        const anoAlvo  = baseData.getFullYear();
 
         const diasComMonitoria = calcularDiasComMonitoria(mesAlvo, anoAlvo);
 

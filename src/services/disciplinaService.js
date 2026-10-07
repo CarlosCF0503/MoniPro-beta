@@ -2,7 +2,6 @@
 const disciplinaRepository = require('../repositories/disciplinaRepository');
 
 class DisciplinaService {
-    // AJUSTE: Intermediário que valida os dados antes de mandar pro banco
     async criar(dados) {
         if (!dados.nome) {
             throw new Error('O nome da disciplina é obrigatório.');
@@ -14,8 +13,12 @@ class DisciplinaService {
         return await disciplinaRepository.buscarTodas();
     }
 
-    async listar() {
-        return await disciplinaRepository.listar();
+    // NOVA PONTE: Intermediário para buscar o ranking
+    async obterRanking(idDisciplina) {
+        if (!idDisciplina || isNaN(idDisciplina)) {
+            throw new Error('ID de disciplina inválido.');
+        }
+        return await disciplinaRepository.buscarRankingPorDisciplina(idDisciplina);
     }
 }
 module.exports = new DisciplinaService();

@@ -24,7 +24,9 @@ const isMonitor = (req, res, next) => {
         return next();
     }
 
-    return res.status(403).json({ erro: 'Acesso negado. Apenas Monitores podem cadastrar disciplinas.' });
+    return res
+        .status(403)
+        .json({ erro: 'Acesso negado. Apenas Monitores podem cadastrar disciplinas.' });
 };
 
 module.exports = {

@@ -1,6 +1,7 @@
 // src/controllers/monitoriaController.js
 const monitoriaService = require('../services/monitoriaService');
-const tratarErro       = require('../utils/tratarErro');
+const tratarErro = require('../utils/tratarErro');
+const { obterParametrosPaginacao, montarPaginacao } = require('../utils/paginacao');
 
 class MonitoriaController {
     async criar(req, res) {
@@ -22,7 +23,7 @@ class MonitoriaController {
         } catch (error) {
             console.error('❌ Erro ao criar monitoria:', error);
             const mensagem = tratarErro(error, {
-                P2003:   'A disciplina informada não existe.',
+                P2003: 'A disciplina informada não existe.',
                 default: 'Não foi possível criar a vaga de monitoria. Tente novamente.'
             });
             res.status(400).json({ success: false, erro: mensagem });
@@ -31,9 +32,12 @@ class MonitoriaController {
 
     async listar(req, res) {
         try {
-            const monitorias = await monitoriaService.listarPorDisciplina(req.params.idDisciplina);
-            // Retorna array direto — frontend trata com Array.isArray()
-            res.json(monitorias);
+            const paginacao = obterParametrosPaginacao(req.query);
+            const { dados, total } = await monitoriaService.listarPorDisciplina(
+                req.params.idDisciplina,
+                paginacao
+            );
+            res.json({ monitorias: dados, paginacao: montarPaginacao(paginacao, total) });
         } catch (error) {
             console.error('❌ Erro ao listar monitorias:', error);
             res.status(500).json({
@@ -45,8 +49,16 @@ class MonitoriaController {
 
     async listarAgendamentosDoMonitor(req, res) {
         try {
-            const agendamentos = await monitoriaService.buscarAgendamentosPorMonitor(req.usuario.id);
-            res.json({ success: true, agendamentos });
+            const paginacao = obterParametrosPaginacao(req.query);
+            const { dados, total } = await monitoriaService.buscarAgendamentosPorMonitor(
+                req.usuario.id,
+                paginacao
+            );
+            res.json({
+                success: true,
+                agendamentos: dados,
+                paginacao: montarPaginacao(paginacao, total)
+            });
         } catch (error) {
             console.error('❌ Erro ao buscar agendamentos do monitor:', error);
             res.status(500).json({
@@ -58,14 +70,21 @@ class MonitoriaController {
 
     async cancelar(req, res) {
         try {
-            const monitoria = await monitoriaService.cancelar(parseInt(req.params.id), req.usuario.id);
-            res.json({ success: true, mensagem: 'Vaga de monitoria cancelada com sucesso.', monitoria });
+            const monitoria = await monitoriaService.cancelar(
+                parseInt(req.params.id),
+                req.usuario.id
+            );
+            res.json({
+                success: true,
+                mensagem: 'Vaga de monitoria cancelada com sucesso.',
+                monitoria
+            });
         } catch (error) {
             console.error('❌ Erro ao cancelar monitoria:', error);
             const mensagem = tratarErro(error, {
                 naoEncontrado: 'Vaga de monitoria não encontrada.',
                 naoAutorizado: 'Você não tem permissão para cancelar esta vaga.',
-                default:       'Não foi possível cancelar a vaga. Tente novamente.'
+                default: 'Não foi possível cancelar a vaga. Tente novamente.'
             });
             const status = error.message?.includes('autorizado') ? 403 : 400;
             res.status(status).json({ success: false, erro: mensagem });

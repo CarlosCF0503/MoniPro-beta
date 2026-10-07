@@ -1,8 +1,6 @@
-// src/repositories/disciplinaRepository.js
 const prisma = require('../config/bancoDeDados');
 
 class DisciplinaRepository {
-    // AJUSTE: Novo método para criar a disciplina no banco
     async criar(dados) {
         return await prisma.disciplina.create({
             data: { nome: dados.nome }
@@ -13,12 +11,26 @@ class DisciplinaRepository {
         return await prisma.disciplina.findMany({ orderBy: { nome: 'asc' } });
     }
 
-    async listar() {
-        return await prisma.disciplina.findMany({
-            orderBy: {
-                nome: 'asc' // Traz em ordem alfabética (A-Z) 
-            }
+    async buscarRankingPorDisciplina(idDisciplina) {
+        return await prisma.usuario.findMany({
+            where: {
+                tipo_usuario: 'aluno',
+                meus_agendamentos: {
+                    some: {
+                        status: 'concluido',
+                        monitoria: { id_disciplina: idDisciplina }
+                    }
+                }
+            },
+            select: {
+                id: true,
+                nome_completo: true,
+                pontos: true
+            },
+            orderBy: { pontos: 'desc' },
+            take: 10
         });
     }
 }
+
 module.exports = new DisciplinaRepository();
