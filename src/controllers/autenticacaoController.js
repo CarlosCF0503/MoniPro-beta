@@ -13,7 +13,7 @@ class AutenticacaoController {
                 success: false,
                 erro: 'Preencha todos os campos obrigatórios.'
             });
-        }
+        } 
 
         const nomeValidado = validarNomeCompleto(nome_completo);
         if (!nomeValidado.valido) {
