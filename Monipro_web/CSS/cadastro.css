@@ -102,8 +102,15 @@ body, html {
     transition: border-color 0.2s;
 }
 
-.input-group:focus-within { 
-    border-color: #4a90e2; 
+.input-group:focus-within {
+    border-color: #4a90e2;
+}
+
+/* Regra de senha exibida abaixo do campo (a mesma validada pela API) */
+.dica-senha {
+    margin: -10px 0 15px;
+    font-size: 0.8rem;
+    color: #555;
 }
 
 /* Ícones SVG dentro dos inputs */
@@ -185,9 +192,9 @@ input[type="password"]::-ms-clear { display: none; }
     background-color: #1F4287;
 }
 
-#entrar:disabled { 
-    opacity: 0.6; 
-    cursor: not-allowed; 
+#entrar:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 /* LINK VOLTAR */
@@ -206,8 +213,8 @@ input[type="password"]::-ms-clear { display: none; }
     text-decoration: none;
 }
 
-.link-voltar a:hover { 
-    text-decoration: underline; 
+.link-voltar a:hover {
+    text-decoration: underline;
 }
 
 /* ACESSIBILIDADE */
@@ -227,7 +234,7 @@ input[type="password"]::-ms-clear { display: none; }
     .split-layout {
         flex-direction: column;
     }
-    
+
     .visual-side {
         display: none; /* Esconde a parte com o texto e fundo degradê */
     }
@@ -237,4 +244,34 @@ input[type="password"]::-ms-clear { display: none; }
         min-height: 100vh;
         padding: 2rem 1rem;
     }
+}
+/* ==============================================
+   TOAST (mensagens de sucesso/erro do cadastro)
+   Sem este bloco o #toast-container ficava sem estilo, abaixo dos 100vh do
+   layout, e os erros da API (senha fraca, e-mail já usado...) não apareciam.
+   ============================================== */
+#toast-container {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    background-color: #071E3D;
+    color: white;
+    padding: 16px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    transform: translateX(200%);
+    transition: transform 0.4s ease-in-out;
+}
+
+#toast-container.show {
+    transform: translateX(0);
+}
+
+#toast-container.success {
+    background-color: #28a745;
+}
+
+#toast-container.error {
+    background-color: #D8000C;
 }
