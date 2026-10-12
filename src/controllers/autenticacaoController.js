@@ -4,6 +4,7 @@
 const autenticacaoService = require('../services/autenticacaoService');
 const { ErroCredenciaisInvalidas } = require('../utils/erros');
 const logger = require('../utils/logger');
+const { mascararIdentificador } = require('../utils/mascararIdentificador');
 
 class AutenticacaoController {
     async cadastrar(req, res) {
@@ -24,7 +25,10 @@ class AutenticacaoController {
             res.json(resultado);
         } catch (error) {
             if (error instanceof ErroCredenciaisInvalidas) {
-                logger.warn({ identificador, tipo_usuario }, 'Tentativa de login falhou');
+                logger.warn(
+                    { identificador: mascararIdentificador(identificador), tipo_usuario },
+                    'Tentativa de login falhou'
+                );
             }
             throw error;
         }
