@@ -2,7 +2,7 @@ const request = require('supertest');
 const { gerarToken } = require('./helpers/token');
 
 jest.mock('../src/config/bancoDeDados', () => ({
-    usuario: {},
+    usuario: { update: jest.fn() },
     monitoria: {},
     $transaction: jest.fn(),
     $queryRaw: jest.fn(),
@@ -12,6 +12,7 @@ jest.mock('../src/config/bancoDeDados', () => ({
         count: jest.fn(),
         findUnique: jest.fn(),
         findFirst: jest.fn(),
+        updateMany: jest.fn(),
         delete: jest.fn()
     }
 }));
@@ -21,6 +22,7 @@ const app = require('../src/app');
 
 const tokenAluno = gerarToken({ id: 20, tipo: 'aluno' });
 const tokenOutroAluno = gerarToken({ id: 21, tipo: 'aluno' });
+const tokenMonitor = gerarToken({ id: 30, tipo: 'monitor' });
 
 describe('POST /agendamentos', () => {
     const corpo = { id_monitoria: 5, data_hora: '2026-09-10T14:00:00.000Z' };
@@ -159,5 +161,85 @@ describe('DELETE /agendamentos/:id', () => {
         expect(resposta.status).toBe(400);
         expect(resposta.body.erro).toMatch(/24h/);
         expect(prisma.agendamento.delete).not.toHaveBeenCalled();
+    });
+});
+
+describe('PATCH /agendamentos/:id/concluir', () => {
+    const concluir = (token = tokenAluno) =>
+        request(app).patch('/agendamentos/1/concluir').set('Authorization', `Bearer ${token}`);
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        prisma.$transaction.mockImplementation((fn) => fn(prisma));
+    });
+
+    it('conclui o agendamento do próprio aluno e credita os pontos', async () => {
+        prisma.agendamento.findUnique
+            .mockResolvedValueOnce({ id: 1, id_aluno: 20, status: 'pendente' })
+            .mockResolvedValueOnce({ id: 1, id_aluno: 20, status: 'concluido' });
+        prisma.agendamento.updateMany.mockResolvedValue({ count: 1 });
+
+        const resposta = await concluir();
+
+        expect(resposta.status).toBe(200);
+        expect(resposta.body.agendamento.status).toBe('concluido');
+        expect(prisma.usuario.update).toHaveBeenCalledWith({
+            where: { id: 20 },
+            data: { pontos: { increment: 10 } }
+        });
+    });
+
+    it('retorna 403 e não credita pontos quando outro aluno tenta concluir', async () => {
+        prisma.agendamento.findUnique.mockResolvedValue({
+            id: 1,
+            id_aluno: 20,
+            status: 'pendente'
+        });
+
+        const resposta = await concluir(tokenOutroAluno);
+
+        expect(resposta.status).toBe(403);
+        expect(prisma.agendamento.updateMany).not.toHaveBeenCalled();
+        expect(prisma.usuario.update).not.toHaveBeenCalled();
+    });
+
+    it('retorna 403 quando um monitor tenta concluir o agendamento de um aluno', async () => {
+        prisma.agendamento.findUnique.mockResolvedValue({
+            id: 1,
+            id_aluno: 20,
+            status: 'pendente'
+        });
+
+        const resposta = await concluir(tokenMonitor);
+
+        expect(resposta.status).toBe(403);
+        expect(prisma.usuario.update).not.toHaveBeenCalled();
+    });
+
+    it('retorna 400 ao concluir um agendamento cancelado', async () => {
+        prisma.agendamento.findUnique.mockResolvedValue({
+            id: 1,
+            id_aluno: 20,
+            status: 'cancelado'
+        });
+
+        const resposta = await concluir();
+
+        expect(resposta.status).toBe(400);
+        expect(prisma.usuario.update).not.toHaveBeenCalled();
+    });
+
+    it('não credita pontos duas vezes quando a conclusão concorrente já ocorreu', async () => {
+        prisma.agendamento.findUnique.mockResolvedValue({
+            id: 1,
+            id_aluno: 20,
+            status: 'pendente'
+        });
+        prisma.agendamento.updateMany.mockResolvedValue({ count: 0 });
+
+        const resposta = await concluir();
+
+        expect(resposta.status).toBe(400);
+        expect(prisma.usuario.update).not.toHaveBeenCalled();
     });
 });

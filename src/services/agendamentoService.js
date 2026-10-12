@@ -62,14 +62,24 @@ class AgendamentoService {
         if (!agendamento) {
             throw new ErroNaoEncontrado('Agendamento não encontrado.');
         }
+        if (agendamento.id_aluno !== idAluno) {
+            throw new ErroNaoAutorizado('Você não tem permissão para concluir este agendamento.');
+        }
         if (agendamento.status === 'concluido') {
             throw new ErroRegraNegocio('Este agendamento já foi concluído.');
         }
+        if (agendamento.status === 'cancelado') {
+            throw new ErroRegraNegocio('Não é possível concluir um agendamento cancelado.');
+        }
 
-        const [agendamentoAtualizado] = await agendamentoRepository.concluirEIncrementarPontos(
+        const agendamentoAtualizado = await agendamentoRepository.concluirEIncrementarPontos(
             id,
             idAluno
         );
+        // Outra requisição concluiu o mesmo agendamento entre a leitura e a escrita
+        if (!agendamentoAtualizado) {
+            throw new ErroRegraNegocio('Este agendamento já foi concluído.');
+        }
         return agendamentoAtualizado;
     }
 }
