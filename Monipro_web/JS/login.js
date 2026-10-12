@@ -45,10 +45,9 @@ document.addEventListener('DOMContentLoaded', () => {
         btnSubmit.disabled = true;
 
         try {
-            // Usa MB_BETA_ORM definido em api.js — rota: POST /auth/login
-            const resposta = await fetch(`${MB_BETA_ORM}/auth/login`, {
+            // chamadaApi (api.js) trata resposta não-JSON e registra falhas no console
+            const dados = await chamadaApi('/auth/login', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     identificador: identificadorInput.value.trim(),
                     senha: senhaInput.value,
@@ -56,9 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
             });
 
-            const dados = await resposta.json();
-
-            if (resposta.ok && dados.success) {
+            if (dados.success) {
                 // Chave padrão do app: 'monipro_token'
                 localStorage.setItem('monipro_token', dados.token);
                 localStorage.setItem('monipro_usuario', JSON.stringify(dados.usuario));
@@ -68,14 +65,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => {
                     window.location.href = 'base.html';
                 }, 1000);
-            } else {
-                const msg = dados.detalhe || dados.erro || 'Credenciais inválidas.';
-                if (typeof showToast === 'function') showToast(msg, 'error');
+            } else if (typeof showToast === 'function') {
+                showToast(mensagemDaApi(dados, 'Credenciais inválidas.'), 'error', dados);
             }
         } catch (error) {
-            console.error('Erro ao fazer login:', error);
             if (typeof showToast === 'function')
-                showToast('Erro de conexão com o servidor.', 'error');
+                showToast('Erro de conexão com o servidor.', 'error', error);
         } finally {
             btnSubmit.value = 'Entrar';
             btnSubmit.disabled = false;
