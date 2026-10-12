@@ -2,6 +2,11 @@
 // Depende de: api.js (MB_BETA_ORM), toast.js (showToast), base.js, calendario.js
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Botão "Voltar": ligado aqui, e não por onclick no HTML, porque a CSP do
+    // Nginx (script-src 'self') bloqueia handlers inline.
+    const btnVoltar = document.querySelector('.btn-voltar');
+    if (btnVoltar) btnVoltar.addEventListener('click', () => history.back());
+
     // --- 1. CONFIGURAÇÃO INICIAL ---
     const urlParams = new URLSearchParams(window.location.search);
     const disciplinaID = urlParams.get('disciplinaID');
