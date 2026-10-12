@@ -92,6 +92,8 @@ server {
 
     server_name $DOMINIO $DOMINIO_WWW;
 
+    server_tokens off;
+
 
 
     location /.well-known/acme-challenge/ {
@@ -110,6 +112,8 @@ server {
 
         proxy_set_header X-Real-IP \$remote_addr;
 
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+
     }
 
 
@@ -121,6 +125,8 @@ server {
         proxy_set_header Host \$host;
 
         proxy_set_header X-Real-IP \$remote_addr;
+
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
 
     }
 
@@ -168,6 +174,8 @@ server {
 
     server_name $DOMINIO $DOMINIO_WWW;
 
+    server_tokens off;
+
 
 
     location /.well-known/acme-challenge/ {
@@ -194,6 +202,8 @@ server {
 
     server_name $DOMINIO $DOMINIO_WWW;
 
+    server_tokens off;
+
 
 
     ssl_certificate     $CERT_PATH;
@@ -216,6 +226,8 @@ server {
 
         proxy_set_header X-Real-IP \$remote_addr;
 
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+
         proxy_set_header X-Forwarded-Proto \$scheme;
 
     }
@@ -229,6 +241,8 @@ server {
         proxy_set_header Host \$host;
 
         proxy_set_header X-Real-IP \$remote_addr;
+
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
 
         proxy_set_header X-Forwarded-Proto \$scheme;
 
