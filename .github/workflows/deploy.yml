@@ -53,9 +53,12 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
 
-            # 1) Reconstrói a imagem (sem subir ainda) — precisamos dela pronta
-            #    para rodar a migration com as mesmas dependências do app.
-            docker-compose build backend
+            # 1) Reconstrói as imagens de TODOS os serviços (sem subir ainda) — a do
+            #    backend precisa estar pronta para rodar a migration com as mesmas
+            #    dependências do app. O frontend também precisa ser reconstruído: o
+            #    "up -d" do passo 4 não faz build, então sem isto o Nginx de produção
+            #    continuaria servindo a imagem antiga do Monipro_web/.
+            docker-compose build
 
             # 2) Checagem de segurança ANTES de aplicar qualquer coisa: "migrate status"
             #    só lê o estado das migrations, não altera nada no banco. A engine de
