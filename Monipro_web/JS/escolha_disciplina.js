@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // ✅ Verifica se o servidor retornou erro (status 4xx/5xx)
         if (dados.erro || dados.statusHttp >= 400) {
-            throw new Error(dados.mensagem || `Erro ${dados.statusHttp}`);
+            throw new Error(mensagemDaApi(dados, `Erro ${dados.statusHttp}`));
         }
 
         // ✅ Suporta tanto { disciplinas: [...] } quanto array direto
@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             containerDisciplinas.appendChild(card);
         });
     } catch (error) {
-        console.error('Erro ao carregar disciplinas:', error.message);
+        console.error('[MoniPro] Erro ao carregar disciplinas:', error.message);
         containerDisciplinas.innerHTML = `<p>Erro ao carregar disciplinas: ${escaparHtml(error.message)}</p>`;
     }
 });

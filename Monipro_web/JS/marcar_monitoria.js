@@ -180,10 +180,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function carregarMonitoriasParaAluno() {
         try {
-            const response = await fetch(`${MB_BETA_ORM}/monitorias/${disciplinaID}?limit=100`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            const data = await response.json();
+            const data = await chamadaApi(
+                `/monitorias/${encodeURIComponent(disciplinaID)}?limit=100`
+            );
+            // Sem isso, um erro do servidor (ex.: token expirado) aparecia como "nenhum monitor"
+            if (data.statusHttp >= 400 && typeof showToast === 'function') {
+                showToast(mensagemDaApi(data, 'Erro ao carregar monitorias.'), 'error', data);
+            }
             const lista = Array.isArray(data) ? data : data.monitorias || [];
 
             if (lista.length > 0) {
@@ -204,8 +207,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
         } catch (error) {
-            console.error('Erro ao carregar monitorias:', error);
-            if (typeof showToast === 'function') showToast('Erro ao carregar monitorias.', 'error');
+            if (typeof showToast === 'function')
+                showToast('Erro ao carregar monitorias.', 'error', error);
             renderCalendario([], aoDiaClicar);
         }
     }
@@ -282,17 +285,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
         try {
-            const response = await fetch(`${MB_BETA_ORM}/agendamentos`, {
+            const data = await chamadaApi('/agendamentos', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                 body: JSON.stringify({
                     id_monitoria: Number(monitoriaSelecionada.id),
                     data_hora: monitoriaSelecionada.horario
                 })
             });
-            const data = await response.json();
 
-            if (response.ok && data.success) {
+            if (data.success) {
                 if (btnAgendar) {
                     btnAgendar.classList.add('marcado');
                     btnAgendar.querySelector('p').textContent = 'Agendado!';
@@ -302,13 +303,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 setTimeout(() => {
                     window.location.href = 'base.html';
                 }, 2000);
-            } else {
-                if (typeof showToast === 'function')
-                    showToast(data.erro || 'Erro ao agendar.', 'error');
+            } else if (typeof showToast === 'function') {
+                showToast(mensagemDaApi(data, 'Erro ao agendar.'), 'error', data);
             }
         } catch (error) {
             if (typeof showToast === 'function')
-                showToast('Não foi possível ligar ao servidor.', 'error');
+                showToast('Não foi possível ligar ao servidor.', 'error', error);
         }
     }
 
@@ -331,9 +331,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const data_monitoria = new Date(ano, mes, dia, horas, minutos, 0).toISOString();
 
         try {
-            const response = await fetch(`${MB_BETA_ORM}/monitorias`, {
+            const data = await chamadaApi('/monitorias', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                 body: JSON.stringify({
                     id_disciplina: Number(disciplinaID),
                     horario: data_monitoria,
@@ -341,9 +340,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     descricao: descricao || ''
                 })
             });
-            const data = await response.json();
 
-            if (response.ok && data.success) {
+            if (data.success) {
                 if (btnCriarMonitoria) {
                     btnCriarMonitoria.classList.add('marcado');
                     btnCriarMonitoria.querySelector('p').textContent = 'Vaga Criada!';
@@ -353,13 +351,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 setTimeout(() => {
                     window.location.href = 'base.html';
                 }, 2000);
-            } else {
-                if (typeof showToast === 'function')
-                    showToast(data.erro || 'Erro ao criar vaga.', 'error');
+            } else if (typeof showToast === 'function') {
+                showToast(mensagemDaApi(data, 'Erro ao criar vaga.'), 'error', data);
             }
         } catch (error) {
             if (typeof showToast === 'function')
-                showToast('Não foi possível ligar ao servidor.', 'error');
+                showToast('Não foi possível ligar ao servidor.', 'error', error);
         }
     }
 });

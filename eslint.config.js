@@ -37,6 +37,7 @@ module.exports = [
             globals: {
                 ...globals.browser,
                 showToast: 'readonly',
+                mensagemDaApi: 'readonly',
                 chamadaApi: 'readonly',
                 escaparHtml: 'readonly',
                 MB_BETA_ORM: 'readonly',

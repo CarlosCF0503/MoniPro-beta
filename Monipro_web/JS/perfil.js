@@ -69,9 +69,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 tipo.charAt(0).toUpperCase() + tipo.slice(1);
         } else {
             // Exibe a mensagem real retornada pelo servidor (erro 401, 404, 500, etc.)
-            const msgErro = data.mensagem || data.erro || 'Erro ao carregar perfil.';
-            if (typeof showToast === 'function') showToast(msgErro, 'error');
-            console.error('Erro detalhado do servidor:', data);
+            if (typeof showToast === 'function')
+                showToast(mensagemDaApi(data, 'Erro ao carregar perfil.'), 'error', data);
 
             // Se token inválido/expirado, redireciona para login
             if (data.statusHttp === 401) {
@@ -84,8 +83,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
         // Erro de REDE (servidor offline, CORS, sem internet)
         const msg = error.message || 'Falha na comunicação com o servidor.';
-        if (typeof showToast === 'function') showToast(msg, 'error');
-        console.error('Erro de rede ao carregar perfil:', error);
+        if (typeof showToast === 'function') showToast(msg, 'error', error);
     }
 
     // ==========================================
@@ -184,12 +182,16 @@ async function carregarAgendamentos(container) {
                 container.appendChild(div);
             });
         } else if (data.erro) {
-            container.innerHTML = `<p style="color:#D8000C;">Falha do servidor: ${escaparHtml(data.mensagem)}</p>`;
+            // O backend manda o motivo em `erro` (tratadorDeErros.js), não em `mensagem`
+            const msg = mensagemDaApi(data, 'Erro ao carregar os seus agendamentos.');
+            container.innerHTML = `<p style="color:#D8000C;">Falha do servidor: ${escaparHtml(msg)}</p>`;
+            console.error('[MoniPro]', msg, data);
         } else {
             container.innerHTML = '<p>Ainda não se inscreveu em nenhuma monitoria.</p>';
         }
     } catch (error) {
         container.innerHTML = '<p>Erro ao carregar os seus agendamentos.</p>';
+        console.error('[MoniPro] Erro ao carregar os seus agendamentos.', error);
     }
 }
 
@@ -225,12 +227,15 @@ async function carregarMonitoriasCriadas(container) {
                 container.appendChild(div);
             });
         } else if (data.erro) {
-            container.innerHTML = `<p style="color:#D8000C;">Falha do servidor: ${escaparHtml(data.mensagem)}</p>`;
+            const msg = mensagemDaApi(data, 'Erro ao carregar as suas monitorias.');
+            container.innerHTML = `<p style="color:#D8000C;">Falha do servidor: ${escaparHtml(msg)}</p>`;
+            console.error('[MoniPro]', msg, data);
         } else {
             container.innerHTML = '<p>Ainda não criou nenhuma vaga de monitoria.</p>';
         }
     } catch (error) {
         container.innerHTML = '<p>Erro ao carregar as suas monitorias.</p>';
+        console.error('[MoniPro] Erro ao carregar as suas monitorias.', error);
     }
 }
 
@@ -238,19 +243,14 @@ async function handleSairMonitoria(agendamentoId, itemElement) {
     try {
         const data = await chamadaApi(`/agendamentos/${agendamentoId}`, { method: 'DELETE' });
         if (!data.erro && data.success) {
-            // Backend retorna 'mensagem' (pt), não 'message'
             if (typeof showToast === 'function')
-                showToast(data.mensagem || data.message || 'Cancelado com sucesso', 'success');
+                showToast(mensagemDaApi(data, 'Inscrição cancelada com sucesso.'), 'success');
             itemElement.remove();
-        } else {
-            if (typeof showToast === 'function')
-                showToast(
-                    data.mensagem || data.message || data.erro || 'Erro ao cancelar.',
-                    'error'
-                );
+        } else if (typeof showToast === 'function') {
+            showToast(mensagemDaApi(data, 'Erro ao cancelar.'), 'error', data);
         }
     } catch (error) {
-        if (typeof showToast === 'function') showToast('Erro de rede.', 'error');
+        if (typeof showToast === 'function') showToast('Erro de rede.', 'error', error);
     }
 }
 
@@ -258,7 +258,12 @@ async function handleCancelarMonitoria(monitoriaId, itemElement) {
     try {
         const data = await chamadaApi(`/monitorias/${monitoriaId}/cancelar`, { method: 'PUT' });
         if (!data.erro && data.success) {
-            if (typeof showToast === 'function') showToast(data.message, 'success');
+            // Antes lia data.message, que o backend não envia: o toast de sucesso saía vazio
+            if (typeof showToast === 'function')
+                showToast(
+                    mensagemDaApi(data, 'Vaga de monitoria cancelada com sucesso.'),
+                    'success'
+                );
             const statusEl = itemElement.querySelector('.lista-item-info p:nth-child(2)');
             if (statusEl) {
                 const partes = statusEl.innerHTML.split('—');
@@ -266,11 +271,11 @@ async function handleCancelarMonitoria(monitoriaId, itemElement) {
             }
             const btn = itemElement.querySelector('.btn-cancelar');
             if (btn) btn.remove();
-        } else {
-            if (typeof showToast === 'function')
-                showToast(data.mensagem || data.message || 'Erro ao cancelar.', 'error');
+        } else if (typeof showToast === 'function') {
+            // Antes ignorava data.erro e mostrava sempre a mensagem genérica
+            showToast(mensagemDaApi(data, 'Erro ao cancelar.'), 'error', data);
         }
     } catch (error) {
-        if (typeof showToast === 'function') showToast('Erro de rede.', 'error');
+        if (typeof showToast === 'function') showToast('Erro de rede.', 'error', error);
     }
 }

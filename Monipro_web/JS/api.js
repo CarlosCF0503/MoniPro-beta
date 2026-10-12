@@ -70,8 +70,13 @@ async function chamadaApi(endpoint, opcoes = {}) {
         dados.statusHttp = resposta.status;
 
         // Log de aviso no console caso a requisição não tenha sido sucesso (2xx)
+        // Inclui o motivo devolvido pelo servidor e, em erro de validação, os campos recusados
         if (!resposta.ok) {
-            console.warn(`Aviso de API: Status ${resposta.status} ao acessar ${endpoint}`);
+            const motivo = typeof dados.erro === 'string' ? dados.erro : dados.mensagem;
+            console.warn(
+                `[MoniPro] API ${opcoes.method || 'GET'} ${endpoint} → ${resposta.status}: ${motivo || 'sem mensagem'}`,
+                ...(dados.campos ? [dados.campos] : [])
+            );
         }
 
         return dados;
