@@ -88,20 +88,29 @@ class AgendamentoRepository {
         });
     }
 
+    // Conclui o agendamento do próprio aluno e credita os pontos numa única transação.
+    // O updateMany condicional (dono + status ainda pendente/confirmado) torna a conclusão
+    // idempotente: duas requisições simultâneas não creditam os pontos duas vezes.
+    // Retorna null se nenhuma linha foi alterada.
     async concluirEIncrementarPontos(idAgendamento, idAluno) {
-        return await prisma.$transaction([
-            prisma.agendamento.update({
-                where: { id: idAgendamento },
-
+        return await prisma.$transaction(async (tx) => {
+            const { count } = await tx.agendamento.updateMany({
+                where: {
+                    id: idAgendamento,
+                    id_aluno: idAluno,
+                    status: { in: ['pendente', 'confirmado'] }
+                },
                 data: { status: 'concluido' }
-            }),
+            });
+            if (count === 0) return null;
 
-            prisma.usuario.update({
+            await tx.usuario.update({
                 where: { id: idAluno },
-
                 data: { pontos: { increment: 10 } }
-            })
-        ]);
+            });
+
+            return await tx.agendamento.findUnique({ where: { id: idAgendamento } });
+        });
     }
 }
 
