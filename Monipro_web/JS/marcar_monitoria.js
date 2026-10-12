@@ -221,31 +221,42 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        // Define a sugestão como o primeiro monitor da lista filtrada
-        atualizarSugestaoMonitor(lista[0]);
+        // Define a sugestão como o primeiro monitor da lista filtrada que ainda tem vaga
+        atualizarSugestaoMonitor(lista.find((m) => m.vagas_disponiveis > 0) || null);
 
         lista.forEach((monitoria) => {
             const horaFormatada = new Date(monitoria.horario).toLocaleString('pt-BR', {
                 hour: '2-digit',
                 minute: '2-digit'
             });
-            const nomeMonitor = monitoria.monitor?.nome_completo || 'Monitor';
-            const monId = String(monitoria.id);
+            const nomeMonitor = escaparHtml(monitoria.monitor?.nome_completo || 'Monitor');
+            const monId = escaparHtml(monitoria.id);
+            const vagas = Number(monitoria.vagas_disponiveis ?? 0);
+            const lotada = vagas <= 0;
+            const textoVagas = lotada
+                ? 'Lotada'
+                : `${vagas} ${vagas === 1 ? 'vaga disponível' : 'vagas disponíveis'}`;
 
             const div = document.createElement('div');
-            div.className = 'monitor-item';
+            div.className = lotada ? 'monitor-item lotada' : 'monitor-item';
             div.innerHTML = `
-                <input type="radio" name="monitoriaEscolhida" value="${monId}" id="mon-${monId}" style="display:none;">
+                <input type="radio" name="monitoriaEscolhida" value="${monId}" id="mon-${monId}" style="display:none;"${lotada ? ' disabled' : ''}>
                 <label for="mon-${monId}" style="cursor:pointer;width:100%;display:flex;align-items:center;gap:15px;">
                     <div class="icone"><img src="IMG/Icone_monitor.png" alt="Monitor"></div>
                     <div>
                         <strong>${nomeMonitor}</strong><br>
-                        <small>Local: ${monitoria.local || 'A definir'}</small><br>
-                        <small style="color:#071E3D;font-weight:bold;">Horário: ${horaFormatada}</small>
+                        <small>Local: ${escaparHtml(monitoria.local || 'A definir')}</small><br>
+                        <small style="color:#071E3D;font-weight:bold;">Horário: ${horaFormatada}</small><br>
+                        <small class="vagas-info">${textoVagas}</small>
                     </div>
                 </label>
             `;
             div.addEventListener('click', () => {
+                if (lotada) {
+                    if (typeof showToast === 'function')
+                        showToast('Esta vaga de monitoria está lotada.', 'error');
+                    return;
+                }
                 document
                     .querySelectorAll('.monitor-item.selecionado')
                     .forEach((m) => m.classList.remove('selecionado'));

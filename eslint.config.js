@@ -38,6 +38,7 @@ module.exports = [
                 ...globals.browser,
                 showToast: 'readonly',
                 chamadaApi: 'readonly',
+                escaparHtml: 'readonly',
                 MB_BETA_ORM: 'readonly',
                 renderCalendario: 'readonly',
                 iniciarNavegacaoCalendario: 'readonly',

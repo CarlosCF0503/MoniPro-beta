@@ -1,16 +1,44 @@
 const agendamentoRepository = require('../repositories/agendamentoRepository');
+const { validarAntecedenciaCancelamento } = require('../utils/validarAntecedencia');
+const {
+    ErroValidacao,
+    ErroRegraNegocio,
+    ErroNaoAutorizado,
+    ErroNaoEncontrado,
+    ErroConflito
+} = require('../utils/erros');
 
 class AgendamentoService {
     async criar(dados) {
-        // Impede agendamento duplicado para a mesma monitoria
-        const jaExiste = await agendamentoRepository.buscarPorAlunoEMonitoria(
-            dados.id_aluno,
-            dados.id_monitoria
-        );
-        if (jaExiste) {
-            throw new Error('Você já está inscrito nesta monitoria.');
-        }
-        return await agendamentoRepository.criar(dados);
+        // Duplicidade e capacidade são verificadas na mesma transação, com a linha da monitoria
+        // travada, para que inscrições simultâneas não ultrapassem o limite de vagas.
+        return await agendamentoRepository.emTransacao(async (tx) => {
+            const monitoria = await agendamentoRepository.bloquearMonitoria(dados.id_monitoria, tx);
+            if (!monitoria) {
+                // A monitoria vem do corpo da requisição, não da URL: é dado inválido (400), não 404
+                throw new ErroValidacao('A monitoria selecionada não foi encontrada.', {
+                    id_monitoria: 'A monitoria selecionada não foi encontrada.'
+                });
+            }
+
+            // Impede agendamento duplicado para a mesma monitoria
+            const jaExiste = await agendamentoRepository.buscarPorAlunoEMonitoria(
+                dados.id_aluno,
+                dados.id_monitoria,
+                tx
+            );
+            if (jaExiste) {
+                throw new ErroRegraNegocio('Você já está inscrito nesta monitoria.');
+            }
+
+            const ocupadas = await agendamentoRepository.contarOcupadas(dados.id_monitoria, tx);
+            if (ocupadas >= monitoria.capacidade) {
+                // Vaga lotada: conflito de estado, não erro de validação da requisição
+                throw new ErroConflito('Esta vaga de monitoria está lotada.');
+            }
+
+            return await agendamentoRepository.criar(dados, tx);
+        });
     }
 
     async listarPorAluno(idAluno, paginacao) {
@@ -20,27 +48,38 @@ class AgendamentoService {
     async deletar(id, idAluno) {
         const agendamento = await agendamentoRepository.buscarPorId(id);
         if (!agendamento) {
-            throw new Error('Agendamento não encontrado.');
+            throw new ErroNaoEncontrado('Agendamento não encontrado.');
         }
         if (agendamento.id_aluno !== idAluno) {
-            throw new Error('Não autorizado: este agendamento não pertence a você.');
+            throw new ErroNaoAutorizado('Você não tem permissão para cancelar este agendamento.');
         }
+        validarAntecedenciaCancelamento(agendamento.data_hora);
         return await agendamentoRepository.deletar(id);
     }
 
     async concluir(id, idAluno) {
         const agendamento = await agendamentoRepository.buscarPorId(id);
         if (!agendamento) {
-            throw new Error('Agendamento não encontrado.');
+            throw new ErroNaoEncontrado('Agendamento não encontrado.');
+        }
+        if (agendamento.id_aluno !== idAluno) {
+            throw new ErroNaoAutorizado('Você não tem permissão para concluir este agendamento.');
         }
         if (agendamento.status === 'concluido') {
-            throw new Error('Este agendamento já foi concluído.');
+            throw new ErroRegraNegocio('Este agendamento já foi concluído.');
+        }
+        if (agendamento.status === 'cancelado') {
+            throw new ErroRegraNegocio('Não é possível concluir um agendamento cancelado.');
         }
 
-        const [agendamentoAtualizado] = await agendamentoRepository.concluirEIncrementarPontos(
+        const agendamentoAtualizado = await agendamentoRepository.concluirEIncrementarPontos(
             id,
             idAluno
         );
+        // Outra requisição concluiu o mesmo agendamento entre a leitura e a escrita
+        if (!agendamentoAtualizado) {
+            throw new ErroRegraNegocio('Este agendamento já foi concluído.');
+        }
         return agendamentoAtualizado;
     }
 }

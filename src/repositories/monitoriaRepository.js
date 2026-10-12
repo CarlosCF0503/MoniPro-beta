@@ -10,7 +10,9 @@ class MonitoriaRepository {
                 local: dados.local,
                 descricao: dados.descricao,
                 status: dados.status || 'ativa',
-                horario: dados.horario
+                horario: dados.horario,
+                // Omitido => o banco aplica o default (1)
+                ...(dados.capacidade !== undefined && { capacidade: dados.capacidade })
             }
         });
     }
@@ -25,7 +27,11 @@ class MonitoriaRepository {
             prisma.monitoria.findMany({
                 where,
                 include: {
-                    monitor: { select: { nome_completo: true } }
+                    monitor: { select: { nome_completo: true } },
+                    // Inscrições que ocupam vaga (tudo que não foi cancelado)
+                    _count: {
+                        select: { inscricoes: { where: { status: { not: 'cancelado' } } } }
+                    }
                 },
                 orderBy: { horario: 'asc' },
                 skip,
