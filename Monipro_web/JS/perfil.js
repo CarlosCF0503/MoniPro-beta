@@ -166,9 +166,11 @@ async function carregarAgendamentos(container) {
                     dateStyle: 'short',
                     timeStyle: 'short'
                 });
-                const nomeDisciplina = ag.monitoria?.disciplina?.nome || 'Disciplina Indefinida';
-                const nomeMonitor = ag.monitoria?.monitor?.nome_completo || 'Monitor';
-                const statusStr = String(ag.status);
+                const nomeDisciplina = escaparHtml(
+                    ag.monitoria?.disciplina?.nome || 'Disciplina Indefinida'
+                );
+                const nomeMonitor = escaparHtml(ag.monitoria?.monitor?.nome_completo || 'Monitor');
+                const statusStr = escaparHtml(ag.status);
 
                 const div = document.createElement('div');
                 div.className = 'lista-item';
@@ -177,12 +179,12 @@ async function carregarAgendamentos(container) {
                         <p><strong>${nomeDisciplina}</strong> (com ${nomeMonitor})</p>
                         <p>${dataFormatada} — <span class="status-${statusStr.toLowerCase()}">${statusStr.toUpperCase()}</span></p>
                     </div>
-                    <button class="btn-cancelar" data-agendamento-id="${ag.id}">Sair</button>
+                    <button class="btn-cancelar" data-agendamento-id="${escaparHtml(ag.id)}">Sair</button>
                 `;
                 container.appendChild(div);
             });
         } else if (data.erro) {
-            container.innerHTML = `<p style="color:#D8000C;">Falha do servidor: ${data.mensagem}</p>`;
+            container.innerHTML = `<p style="color:#D8000C;">Falha do servidor: ${escaparHtml(data.mensagem)}</p>`;
         } else {
             container.innerHTML = '<p>Ainda não se inscreveu em nenhuma monitoria.</p>';
         }
@@ -203,27 +205,27 @@ async function carregarMonitoriasCriadas(container) {
                     dateStyle: 'short',
                     timeStyle: 'short'
                 });
-                const nomeDisciplina = m.disciplina?.nome || 'Disciplina Indefinida';
-                const statusStr = String(m.status);
+                const nomeDisciplina = escaparHtml(m.disciplina?.nome || 'Disciplina Indefinida');
+                const statusStr = escaparHtml(m.status);
                 const ativa = ['ativa', 'pendente'].includes(statusStr.toLowerCase());
 
                 const div = document.createElement('div');
                 div.className = 'lista-item';
                 div.innerHTML = `
                     <div class="lista-item-info">
-                        <p><strong>${nomeDisciplina}</strong> (${m.local || 'Local Indefinido'})</p>
+                        <p><strong>${nomeDisciplina}</strong> (${escaparHtml(m.local || 'Local Indefinido')})</p>
                         <p>${dataFormatada} — <span class="status-${statusStr.toLowerCase()}">${statusStr.toUpperCase()}</span></p>
                     </div>
                     ${
                         ativa
-                            ? `<button class="btn-cancelar" data-monitoria-id="${m.id}">Cancelar Vaga</button>`
+                            ? `<button class="btn-cancelar" data-monitoria-id="${escaparHtml(m.id)}">Cancelar Vaga</button>`
                             : `<span class="status-${statusStr.toLowerCase()}">${statusStr.toUpperCase()}</span>`
                     }
                 `;
                 container.appendChild(div);
             });
         } else if (data.erro) {
-            container.innerHTML = `<p style="color:#D8000C;">Falha do servidor: ${data.mensagem}</p>`;
+            container.innerHTML = `<p style="color:#D8000C;">Falha do servidor: ${escaparHtml(data.mensagem)}</p>`;
         } else {
             container.innerHTML = '<p>Ainda não criou nenhuma vaga de monitoria.</p>';
         }
