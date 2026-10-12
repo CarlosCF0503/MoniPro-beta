@@ -1,0 +1,45 @@
+name: Verificação de Pull Request
+
+# R11: roda o mesmo gate de qualidade dos deploys (testes + lint) em todo pull request
+# para develop ou main, para que um problema seja apontado ANTES do merge, e não só
+# depois, no push que dispara o deploy. Inclui a auditoria de dependências de produção.
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+
+jobs:
+  verificar:
+    name: Testes, lint e auditoria de dependências
+    runs-on: ubuntu-latest
+    env:
+      # Valores fictícios só para os testes (o banco é simulado); não são credenciais reais.
+      DATABASE_URL: postgres://usuario:senha@localhost:5432/teste # pragma: allowlist secret
+      JWT_SECRET: segredo-de-ci # pragma: allowlist secret
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Rodar testes automatizados
+        run: npm test
+
+      - name: Lint e formatação (ESLint + Prettier)
+        run: npm run lint
+
+      # Bloqueia apenas vulnerabilidades críticas: as altas restantes estão nas
+      # ferramentas de linha de comando do Prisma e dependem de atualização coordenada
+      # do Prisma (ver PR do R9).
+      - name: Auditoria de dependências de produção
+        run: npm audit --omit=dev --audit-level=critical
