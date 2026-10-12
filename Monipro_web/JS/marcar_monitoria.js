@@ -229,8 +229,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 hour: '2-digit',
                 minute: '2-digit'
             });
-            const nomeMonitor = monitoria.monitor?.nome_completo || 'Monitor';
-            const monId = String(monitoria.id);
+            const nomeMonitor = escaparHtml(monitoria.monitor?.nome_completo || 'Monitor');
+            const monId = escaparHtml(monitoria.id);
             const vagas = Number(monitoria.vagas_disponiveis ?? 0);
             const lotada = vagas <= 0;
             const textoVagas = lotada
@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="icone"><img src="IMG/Icone_monitor.png" alt="Monitor"></div>
                     <div>
                         <strong>${nomeMonitor}</strong><br>
-                        <small>Local: ${monitoria.local || 'A definir'}</small><br>
+                        <small>Local: ${escaparHtml(monitoria.local || 'A definir')}</small><br>
                         <small style="color:#071E3D;font-weight:bold;">Horário: ${horaFormatada}</small><br>
                         <small class="vagas-info">${textoVagas}</small>
                     </div>
