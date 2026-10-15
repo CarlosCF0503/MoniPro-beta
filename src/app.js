@@ -1,11 +1,9 @@
 // src/app.js
 const express = require('express');
-const helmet  = require('helmet');
-const cors    = require('cors');
-const helmet  = require('helmet');
+const helmet = require('helmet');
+const cors = require('cors');
 
 const app = express();
-app.use(express.json());
 
 // Atrás do Nginx (reverse proxy) em produção/dev — necessário para que
 // express-rate-limit e o CORS leiam corretamente IP/Origin reais dos clientes
@@ -14,11 +12,10 @@ app.set('trust proxy', 1);
 
 // Rotas
 const autenticacaoRotas = require('./routes/autenticacaoRotas');
-const agendamentoRotas  = require('./routes/agendamentoRotas');
-const disciplinaRotas   = require('./routes/disciplinaRotas');
-const monitoriaRotas    = require('./routes/monitoriaRotas');
-const perfilRotas       = require('./routes/perfilRotas');
-
+const agendamentoRotas = require('./routes/agendamentoRotas');
+const disciplinaRotas = require('./routes/disciplinaRotas');
+const monitoriaRotas = require('./routes/monitoriaRotas');
+const perfilRotas = require('./routes/perfilRotas');
 
 // Middlewares globais
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
@@ -42,11 +39,11 @@ app.use(
 app.use(express.json());
 
 // Endpoints
-app.use('/auth',         autenticacaoRotas);
+app.use('/auth', autenticacaoRotas);
 app.use('/agendamentos', agendamentoRotas);
-app.use('/disciplinas',  disciplinaRotas);
-app.use('/monitorias',   monitoriaRotas);
-app.use('/perfil',       perfilRotas);
+app.use('/disciplinas', disciplinaRotas);
+app.use('/monitorias', monitoriaRotas);
+app.use('/perfil', perfilRotas);
 
 // Rota de teste
 app.get('/teste', (req, res) => {

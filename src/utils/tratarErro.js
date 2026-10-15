@@ -13,7 +13,7 @@ function tratarErro(error, mapaPersonalizado = {}) {
         const campo = error.meta?.target?.[0];
         if (campo === 'email') return 'Este e-mail já está cadastrado.';
         if (campo === 'matricula') return 'Esta matrícula já está cadastrada.';
-        return 'Registro duplicado. Verifique os dados informados.';
+        return mapaPersonalizado.P2002 || 'Registro duplicado. Verifique os dados informados.';
     }
 
     if (error.code === 'P2025') {

@@ -3,20 +3,23 @@ const { JWT_SECRET } = require('../config/env');
 
 const autenticar = (req, res, next) => {
     const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ erro: 'Token não fornecido' });
+    if (!authHeader) 
+        return res.status(401).json({ success: false, erro: 'Token não fornecido' });
 
     const partes = authHeader.split(' ');
-    if (partes.length !== 2) return res.status(401).json({ erro: 'Erro de token' });
+    if (partes.length !== 2) 
+        return res.status(401).json({ success: false, erro: 'Erro de token' });
 
     const [esquema, token] = partes;
-    if (!/^Bearer$/i.test(esquema)) return res.status(401).json({ erro: 'Token mal formatado' });
+    if (!/^Bearer$/i.test(esquema))
+        return res.status(401).json({ success: false, erro: 'Token mal formatado' });
 
     jwt.verify(token, JWT_SECRET, (err, decodificado) => {
-        if (err) return res.status(401).json({ erro: 'Token inválido' });
+        if (err) return res.status(401).json({ success: false, erro: 'Token inválido' });
         req.usuario = decodificado;
         return next();
     });
-}; 
+};
 
 // verificando se a propriedade do perfil no token decodificado bate com o que queremos
 const isMonitor = (req, res, next) => {
@@ -24,9 +27,10 @@ const isMonitor = (req, res, next) => {
         return next();
     }
 
-    return res
-        .status(403)
-        .json({ erro: 'Acesso negado. Apenas Monitores podem cadastrar disciplinas.' });
+    return res.status(403).json({
+        success: false,
+        erro: 'Acesso negado. Apenas Monitores podem cadastrar disciplinas.'
+    });
 };
 
 module.exports = {

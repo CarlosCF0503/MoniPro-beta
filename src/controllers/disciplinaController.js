@@ -1,43 +1,68 @@
 // src/controllers/disciplinaController.js
-const disciplinaService = require('../services/disciplinaService'); //o controller estava chamando o repository diretamente, agora chama o service, e o service chama o repository.
+const disciplinaService = require('../services/disciplinaService');
+const tratarErro = require('../utils/tratarErro');
 
-exports.listar = async (req, res) => {
-    try {
-        const disciplinas = await disciplinaService.listar();
-        return res.status(200).json({ disciplinas });
-    } catch (erro) {
-        console.error('Erro ao listar disciplinas:', erro);
-        return res.status(500).json({ erro: true, mensagem: 'Erro interno ao buscar disciplinas.' });
+class DisciplinaController {
+    async listar(req, res) {
+        try {
+            const disciplinas = await disciplinaService.listar();
+            res.json({ success: true, disciplinas });
+        } catch (error) {
+            console.error('❌ Erro ao listar disciplinas:', error);
+            res.status(500).json({
+                success: false,
+                erro: 'Não foi possível carregar as disciplinas. Tente novamente.'
+            });
+        }
     }
-};
 
-exports.criar = async (req, res) => {
-    try {
+    async criar(req, res) {
         const { nome } = req.body;
-        
+
         // Proteção para evitar que o .trim() quebre se "nome" vier vazio/undefined
-        if (!nome || typeof nome !== 'string') {
-            return res.status(400).json({ erro: true, mensagem: 'O nome da disciplina é obrigatório e deve ser um texto.' });
+        if (!nome || typeof nome !== 'string' || !nome.trim()) {
+            return res.status(400).json({
+                success: false,
+                erro: 'O nome da disciplina é obrigatório e deve ser um texto.'
+            });
         }
 
-        const disciplina = await disciplinaService.criar({ nome: nome.trim() }); 
-        return res.status(201).json({ mensagem: 'Disciplina criada com sucesso.', disciplina });
-    } catch (erro) {
-        console.error('Erro ao criar disciplina:', erro);
-        return res.status(400).json({ erro: true, mensagem: erro.message || 'Erro interno ao criar disciplina.' });
+        try {
+            const disciplina = await disciplinaService.criar({ nome: nome.trim() });
+            res.status(201).json({
+                success: true,
+                mensagem: 'Disciplina criada com sucesso.',
+                disciplina
+            });
+        } catch (error) {
+            console.error('❌ Erro ao criar disciplina:', error);
+            const mensagem = tratarErro(error, {
+                P2002: 'Já existe uma disciplina com esse nome.',
+                default: 'Não foi possível criar a disciplina. Tente novamente.'
+            });
+            res.status(400).json({ success: false, erro: mensagem });
+        }
     }
-};
 
-exports.obterRanking = async (req, res) => {
-    try {
+    async obterRanking(req, res) {
         const idDisciplina = parseInt(req.params.id, 10);
 
-        // ✅ Chamando o SERVICE ao invés de acessar o REPOSITORY diretamente
-        const ranking = await disciplinaService.obterRanking(idDisciplina);
-        
-        return res.status(200).json({ success: true, ranking });
-    } catch (erro) {
-        console.error('Erro ao buscar ranking da disciplina:', erro);
-        return res.status(400).json({ erro: true, mensagem: erro.message || 'Erro interno ao buscar ranking.' });
+        if (Number.isNaN(idDisciplina)) {
+            return res.status(400).json({ success: false, erro: 'ID de disciplina inválido.' });
+        }
+
+        try {
+            const ranking = await disciplinaService.obterRanking(idDisciplina);
+            res.json({ success: true, ranking });
+        } catch (error) {
+            console.error('❌ Erro ao buscar ranking da disciplina:', error);
+            const mensagem = tratarErro(error, {
+                naoEncontrado: 'Disciplina não encontrada.',
+                default: 'Não foi possível carregar o ranking. Tente novamente.'
+            });
+            res.status(400).json({ success: false, erro: mensagem });
+        }
     }
-};
+}
+
+module.exports = new DisciplinaController();

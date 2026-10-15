@@ -1,0 +1,537 @@
+openapi: 3.0.3
+
+# Contrato mínimo da API do MoniPro.
+#
+# Objetivo: ter uma única fonte de verdade para o envelope de resposta, evitando
+# divergências entre controllers. O caso que motivou este arquivo: o
+# disciplinaController respondia { erro: true, mensagem: '...' } enquanto os
+# demais respondiam { success: false, erro: '...' } — um cliente que lia
+# `data.erro` como string recebia o booleano `true`.
+#
+# REGRA DO ENVELOPE:
+#   - Erro   -> { success: false, erro: '<mensagem para o usuário>' }  (ver #/components/schemas/Erro)
+#   - Sucesso-> { success: true, ...dados }  e `mensagem` só em caso de sucesso.
+#
+# A guarda automática desta regra está em tests/contrato.test.js.
+
+info:
+    title: MoniPro API
+    version: 1.0.0
+    description: |
+        API de monitorias acadêmicas do MoniPro.
+
+        Todas as respostas de erro (4xx/5xx) seguem o schema `Erro`:
+        `{ "success": false, "erro": "mensagem legível para o usuário" }`.
+
+        A chave `erro` é SEMPRE uma string. A chave `mensagem` aparece apenas em
+        respostas de sucesso e nunca descreve uma falha.
+
+servers:
+    - url: https://moni-pro.app.br
+      description: Produção
+    - url: http://localhost:3000
+      description: Desenvolvimento local
+
+tags:
+    - name: Autenticação
+    - name: Disciplinas
+    - name: Monitorias
+    - name: Agendamentos
+    - name: Perfil
+
+paths:
+    /auth/cadastro:
+        post:
+            tags: [Autenticação]
+            summary: Cria uma conta de aluno ou monitor
+            security: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [nome_completo, email, matricula, senha, tipo_usuario]
+                            properties:
+                                nome_completo: { type: string }
+                                email: { type: string, format: email }
+                                matricula: { type: string }
+                                senha: { type: string, format: password }
+                                tipo_usuario: { type: string, enum: [aluno, monitor] }
+            responses:
+                '201':
+                    description: Conta criada
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success: { type: boolean, enum: [true] }
+                                    mensagem: { type: string }
+                                    id: { type: integer }
+                '400': { $ref: '#/components/responses/Erro' }
+                '429': { $ref: '#/components/responses/Erro' }
+
+    /auth/login:
+        post:
+            tags: [Autenticação]
+            summary: Autentica e devolve o token JWT
+            security: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [identificador, senha, tipo_usuario]
+                            properties:
+                                identificador:
+                                    type: string
+                                    description: E-mail ou matrícula
+                                senha: { type: string, format: password }
+                                tipo_usuario: { type: string, enum: [aluno, monitor] }
+            responses:
+                '200':
+                    description: Login efetuado
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success: { type: boolean, enum: [true] }
+                                    token: { type: string }
+                                    usuario:
+                                        type: object
+                                        properties:
+                                            id: { type: integer }
+                                            nome: { type: string }
+                                            tipo: { type: string, enum: [aluno, monitor] }
+                '400': { $ref: '#/components/responses/Erro' }
+                '401': { $ref: '#/components/responses/Erro' }
+                '429': { $ref: '#/components/responses/Erro' }
+                '500': { $ref: '#/components/responses/Erro' }
+
+    /disciplinas:
+        get:
+            tags: [Disciplinas]
+            summary: Lista todas as disciplinas
+            responses:
+                '200':
+                    description: Lista de disciplinas
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success: { type: boolean, enum: [true] }
+                                    disciplinas:
+                                        type: array
+                                        items: { $ref: '#/components/schemas/Disciplina' }
+                '401': { $ref: '#/components/responses/Erro' }
+                '500': { $ref: '#/components/responses/Erro' }
+        post:
+            tags: [Disciplinas]
+            summary: Cria uma disciplina (apenas monitores)
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [nome]
+                            properties:
+                                nome: { type: string }
+            responses:
+                '201':
+                    description: Disciplina criada
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success: { type: boolean, enum: [true] }
+                                    mensagem: { type: string }
+                                    disciplina: { $ref: '#/components/schemas/Disciplina' }
+                '400': { $ref: '#/components/responses/Erro' }
+                '401': { $ref: '#/components/responses/Erro' }
+                '403': { $ref: '#/components/responses/Erro' }
+
+    /disciplinas/{id}/ranking:
+        get:
+            tags: [Disciplinas]
+            summary: Top 10 alunos por pontos na disciplina
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema: { type: integer }
+            responses:
+                '200':
+                    description: Ranking da disciplina
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success: { type: boolean, enum: [true] }
+                                    ranking:
+                                        type: array
+                                        items:
+                                            type: object
+                                            properties:
+                                                id: { type: integer }
+                                                nome_completo: { type: string }
+                                                pontos: { type: integer }
+                '400': { $ref: '#/components/responses/Erro' }
+                '401': { $ref: '#/components/responses/Erro' }
+
+    /monitorias:
+        post:
+            tags: [Monitorias]
+            summary: Cria uma vaga de monitoria (apenas monitores)
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [id_disciplina, horario, local]
+                            properties:
+                                id_disciplina: { type: integer }
+                                horario: { type: string, format: date-time }
+                                local: { type: string }
+                                descricao: { type: string }
+            responses:
+                '201':
+                    description: Vaga criada
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success: { type: boolean, enum: [true] }
+                                    monitoria: { $ref: '#/components/schemas/Monitoria' }
+                '400': { $ref: '#/components/responses/Erro' }
+                '401': { $ref: '#/components/responses/Erro' }
+                '403': { $ref: '#/components/responses/Erro' }
+
+    /monitorias/{idDisciplina}:
+        get:
+            tags: [Monitorias]
+            summary: Lista as vagas de monitoria de uma disciplina
+            parameters:
+                - name: idDisciplina
+                  in: path
+                  required: true
+                  schema: { type: integer }
+                - $ref: '#/components/parameters/Page'
+                - $ref: '#/components/parameters/Limit'
+            responses:
+                '200':
+                    description: Vagas da disciplina
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    monitorias:
+                                        type: array
+                                        items: { $ref: '#/components/schemas/Monitoria' }
+                                    paginacao: { $ref: '#/components/schemas/Paginacao' }
+                '401': { $ref: '#/components/responses/Erro' }
+                '500': { $ref: '#/components/responses/Erro' }
+
+    /monitorias/monitor/agendamentos:
+        get:
+            tags: [Monitorias]
+            summary: Agendamentos recebidos nas vagas do monitor autenticado
+            parameters:
+                - $ref: '#/components/parameters/Page'
+                - $ref: '#/components/parameters/Limit'
+            responses:
+                '200':
+                    description: Agendamentos do monitor
+                    content:
+                        application/json:
+                            schema: { $ref: '#/components/schemas/ListaAgendamentos' }
+                '401': { $ref: '#/components/responses/Erro' }
+                '500': { $ref: '#/components/responses/Erro' }
+
+    /monitorias/{id}/cancelar:
+        put:
+            tags: [Monitorias]
+            summary: Cancela uma vaga (apenas o monitor dono dela)
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema: { type: integer }
+            responses:
+                '200':
+                    description: Vaga cancelada
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success: { type: boolean, enum: [true] }
+                                    mensagem: { type: string }
+                                    monitoria: { $ref: '#/components/schemas/Monitoria' }
+                '400': { $ref: '#/components/responses/Erro' }
+                '401': { $ref: '#/components/responses/Erro' }
+                '403': { $ref: '#/components/responses/Erro' }
+
+    /agendamentos:
+        get:
+            tags: [Agendamentos]
+            summary: Agendamentos do aluno autenticado
+            parameters:
+                - $ref: '#/components/parameters/Page'
+                - $ref: '#/components/parameters/Limit'
+            responses:
+                '200':
+                    description: Agendamentos do aluno
+                    content:
+                        application/json:
+                            schema: { $ref: '#/components/schemas/ListaAgendamentos' }
+                '401': { $ref: '#/components/responses/Erro' }
+                '500': { $ref: '#/components/responses/Erro' }
+        post:
+            tags: [Agendamentos]
+            summary: Agenda uma monitoria
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [id_monitoria]
+                            properties:
+                                id_monitoria: { type: integer }
+                                data_hora: { type: string, format: date-time }
+                                status: { type: string }
+            responses:
+                '201':
+                    description: Agendamento criado
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success: { type: boolean, enum: [true] }
+                                    agendamento: { $ref: '#/components/schemas/Agendamento' }
+                '400': { $ref: '#/components/responses/Erro' }
+                '401': { $ref: '#/components/responses/Erro' }
+
+    /agendamentos/{id}:
+        delete:
+            tags: [Agendamentos]
+            summary: Cancela a própria inscrição
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema: { type: integer }
+            responses:
+                '200':
+                    description: Inscrição cancelada
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success: { type: boolean, enum: [true] }
+                                    mensagem: { type: string }
+                '400': { $ref: '#/components/responses/Erro' }
+                '401': { $ref: '#/components/responses/Erro' }
+                '403': { $ref: '#/components/responses/Erro' }
+
+    /agendamentos/{id}/concluir:
+        patch:
+            tags: [Agendamentos]
+            summary: Conclui o agendamento e credita 10 pontos ao aluno
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema: { type: integer }
+            responses:
+                '200':
+                    description: Agendamento concluído
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success: { type: boolean, enum: [true] }
+                                    mensagem: { type: string }
+                                    agendamento: { $ref: '#/components/schemas/Agendamento' }
+                '400': { $ref: '#/components/responses/Erro' }
+                '401': { $ref: '#/components/responses/Erro' }
+
+    /perfil:
+        get:
+            tags: [Perfil]
+            summary: Dados do usuário autenticado
+            responses:
+                '200':
+                    description: Perfil do usuário
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success: { type: boolean, enum: [true] }
+                                    user: { $ref: '#/components/schemas/Perfil' }
+                '401': { $ref: '#/components/responses/Erro' }
+                '404': { $ref: '#/components/responses/Erro' }
+
+    /perfil/agendamentos:
+        get:
+            tags: [Perfil]
+            summary: Agendamentos do usuário autenticado
+            parameters:
+                - $ref: '#/components/parameters/Page'
+                - $ref: '#/components/parameters/Limit'
+            responses:
+                '200':
+                    description: Agendamentos do perfil
+                    content:
+                        application/json:
+                            schema: { $ref: '#/components/schemas/ListaAgendamentos' }
+                '401': { $ref: '#/components/responses/Erro' }
+                '500': { $ref: '#/components/responses/Erro' }
+
+    /perfil/monitorias:
+        get:
+            tags: [Perfil]
+            summary: Vagas de monitoria do usuário autenticado
+            parameters:
+                - $ref: '#/components/parameters/Page'
+                - $ref: '#/components/parameters/Limit'
+            responses:
+                '200':
+                    description: Monitorias do perfil
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success: { type: boolean, enum: [true] }
+                                    monitorias:
+                                        type: array
+                                        items: { $ref: '#/components/schemas/Monitoria' }
+                                    paginacao: { $ref: '#/components/schemas/Paginacao' }
+                '401': { $ref: '#/components/responses/Erro' }
+                '500': { $ref: '#/components/responses/Erro' }
+
+    /teste:
+        get:
+            summary: Health check simples
+            security: []
+            responses:
+                '200':
+                    description: Servidor respondendo
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    mensagem: { type: string }
+
+components:
+    securitySchemes:
+        bearerAuth:
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
+
+    parameters:
+        Page:
+            name: page
+            in: query
+            schema: { type: integer, minimum: 1, default: 1 }
+        Limit:
+            name: limit
+            in: query
+            schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+
+    responses:
+        Erro:
+            description: Falha na requisição
+            content:
+                application/json:
+                    schema: { $ref: '#/components/schemas/Erro' }
+
+    schemas:
+        Erro:
+            type: object
+            required: [success, erro]
+            properties:
+                success:
+                    type: boolean
+                    enum: [false]
+                erro:
+                    type: string
+                    description: |
+                        Mensagem legível para o usuário final. SEMPRE string —
+                        nunca booleano, e nunca um objeto de erro técnico.
+            example:
+                success: false
+                erro: Já existe uma disciplina com esse nome.
+
+        Disciplina:
+            type: object
+            properties:
+                id: { type: integer }
+                nome: { type: string }
+
+        Monitoria:
+            type: object
+            properties:
+                id: { type: integer }
+                id_disciplina: { type: integer }
+                id_monitor: { type: integer }
+                horario: { type: string, format: date-time }
+                local: { type: string }
+                descricao: { type: string, nullable: true }
+                status: { type: string }
+
+        Agendamento:
+            type: object
+            properties:
+                id: { type: integer }
+                id_monitoria: { type: integer }
+                id_aluno: { type: integer }
+                data_hora: { type: string, format: date-time }
+                status: { type: string, enum: [pendente, concluido, cancelado] }
+
+        Perfil:
+            type: object
+            properties:
+                id: { type: integer }
+                nome_completo: { type: string }
+                email: { type: string, format: email }
+                matricula: { type: string }
+                tipo_usuario: { type: string, enum: [aluno, monitor] }
+                pontos: { type: integer }
+
+        Paginacao:
+            type: object
+            properties:
+                page: { type: integer }
+                limit: { type: integer }
+                total: { type: integer }
+                totalPaginas: { type: integer }
+
+        ListaAgendamentos:
+            type: object
+            properties:
+                success: { type: boolean, enum: [true] }
+                agendamentos:
+                    type: array
+                    items: { $ref: '#/components/schemas/Agendamento' }
+                paginacao: { $ref: '#/components/schemas/Paginacao' }
+
+security:
+    - bearerAuth: []
