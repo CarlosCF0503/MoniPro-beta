@@ -3,12 +3,10 @@ const { JWT_SECRET } = require('../config/env');
 
 const autenticar = (req, res, next) => {
     const authHeader = req.headers.authorization;
-    if (!authHeader) 
-        return res.status(401).json({ success: false, erro: 'Token não fornecido' });
+    if (!authHeader) return res.status(401).json({ success: false, erro: 'Token não fornecido' });
 
     const partes = authHeader.split(' ');
-    if (partes.length !== 2) 
-        return res.status(401).json({ success: false, erro: 'Erro de token' });
+    if (partes.length !== 2) return res.status(401).json({ success: false, erro: 'Erro de token' });
 
     const [esquema, token] = partes;
     if (!/^Bearer$/i.test(esquema))

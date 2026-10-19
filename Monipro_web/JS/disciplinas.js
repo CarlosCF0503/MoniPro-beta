@@ -8,12 +8,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Se não tiver token, expulsa para a tela de login correta (index.html)
     if (!tokenUsuario) {
         alert('Você precisa estar logado para acessar esta página!');
-        window.location.href = 'index.html'; 
+        window.location.href = 'index.html';
         return; // Para a execução do código aqui
     }
 
     // Decodifica o token para descobrir se é aluno ou monitor (igual ao base.js)
-    let tipoUsuario = '';
+    let tipoUsuario;
     try {
         const userData = JSON.parse(atob(tokenUsuario.split('.')[1]));
         tipoUsuario = userData.tipo;
@@ -29,11 +29,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const btnNovaDisciplina = document.getElementById('btnNovaDisciplina');
         if (btnNovaDisciplina) btnNovaDisciplina.style.display = 'block';
     }
-    
+
     // Chama a função que busca as disciplinas no back-end
     carregarDisciplinas();
 
-   
     // --- 2. BUSCAR DISCIPLINAS (GET) ---
     async function carregarDisciplinas() {
         const divLista = document.getElementById('listaDisciplinas');
@@ -42,16 +41,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const resposta = await fetch(`${MB_BETA_ORM}/disciplinas`, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${tokenUsuario}` 
+                    Authorization: `Bearer ${tokenUsuario}`
                 }
             });
 
             const dados = await resposta.json();
 
             if (resposta.status === 200 && dados.success) {
-                divLista.innerHTML = ''; 
-                
-                const lista = dados.disciplinas; 
+                divLista.innerHTML = '';
+
+                const lista = dados.disciplinas;
 
                 if (lista.length === 0) {
                     divLista.innerHTML = '<p>Nenhuma disciplina cadastrada ainda.</p>';
@@ -59,10 +58,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 // Agora fazemos o loop na lista correta!
-                lista.forEach(disciplina => {
+                lista.forEach((disciplina) => {
                     const card = document.createElement('div');
                     card.className = 'card-disciplina';
-                    card.innerText = disciplina.nome; 
+                    card.innerText = disciplina.nome;
                     divLista.appendChild(card);
                 });
             } else {
@@ -73,7 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
             divLista.innerHTML = '<p style="color:red;">Falha de conexão com o servidor.</p>';
         }
     }
-    
 
     // --- 3. LÓGICA DO MODAL E CADASTRO (POST) ---
     const modal = document.getElementById('modalDisciplina');
@@ -83,16 +81,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Abre Modal
     if (btnNovaDisciplina) {
-        btnNovaDisciplina.addEventListener('click', () => { 
-            modal.style.display = 'flex'; 
+        btnNovaDisciplina.addEventListener('click', () => {
+            modal.style.display = 'flex';
         });
     }
 
     // Fecha Modal
     if (btnCancelar) {
-        btnCancelar.addEventListener('click', () => { 
-            modal.style.display = 'none'; 
-            document.getElementById('nomeDisciplina').value = ''; 
+        btnCancelar.addEventListener('click', () => {
+            modal.style.display = 'none';
+            document.getElementById('nomeDisciplina').value = '';
         });
     }
 
@@ -112,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${tokenUsuario}` 
+                        Authorization: `Bearer ${tokenUsuario}`
                     },
                     body: JSON.stringify({ nome: nomeInput })
                 });
@@ -121,11 +119,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (resposta.status === 201) {
                     alert('Disciplina criada com sucesso!');
-                    modal.style.display = 'none'; 
-                    document.getElementById('nomeDisciplina').value = ''; 
-                    
+                    modal.style.display = 'none';
+                    document.getElementById('nomeDisciplina').value = '';
+
                     // Recarrega a lista para a nova disciplina aparecer na hora!
-                    carregarDisciplinas(); 
+                    carregarDisciplinas();
                 } else {
                     alert(dados.erro || 'Erro ao criar disciplina.');
                 }

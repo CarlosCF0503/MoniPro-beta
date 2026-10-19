@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const profileLinks = document.querySelectorAll('.perfil-link');
     const monitoriaLink = document.querySelector('.monitoria-link');
-    
+
     // 🔥 NOVO: Selecionando o botão de disciplinas que adicionamos no HTML
     const disciplinasLink = document.querySelector('.disciplinas-link');
 

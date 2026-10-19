@@ -23,7 +23,6 @@ async function iniciarServidor() {
                 process.exit(0);
             });
         });
-        
     } catch (erro) {
         console.error('❌ Falha crítica ao conectar no banco de dados:', erro);
         await prisma.$disconnect();
