@@ -9,7 +9,9 @@ class PerfilRepository {
                 nome_completo: true,
                 email: true,
                 matricula: true,
-                tipo_usuario: true
+                tipo_usuario: true,
+                // RN-008: a página de perfil exibe a pontuação (data.user.pontos)
+                pontos: true
                 // Pode incluir os agendamentos do utilizador se a relação existir no schema.prisma
                 // agendamentos: true
             }

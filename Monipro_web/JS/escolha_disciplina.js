@@ -24,18 +24,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         listaDisciplinas.forEach((disc) => {
             const card = document.createElement('a');
             card.className = 'disciplina-card';
-            card.href = `marcar_monitoria.html?disciplinaID=${disc.id}&disciplinaNome=${encodeURIComponent(disc.nome)}`;
-            // XSS: disc.nome vem da API sem sanitização no backend.
-            card.innerHTML = html`
+            card.href = `marcar_monitoria.html?disciplinaID=${encodeURIComponent(disc.id)}&disciplinaNome=${encodeURIComponent(disc.nome)}`;
+            const nome = escaparHtml(disc.nome);
+            card.innerHTML = `
                 <div class="icone-disciplina">
-                    <img src="IMG/Icone_Disciplina.png" alt="${disc.nome}">
+                    <img src="IMG/Icone_Disciplina.png" alt="${nome}">
                 </div>
-                <h2>${disc.nome}</h2>
+                <h2>${nome}</h2>
             `;
             containerDisciplinas.appendChild(card);
         });
     } catch (error) {
         console.error('Erro ao carregar disciplinas:', error.message);
-        containerDisciplinas.innerHTML = html`<p>Erro ao carregar disciplinas: ${error.message}</p>`;
+        containerDisciplinas.innerHTML = `<p>Erro ao carregar disciplinas: ${escaparHtml(error.message)}</p>`;
     }
 });

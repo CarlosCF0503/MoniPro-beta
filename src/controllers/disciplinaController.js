@@ -1,68 +1,31 @@
 // src/controllers/disciplinaController.js
+// Tarefa 8: erros sobem para o middleware central (src/middlewares/tratadorDeErros.js).
+const disciplinaRepository = require('../repositories/disciplinaRepository');
 const disciplinaService = require('../services/disciplinaService');
-const tratarErro = require('../utils/tratarErro');
+const { ErroValidacao } = require('../utils/erros');
 
-class DisciplinaController {
-    async listar(req, res) {
-        try {
-            const disciplinas = await disciplinaService.listar();
-            res.json({ success: true, disciplinas });
-        } catch (error) {
-            console.error('❌ Erro ao listar disciplinas:', error);
-            res.status(500).json({
-                success: false,
-                erro: 'Não foi possível carregar as disciplinas. Tente novamente.'
-            });
-        }
+exports.listar = async (req, res) => {
+    const disciplinas = await disciplinaRepository.buscarTodas();
+    return res.status(200).json({ success: true, disciplinas });
+};
+
+exports.criar = async (req, res) => {
+    const nome = typeof req.body?.nome === 'string' ? req.body.nome.trim() : '';
+    const disciplina = await disciplinaService.criar({ nome });
+    return res.status(201).json({
+        success: true,
+        mensagem: 'Disciplina criada com sucesso.',
+        disciplina
+    });
+};
+
+exports.obterRanking = async (req, res) => {
+    const idDisciplina = Number.parseInt(req.params.id, 10);
+
+    if (Number.isNaN(idDisciplina)) {
+        throw new ErroValidacao('ID de disciplina inválido.', { id: 'ID de disciplina inválido.' });
     }
 
-    async criar(req, res) {
-        const { nome } = req.body;
-
-        // Proteção para evitar que o .trim() quebre se "nome" vier vazio/undefined
-        if (!nome || typeof nome !== 'string' || !nome.trim()) {
-            return res.status(400).json({
-                success: false,
-                erro: 'O nome da disciplina é obrigatório e deve ser um texto.'
-            });
-        }
-
-        try {
-            const disciplina = await disciplinaService.criar({ nome: nome.trim() });
-            res.status(201).json({
-                success: true,
-                mensagem: 'Disciplina criada com sucesso.',
-                disciplina
-            });
-        } catch (error) {
-            console.error('❌ Erro ao criar disciplina:', error);
-            const mensagem = tratarErro(error, {
-                P2002: 'Já existe uma disciplina com esse nome.',
-                default: 'Não foi possível criar a disciplina. Tente novamente.'
-            });
-            res.status(400).json({ success: false, erro: mensagem });
-        }
-    }
-
-    async obterRanking(req, res) {
-        const idDisciplina = parseInt(req.params.id, 10);
-
-        if (Number.isNaN(idDisciplina)) {
-            return res.status(400).json({ success: false, erro: 'ID de disciplina inválido.' });
-        }
-
-        try {
-            const ranking = await disciplinaService.obterRanking(idDisciplina);
-            res.json({ success: true, ranking });
-        } catch (error) {
-            console.error('❌ Erro ao buscar ranking da disciplina:', error);
-            const mensagem = tratarErro(error, {
-                naoEncontrado: 'Disciplina não encontrada.',
-                default: 'Não foi possível carregar o ranking. Tente novamente.'
-            });
-            res.status(400).json({ success: false, erro: mensagem });
-        }
-    }
-}
-
-module.exports = new DisciplinaController();
+    const ranking = await disciplinaRepository.buscarRankingPorDisciplina(idDisciplina);
+    return res.status(200).json({ success: true, ranking });
+};

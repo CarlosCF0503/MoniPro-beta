@@ -166,31 +166,25 @@ async function carregarAgendamentos(container) {
                     dateStyle: 'short',
                     timeStyle: 'short'
                 });
-                const nomeDisciplina = ag.monitoria?.disciplina?.nome || 'Disciplina Indefinida';
-                const nomeMonitor = ag.monitoria?.monitor?.nome_completo || 'Monitor';
-                const statusStr = String(ag.status);
+                const nomeDisciplina = escaparHtml(
+                    ag.monitoria?.disciplina?.nome || 'Disciplina Indefinida'
+                );
+                const nomeMonitor = escaparHtml(ag.monitoria?.monitor?.nome_completo || 'Monitor');
+                const statusStr = escaparHtml(ag.status);
 
                 const div = document.createElement('div');
                 div.className = 'lista-item';
-                // XSS: nomeDisciplina e nomeMonitor vêm da API sem sanitização no backend.
-                div.innerHTML = html`
+                div.innerHTML = `
                     <div class="lista-item-info">
                         <p><strong>${nomeDisciplina}</strong> (com ${nomeMonitor})</p>
-                        <p>
-                            ${dataFormatada} —
-                            <span class="status-${statusStr.toLowerCase()}"
-                                >${statusStr.toUpperCase()}</span
-                            >
-                        </p>
+                        <p>${dataFormatada} — <span class="status-${statusStr.toLowerCase()}">${statusStr.toUpperCase()}</span></p>
                     </div>
-                    <button class="btn-cancelar" data-agendamento-id="${ag.id}">Sair</button>
+                    <button class="btn-cancelar" data-agendamento-id="${escaparHtml(ag.id)}">Sair</button>
                 `;
                 container.appendChild(div);
             });
         } else if (data.erro) {
-            container.innerHTML = html`<p style="color:#D8000C;">
-                Falha do servidor: ${data.mensagem}
-            </p>`;
+            container.innerHTML = `<p style="color:#D8000C;">Falha do servidor: ${escaparHtml(data.mensagem)}</p>`;
         } else {
             container.innerHTML = '<p>Ainda não se inscreveu em nenhuma monitoria.</p>';
         }
@@ -211,47 +205,27 @@ async function carregarMonitoriasCriadas(container) {
                     dateStyle: 'short',
                     timeStyle: 'short'
                 });
-                const nomeDisciplina = m.disciplina?.nome || 'Disciplina Indefinida';
-                const statusStr = String(m.status);
+                const nomeDisciplina = escaparHtml(m.disciplina?.nome || 'Disciplina Indefinida');
+                const statusStr = escaparHtml(m.status);
                 const ativa = ['ativa', 'pendente'].includes(statusStr.toLowerCase());
-
-                // O botão/span já é HTML escapado: NÃO pode ser interpolado dentro de
-                // outro `html` (seria escapado duas vezes e apareceria como texto).
-                // É anexado à parte, com insertAdjacentHTML.
-                const rodapeHtml = ativa
-                    ? html`<button class="btn-cancelar" data-monitoria-id="${m.id}">
-                          Cancelar Vaga
-                      </button>`
-                    : html`<span class="status-${statusStr.toLowerCase()}">
-                          ${statusStr.toUpperCase()}
-                      </span>`;
 
                 const div = document.createElement('div');
                 div.className = 'lista-item';
-                // XSS: nomeDisciplina e m.local vêm da API sem sanitização no backend.
-                div.innerHTML = html`
+                div.innerHTML = `
                     <div class="lista-item-info">
-                        <p><strong>${nomeDisciplina}</strong> (${m.local || 'Local Indefinido'})</p>
-                        <p>
-                            ${dataFormatada} —
-                            <span class="status-${statusStr.toLowerCase()}"
-                                >${statusStr.toUpperCase()}</span
-                            >
-                        </p>
+                        <p><strong>${nomeDisciplina}</strong> (${escaparHtml(m.local || 'Local Indefinido')})</p>
+                        <p>${dataFormatada} — <span class="status-${statusStr.toLowerCase()}">${statusStr.toUpperCase()}</span></p>
                     </div>
                     ${
                         ativa
-                            ? `<button class="btn-cancelar" data-monitoria-id="${m.id}">Cancelar Vaga</button>`
+                            ? `<button class="btn-cancelar" data-monitoria-id="${escaparHtml(m.id)}">Cancelar Vaga</button>`
                             : `<span class="status-${statusStr.toLowerCase()}">${statusStr.toUpperCase()}</span>`
                     }
                 `;
-                div.insertAdjacentHTML('beforeend', rodapeHtml);
                 container.appendChild(div);
             });
         } else if (data.erro) {
-            container.innerHTML = html`<p style="color:#D8000C;">
-                Falha do servidor: ${data.mensagem}
-            </p>`;
+            container.innerHTML = `<p style="color:#D8000C;">Falha do servidor: ${escaparHtml(data.mensagem)}</p>`;
         } else {
             container.innerHTML = '<p>Ainda não criou nenhuma vaga de monitoria.</p>';
         }
@@ -285,15 +259,10 @@ async function handleCancelarMonitoria(monitoriaId, itemElement) {
         const data = await chamadaApi(`/monitorias/${monitoriaId}/cancelar`, { method: 'PUT' });
         if (!data.erro && data.success) {
             if (typeof showToast === 'function') showToast(data.message, 'success');
-            // Antes: lia statusEl.innerHTML, dividia por '—' e reinjetava o resultado,
-            // reintroduzindo qualquer payload já presente no DOM.
-            // Agora altera apenas o <span> de estado, via textContent.
-            const statusEl = itemElement.querySelector('.lista-item-info p:nth-child(2) span');
+            const statusEl = itemElement.querySelector('.lista-item-info p:nth-child(2)');
             if (statusEl) {
-                statusEl.textContent = 'CANCELADA';
-                statusEl.className = 'status-cancelada';
-                statusEl.style.color = 'red';
-                statusEl.style.fontWeight = 'bold';
+                const partes = statusEl.innerHTML.split('—');
+                statusEl.innerHTML = `${partes[0]}— <span class="status-cancelada" style="color:red;font-weight:bold;">CANCELADA</span>`;
             }
             const btn = itemElement.querySelector('.btn-cancelar');
             if (btn) btn.remove();
@@ -303,23 +272,5 @@ async function handleCancelarMonitoria(monitoriaId, itemElement) {
         }
     } catch (error) {
         if (typeof showToast === 'function') showToast('Erro de rede.', 'error');
-    }
-}
-
-if (data.success && data.user) {
-    const elNome = document.getElementById('nomeUsuario');
-    const elEmail = document.getElementById('emailUsuario');
-    const elMatricula = document.getElementById('matriculaUsuario');
-    const elTipo = document.getElementById('tipoUsuario');
-    const elPontos = document.getElementById('pontosUsuario'); // <-- ELEMENTO DE PONTOS
-
-    if (elNome) elNome.textContent = data.user.nome_completo || 'Utilizador';
-    if (elEmail) elEmail.textContent = data.user.email || '';
-    if (elMatricula) elMatricula.textContent = data.user.matricula || '';
-    if (elPontos) elPontos.textContent = `${data.user.pontos || 0} pts`;
-
-    if (elTipo) {
-        const tipo = String(data.user.tipo_usuario || userData.tipo || 'aluno');
-        elTipo.textContent = tipo.charAt(0).toUpperCase() + tipo.slice(1);
     }
 }

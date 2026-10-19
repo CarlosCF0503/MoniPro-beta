@@ -3,9 +3,17 @@ const express = require('express');
 const router = express.Router();
 const monitoriaController = require('../controllers/monitoriaController');
 const { autenticar, isMonitor } = require('../middlewares/autenticacaoMiddleware');
+const validarCorpo = require('../middlewares/validarCorpo');
+const { criarMonitoriaSchema } = require('../schemas/monitoriaSchemas');
 
 // app.js registra: app.use('/monitorias', monitoriaRotas)
-router.post('/', autenticar, isMonitor, monitoriaController.criar);
+router.post(
+    '/',
+    autenticar,
+    isMonitor,
+    validarCorpo(criarMonitoriaSchema),
+    monitoriaController.criar
+);
 
 // Rotas específicas ANTES da rota com parâmetro (ordem importa no Express)
 router.get('/monitor/agendamentos', autenticar, monitoriaController.listarAgendamentosDoMonitor);

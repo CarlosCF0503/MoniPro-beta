@@ -1,7 +1,8 @@
 // src/app.js
 const express = require('express');
-const helmet = require('helmet');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 
@@ -16,6 +17,8 @@ const agendamentoRotas = require('./routes/agendamentoRotas');
 const disciplinaRotas = require('./routes/disciplinaRotas');
 const monitoriaRotas = require('./routes/monitoriaRotas');
 const perfilRotas = require('./routes/perfilRotas');
+const tratadorDeErros = require('./middlewares/tratadorDeErros');
+const { ErroNaoAutorizado } = require('./utils/erros');
 
 // Middlewares globais
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
@@ -31,11 +34,22 @@ app.use(
             if (!origem || allowedOrigins.includes(origem)) {
                 callback(null, true);
             } else {
-                callback(new Error('Não permitido pelo CORS'));
+                callback(new ErroNaoAutorizado('Origem não permitida pelo CORS.'));
             }
         }
     })
 );
+// R10: limite geral para todas as rotas, contra abuso e varredura automatizada. É bem mais
+// permissivo que o authLimiter de /auth (10 tentativas/15 min), e por minuto, porque alunos
+// na rede da faculdade podem compartilhar o mesmo IP público (NAT).
+const limiteGeral = rateLimit({
+    windowMs: 60 * 1000,
+    max: 120,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { erro: 'Muitas requisições. Aguarde um minuto e tente novamente.' }
+});
+app.use(limiteGeral);
 app.use(express.json());
 
 // Endpoints
@@ -44,9 +58,12 @@ app.use('/agendamentos', agendamentoRotas);
 app.use('/disciplinas', disciplinaRotas);
 app.use('/monitorias', monitoriaRotas);
 app.use('/perfil', perfilRotas);
-
 // Rota de teste
 app.get('/teste', (req, res) => {
     res.json({ mensagem: 'O servidor atualizado está respondendo!' });
 });
+
+// Tarefa 8: middleware central de erro — sempre o último registrado
+app.use(tratadorDeErros);
+
 module.exports = app;

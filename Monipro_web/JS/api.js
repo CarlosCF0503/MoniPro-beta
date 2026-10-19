@@ -1,7 +1,27 @@
 // JS/api.js
+// Depende de: JS/config.js (deve ser carregado antes deste ficheiro)
 
-// URL base do seu servidor. Se for testar localmente, pode alterar para "http://localhost:3000"
-const MB_BETA_ORM = "https://moni-pro.app.br";
+// URL base do servidor, definida em JS/config.js — gerada por ambiente no arranque do
+// container Nginx (ver Monipro_web/JS/config.js.template). Fallback abaixo cobre o caso de
+// config.js não ter sido carregado (ex.: script bloqueado ou faltando na página).
+const MB_BETA_ORM =
+    (window.MONIPRO_CONFIG && window.MONIPRO_CONFIG.API_BASE_URL) || 'https://moni-pro.app.br';
+
+/**
+ * Escapa texto vindo da API antes de interpolá-lo em template HTML (innerHTML).
+ * Nomes, locais e disciplinas são digitados por usuários: sem isso, um valor como
+ * `<img src=x onerror=...>` seria executado no navegador de quem visualiza (XSS armazenado).
+ * @param {*} valor - Qualquer valor; null/undefined viram string vazia.
+ * @returns {string} Texto seguro para conteúdo e atributos HTML entre aspas.
+ */
+function escaparHtml(valor) {
+    return String(valor ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
 /**
  * Função centralizada para realizar pedidos ao backend.
  * @param {string} endpoint - O caminho da rota (ex: '/auth/login', '/perfil')

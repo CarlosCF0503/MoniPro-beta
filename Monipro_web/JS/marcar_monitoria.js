@@ -2,11 +2,16 @@
 // Depende de: api.js (MB_BETA_ORM), toast.js (showToast), base.js, calendario.js
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Botão "Voltar": ligado aqui, e não por onclick no HTML, porque a CSP do
+    // Nginx (script-src 'self') bloqueia handlers inline.
+    const btnVoltar = document.querySelector('.btn-voltar');
+    if (btnVoltar) btnVoltar.addEventListener('click', () => history.back());
+
     // --- 1. CONFIGURAÇÃO INICIAL ---
-    const urlParams      = new URLSearchParams(window.location.search);
-    const disciplinaID   = urlParams.get('disciplinaID');
+    const urlParams = new URLSearchParams(window.location.search);
+    const disciplinaID = urlParams.get('disciplinaID');
     const disciplinaNome = urlParams.get('disciplinaNome');
-    const token          = localStorage.getItem('monipro_token');
+    const token = localStorage.getItem('monipro_token');
 
     if (!disciplinaID || !token) {
         if (typeof showToast === 'function')
@@ -18,12 +23,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Elementos da UI
-    const tituloPagina       = document.getElementById('titulo-pagina');
-    const viewAluno          = document.getElementById('view-aluno');
-    const viewMonitor        = document.getElementById('view-monitor');
+    const tituloPagina = document.getElementById('titulo-pagina');
+    const viewAluno = document.getElementById('view-aluno');
+    const viewMonitor = document.getElementById('view-monitor');
     const containerMonitores = document.getElementById('lista-monitores');
-    const btnAgendar         = document.getElementById('marcar-agendamento');
-    const btnCriarMonitoria  = document.getElementById('criar-monitoria');
+    const btnAgendar = document.getElementById('marcar-agendamento');
+    const btnCriarMonitoria = document.getElementById('criar-monitoria');
 
     // Estado
     let monitoriaSelecionada = null;
@@ -45,10 +50,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Callback chamado sempre que o mês muda (botões < >)
     function aoMudarMes(mesOffset) {
-        const hoje     = new Date();
+        const hoje = new Date();
         const baseData = new Date(hoje.getFullYear(), hoje.getMonth() + mesOffset, 1);
-        const mesAlvo  = baseData.getMonth();
-        const anoAlvo  = baseData.getFullYear();
+        const mesAlvo = baseData.getMonth();
+        const anoAlvo = baseData.getFullYear();
 
         const diasComMonitoria = calcularDiasComMonitoria(mesAlvo, anoAlvo);
 
@@ -221,45 +226,42 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        // Define a sugestão como o primeiro monitor da lista filtrada
-        atualizarSugestaoMonitor(lista[0]);
+        // Define a sugestão como o primeiro monitor da lista filtrada que ainda tem vaga
+        atualizarSugestaoMonitor(lista.find((m) => m.vagas_disponiveis > 0) || null);
 
         lista.forEach((monitoria) => {
             const horaFormatada = new Date(monitoria.horario).toLocaleString('pt-BR', {
                 hour: '2-digit',
                 minute: '2-digit'
             });
-            const nomeMonitor = monitoria.monitor?.nome_completo || 'Monitor';
-            const local = monitoria.local || 'A definir';
-            const monId = String(monitoria.id);
+            const nomeMonitor = escaparHtml(monitoria.monitor?.nome_completo || 'Monitor');
+            const monId = escaparHtml(monitoria.id);
+            const vagas = Number(monitoria.vagas_disponiveis ?? 0);
+            const lotada = vagas <= 0;
+            const textoVagas = lotada
+                ? 'Lotada'
+                : `${vagas} ${vagas === 1 ? 'vaga disponível' : 'vagas disponíveis'}`;
 
             const div = document.createElement('div');
-            div.className = 'monitor-item';
-            // XSS: nomeMonitor e local vêm da API sem sanitização no backend
-            // (nome_completo do cadastro; local digitado livremente pelo monitor).
-            div.innerHTML = html`
-                <input
-                    type="radio"
-                    name="monitoriaEscolhida"
-                    value="${monId}"
-                    id="mon-${monId}"
-                    style="display:none;"
-                />
-                <label
-                    for="mon-${monId}"
-                    style="cursor:pointer;width:100%;display:flex;align-items:center;gap:15px;"
-                >
-                    <div class="icone"><img src="IMG/Icone_monitor.png" alt="Monitor" /></div>
+            div.className = lotada ? 'monitor-item lotada' : 'monitor-item';
+            div.innerHTML = `
+                <input type="radio" name="monitoriaEscolhida" value="${monId}" id="mon-${monId}" style="display:none;"${lotada ? ' disabled' : ''}>
+                <label for="mon-${monId}" style="cursor:pointer;width:100%;display:flex;align-items:center;gap:15px;">
+                    <div class="icone"><img src="IMG/Icone_monitor.png" alt="Monitor"></div>
                     <div>
-                        <strong>${nomeMonitor}</strong><br />
-                        <small>Local: ${local}</small><br />
-                        <small style="color:#071E3D;font-weight:bold;"
-                            >Horário: ${horaFormatada}</small
-                        >
+                        <strong>${nomeMonitor}</strong><br>
+                        <small>Local: ${escaparHtml(monitoria.local || 'A definir')}</small><br>
+                        <small style="color:#071E3D;font-weight:bold;">Horário: ${horaFormatada}</small><br>
+                        <small class="vagas-info">${textoVagas}</small>
                     </div>
                 </label>
             `;
             div.addEventListener('click', () => {
+                if (lotada) {
+                    if (typeof showToast === 'function')
+                        showToast('Esta vaga de monitoria está lotada.', 'error');
+                    return;
+                }
                 document
                     .querySelectorAll('.monitor-item.selecionado')
                     .forEach((m) => m.classList.remove('selecionado'));

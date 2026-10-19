@@ -73,7 +73,7 @@ describe('POST /disciplinas', () => {
         expect(prisma.disciplina.create).not.toHaveBeenCalled();
     });
 
-    it('retorna 400 com mensagem amigável quando o nome já existe (P2002)', async () => {
+    it('retorna 409 com mensagem amigável quando o nome já existe (P2002)', async () => {
         const erroPrisma = Object.assign(new Error('Unique constraint failed'), {
             code: 'P2002',
             meta: { target: ['nome'] }
@@ -85,7 +85,7 @@ describe('POST /disciplinas', () => {
             .set('Authorization', `Bearer ${tokenMonitor}`)
             .send({ nome: 'Cálculo I' });
 
-        expect(resposta.status).toBe(400);
+        expect(resposta.status).toBe(409);
         expect(resposta.body.success).toBe(false);
         expect(resposta.body.erro).toBe('Já existe uma disciplina com esse nome.');
     });

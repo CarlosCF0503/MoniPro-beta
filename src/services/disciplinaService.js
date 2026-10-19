@@ -1,12 +1,22 @@
 // src/services/disciplinaService.js
 const disciplinaRepository = require('../repositories/disciplinaRepository');
+const { ErroValidacao, ErroConflito } = require('../utils/erros');
 
 class DisciplinaService {
     async criar(dados) {
         if (!dados.nome) {
-            throw new Error('O nome da disciplina é obrigatório.');
+            throw new ErroValidacao('O nome da disciplina é obrigatório.', {
+                nome: 'O nome da disciplina é obrigatório.'
+            });
         }
-        return await disciplinaRepository.criar(dados);
+        try {
+            return await disciplinaRepository.criar(dados);
+        } catch (error) {
+            if (error.code === 'P2002') {
+                throw new ErroConflito('Já existe uma disciplina com esse nome.');
+            }
+            throw error;
+        }
     }
 
     async listar() {

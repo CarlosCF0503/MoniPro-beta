@@ -6,9 +6,7 @@
 
 Módulos Próximos (Roadmap):
 
-RN-001 (Regra das 24h para cancelamento): Planejado para implementação completa nas Tarefas 14 e 15.
-
-Módulo de Gamificação (Moedas/Pontos): Planejado para finalização e integração total nas Tarefas 14 e 15.
+Módulo de Gamificação (Moedas/Pontos): Planejado para finalização e integração total na Tarefa 15.
 
 Perfil "Coordenações (Módulo Premium)": Movido para o Roadmap de extensões futuras da plataforma.
 
@@ -36,18 +34,31 @@ perfil_aluno.html: Painel exclusivo do aluno. Exibe informações da conta, sald
 
 perfil_monitor.html: Painel exclusivo do monitor. Exibe as vagas criadas, agendamentos sob sua responsabilidade, opções de cancelamento de horários e modal de certificados.
 
+# Como executar localmente
+
+Pré-requisitos: Node.js 22 e um banco PostgreSQL acessível.
+
+1. Copie `.env.example` para `.env` e preencha ao menos `DATABASE_URL` e `JWT_SECRET`.
+2. Instale as dependências com `npm install`. O `postinstall` já gera o Prisma Client.
+3. Se alterar `prisma/schema.prisma`, gere o client de novo com `npm run generate`. O client gerado não é versionado no repositório.
+4. Aplique as migrations no banco **local** com `npx prisma migrate dev`.
+5. Suba a API com `npm run dev` (com reload) ou `npm start`.
+6. Rode os testes e o lint com `npm test` e `npm run lint`.
+
+Com Docker, `docker compose up --build` sobe o backend (porta 3000) e o frontend (porta 8080) usando o `.env`.
+
 # Especificação Acadêmica
 
 ## Tabela de Status de RF e RN (Código Real)
 
-| Código     | Descrição                                   | Tipo                | Status Atual  | Observações / Mapeamento                                         |
-| :--------- | :------------------------------------------ | :------------------ | :------------ | :--------------------------------------------------------------- |
-| **RF-001** | Autenticação JWT e Controle de Acesso       | Requisito Funcional | **Concluído** | Rotas `/autenticacao` e middlewares ativos no Express.           |
-| **RF-002** | Agendamento de Monitorias via Calendário    | Requisito Funcional | **Concluído** | Interface interativa em `marcar_monitoria.html`.                 |
-| **RF-003** | Gestão de Perfil (Aluno / Monitor)          | Requisito Funcional | **Concluído** | Integrado às rotas `/perfil`, `/agendamentos` e `/monitorias`.   |
-| **RF-004** | Sistema de Gamificação (Ranking/Pontos)     | Requisito Funcional | **Planejado** | Estruturado para ser finalizado nas Tarefas 14 e 15.             |
-| **RN-001** | Cancelamento Prévio com 24h de Antecedência | Regra de Negócio    | **Planejado** | Validação no backend em desenvolvimento para as Tarefas 14 e 15. |
-| **RN-002** | Isolamento de Perfis e Permissões           | Regra de Negócio    | **Concluído** | Controle de acesso via middleware de autenticação JWT.           |
+| Código     | Descrição                                   | Tipo                | Status Atual  | Observações / Mapeamento                                                            |
+| :--------- | :------------------------------------------ | :------------------ | :------------ | :---------------------------------------------------------------------------------- |
+| **RF-001** | Autenticação JWT e Controle de Acesso       | Requisito Funcional | **Concluído** | Rotas `/autenticacao` e middlewares ativos no Express.                              |
+| **RF-002** | Agendamento de Monitorias via Calendário    | Requisito Funcional | **Concluído** | Interface interativa em `marcar_monitoria.html`.                                    |
+| **RF-003** | Gestão de Perfil (Aluno / Monitor)          | Requisito Funcional | **Concluído** | Integrado às rotas `/perfil`, `/agendamentos` e `/monitorias`.                      |
+| **RF-004** | Sistema de Gamificação (Ranking/Pontos)     | Requisito Funcional | **Planejado** | Estruturado para ser finalizado nas Tarefas 14 e 15.                                |
+| **RN-001** | Cancelamento Prévio com 24h de Antecedência | Regra de Negócio    | **Concluído** | Validado em `agendamentoService.deletar` e `monitoriaService.cancelar` (Tarefa 14). |
+| **RN-002** | Isolamento de Perfis e Permissões           | Regra de Negócio    | **Concluído** | Controle de acesso via middleware de autenticação JWT.                              |
 
 Seções Acadêmicas (24 a 27)
 Seção 24: Qualidade de Código
@@ -64,4 +75,4 @@ Seção 26: Extensões e Decisões de Design (Curso / Avaliação / Certificado)
 A emissão automática de certificados com base em avaliações de curso foi simplificada para a versão atual. As tabelas complexas de Avaliação e Curso foram temporariamente removidas do escopo ativo e movidas para o roadmap. A exibição de certificados no painel do monitor permanece como um componente visual direto.
 
 Seção 27: Avaliação Geral e Conclusão
-A plataforma atende aos critérios fundamentais de usabilidade e integridade para agendamento de monitorias acadêmicas. Os módulos pendentes (Gamificação completa e Regra RN-001 de 24h) possuem infraestrutura preparada e cronograma definido para finalização imediata nas etapas subsequentes.
+A plataforma atende aos critérios fundamentais de usabilidade e integridade para agendamento de monitorias acadêmicas. O módulo pendente (Gamificação completa) possui infraestrutura preparada e cronograma definido para finalização imediata na etapa subsequente.

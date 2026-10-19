@@ -155,6 +155,7 @@ paths:
                 '400': { $ref: '#/components/responses/Erro' }
                 '401': { $ref: '#/components/responses/Erro' }
                 '403': { $ref: '#/components/responses/Erro' }
+                '409': { $ref: '#/components/responses/Erro' }
 
     /disciplinas/{id}/ranking:
         get:
