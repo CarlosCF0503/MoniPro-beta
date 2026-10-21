@@ -1,137 +1,137 @@
 // JS/base.js
 
-document.addEventListener('DOMContentLoaded', () => {
-    // --- 1. SELEÇÃO DOS ELEMENTOS GERAIS ---
-    const menuIcon = document.getElementById('menu');
-    const closeMenuIcon = document.getElementById('menu_fechar');
-    const sidebar = document.getElementById('menuLateral');
+document.addEventListener("DOMContentLoaded", () => {
+  // --- 1. SELEÇÃO DOS ELEMENTOS GERAIS ---
+  const menuIcon = document.getElementById("menu");
+  const closeMenuIcon = document.getElementById("menu_fechar");
+  const sidebar = document.getElementById("menuLateral");
 
-    const profileLinks = document.querySelectorAll('.perfil-link');
-    const monitoriaLink = document.querySelector('.monitoria-link');
+  const profileLinks = document.querySelectorAll(".perfil-link");
+  const monitoriaLink = document.querySelector(".monitoria-link");
 
-    const logoutButton = document.getElementById('sair');
-    const logoutModal = document.getElementById('aviso_sair');
-    const confirmLogoutButton = document.getElementById('btnSim');
-    const cancelLogoutButton = document.getElementById('btnNao');
-    const overlay = document.getElementById('overlay');
+  const logoutButton = document.getElementById("sair");
+  const logoutModal = document.getElementById("aviso_sair");
+  const confirmLogoutButton = document.getElementById("btnSim");
+  const cancelLogoutButton = document.getElementById("btnNao");
+  const overlay = document.getElementById("overlay");
 
-    // --- 2. FUNÇÕES DE INTERFACE (MENU E MODAIS) ---
-    const showElement = (element) => {
-        if (overlay) overlay.classList.add('active');
-        if (element) element.classList.add('aparecer');
-    };
+  // --- 2. FUNÇÕES DE INTERFACE (MENU E MODAIS) ---
+  const showElement = (element) => {
+    if (overlay) overlay.classList.add("active");
+    if (element) element.classList.add("aparecer");
+  };
 
-    const hideAll = () => {
-        if (overlay) overlay.classList.remove('active');
-        if (sidebar) sidebar.classList.remove('aparecer');
-        if (logoutModal) logoutModal.classList.remove('aparecer');
+  const hideAll = () => {
+    if (overlay) overlay.classList.remove("active");
+    if (sidebar) sidebar.classList.remove("aparecer");
+    if (logoutModal) logoutModal.classList.remove("aparecer");
 
-        const confirmModal = document.getElementById('modal-confirmacao');
-        if (confirmModal) {
-            confirmModal.classList.remove('aparecer');
-        }
-        const finalizarModal = document.getElementById('modal-finalizar');
-        if (finalizarModal) {
-            finalizarModal.classList.remove('aparecer');
-        }
-    };
+    const confirmModal = document.getElementById("modal-confirmacao");
+    if (confirmModal) {
+      confirmModal.classList.remove("aparecer");
+    }
+    const finalizarModal = document.getElementById("modal-finalizar");
+    if (finalizarModal) {
+      finalizarModal.classList.remove("aparecer");
+    }
+  };
 
-    // --- 3. FUNÇÕES DE AUTENTICAÇÃO E PERFIL ---
-    // Descodifica o Token JWT para ler os dados do utilizador
-    const parseJwt = (token) => {
-        try {
-            return JSON.parse(atob(token.split('.')[1]));
-        } catch (e) {
-            return null;
-        }
-    };
+  // --- 3. FUNÇÕES DE AUTENTICAÇÃO E PERFIL ---
+  // Descodifica o Token JWT para ler os dados do utilizador
+  const parseJwt = (token) => {
+    try {
+      return JSON.parse(atob(token.split(".")[1]));
+    } catch (e) {
+      return null;
+    }
+  };
 
-    // Redireciona de forma dinâmica para o ecrã correto baseado no perfil
-    const handleProfileRedirect = () => {
-        const token = localStorage.getItem('monipro_token');
-        if (!token) {
-            window.location.href = 'index.html';
-            return;
-        }
-
-        const user = parseJwt(token);
-        if (user) {
-            const tipo = user.tipo || user.tipo_usuario;
-            if (String(tipo).toLowerCase() === 'monitor') {
-                window.location.href = 'perfil_monitor.html';
-            } else {
-                window.location.href = 'perfil_aluno.html';
-            }
-        } else {
-            window.location.href = 'index.html';
-        }
-    };
-
-    // --- 4. EVENT LISTENERS (CLIQUES) ---
-    if (menuIcon) menuIcon.addEventListener('click', () => showElement(sidebar));
-    if (closeMenuIcon) closeMenuIcon.addEventListener('click', hideAll);
-    if (overlay) overlay.addEventListener('click', hideAll);
-    if (cancelLogoutButton) cancelLogoutButton.addEventListener('click', hideAll);
-
-    if (logoutButton) {
-        logoutButton.addEventListener('click', () => {
-            if (sidebar) sidebar.classList.remove('aparecer');
-            showElement(logoutModal);
-        });
+  // Redireciona de forma dinâmica para o ecrã correto baseado no perfil
+  const handleProfileRedirect = () => {
+    const token = localStorage.getItem("monipro_token");
+    if (!token) {
+      window.location.href = "index.html";
+      return;
     }
 
-    // Ações dos links do menu lateral
-    profileLinks.forEach((link) => {
-        link.addEventListener('click', (event) => {
-            event.preventDefault();
-            handleProfileRedirect();
-        });
+    const user = parseJwt(token);
+    if (user) {
+      const tipo = user.tipo || user.tipo_usuario;
+      if (String(tipo).toLowerCase() === "monitor") {
+        window.location.href = "perfil_monitor.html";
+      } else {
+        window.location.href = "perfil_aluno.html";
+      }
+    } else {
+      window.location.href = "index.html";
+    }
+  };
+
+  // --- 4. EVENT LISTENERS (CLIQUES) ---
+  if (menuIcon) menuIcon.addEventListener("click", () => showElement(sidebar));
+  if (closeMenuIcon) closeMenuIcon.addEventListener("click", hideAll);
+  if (overlay) overlay.addEventListener("click", hideAll);
+  if (cancelLogoutButton) cancelLogoutButton.addEventListener("click", hideAll);
+
+  if (logoutButton) {
+    logoutButton.addEventListener("click", () => {
+      if (sidebar) sidebar.classList.remove("aparecer");
+      showElement(logoutModal);
     });
+  }
 
-    if (monitoriaLink) {
-        monitoriaLink.addEventListener('click', (event) => {
-            event.preventDefault();
-            window.location.href = 'escolha_disciplina.html';
-        });
-    }
+  // Ações dos links do menu lateral
+  profileLinks.forEach((link) => {
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      handleProfileRedirect();
+    });
+  });
 
-    // Ação de confirmar o Logout
-    if (confirmLogoutButton) {
-        confirmLogoutButton.addEventListener('click', () => {
-            localStorage.removeItem('monipro_token');
-            if (typeof showToast === 'function') {
-                showToast('Sessão encerrada com sucesso!', 'success');
-            }
-            setTimeout(() => {
-                window.location.href = 'index.html';
-            }, 1000);
-        });
-    }
+  if (monitoriaLink) {
+    monitoriaLink.addEventListener("click", (event) => {
+      event.preventDefault();
+      window.location.href = "escolha_disciplina.html";
+    });
+  }
 
-    // --- 5. LÓGICA EXCLUSIVA DO DASHBOARD (base.html) ---
-    const dashNomeUsuario = document.getElementById('dash-nome-usuario');
-    const dashLinkPerfil = document.getElementById('dash-link-perfil');
+  // Ação de confirmar o Logout
+  if (confirmLogoutButton) {
+    confirmLogoutButton.addEventListener("click", () => {
+      localStorage.removeItem("monipro_token");
+      if (typeof showToast === "function") {
+        showToast("Sessão encerrada com sucesso!", "success");
+      }
+      setTimeout(() => {
+        window.location.href = "index.html";
+      }, 1000);
+    });
+  }
 
-    if (dashNomeUsuario && dashLinkPerfil) {
-        const token = localStorage.getItem('monipro_token');
-        if (token) {
-            const user = parseJwt(token);
-            if (user) {
-                // Removemos a variável redundante e garantimos que o split opera numa string válida
-                dashNomeUsuario.textContent = user.nome_completo
-                    ? String(user.nome_completo).split(' ')[0]
-                    : String(user.email).split('@')[0];
+  // --- 5. LÓGICA EXCLUSIVA DO DASHBOARD (base.html) ---
+  const dashNomeUsuario = document.getElementById("dash-nome-usuario");
+  const dashLinkPerfil = document.getElementById("dash-link-perfil");
 
-                // Define o link correto dinamicamente para evitar o erro 404
-                const tipo = user.tipo || user.tipo_usuario;
-                if (String(tipo).toLowerCase() === 'monitor') {
-                    dashLinkPerfil.href = 'perfil_monitor.html';
-                } else {
-                    dashLinkPerfil.href = 'perfil_aluno.html';
-                }
-            }
+  if (dashNomeUsuario && dashLinkPerfil) {
+    const token = localStorage.getItem("monipro_token");
+    if (token) {
+      const user = parseJwt(token);
+      if (user) {
+        // Removemos a variável redundante e garantimos que o split opera numa string válida
+        dashNomeUsuario.textContent = user.nome_completo
+          ? String(user.nome_completo).split(" ")[0]
+          : String(user.email).split("@")[0];
+
+        // Define o link correto dinamicamente para evitar o erro 404
+        const tipo = user.tipo || user.tipo_usuario;
+        if (String(tipo).toLowerCase() === "monitor") {
+          dashLinkPerfil.href = "perfil_monitor.html";
         } else {
-            window.location.href = 'index.html';
+          dashLinkPerfil.href = "perfil_aluno.html";
         }
+      }
+    } else {
+      window.location.href = "index.html";
     }
+  }
 });

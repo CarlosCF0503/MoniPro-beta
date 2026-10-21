@@ -1,125 +1,125 @@
 // src/repositories/monitoriaRepository.js
-const prisma = require('../config/bancoDeDados');
+const prisma = require("../config/bancoDeDados");
 
 class MonitoriaRepository {
-    async criar(dados) {
-        return await prisma.monitoria.create({
-            data: {
-                id_disciplina: Number(dados.id_disciplina),
-                id_monitor: dados.id_monitor,
-                local: dados.local,
-                descricao: dados.descricao,
-                status: dados.status || 'ativa',
-                horario: dados.horario,
-                // Omitido => o banco aplica o default (1)
-                ...(dados.capacidade !== undefined && { capacidade: dados.capacidade })
-            }
-        });
-    }
+  async criar(dados) {
+    return await prisma.monitoria.create({
+      data: {
+        id_disciplina: Number(dados.id_disciplina),
+        id_monitor: dados.id_monitor,
+        local: dados.local,
+        descricao: dados.descricao,
+        status: dados.status || "ativa",
+        horario: dados.horario,
+        // Omitido => o banco aplica o default (1)
+        ...(dados.capacidade !== undefined && { capacidade: dados.capacidade }),
+      },
+    });
+  }
 
-    async buscarPorDisciplina(idDisciplina, { skip, take } = {}) {
-        const where = {
-            id_disciplina: idDisciplina,
-            status: 'ativa'
-        };
+  async buscarPorDisciplina(idDisciplina, { skip, take } = {}) {
+    const where = {
+      id_disciplina: idDisciplina,
+      status: "ativa",
+    };
 
-        const [dados, total] = await Promise.all([
-            prisma.monitoria.findMany({
-                where,
-                include: {
-                    monitor: { select: { nome_completo: true } },
-                    // Inscrições que ocupam vaga (tudo que não foi cancelado)
-                    _count: {
-                        select: { inscricoes: { where: { status: { not: 'cancelado' } } } }
-                    }
-                },
-                orderBy: { horario: 'asc' },
-                skip,
-                take
-            }),
-            prisma.monitoria.count({ where })
-        ]);
+    const [dados, total] = await Promise.all([
+      prisma.monitoria.findMany({
+        where,
+        include: {
+          monitor: { select: { nome_completo: true } },
+          // Inscrições que ocupam vaga (tudo que não foi cancelado)
+          _count: {
+            select: { inscricoes: { where: { status: { not: "cancelado" } } } },
+          },
+        },
+        orderBy: { horario: "asc" },
+        skip,
+        take,
+      }),
+      prisma.monitoria.count({ where }),
+    ]);
 
-        return { dados, total };
-    }
+    return { dados, total };
+  }
 
-    async buscarAgendamentos(monitorId, { skip, take } = {}) {
-        const where = {
-            monitoria: { id_monitor: monitorId }
-        };
+  async buscarAgendamentos(monitorId, { skip, take } = {}) {
+    const where = {
+      monitoria: { id_monitor: monitorId },
+    };
 
-        const [dados, total] = await Promise.all([
-            prisma.agendamento.findMany({
-                where,
-                include: {
-                    aluno: {
-                        select: { nome_completo: true, email: true, matricula: true }
-                    },
-                    monitoria: {
-                        select: {
-                            local: true,
-                            horario: true,
-                            disciplina: { select: { nome: true } }
-                        }
-                    }
-                },
-                orderBy: { data_hora: 'desc' },
-                skip,
-                take
-            }),
-            prisma.agendamento.count({ where })
-        ]);
-
-        return { dados, total };
-    }
-
-    async buscarPorId(id) {
-        return await prisma.monitoria.findUnique({
-            where: { id: parseInt(id) }
-        });
-    }
-
-    async cancelar(id) {
-        return await prisma.monitoria.update({
-            where: { id: parseInt(id) },
-            data: { status: 'cancelada' }
-        });
-    }
-    // Finaliza a vaga do próprio monitor. O updateMany condicional (dono + status ainda
-    // ativa/pendente) impede finalizar duas vezes ou finalizar uma vaga cancelada, mesmo com
-    // requisições simultâneas. Retorna null se nenhuma linha foi alterada.
-    async finalizar(id, idMonitor, dataFim) {
-        const { count } = await prisma.monitoria.updateMany({
-            where: {
-                id: parseInt(id),
-                id_monitor: idMonitor,
-                status: { in: ['ativa', 'pendente'] }
+    const [dados, total] = await Promise.all([
+      prisma.agendamento.findMany({
+        where,
+        include: {
+          aluno: {
+            select: { nome_completo: true, email: true, matricula: true },
+          },
+          monitoria: {
+            select: {
+              local: true,
+              horario: true,
+              disciplina: { select: { nome: true } },
             },
-            data: { status: 'realizada', data_fim: dataFim }
-        });
-        if (count === 0) return null;
+          },
+        },
+        orderBy: { data_hora: "desc" },
+        skip,
+        take,
+      }),
+      prisma.agendamento.count({ where }),
+    ]);
 
-        return await prisma.monitoria.findUnique({ where: { id: parseInt(id) } });
-    }
+    return { dados, total };
+  }
 
-    async buscarPorMonitor(idMonitor, { skip, take } = {}) {
-        const where = { id_monitor: idMonitor };
+  async buscarPorId(id) {
+    return await prisma.monitoria.findUnique({
+      where: { id: parseInt(id) },
+    });
+  }
 
-        const [dados, total] = await Promise.all([
-            prisma.monitoria.findMany({
-                where,
-                include: {
-                    disciplina: { select: { nome: true } }
-                },
-                orderBy: { horario: 'desc' },
-                skip,
-                take
-            }),
-            prisma.monitoria.count({ where })
-        ]);
+  async cancelar(id) {
+    return await prisma.monitoria.update({
+      where: { id: parseInt(id) },
+      data: { status: "cancelada" },
+    });
+  }
+  // Finaliza a vaga do próprio monitor. O updateMany condicional (dono + status ainda
+  // ativa/pendente) impede finalizar duas vezes ou finalizar uma vaga cancelada, mesmo com
+  // requisições simultâneas. Retorna null se nenhuma linha foi alterada.
+  async finalizar(id, idMonitor, dataFim) {
+    const { count } = await prisma.monitoria.updateMany({
+      where: {
+        id: parseInt(id),
+        id_monitor: idMonitor,
+        status: { in: ["ativa", "pendente"] },
+      },
+      data: { status: "realizada", data_fim: dataFim },
+    });
+    if (count === 0) return null;
 
-        return { dados, total };
-    }
+    return await prisma.monitoria.findUnique({ where: { id: parseInt(id) } });
+  }
+
+  async buscarPorMonitor(idMonitor, { skip, take } = {}) {
+    const where = { id_monitor: idMonitor };
+
+    const [dados, total] = await Promise.all([
+      prisma.monitoria.findMany({
+        where,
+        include: {
+          disciplina: { select: { nome: true } },
+        },
+        orderBy: { horario: "desc" },
+        skip,
+        take,
+      }),
+      prisma.monitoria.count({ where }),
+    ]);
+
+    return { dados, total };
+  }
 }
 
 module.exports = new MonitoriaRepository();
