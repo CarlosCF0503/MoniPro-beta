@@ -19,7 +19,10 @@ class MonitoriaController {
             req.params.idDisciplina,
             paginacao
         );
-        res.json({ monitorias: dados, paginacao: montarPaginacao(paginacao, total) });
+        res.json({
+            monitorias: dados,
+            paginacao: montarPaginacao(paginacao, total)
+        });
     }
 
     async listarAgendamentosDoMonitor(req, res) {
@@ -32,6 +35,18 @@ class MonitoriaController {
             success: true,
             agendamentos: dados,
             paginacao: montarPaginacao(paginacao, total)
+        });
+    }
+    async finalizar(req, res) {
+        const monitoria = await monitoriaService.finalizar(
+            parseInt(req.params.id, 10),
+            req.usuario.id,
+            req.body.data_fim
+        );
+        res.json({
+            success: true,
+            mensagem: 'Monitoria finalizada com sucesso.',
+            monitoria
         });
     }
 

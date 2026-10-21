@@ -111,20 +111,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const btnCertificados = document.getElementById('btn-certificados');
         if (btnCertificados) btnCertificados.style.display = 'flex';
 
-        const container = document.getElementById('lista-monitorias-criadas');
-        if (container) {
-            await carregarMonitoriasCriadas(container);
-
-            container.addEventListener('click', (event) => {
-                if (event.target.classList.contains('btn-cancelar')) {
-                    const monitoriaId = event.target.dataset.monitoriaId;
-                    const itemElement = event.target.closest('.lista-item');
-                    acaoPendente = () => handleCancelarMonitoria(monitoriaId, itemElement);
-                    showConfirmModal('Tem a certeza que deseja cancelar esta vaga de monitoria?');
-                }
-            });
-        }
-
         // Painel de certificados
         const verCertificadosBtn = document.getElementById('abrir_c');
         const fecharCertBtn = document.getElementById('fechar_c');
@@ -147,6 +133,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         fecharCertBtn?.addEventListener('click', fecharCert);
         overlayCert?.addEventListener('click', fecharCert);
+
+        // Lógica do Container de Monitorias
+        const container = document.getElementById('lista-monitorias-criadas');
+        if (container) {
+            await carregarMonitoriasCriadas(container);
+
+            container.addEventListener('click', (event) => {
+                if (event.target.classList.contains('btn-cancelar')) {
+                    const monitoriaId = event.target.dataset.monitoriaId;
+                    const itemElement = event.target.closest('.lista-item');
+                    acaoPendente = () => handleCancelarMonitoria(monitoriaId, itemElement);
+                    showConfirmModal('Tem a certeza que deseja cancelar esta vaga de monitoria?');
+                }
+                if (event.target.classList.contains('btn-finalizar')) {
+                    const { monitoriaId, horario, disciplina } = event.target.dataset;
+                    abrirFinalizacao({ monitoriaId, horario, disciplina }, container);
+                }
+            });
+            configurarModalFinalizacao(container);
+        }
     }
 });
 
@@ -209,16 +215,29 @@ async function carregarMonitoriasCriadas(container) {
                 const statusStr = escaparHtml(m.status);
                 const ativa = ['ativa', 'pendente'].includes(statusStr.toLowerCase());
 
+                const dataFimFormatada = m.data_fim
+                    ? new Date(m.data_fim).toLocaleString('pt-BR', {
+                          dateStyle: 'short',
+                          timeStyle: 'short'
+                      })
+                    : null;
+
                 const div = document.createElement('div');
                 div.className = 'lista-item';
                 div.innerHTML = `
                     <div class="lista-item-info">
                         <p><strong>${nomeDisciplina}</strong> (${escaparHtml(m.local || 'Local Indefinido')})</p>
-                        <p>${dataFormatada} — <span class="status-${statusStr.toLowerCase()}">${statusStr.toUpperCase()}</span></p>
+                        <p>${dataFormatada}${dataFimFormatada ? ` até ${dataFimFormatada}` : ''} — <span class="status-${statusStr.toLowerCase()}">${statusStr.toUpperCase()}</span></p>
                     </div>
                     ${
                         ativa
-                            ? `<button class="btn-cancelar" data-monitoria-id="${escaparHtml(m.id)}">Cancelar Vaga</button>`
+                            ? `<div class="lista-item-acoes">
+                                <button class="btn-finalizar"
+                                    data-monitoria-id="${escaparHtml(m.id)}"
+                                    data-horario="${escaparHtml(m.horario)}"
+                                    data-disciplina="${escaparHtml(m.disciplina?.nome || 'Disciplina Indefinida')}">Finalizar</button>
+                                <button class="btn-cancelar" data-monitoria-id="${escaparHtml(m.id)}">Cancelar Vaga</button>
+                            </div>`
                             : `<span class="status-${statusStr.toLowerCase()}">${statusStr.toUpperCase()}</span>`
                     }
                 `;
@@ -236,9 +255,10 @@ async function carregarMonitoriasCriadas(container) {
 
 async function handleSairMonitoria(agendamentoId, itemElement) {
     try {
-        const data = await chamadaApi(`/agendamentos/${agendamentoId}`, { method: 'DELETE' });
+        const data = await chamadaApi(`/agendamentos/${agendamentoId}`, {
+            method: 'DELETE'
+        });
         if (!data.erro && data.success) {
-            // Backend retorna 'mensagem' (pt), não 'message'
             if (typeof showToast === 'function')
                 showToast(data.mensagem || data.message || 'Cancelado com sucesso', 'success');
             itemElement.remove();
@@ -256,7 +276,9 @@ async function handleSairMonitoria(agendamentoId, itemElement) {
 
 async function handleCancelarMonitoria(monitoriaId, itemElement) {
     try {
-        const data = await chamadaApi(`/monitorias/${monitoriaId}/cancelar`, { method: 'PUT' });
+        const data = await chamadaApi(`/monitorias/${monitoriaId}/cancelar`, {
+            method: 'PUT'
+        });
         if (!data.erro && data.success) {
             if (typeof showToast === 'function') showToast(data.message, 'success');
             const statusEl = itemElement.querySelector('.lista-item-info p:nth-child(2)');
@@ -266,6 +288,8 @@ async function handleCancelarMonitoria(monitoriaId, itemElement) {
             }
             const btn = itemElement.querySelector('.btn-cancelar');
             if (btn) btn.remove();
+            const btnFin = itemElement.querySelector('.btn-finalizar');
+            if (btnFin) btnFin.remove();
         } else {
             if (typeof showToast === 'function')
                 showToast(data.mensagem || data.message || 'Erro ao cancelar.', 'error');
@@ -273,4 +297,104 @@ async function handleCancelarMonitoria(monitoriaId, itemElement) {
     } catch (error) {
         if (typeof showToast === 'function') showToast('Erro de rede.', 'error');
     }
+}
+
+// ==========================================
+// FINALIZAÇÃO DE MONITORIA (monitor)
+// ==========================================
+
+// Converte uma data em "YYYY-MM-DDTHH:mm" no fuso local — formato do <input type="datetime-local">
+function paraInputLocal(data) {
+    const d = new Date(data);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+let finalizacaoAtual = null;
+
+function abrirFinalizacao(dados, container) {
+    const modal = document.getElementById('modal-finalizar');
+    const overlay = document.getElementById('overlay');
+    if (!modal || !overlay) return;
+
+    finalizacaoAtual = { ...dados, container };
+    const inicio = paraInputLocal(dados.horario);
+
+    document.getElementById('finalizar-disciplina').textContent = dados.disciplina;
+    document.getElementById('finalizar-inicio').value = inicio;
+
+    const campoFim = document.getElementById('finalizar-fim');
+    campoFim.min = inicio; // o seletor já bloqueia datas anteriores ao início
+    campoFim.value = '';
+    campoFim.classList.remove('invalido');
+
+    document.getElementById('finalizar-erro').textContent = '';
+
+    overlay.classList.add('active');
+    modal.classList.add('aparecer');
+    campoFim.focus();
+}
+
+function fecharFinalizacao() {
+    document.getElementById('modal-finalizar')?.classList.remove('aparecer');
+    document.getElementById('overlay')?.classList.remove('active');
+    finalizacaoAtual = null;
+}
+
+function configurarModalFinalizacao(container) {
+    const btnConfirmar = document.getElementById('btnFinalizarConfirmar');
+    const btnVoltar = document.getElementById('btnFinalizarCancelar');
+    const campoFim = document.getElementById('finalizar-fim');
+    const erro = document.getElementById('finalizar-erro');
+
+    if (!btnConfirmar || !btnVoltar || !campoFim) return;
+
+    const mostrarErro = (mensagem) => {
+        erro.textContent = mensagem;
+        campoFim.classList.add('invalido');
+    };
+
+    btnVoltar.addEventListener('click', fecharFinalizacao);
+
+    btnConfirmar.addEventListener('click', async () => {
+        if (!finalizacaoAtual) return;
+
+        erro.textContent = '';
+        campoFim.classList.remove('invalido');
+
+        if (!campoFim.value) {
+            mostrarErro('Informe a data e hora de término.');
+            return;
+        }
+
+        const fim = new Date(campoFim.value);
+
+        if (fim.getTime() < new Date(finalizacaoAtual.horario).getTime()) {
+            mostrarErro('A data de término não pode ser anterior ao início da monitoria.');
+            return;
+        }
+
+        btnConfirmar.disabled = true;
+        try {
+            const data = await chamadaApi(`/monitorias/${finalizacaoAtual.monitoriaId}/finalizar`, {
+                method: 'PATCH',
+                body: JSON.stringify({ data_fim: fim.toISOString() })
+            });
+
+            if (!data.erro && data.success) {
+                if (typeof showToast === 'function')
+                    showToast(data.mensagem || 'Monitoria finalizada com sucesso.', 'success');
+                fecharFinalizacao();
+                await carregarMonitoriasCriadas(container);
+            } else {
+                mostrarErro(
+                    data.erro || data.mensagem || 'Não foi possível finalizar a monitoria.'
+                );
+            }
+        } catch (error) {
+            mostrarErro('Erro de rede. Tente novamente.');
+        } finally {
+            btnConfirmar.disabled = false;
+        }
+    });
 }
