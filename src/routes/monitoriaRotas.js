@@ -1,46 +1,36 @@
 // src/routes/monitoriaRotas.js
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const monitoriaController = require("../controllers/monitoriaController");
-const {
-  autenticar,
-  isMonitor,
-} = require("../middlewares/autenticacaoMiddleware");
-const validarCorpo = require("../middlewares/validarCorpo");
-const {
-  criarMonitoriaSchema,
-  finalizarMonitoriaSchema,
-} = require("../schemas/monitoriaSchemas");
+const monitoriaController = require('../controllers/monitoriaController');
+const { autenticar, isMonitor } = require('../middlewares/autenticacaoMiddleware');
+const validarCorpo = require('../middlewares/validarCorpo');
+const { criarMonitoriaSchema, finalizarMonitoriaSchema } = require('../schemas/monitoriaSchemas');
 
 // app.js registra: app.use('/monitorias', monitoriaRotas)
 router.post(
-  "/",
-  autenticar,
-  isMonitor,
-  validarCorpo(criarMonitoriaSchema),
-  monitoriaController.criar,
+    '/',
+    autenticar,
+    isMonitor,
+    validarCorpo(criarMonitoriaSchema),
+    monitoriaController.criar
 );
 
 // Rotas específicas ANTES da rota com parâmetro (ordem importa no Express)
-router.get(
-  "/monitor/agendamentos",
-  autenticar,
-  monitoriaController.listarAgendamentosDoMonitor,
-);
+router.get('/monitor/agendamentos', autenticar, monitoriaController.listarAgendamentosDoMonitor);
 
 // Rota de cancelar vaga — chamada pelo perfil.js do monitor
-router.put("/:id/cancelar", autenticar, monitoriaController.cancelar);
+router.put('/:id/cancelar', autenticar, monitoriaController.cancelar);
 
 // Rota com parâmetro por último
-router.get("/:idDisciplina", autenticar, monitoriaController.listar);
+router.get('/:idDisciplina', autenticar, monitoriaController.listar);
 
 // Finalização da monitoria pelo monitor dono da vaga (informa a data/hora de término)
 router.patch(
-  "/:id/finalizar",
-  autenticar,
-  isMonitor,
-  validarCorpo(finalizarMonitoriaSchema),
-  monitoriaController.finalizar,
+    '/:id/finalizar',
+    autenticar,
+    isMonitor,
+    validarCorpo(finalizarMonitoriaSchema),
+    monitoriaController.finalizar
 );
 
 module.exports = router;
