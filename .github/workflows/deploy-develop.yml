@@ -45,13 +45,22 @@ jobs:
           username: ${{ secrets.ORACLE_USERNAME }}
           key: ${{ secrets.ORACLE_SSH_KEY }}
           script: |
+            set -e
             echo "Iniciando atualização do ambiente de testes (Develop)..."
             cd ~/moni-pro-beta-develop
-            
+
             # Atualiza o código pegando as novidades do GitHub
             git pull origin develop
-            
-            # Reconstrói as imagens do Docker e reinicia os containers
-            docker-compose -p monipro-dev up -d --build
+
+            # Reconstrói as imagens antes de migrar: a migration roda com a imagem nova do backend
+            docker-compose -p monipro-dev build
+
+            # Aplica as migrations pendentes ANTES de trocar os containers (mesmo fluxo do
+            # deploy.yml de produção). Sem isto, um campo novo no schema.prisma (ex.: data_fim)
+            # chega ao código mas não ao banco, e as consultas do Prisma falham.
+            docker-compose -p monipro-dev run --rm backend npx prisma migrate deploy
+
+            # Só agora sobe os containers, já com o schema atualizado no banco
+            docker-compose -p monipro-dev up -d
             
             echo "Deploy concluído com sucesso!"
