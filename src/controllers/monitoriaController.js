@@ -34,6 +34,18 @@ class MonitoriaController {
             paginacao: montarPaginacao(paginacao, total)
         });
     }
+    async finalizar(req, res) {
+        const monitoria = await monitoriaService.finalizar(
+            parseInt(req.params.id, 10),
+            req.usuario.id,
+            req.body.data_fim
+        );
+        res.json({
+            success: true,
+            mensagem: 'Monitoria finalizada com sucesso.',
+            monitoria
+        });
+    }
 
     async cancelar(req, res) {
         const monitoria = await monitoriaService.cancelar(parseInt(req.params.id), req.usuario.id);

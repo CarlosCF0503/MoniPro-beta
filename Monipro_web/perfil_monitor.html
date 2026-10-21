@@ -43,7 +43,27 @@
         <div class="icone_sair"><svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><p id="modal-confirmacao-texto">Tem certeza?</p></div>
         <div class="areaSim"><button id="btnConfirmarSim" class="btn-confirmar-acao">Sim</button></div><div class="areaNao"><button id="btnConfirmarNao" class="btn-cancelar-acao">Não</button></div>
     </div>
+    <!-- Tela de finalização da monitoria (aberta pelo botão "Finalizar" da lista) -->
+    <div id="modal-finalizar" class="modal-finalizar" role="dialog" aria-modal="true" aria-labelledby="finalizar-titulo">
+        <h3 id="finalizar-titulo">Finalizar monitoria</h3>
+        <p id="finalizar-disciplina" class="finalizar-disciplina"></p>
 
+        <div class="finalizar-campo">
+            <label for="finalizar-inicio">Início da monitoria</label>
+            <input type="datetime-local" id="finalizar-inicio" readonly>
+        </div>
+
+        <div class="finalizar-campo">
+            <label for="finalizar-fim">Término da monitoria</label>
+            <input type="datetime-local" id="finalizar-fim" required>
+            <small id="finalizar-erro" class="finalizar-erro" role="alert"></small>
+        </div>
+
+        <div class="finalizar-acoes">
+            <button type="button" id="btnFinalizarCancelar" class="btn-secundario">Voltar</button>
+            <button type="button" id="btnFinalizarConfirmar" class="btn-confirmar">Confirmar finalização</button>
+        </div>
+    </div>
     <!-- ==========================================
          NOVO DASHBOARD DO MONITOR 
          ========================================== -->

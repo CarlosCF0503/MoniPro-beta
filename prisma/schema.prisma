@@ -54,6 +54,7 @@ model Disciplina {
 model Monitoria {
   id            Int             @id @default(autoincrement())
   horario       DateTime
+  data_fim      DateTime?       // preenchida pelo monitor ao finalizar (status -> realizada)
   descricao     String?
   local         String
   status        StatusMonitoria @default(ativa)

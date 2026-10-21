@@ -30,4 +30,14 @@ const criarMonitoriaSchema = z.object({
         .optional()
 });
 
-module.exports = { criarMonitoriaSchema };
+// Finalização pelo monitor: só a data/hora de término. A regra "não pode ser anterior ao
+// início" depende da vaga no banco e fica em monitoriaService.finalizar.
+const finalizarMonitoriaSchema = z.object({
+    data_fim: dataHoraIso({
+        obrigatorio: 'Informe a data e hora de término da monitoria.',
+        invalido:
+            'A data de término deve ser uma data/hora ISO 8601 (ex.: 2026-09-10T15:00:00.000Z).'
+    })
+});
+
+module.exports = { criarMonitoriaSchema, finalizarMonitoriaSchema };

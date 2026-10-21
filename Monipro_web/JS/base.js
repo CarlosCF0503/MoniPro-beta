@@ -30,6 +30,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (confirmModal) {
             confirmModal.classList.remove('aparecer');
         }
+        const finalizarModal = document.getElementById('modal-finalizar');
+        if (finalizarModal) {
+            finalizarModal.classList.remove('aparecer');
+        }
     };
 
     // --- 3. FUNÇÕES DE AUTENTICAÇÃO E PERFIL ---

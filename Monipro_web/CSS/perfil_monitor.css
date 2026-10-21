@@ -65,6 +65,9 @@ main.dashboard-wrapper {
 
 .status-pendente { color: #FFA500; font-weight: bold; }
 .status-realizado { color: #28a745; font-weight: bold; }
+.status-realizada { color: #28a745; font-weight: bold; }
+.status-ativa { color: #1F4287; font-weight: bold; }
+.status-cancelada { color: #D8000C; font-weight: bold; }
 
 .btn-cancelar { padding: 8px 16px; font-size: 13px; font-weight: 600; color: #D8000C; background-color: #ffeef0; border: 1px solid #ffdce0; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
 .btn-cancelar:hover { background-color: #D8000C; color: #ffffff; }
@@ -237,3 +240,23 @@ main.dashboard-wrapper {
     .lista-item { flex-direction: column; align-items: flex-start; }
     .btn-cancelar { width: 100%; margin-top: 10px; }
 }
+/* ===== Finalização de monitoria ===== */
+.lista-item-acoes { display: flex; gap: 8px; flex-shrink: 0; }
+.btn-finalizar { padding: 8px 16px; font-size: 13px; font-weight: 600; color: #166534; background-color: #e8f7ee; border: 1px solid #bfe6cd; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+.btn-finalizar:hover { background-color: #28a745; color: #ffffff; }
+
+.modal-finalizar { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95); width: 420px; max-width: 92%; background: #ffffff; border-radius: 16px; box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3); padding: 28px; z-index: 2; opacity: 0; pointer-events: none; transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out; }
+.modal-finalizar.aparecer { opacity: 1; pointer-events: all; transform: translate(-50%, -50%) scale(1); }
+.modal-finalizar h3 { color: #071E3D; font-size: 20px; margin-bottom: 4px; }
+.finalizar-disciplina { color: #64748b; font-size: 14px; margin-bottom: 18px; }
+.finalizar-campo { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.finalizar-campo label { font-size: 13px; font-weight: 600; color: #334155; }
+.finalizar-campo input { padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-family: inherit; color: #071E3D; }
+.finalizar-campo input[readonly] { background: #f1f5f9; color: #475569; }
+.finalizar-campo input.invalido { border-color: #D8000C; }
+.finalizar-erro { color: #D8000C; font-size: 12px; min-height: 14px; }
+.finalizar-acoes { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+.finalizar-acoes button { padding: 10px 16px; font-size: 14px; font-weight: 600; border-radius: 8px; cursor: pointer; border: 1px solid transparent; }
+.finalizar-acoes .btn-secundario { background: #f1f5f9; color: #334155; border-color: #e2e8f0; }
+.finalizar-acoes .btn-confirmar { background: #071E3D; color: #ffffff; }
+.finalizar-acoes .btn-confirmar:disabled { opacity: 0.6; cursor: not-allowed; }

@@ -85,6 +85,22 @@ class MonitoriaRepository {
             data: { status: 'cancelada' }
         });
     }
+    // Finaliza a vaga do próprio monitor. O updateMany condicional (dono + status ainda
+    // ativa/pendente) impede finalizar duas vezes ou finalizar uma vaga cancelada, mesmo com
+    // requisições simultâneas. Retorna null se nenhuma linha foi alterada.
+    async finalizar(id, idMonitor, dataFim) {
+        const { count } = await prisma.monitoria.updateMany({
+            where: {
+                id: parseInt(id),
+                id_monitor: idMonitor,
+                status: { in: ['ativa', 'pendente'] }
+            },
+            data: { status: 'realizada', data_fim: dataFim }
+        });
+        if (count === 0) return null;
+
+        return await prisma.monitoria.findUnique({ where: { id: parseInt(id) } });
+    }
 
     async buscarPorMonitor(idMonitor, { skip, take } = {}) {
         const where = { id_monitor: idMonitor };

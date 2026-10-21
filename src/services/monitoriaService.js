@@ -1,7 +1,12 @@
 // src/services/monitoriaService.js
 const monitoriaRepository = require('../repositories/monitoriaRepository');
 const { validarAntecedenciaCancelamento } = require('../utils/validarAntecedencia');
-const { ErroValidacao, ErroNaoAutorizado, ErroNaoEncontrado } = require('../utils/erros');
+const {
+    ErroValidacao,
+    ErroRegraNegocio,
+    ErroNaoAutorizado,
+    ErroNaoEncontrado
+} = require('../utils/erros');
 
 class MonitoriaService {
     async criar(dados) {
@@ -49,6 +54,40 @@ class MonitoriaService {
         return await monitoriaRepository.cancelar(id);
     }
 
+        // Finalização pelo monitor: marca a vaga como realizada e registra a data/hora de término.
+    // A data de término não pode ser anterior ao início (horario) da monitoria.
+    async finalizar(id, monitorId, dataFim) {
+        if (!Number.isInteger(id)) {
+            throw new ErroNaoEncontrado('Vaga de monitoria não encontrada.');
+        }
+
+        const monitoria = await monitoriaRepository.buscarPorId(id);
+        if (!monitoria) {
+            throw new ErroNaoEncontrado('Vaga de monitoria não encontrada.');
+        }
+        if (monitoria.id_monitor !== monitorId) {
+            throw new ErroNaoAutorizado('Você não tem permissão para finalizar esta monitoria.');
+        }
+        if (monitoria.status === 'cancelada') {
+            throw new ErroRegraNegocio('Não é possível finalizar uma monitoria cancelada.');
+        }
+        if (['realizada', 'concluida'].includes(monitoria.status)) {
+            throw new ErroRegraNegocio('Esta monitoria já foi finalizada.');
+        }
+
+        const fim = new Date(dataFim);
+        if (fim.getTime() < new Date(monitoria.horario).getTime()) {
+            const mensagem = 'A data de término não pode ser anterior ao início da monitoria.';
+            throw new ErroValidacao(mensagem, { data_fim: mensagem });
+        }
+
+        const finalizada = await monitoriaRepository.finalizar(id, monitorId, fim);
+        // Outra requisição finalizou ou cancelou a vaga entre a leitura e a escrita
+        if (!finalizada) {
+            throw new ErroRegraNegocio('Esta monitoria já foi finalizada ou cancelada.');
+        }
+        return finalizada;
+    }
     async listarPorMonitor(monitorId, paginacao) {
         return await monitoriaRepository.buscarPorMonitor(monitorId, paginacao);
     }

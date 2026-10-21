@@ -8,7 +8,8 @@ jest.mock('../src/config/bancoDeDados', () => ({
         findMany: jest.fn(),
         count: jest.fn(),
         findUnique: jest.fn(),
-        update: jest.fn()
+        update: jest.fn(),
+        updateMany: jest.fn()
     },
     agendamento: { findMany: jest.fn(), count: jest.fn() }
 }));
@@ -183,5 +184,128 @@ describe('PUT /monitorias/:id/cancelar', () => {
         expect(resposta.status).toBe(400);
         expect(resposta.body.erro).toMatch(/24h/);
         expect(prisma.monitoria.update).not.toHaveBeenCalled();
+    });
+});
+
+describe('PATCH /monitorias/:id/finalizar (finalização pelo monitor)', () => {
+    beforeEach(() => jest.clearAllMocks());
+
+    const inicio = '2026-09-10T14:00:00.000Z';
+    const fimValido = '2026-09-10T15:30:00.000Z';
+    const vaga = { id: 1, id_monitor: 10, status: 'ativa', horario: new Date(inicio) };
+
+    const finalizar = (token, corpo, id = 1) =>
+        request(app)
+            .patch(`/monitorias/${id}/finalizar`)
+            .set('Authorization', `Bearer ${token}`)
+            .send(corpo);
+
+    it('retorna 200 e grava status realizada + data_fim quando o monitor dono finaliza', async () => {
+        prisma.monitoria.findUnique
+            .mockResolvedValueOnce(vaga)
+            .mockResolvedValueOnce({ ...vaga, status: 'realizada', data_fim: new Date(fimValido) });
+        prisma.monitoria.updateMany.mockResolvedValue({ count: 1 });
+
+        const resposta = await finalizar(tokenMonitor, { data_fim: fimValido });
+
+        expect(resposta.status).toBe(200);
+        expect(resposta.body.monitoria.status).toBe('realizada');
+        const { where, data } = prisma.monitoria.updateMany.mock.calls[0][0];
+        expect(where).toEqual({ id: 1, id_monitor: 10, status: { in: ['ativa', 'pendente'] } });
+        expect(data.status).toBe('realizada');
+        expect(data.data_fim).toEqual(new Date(fimValido));
+    });
+
+    it('aceita data_fim igual ao início', async () => {
+        prisma.monitoria.findUnique.mockResolvedValue(vaga);
+        prisma.monitoria.updateMany.mockResolvedValue({ count: 1 });
+
+        const resposta = await finalizar(tokenMonitor, { data_fim: inicio });
+
+        expect(resposta.status).toBe(200);
+    });
+
+    it('retorna 400 quando data_fim é anterior ao início da monitoria', async () => {
+        prisma.monitoria.findUnique.mockResolvedValue(vaga);
+
+        const resposta = await finalizar(tokenMonitor, { data_fim: '2026-09-10T13:59:00.000Z' });
+
+        expect(resposta.status).toBe(400);
+        expect(resposta.body.erro).toMatch(/anterior ao início/);
+        expect(prisma.monitoria.updateMany).not.toHaveBeenCalled();
+    });
+
+    it.each([undefined, 'ontem', '2026-09-10'])(
+        'retorna 400 para data_fim inválida (%p)',
+        async (valor) => {
+            const resposta = await finalizar(
+                tokenMonitor,
+                valor === undefined ? {} : { data_fim: valor }
+            );
+
+            expect(resposta.status).toBe(400);
+            expect(prisma.monitoria.findUnique).not.toHaveBeenCalled();
+        }
+    );
+
+    it('retorna 403 quando o monitor não é o dono da vaga', async () => {
+        prisma.monitoria.findUnique.mockResolvedValue({ ...vaga, id_monitor: 999 });
+
+        const resposta = await finalizar(tokenMonitor, { data_fim: fimValido });
+
+        expect(resposta.status).toBe(403);
+        expect(prisma.monitoria.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('retorna 403 quando o token é de um aluno', async () => {
+        const resposta = await finalizar(tokenAluno, { data_fim: fimValido });
+
+        expect(resposta.status).toBe(403);
+        expect(prisma.monitoria.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('retorna 401 sem token', async () => {
+        const resposta = await request(app)
+            .patch('/monitorias/1/finalizar')
+            .send({ data_fim: fimValido });
+
+        expect(resposta.status).toBe(401);
+    });
+
+    it('retorna 404 quando a vaga não existe', async () => {
+        prisma.monitoria.findUnique.mockResolvedValue(null);
+
+        const resposta = await finalizar(tokenMonitor, { data_fim: fimValido });
+
+        expect(resposta.status).toBe(404);
+    });
+
+    it('retorna 400 quando a monitoria já foi finalizada', async () => {
+        prisma.monitoria.findUnique.mockResolvedValue({ ...vaga, status: 'realizada' });
+
+        const resposta = await finalizar(tokenMonitor, { data_fim: fimValido });
+
+        expect(resposta.status).toBe(400);
+        expect(resposta.body.erro).toMatch(/já foi finalizada/);
+        expect(prisma.monitoria.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('retorna 400 quando a monitoria está cancelada', async () => {
+        prisma.monitoria.findUnique.mockResolvedValue({ ...vaga, status: 'cancelada' });
+
+        const resposta = await finalizar(tokenMonitor, { data_fim: fimValido });
+
+        expect(resposta.status).toBe(400);
+        expect(resposta.body.erro).toMatch(/cancelada/);
+        expect(prisma.monitoria.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('retorna 400 quando outra requisição finaliza a vaga entre a leitura e a escrita', async () => {
+        prisma.monitoria.findUnique.mockResolvedValue(vaga);
+        prisma.monitoria.updateMany.mockResolvedValue({ count: 0 });
+
+        const resposta = await finalizar(tokenMonitor, { data_fim: fimValido });
+
+        expect(resposta.status).toBe(400);
     });
 });
