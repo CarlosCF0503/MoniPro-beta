@@ -52,10 +52,9 @@ document.addEventListener('DOMContentLoaded', () => {
         btnSubmit.disabled = true;
 
         try {
-            // Rota correta: POST /auth/cadastro
-            const response = await fetch(`${MB_BETA_ORM}/auth/cadastro`, {
+            // chamadaApi (api.js) trata resposta não-JSON e registra falhas no console
+            const data = await chamadaApi('/auth/cadastro', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     nome_completo: nome,
                     email,
@@ -65,21 +64,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
             });
 
-            const data = await response.json();
-
-            if (response.ok && data.success) {
+            if (data.success) {
                 if (typeof showToast === 'function')
-                    showToast('Conta criada com sucesso!', 'success');
+                    showToast(mensagemDaApi(data, 'Conta criada com sucesso!'), 'success');
                 setTimeout(() => {
                     window.location.href = 'index.html';
                 }, 2000);
-            } else {
-                const msg = data.detalhe || data.erro || 'Erro ao realizar o cadastro.';
-                if (typeof showToast === 'function') showToast(msg, 'error');
+            } else if (typeof showToast === 'function') {
+                showToast(mensagemDaApi(data, 'Erro ao realizar o cadastro.'), 'error', data);
             }
         } catch (error) {
-            console.error('Erro no cadastro:', error);
-            if (typeof showToast === 'function') showToast('Sem ligação ao servidor.', 'error');
+            if (typeof showToast === 'function')
+                showToast('Sem ligação ao servidor.', 'error', error);
         } finally {
             btnSubmit.value = 'Cadastrar';
             btnSubmit.disabled = false;

@@ -4,7 +4,7 @@ const router = express.Router();
 const monitoriaController = require('../controllers/monitoriaController');
 const { autenticar, isMonitor } = require('../middlewares/autenticacaoMiddleware');
 const validarCorpo = require('../middlewares/validarCorpo');
-const { criarMonitoriaSchema } = require('../schemas/monitoriaSchemas');
+const { criarMonitoriaSchema, finalizarMonitoriaSchema } = require('../schemas/monitoriaSchemas');
 
 // app.js registra: app.use('/monitorias', monitoriaRotas)
 router.post(
@@ -23,5 +23,14 @@ router.put('/:id/cancelar', autenticar, monitoriaController.cancelar);
 
 // Rota com parâmetro por último
 router.get('/:idDisciplina', autenticar, monitoriaController.listar);
+
+// Finalização da monitoria pelo monitor dono da vaga (informa a data/hora de término)
+router.patch(
+    '/:id/finalizar',
+    autenticar,
+    isMonitor,
+    validarCorpo(finalizarMonitoriaSchema),
+    monitoriaController.finalizar
+);
 
 module.exports = router;
