@@ -6,13 +6,14 @@ const { obterParametrosPaginacao, montarPaginacao } = require('../utils/paginaca
 
 class AgendamentoController {
     async criar(req, res) {
-        const { id_monitoria, data_hora, data_agendamento } = req.body;
+        // Tarefa 31: só id_monitoria vem do cliente. status nasce sempre 'pendente' e a
+        // data/hora é derivada do horário da vaga no service.
+        const { id_monitoria } = req.body;
 
         const agendamento = await agendamentoService.criar({
             id_monitoria,
             id_aluno: req.usuario.id,
-            status: 'pendente',
-            data_hora: data_hora || data_agendamento
+            status: 'pendente'
         });
         res.status(201).json({ success: true, agendamento });
     }
