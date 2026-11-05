@@ -2,12 +2,12 @@
    CORREÇÃO DE CONFLITOS COM O BASE.CSS
    ============================================== */
 body {
-    background-color: #f4f7f6; 
+    background-color: #f4f7f6;
 }
 
 /* Isso impede que a tela fique espremida no meio e empurra pra baixo do header */
 main.dashboard-wrapper {
-    display: block !important; 
+    display: block !important;
     width: 100%;
     min-height: 100vh;
     padding-top: 80px; /* Espaço para o header não cobrir o título */
@@ -18,8 +18,8 @@ main.dashboard-wrapper {
    ============================================== */
 .dashboard-container {
     width: 100%;
-    max-width: 1300px; 
-    margin: 0 auto;    
+    max-width: 1300px;
+    margin: 0 auto;
     padding: 40px 30px;
 }
 
@@ -96,7 +96,7 @@ main.dashboard-wrapper {
 .disciplina-card {
     background-color: #ffffff;
     border-radius: 12px;
-    overflow: hidden; 
+    overflow: hidden;
     text-decoration: none;
     color: #334155;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
@@ -113,7 +113,7 @@ main.dashboard-wrapper {
 
 /* A faixa colorida que guarda o ícone */
 .icone-disciplina {
-    height: 100px; 
+    height: 100px;
     width: 100%;
     background: linear-gradient(135deg, #4a90e2 0%, #071E3D 100%);
     display: flex;
@@ -139,7 +139,7 @@ main.dashboard-wrapper {
     margin: 0;
     display: -webkit-box;
     -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;  
+    -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
@@ -155,7 +155,7 @@ main.dashboard-wrapper {
         align-items: flex-start;
     }
     .search-box {
-        width: 100%; 
+        width: 100%;
     }
     .dashboard-container {
         padding: 20px 15px;
@@ -163,4 +163,14 @@ main.dashboard-wrapper {
     .disciplinas {
         grid-template-columns: 1fr; /* 1 card por linha no celular */
     }
+}
+
+/* ACESSIBILIDADE (Tarefa 26): esconde o texto na tela, mas mantém para leitores de tela */
+.sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
 }
