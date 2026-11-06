@@ -148,14 +148,14 @@ describe('POST /agendamentos — schema', () => {
         expect(resposta.body.campos.id_monitoria).toBe('A monitoria selecionada é inválida.');
     });
 
-    it('retorna 400 quando falta a data/hora', async () => {
+    it('retorna 400 quando a data/hora enviada não está em ISO 8601', async () => {
         const resposta = await request(app)
             .post('/agendamentos')
             .set('Authorization', `Bearer ${tokenAluno}`)
-            .send({ id_monitoria: 5 });
+            .send({ id_monitoria: 5, data_hora: 'amanhã às 14h' });
 
         expect(resposta.status).toBe(400);
-        expect(resposta.body.campos.data_hora).toBe('Informe a data/hora do agendamento.');
+        expect(resposta.body.campos.data_hora).toMatch(/ISO 8601/);
     });
 
     it('ignora status enviado pelo cliente (agendamento nasce pendente)', async () => {

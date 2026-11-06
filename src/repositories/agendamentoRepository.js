@@ -14,7 +14,7 @@ class AgendamentoRepository {
     // contar a mesma ocupação e ultrapassar a capacidade.
     async bloquearMonitoria(idMonitoria, db = prisma) {
         const linhas = await db.$queryRaw`
-            SELECT "capacidade", "status"::text AS "status"
+            SELECT "capacidade", "status"::text AS "status", "horario"
             FROM "monitorias"
             WHERE "id" = ${parseInt(idMonitoria)}
             FOR UPDATE
