@@ -29,9 +29,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const overlay = document.getElementById('overlay');
     let acaoPendente = null;
 
-    const showConfirmModal = (texto) => {
+    // rotuloConfirmar: o botão diz a ação ("Cancelar inscrição") em vez de um "Sim" genérico
+    const showConfirmModal = (texto, rotuloConfirmar = 'Confirmar') => {
         if (!confirmModal || !overlay) return;
         confirmModalText.textContent = texto;
+        if (btnConfirmarSim) btnConfirmarSim.textContent = rotuloConfirmar;
         overlay.classList.add('active');
         confirmModal.classList.add('aparecer');
     };
@@ -57,7 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (data.success && data.user) {
             document.getElementById('nomeUsuario').textContent =
-                data.user.nome_completo || 'Utilizador';
+                data.user.nome_completo || 'Usuário';
             document.getElementById('emailUsuario').textContent = data.user.email || '';
             document.getElementById('matriculaUsuario').textContent = data.user.matricula || '';
 
@@ -87,7 +89,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ==========================================
-    // 2. RENDERIZAR LISTAS POR TIPO DE UTILIZADOR
+    // 2. RENDERIZAR LISTAS POR TIPO DE USUÁRIO
     // ==========================================
     if (userData.tipo === 'aluno') {
         const container = document.getElementById('lista-agendamentos');
@@ -100,7 +102,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const itemElement = event.target.closest('.lista-item');
                     acaoPendente = () => handleSairMonitoria(agendamentoId, itemElement);
                     showConfirmModal(
-                        'Tem a certeza que deseja cancelar a sua inscrição nesta monitoria?'
+                        'Tem certeza que deseja cancelar sua inscrição nesta monitoria?',
+                        'Cancelar inscrição'
                     );
                 }
             });
@@ -142,7 +145,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const monitoriaId = event.target.dataset.monitoriaId;
                     const itemElement = event.target.closest('.lista-item');
                     acaoPendente = () => handleCancelarMonitoria(monitoriaId, itemElement);
-                    showConfirmModal('Tem a certeza que deseja cancelar esta vaga de monitoria?');
+                    showConfirmModal(
+                        'Tem certeza que deseja cancelar esta vaga de monitoria?',
+                        'Cancelar vaga'
+                    );
                 }
                 if (event.target.classList.contains('btn-finalizar')) {
                     const { monitoriaId, horario, disciplina } = event.target.dataset;
