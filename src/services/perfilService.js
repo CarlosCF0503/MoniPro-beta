@@ -18,7 +18,15 @@ class PerfilService {
     }
 
     async obterMonitorias(idMonitor, paginacao) {
-        return await monitoriaRepository.buscarPorMonitor(idMonitor, paginacao);
+        const { dados, total } = await monitoriaRepository.buscarPorMonitor(idMonitor, paginacao);
+
+        // O perfil do monitor mostra "N de capacidade inscritos" sem vazar o _count interno do Prisma
+        const monitorias = dados.map(({ _count, ...monitoria }) => ({
+            ...monitoria,
+            inscritos: _count?.inscricoes ?? 0
+        }));
+
+        return { dados: monitorias, total };
     }
 }
 
