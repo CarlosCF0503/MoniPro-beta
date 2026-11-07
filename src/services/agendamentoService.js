@@ -21,6 +21,13 @@ class AgendamentoService {
                 });
             }
 
+            // Só vagas ativas aceitam inscrição (é o mesmo filtro da listagem de vagas)
+            if (monitoria.status !== 'ativa') {
+                throw new ErroRegraNegocio(
+                    'Esta vaga de monitoria não está aberta para inscrições.'
+                );
+            }
+
             // Impede agendamento duplicado para a mesma monitoria
             const jaExiste = await agendamentoRepository.buscarPorAlunoEMonitoria(
                 dados.id_aluno,
@@ -37,7 +44,12 @@ class AgendamentoService {
                 throw new ErroConflito('Esta vaga de monitoria está lotada.');
             }
 
-            return await agendamentoRepository.criar(dados, tx);
+            // Tarefa 31: a data/hora do agendamento é sempre a da vaga gravada no banco,
+            // nunca a enviada pelo cliente
+            return await agendamentoRepository.criar(
+                { ...dados, data_hora: monitoria.horario },
+                tx
+            );
         });
     }
 

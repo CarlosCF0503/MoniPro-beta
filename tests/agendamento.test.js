@@ -24,6 +24,8 @@ const tokenAluno = gerarToken({ id: 20, tipo: 'aluno' });
 const tokenOutroAluno = gerarToken({ id: 21, tipo: 'aluno' });
 const tokenMonitor = gerarToken({ id: 30, tipo: 'monitor' });
 
+const HORARIO_VAGA = new Date('2026-12-01T13:00:00.000Z');
+
 describe('POST /agendamentos', () => {
     const corpo = { id_monitoria: 5, data_hora: '2026-09-10T14:00:00.000Z' };
     const postar = (token = tokenAluno) =>
@@ -33,7 +35,9 @@ describe('POST /agendamentos', () => {
         jest.clearAllMocks();
         // A transação interativa recebe o próprio mock como `tx`
         prisma.$transaction.mockImplementation((fn) => fn(prisma));
-        prisma.$queryRaw.mockResolvedValue([{ capacidade: 1, status: 'ativa' }]);
+        prisma.$queryRaw.mockResolvedValue([
+            { capacidade: 1, status: 'ativa', horario: HORARIO_VAGA }
+        ]);
         prisma.agendamento.count.mockResolvedValue(0);
     });
 
@@ -70,7 +74,9 @@ describe('POST /agendamentos', () => {
     });
 
     it('aceita novas inscrições até atingir a capacidade configurada', async () => {
-        prisma.$queryRaw.mockResolvedValue([{ capacidade: 3, status: 'ativa' }]);
+        prisma.$queryRaw.mockResolvedValue([
+            { capacidade: 3, status: 'ativa', horario: HORARIO_VAGA }
+        ]);
         prisma.agendamento.findFirst.mockResolvedValue(null);
         prisma.agendamento.create.mockResolvedValue({ id: 3, id_monitoria: 5, id_aluno: 20 });
 
@@ -104,6 +110,43 @@ describe('POST /agendamentos', () => {
             prisma.agendamento.count.mock.invocationCallOrder[0]
         );
     });
+
+    it('grava o horário da vaga, ignorando a data/hora enviada pelo cliente (Tarefa 31)', async () => {
+        prisma.agendamento.findFirst.mockResolvedValue(null);
+        prisma.agendamento.create.mockResolvedValue({ id: 1 });
+
+        const resposta = await postar(); // corpo envia data_hora 2026-09-10T14:00
+
+        expect(resposta.status).toBe(201);
+        expect(prisma.agendamento.create.mock.calls[0][0].data.data_hora).toEqual(HORARIO_VAGA);
+    });
+
+    it('cria o agendamento mesmo sem data/hora no corpo (Tarefa 31)', async () => {
+        prisma.agendamento.findFirst.mockResolvedValue(null);
+        prisma.agendamento.create.mockResolvedValue({ id: 1 });
+
+        const resposta = await request(app)
+            .post('/agendamentos')
+            .set('Authorization', `Bearer ${tokenAluno}`)
+            .send({ id_monitoria: 5 });
+
+        expect(resposta.status).toBe(201);
+        expect(prisma.agendamento.create.mock.calls[0][0].data.data_hora).toEqual(HORARIO_VAGA);
+    });
+
+    it.each(['cancelada', 'realizada', 'concluida', 'pendente'])(
+        'retorna 400 e não cria quando a vaga está com status %s',
+        async (status) => {
+            prisma.$queryRaw.mockResolvedValue([{ capacidade: 3, status, horario: HORARIO_VAGA }]);
+            prisma.agendamento.findFirst.mockResolvedValue(null);
+
+            const resposta = await postar();
+
+            expect(resposta.status).toBe(400);
+            expect(resposta.body.erro).toMatch(/não está aberta/i);
+            expect(prisma.agendamento.create).not.toHaveBeenCalled();
+        }
+    );
 
     it('retorna 400 quando a monitoria não existe', async () => {
         prisma.$queryRaw.mockResolvedValue([]);

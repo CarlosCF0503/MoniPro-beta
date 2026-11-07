@@ -248,23 +248,34 @@ button:active {
     transform: scale(0.95);
 }
 
-#btnSim {
-    background-color: #7CFC00;
-    color: black;
+/* Botões das janelas de confirmação ("Sair", "Cancelar inscrição" etc.).
+   A ação confirmada é destrutiva, por isso vermelha; "Voltar" é a saída segura, em neutro.
+   Os rótulos dizem a ação em vez de "Sim"/"Não". */
+.areaSim, .areaNao {
+    padding: 20px 10px;
 }
-
-#btnNao {
-    background-color: #FF0000;
-    color: white;
+.areaSim button, .areaNao button {
+    padding: 10px 20px;
+    font-size: 18px;
+    min-width: 120px;
 }
 
 .btn-confirmar-acao, #btnSim {
-    background-color: #7CFC00;
-    color: black;
+    background-color: #C62828;
+    color: #FFFFFF;
+    border: 2px solid #C62828;
+}
+.btn-confirmar-acao:hover, #btnSim:hover {
+    background-color: #A31515;
+    border-color: #A31515;
 }
 .btn-cancelar-acao, #btnNao {
-    background-color: #FF0000;
-    color: white;
+    background-color: #FFFAFA;
+    color: #071E3D;
+    border: 2px solid #071E3D;
+}
+.btn-cancelar-acao:hover, #btnNao:hover {
+    background-color: #E6F2FF;
 }
 
 
@@ -354,3 +365,14 @@ button:active {
     background-color: #D8000C; /* Vermelho */
 }
 
+
+/* Foco visível para quem navega pelo teclado (WCAG 2.4.7).
+   :focus-visible só aparece no teclado, não no clique do mouse. */
+:focus-visible {
+    outline: 3px solid #1F4287;
+    outline-offset: 2px;
+}
+/* No menu lateral (fundo azul-escuro) o contorno precisa ser claro */
+#menuLateral :focus-visible {
+    outline-color: #FFFAFA;
+}

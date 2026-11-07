@@ -17,6 +17,7 @@ const agendamentoRotas = require('./routes/agendamentoRotas');
 const disciplinaRotas = require('./routes/disciplinaRotas');
 const monitoriaRotas = require('./routes/monitoriaRotas');
 const perfilRotas = require('./routes/perfilRotas');
+const saudeController = require('./controllers/saudeController');
 const tratadorDeErros = require('./middlewares/tratadorDeErros');
 const { ErroNaoAutorizado } = require('./utils/erros');
 
@@ -51,6 +52,15 @@ const limiteGeral = rateLimit({
 });
 app.use(limiteGeral);
 app.use(express.json());
+
+// Tarefa 17: health check para monitoramento externo. Rota pública, sem dado sensível. Fica
+// depois do limite geral de propósito: consulta o banco, então não pode ser usada para
+// martelá-lo sem limite (um monitor externo consulta a cada poucos minutos, bem abaixo de
+// 120/min). Cache-Control evita resposta antiga vinda de proxy.
+app.get('/saude', (req, res, next) => {
+    res.set('Cache-Control', 'no-store');
+    saudeController.verificar(req, res).catch(next);
+});
 
 // Endpoints
 app.use('/auth', autenticacaoRotas);

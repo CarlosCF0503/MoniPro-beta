@@ -3,7 +3,6 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const autenticacaoController = require('../controllers/autenticacaoController');
-const disciplinaController = require('../controllers/disciplinaController'); // ← adicionar
 const validarCorpo = require('../middlewares/validarCorpo');
 const { cadastroSchema, loginSchema } = require('../schemas/autenticacaoSchemas');
 
@@ -24,7 +23,8 @@ router.post(
 );
 router.post('/login', authLimiter, validarCorpo(loginSchema), autenticacaoController.login);
 
-// ✅ Rota pública — sem middleware 'autenticar', pois é a tela de escolha inicial
-router.get('/disciplinas', disciplinaController.listar);
+// Tarefa 32: a listagem de disciplinas existe só em GET /disciplinas (exige token). A antiga
+// GET /auth/disciplinas, pública e sem uso no frontend, foi removida para manter uma única
+// política de acesso para o mesmo recurso.
 
 module.exports = router;

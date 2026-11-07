@@ -122,7 +122,7 @@ main{
     width: 40px;
 }
 #marcar.marcado{
-    background-color: greenyellow;
+    background-color: #1B5E20; /* verde escuro: texto branco com contraste acima de 7:1 */
 }
 
 #marcar p{
@@ -209,10 +209,23 @@ td:hover {
 /* --- NOVOS ESTILOS PARA CORREÇÃO --- */
 /* ========================================================================= */
 
-/* Estilo para o monitor que o utilizador selecionou */
-.monitor.selecionado {
-    border: #071E3D solid 3px;
+/* Item de monitor da lista (criado pelo marcar_monitoria.js).
+   A borda transparente reserva o espaço da borda de seleção, para o layout não "pular". */
+.monitor-item {
+    border: 3px solid transparent;
     border-radius: 10px;
+    padding: 6px 8px;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.monitor-item:not(.lotada):hover {
+    background-color: #f0f7ff;
+}
+
+/* Monitor que o usuário selecionou */
+.monitor-item.selecionado {
+    border-color: #071E3D;
+    background-color: #e6f2ff;
 }
 
 /* Estilo para o dia que o utilizador selecionou */
@@ -268,7 +281,18 @@ td:hover {
     width: 40px;
 }
 .btn-acao.marcado{
-    background-color: #7CFC00; /* Verde do botão de Sair */
+    background-color: #1B5E20; /* verde escuro: texto branco com contraste acima de 7:1 */
+}
+/* Enquanto a requisição está em andamento (evita clique duplo) */
+.btn-acao.enviando{
+    opacity: 0.6;
+    cursor: wait;
+    pointer-events: none;
+}
+/* Depois de concluído, o botão fica verde e não aceita novo clique */
+.btn-acao.marcado{
+    cursor: default;
+    pointer-events: none;
 }
 .btn-acao p{
     color: white;
@@ -300,6 +324,19 @@ td:hover {
     background-color: #cceeff; /* Um azul claro para indicar disponibilidade */
     font-weight: bold;
     color: #071E3D;
+}
+
+/* Dias que já passaram: esmaecidos e sem cara de clicáveis.
+   Vem depois de .dia-com-monitoria para vencer o fundo azul de disponibilidade. */
+td.dia-passado,
+td.dia-passado.dia-com-monitoria {
+    color: #9aa3ad;
+    background-color: #f7f7f7;
+    font-weight: normal;
+    cursor: not-allowed;
+}
+td.dia-passado:hover {
+    background-color: #f7f7f7;
 }
 
 /* Garante que o dia selecionado ainda tenha mais destaque */
