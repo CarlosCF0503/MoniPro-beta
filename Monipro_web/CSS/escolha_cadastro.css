@@ -184,9 +184,3 @@ body, html {
         width: 40px; 
     }
 }
-/* Foco visível para quem navega pelo teclado (WCAG 2.4.7).
-   :focus-visible só aparece no teclado, não no clique do mouse. */
-:focus-visible {
-    outline: 3px solid #1F4287;
-    outline-offset: 2px;
-}

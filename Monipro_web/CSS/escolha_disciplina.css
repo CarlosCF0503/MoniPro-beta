@@ -174,9 +174,3 @@ main.dashboard-wrapper {
     clip: rect(0, 0, 0, 0);
     border: 0;
 }
-
-/* O input da busca não tem contorno próprio; o foco aparece na caixa inteira */
-.search-box:focus-within {
-    border-color: #1F4287;
-    box-shadow: 0 0 0 3px rgba(31, 66, 135, 0.3);
-}

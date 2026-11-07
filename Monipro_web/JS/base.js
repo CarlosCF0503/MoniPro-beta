@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- 3. FUNÇÕES DE AUTENTICAÇÃO E PERFIL ---
-    // Decodifica o token JWT para ler os dados do usuário
+    // Descodifica o Token JWT para ler os dados do utilizador
     const parseJwt = (token) => {
         try {
             return JSON.parse(atob(token.split('.')[1]));
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Redireciona de forma dinâmica para a tela correta baseado no perfil
+    // Redireciona de forma dinâmica para o ecrã correto baseado no perfil
     const handleProfileRedirect = () => {
         const token = localStorage.getItem('monipro_token');
         if (!token) {

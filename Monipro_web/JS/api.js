@@ -1,5 +1,5 @@
 // JS/api.js
-// Depende de: JS/config.js (deve ser carregado antes deste arquivo)
+// Depende de: JS/config.js (deve ser carregado antes deste ficheiro)
 
 // URL base do servidor, definida em JS/config.js — gerada por ambiente no arranque do
 // container Nginx (ver Monipro_web/JS/config.js.template). Fallback abaixo cobre o caso de
@@ -29,7 +29,7 @@ function escaparHtml(valor) {
  * @returns {Promise<object>} - A resposta do servidor (garantida como objeto)
  */
 async function chamadaApi(endpoint, opcoes = {}) {
-    // Tenta recuperar o token salvo no navegador
+    // Tenta recuperar o token guardado no navegador
     const token = localStorage.getItem('monipro_token');
 
     // Configura os cabeçalhos (headers) padrão
@@ -38,7 +38,7 @@ async function chamadaApi(endpoint, opcoes = {}) {
         ...opcoes.headers
     };
 
-    // Se o usuário estiver logado, injeta o token de Autorização automaticamente
+    // Se o utilizador estiver logado, injeta o token de Autorização automaticamente
     if (token) {
         cabecalhos['Authorization'] = `Bearer ${token}`;
     }

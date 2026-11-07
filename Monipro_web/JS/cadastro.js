@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             if (typeof showToast === 'function')
-                showToast('Sem conexão com o servidor.', 'error', error);
+                showToast('Sem ligação ao servidor.', 'error', error);
         } finally {
             btnSubmit.value = 'Cadastrar';
             btnSubmit.disabled = false;
