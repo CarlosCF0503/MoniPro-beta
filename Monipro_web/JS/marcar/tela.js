@@ -719,6 +719,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const alvo = ev.target.closest('[data-acao]');
         if (!alvo || alvo.disabled) return;
         const acao = alvo.dataset.acao;
+        // Seleção anterior, para animar a troca depois do render
+        const diaAntes = PERFIL === 'monitor' ? S.form.dia : S.dia;
+        const vagaAntes = S.vagaId;
         switch (acao) {
             case 'mes': {
                 const v = D.mesVizinho(S.ano, S.mes, Number(alvo.dataset.delta));
@@ -792,11 +795,50 @@ document.addEventListener('DOMContentLoaded', () => {
         render();
         if (acao === 'revisar') focar('revisao');
         if (acao === 'm-revisar') focar('revisao-vaga');
-        if (acao === 'dia' && desktop()) {
-            const dia = raiz.querySelector('.dia[data-dia="' + alvo.dataset.dia + '"]');
-            if (dia) dia.focus();
+        if (acao === 'dia') {
+            animarTroca([['.dia', 'data-dia', diaAntes, alvo.dataset.dia]]);
+            if (desktop()) {
+                const dia = raiz.querySelector('.dia[data-dia="' + alvo.dataset.dia + '"]');
+                if (dia) dia.focus({ preventScroll: true });
+            }
+        }
+        if (acao === 'vaga') {
+            // Primeira escolha: "Agendar"/"Continuar" sai de desativado com a mesma transição
+            const liberar = vagaAntes
+                ? []
+                : Array.from(raiz.querySelectorAll('[data-acao="revisar"]'));
+            animarTroca([['.vaga', 'data-id', vagaAntes, alvo.dataset.id]], liberar);
         }
     });
+
+    /**
+     * Calendário e lista são redesenhados a cada clique, então a troca de seleção seria
+     * instantânea. O item novo nasce com a aparência anterior (.entrando) e o antigo com a de
+     * selecionado (.saindo); tirar as classes no quadro seguinte dispara a transição do CSS.
+     * @param {Array} pares - [seletor, atributo, valorAntes, valorDepois]
+     * @param {Element[]} [liberar] - botões que acabaram de sair de "desativado"
+     */
+    function animarTroca(pares, liberar) {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const marcados = [];
+        pares.forEach(([seletor, atributo, antes, depois]) => {
+            const novo = raiz.querySelector(seletor + '[' + atributo + '="' + depois + '"]');
+            const velho =
+                antes != null && String(antes) !== String(depois)
+                    ? raiz.querySelector(seletor + '[' + atributo + '="' + antes + '"]')
+                    : null;
+            if (novo) marcados.push([novo, 'entrando']);
+            if (velho) marcados.push([velho, 'saindo']);
+        });
+        (liberar || []).forEach((el) => marcados.push([el, 'liberando']));
+        if (!marcados.length) return;
+        marcados.forEach(([el, classe]) => el.classList.add(classe));
+        void raiz.offsetWidth; // fixa o estado inicial antes de animar
+        const soltar = () => marcados.forEach(([el, classe]) => el.classList.remove(classe));
+        // rAF não roda em aba em segundo plano; o setTimeout garante que nada fica preso no meio
+        requestAnimationFrame(soltar);
+        setTimeout(soltar, 32);
+    }
 
     raiz.addEventListener('input', (ev) => {
         const id = ev.target.id;
