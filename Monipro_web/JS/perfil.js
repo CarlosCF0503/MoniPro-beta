@@ -246,7 +246,7 @@ async function carregarMonitoriasCriadas(container) {
                                     data-disciplina="${escaparHtml(m.disciplina?.nome || 'Disciplina Indefinida')}">Finalizar</button>
                                 <button class="btn-cancelar" data-monitoria-id="${escaparHtml(m.id)}">Cancelar Vaga</button>
                             </div>`
-                            : `<span class="status-${statusStr.toLowerCase()}">${statusStr.toUpperCase()}</span>`
+                            : '' // o status já aparece na linha de informações
                     }
                 `;
                 container.appendChild(div);
@@ -292,7 +292,7 @@ async function handleCancelarMonitoria(monitoriaId, itemElement) {
             const statusEl = itemElement.querySelector('.lista-item-info p:nth-child(2)');
             if (statusEl) {
                 const partes = statusEl.innerHTML.split('—');
-                statusEl.innerHTML = `${partes[0]}— <span class="status-cancelada" style="color:red;font-weight:bold;">CANCELADA</span>`;
+                statusEl.innerHTML = `${partes[0]}— <span class="status-cancelada">CANCELADA</span>`;
             }
             const btn = itemElement.querySelector('.btn-cancelar');
             if (btn) btn.remove();

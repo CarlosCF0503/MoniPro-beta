@@ -115,7 +115,8 @@ main.dashboard-wrapper {
   align-items: center;
   gap: 5px;
   font-size: 16px;
-  color: #ffa500;
+  /* texto escuro: #ffa500 sobre branco dá ~2:1, abaixo dos 4,5:1 da WCAG AA (o ícone segue laranja) */
+  color: #8a5300;
 }
 .badge-moedas img {
   width: 20px;
@@ -212,15 +213,16 @@ main.dashboard-wrapper {
 }
 
 .status-pendente {
-  color: #ffa500;
+  /* cores de status com contraste >= 4,5:1 sobre #f8fafc (WCAG AA) */
+  color: #8a5300;
   font-weight: bold;
 }
 .status-realizado {
-  color: #28a745;
+  color: #1e7b34;
   font-weight: bold;
 }
 .status-realizada {
-  color: #28a745;
+  color: #1e7b34;
   font-weight: bold;
 }
 .status-ativa {
