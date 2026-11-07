@@ -19,7 +19,7 @@
         'Dezembro'
     ];
 
-    // Offset de mês navegado pelo utilizador (0 = mês atual, 1 = próximo, -1 = anterior)
+    // Offset de mês navegado pelo usuário (0 = mês atual, 1 = próximo, -1 = anterior)
     let mesOffset = 0;
 
     /**
@@ -86,6 +86,8 @@
             const dataHoje = new Date(anoHoje, mesHoje, diaHoje);
             if (dataDoTd < dataHoje) {
                 td.classList.add('dia-passado');
+                td.setAttribute('aria-disabled', 'true');
+                td.title = 'Dia já passou';
             }
 
             if (typeof onDiaClick === 'function') {

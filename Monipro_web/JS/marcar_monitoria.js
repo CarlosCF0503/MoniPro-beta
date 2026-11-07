@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         monitoriaSelecionada = null;
         atualizarSugestaoMonitor(null);
         if (containerMonitores) {
-            containerMonitores.innerHTML = '<p>Selecione um dia disponível (marcado a azul).</p>';
+            containerMonitores.innerHTML = '<p>Selecione um dia disponível (marcado em azul).</p>';
         }
     }
 
@@ -72,18 +72,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         const temMonitoria = td.classList.contains('dia-com-monitoria');
         const ehPassado = td.classList.contains('dia-passado');
 
-        if (ehPassado) {
-            if (typeof showToast === 'function')
-                showToast('Não é possível selecionar dias passados.', 'error');
-            return;
-        }
+        // Dias passados já aparecem desabilitados no calendário; o clique é só ignorado
+        if (ehPassado) return;
 
         if (userData.tipo === 'aluno' && !temMonitoria) {
             if (typeof showToast === 'function')
                 showToast('Nenhuma monitoria disponível neste dia.', 'error');
             if (containerMonitores)
                 containerMonitores.innerHTML =
-                    '<p>Selecione um dia disponível (marcado a azul).</p>';
+                    '<p>Selecione um dia disponível (marcado em azul).</p>';
             monitoriaSelecionada = null;
             atualizarSugestaoMonitor(null);
             selecionarDia(null);
@@ -111,7 +108,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Inicializa navegação (botões < >) — calendário.js
     iniciarNavegacaoCalendario(aoMudarMes);
 
-    // --- 3. INICIALIZAÇÃO POR TIPO DE UTILIZADOR ---
+    // Os botões de ação são <div role="button">: Enter e Espaço precisam disparar o clique
+    [btnAgendar, btnCriarMonitoria].forEach((btn) => {
+        if (!btn) return;
+        btn.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                btn.click();
+            }
+        });
+    });
+
+    // Trava o botão durante a requisição para evitar envio duplicado
+    function travarBotao(btn, travado) {
+        if (!btn) return;
+        btn.classList.toggle('enviando', travado);
+        btn.setAttribute('aria-disabled', String(travado));
+        btn.setAttribute('aria-busy', String(travado));
+    }
+
+    // --- 3. INICIALIZAÇÃO POR TIPO DE USUÁRIO ---
     if (userData.tipo === 'aluno') {
         if (viewAluno) viewAluno.style.display = 'flex';
         if (viewMonitor) viewMonitor.style.display = 'none';
@@ -197,7 +213,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 renderCalendario(diasCom, aoDiaClicar);
 
                 if (containerMonitores) {
-                    containerMonitores.innerHTML = '<p>Selecione um dia azul no calendário.</p>';
+                    containerMonitores.innerHTML =
+                        '<p>Selecione um dia disponível (marcado em azul) no calendário.</p>';
                 }
             } else {
                 renderCalendario([], aoDiaClicar);
@@ -278,12 +295,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    let enviandoAgendamento = false;
     async function salvarAgendamento() {
+        if (enviandoAgendamento || btnAgendar?.classList.contains('marcado')) return;
         if (!monitoriaSelecionada) {
             if (typeof showToast === 'function')
                 showToast('Selecione um monitor da lista.', 'error');
             return;
         }
+        enviandoAgendamento = true;
+        travarBotao(btnAgendar, true);
+        let sucesso = false;
         try {
             const data = await chamadaApi('/agendamentos', {
                 method: 'POST',
@@ -294,6 +316,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
 
             if (data.success) {
+                sucesso = true;
                 if (btnAgendar) {
                     btnAgendar.classList.add('marcado');
                     btnAgendar.querySelector('p').textContent = 'Agendado!';
@@ -308,11 +331,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } catch (error) {
             if (typeof showToast === 'function')
-                showToast('Não foi possível ligar ao servidor.', 'error', error);
+                showToast('Não foi possível conectar ao servidor.', 'error', error);
+        } finally {
+            enviandoAgendamento = false;
+            // Em caso de sucesso o botão segue travado até o redirecionamento
+            if (sucesso) btnAgendar?.classList.remove('enviando');
+            else travarBotao(btnAgendar, false);
         }
     }
 
+    let enviandoMonitoria = false;
     async function salvarNovaMonitoria() {
+        if (enviandoMonitoria || btnCriarMonitoria?.classList.contains('marcado')) return;
         const tdAtual = getTdSelecionado();
         const dia = tdAtual ? Number(tdAtual.dataset.dia) : null;
         const mes = tdAtual ? Number(tdAtual.dataset.mes) : null;
@@ -330,6 +360,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const [horas, minutos] = horaInput.split(':').map(Number);
         const data_monitoria = new Date(ano, mes, dia, horas, minutos, 0).toISOString();
 
+        enviandoMonitoria = true;
+        travarBotao(btnCriarMonitoria, true);
+        let sucesso = false;
         try {
             const data = await chamadaApi('/monitorias', {
                 method: 'POST',
@@ -342,6 +375,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
 
             if (data.success) {
+                sucesso = true;
                 if (btnCriarMonitoria) {
                     btnCriarMonitoria.classList.add('marcado');
                     btnCriarMonitoria.querySelector('p').textContent = 'Vaga Criada!';
@@ -356,7 +390,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } catch (error) {
             if (typeof showToast === 'function')
-                showToast('Não foi possível ligar ao servidor.', 'error', error);
+                showToast('Não foi possível conectar ao servidor.', 'error', error);
+        } finally {
+            enviandoMonitoria = false;
+            if (sucesso) btnCriarMonitoria?.classList.remove('enviando');
+            else travarBotao(btnCriarMonitoria, false);
         }
     }
 });
