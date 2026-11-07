@@ -1,20 +1,31 @@
 // src/services/disciplinaService.js
 const disciplinaRepository = require('../repositories/disciplinaRepository');
-const { ErroValidacao } = require('../utils/erros');
+const { ErroConflito, ErroNaoEncontrado } = require('../utils/erros');
+
+const MENSAGEM_DUPLICADA = 'Já existe uma disciplina com esse nome.';
 
 class DisciplinaService {
-    // AJUSTE: Intermediário que valida os dados antes de mandar pro banco
-    async criar(dados) {
-        if (!dados.nome) {
-            throw new ErroValidacao('O nome da disciplina é obrigatório.', {
-                nome: 'O nome da disciplina é obrigatório.'
-            });
+    // O nome chega validado pelo schema. A unicidade no banco diferencia maiúsculas,
+    // então a comparação sem diferenciar ("cálculo i" = "Cálculo I") é feita aqui.
+    async criar({ nome }) {
+        const existente = await disciplinaRepository.buscarPorNome(nome);
+        if (existente) {
+            throw new ErroConflito(MENSAGEM_DUPLICADA);
         }
-        return await disciplinaRepository.criar(dados);
+        return await disciplinaRepository.criar({ nome });
     }
 
     async listar() {
         return await disciplinaRepository.buscarTodas();
     }
+
+    async obterRanking(idDisciplina) {
+        const disciplina = await disciplinaRepository.buscarPorId(idDisciplina);
+        if (!disciplina) {
+            throw new ErroNaoEncontrado('Disciplina não encontrada.');
+        }
+        return await disciplinaRepository.buscarRankingPorDisciplina(idDisciplina);
+    }
 }
+
 module.exports = new DisciplinaService();

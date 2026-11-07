@@ -183,3 +183,77 @@ describe('mascararIdentificador', () => {
         expect(mascararIdentificador(entrada)).toBe(esperado);
     });
 });
+
+// RN-006 como o sistema funciona hoje: aluno e monitor são perfis separados. O mesmo e-mail
+// (ou matrícula) pode existir uma vez em cada perfil, mas não duas vezes no mesmo perfil.
+describe('POST /auth/cadastro — RN-006 (perfis separados)', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        prisma.usuario.create.mockResolvedValue({ id: 2 });
+    });
+
+    const dados = (campos = {}) => ({
+        nome_completo: 'Ana Aluna',
+        email: 'ana@exemplo.com',
+        matricula: 12345,
+        senha: 'senha123',
+        tipo_usuario: 'monitor',
+        ...campos
+    });
+
+    it('aceita como monitor o e-mail e a matrícula de quem já é aluno (201)', async () => {
+        // Nenhum monitor com esse e-mail nem com essa matrícula
+        prisma.usuario.findFirst.mockResolvedValue(null);
+
+        const resposta = await request(app).post('/auth/cadastro').send(dados());
+
+        expect(resposta.status).toBe(201);
+        // As duas buscas são feitas dentro do perfil pedido, não no sistema inteiro
+        expect(prisma.usuario.findFirst).toHaveBeenNthCalledWith(1, {
+            where: { email: 'ana@exemplo.com', tipo_usuario: 'monitor' }
+        });
+        expect(prisma.usuario.findFirst).toHaveBeenNthCalledWith(2, {
+            where: { matricula: 12345, tipo_usuario: 'monitor' }
+        });
+        expect(prisma.usuario.create).toHaveBeenCalledTimes(1);
+    });
+
+    it('retorna 409 para e-mail repetido no mesmo perfil', async () => {
+        prisma.usuario.findFirst.mockResolvedValueOnce({ id: 1, tipo_usuario: 'monitor' });
+
+        const resposta = await request(app).post('/auth/cadastro').send(dados());
+
+        expect(resposta.status).toBe(409);
+        expect(resposta.body.erro).toBe('Este e-mail já está cadastrado como monitor.');
+        expect(prisma.usuario.create).not.toHaveBeenCalled();
+    });
+
+    it('retorna 409 para matrícula repetida no mesmo perfil', async () => {
+        prisma.usuario.findFirst
+            .mockResolvedValueOnce(null)
+            .mockResolvedValueOnce({ id: 1, tipo_usuario: 'aluno' });
+
+        const resposta = await request(app)
+            .post('/auth/cadastro')
+            .send(dados({ email: 'outro@exemplo.com', tipo_usuario: 'aluno' }));
+
+        expect(resposta.status).toBe(409);
+        expect(resposta.body.erro).toBe('Esta matrícula já está cadastrada como aluno.');
+        expect(prisma.usuario.create).not.toHaveBeenCalled();
+    });
+
+    it('retorna 409 quando dois cadastros simultâneos esbarram na unicidade do banco', async () => {
+        prisma.usuario.findFirst.mockResolvedValue(null);
+        prisma.usuario.create.mockRejectedValue(
+            Object.assign(new Error('Unique constraint'), {
+                code: 'P2002',
+                meta: { target: ['email'] }
+            })
+        );
+
+        const resposta = await request(app).post('/auth/cadastro').send(dados());
+
+        expect(resposta.status).toBe(409);
+        expect(resposta.body.erro).toBe('Este e-mail já está cadastrado.');
+    });
+});
