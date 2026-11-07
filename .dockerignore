@@ -1,7 +1,14 @@
 .env
+.env*
 
 .git
 
 node_modules
 
 prisma/.prisma
+
+# Segredos e arquivos de operacao do servidor: nunca entram no contexto de build
+# nem na imagem (certs/ tem a chave privada do Postgres, com dono uid 999).
+certs/
+backups/
+docker-compose.yml.*
