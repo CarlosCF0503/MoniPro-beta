@@ -1,473 +1,875 @@
-/* ... (Todo o seu CSS existente de marcar_monitoria.css permanece o mesmo) ... */
-*{
+/* =========================================================================
+   Marcar monitoria (aluno) e criar vaga (monitor)
+   Montagem decidida pelo time: >= 700px calendário + coluna lateral;
+   < 700px passo a passo. Tudo fica dentro de .pagina-marcar para não herdar
+   a regra global de <button> do base.css (padding 45px, fonte 25px).
+   ========================================================================= */
+
+.pagina-marcar {
+    --navy: #071E3D;
+    --navy-2: #1F4287;
+    --blue: #4a90e2;
+    --snow: #FFFAFA;
+    --white: #FFFFFF;
+    --soft: #f0f4ff;
+    --soft-2: #e0eaff;
+    --avail: #cceeff;
+    --avail-hover: #b5e3fb;
+    --sug-bg: #f0f7ff;
+    --sug-line: #bbe0ff;
+    --slate: #64748b;
+    --slate-ink: #334155;
+    --line: #e2e8f0;
+    --disabled: #b8c2cf;
+    --ok: #1e7b34;
+    --ok-ink: #2e7d32;
+    --ok-soft: #e5f4e8;
+    --bad: #c62828;
+    --bad-ink: #b3261e;
+    --bad-soft: #fde8e8;
+    --warn: #FFA500;
+    --warn-ink: #8a5300;
+    --warn-soft: #fff3dc;
+    --sombra-cartao: 0 10px 20px 0 rgba(0, 0, 0, 0.25);
+    --sombra-leve: 0 2px 5px rgba(0, 0, 0, 0.06);
+
+    color: var(--navy);
+    font-size: 15px;
+    line-height: 1.5;
+    padding: 24px 16px 40px;
+}
+
+.pagina-marcar *,
+.pagina-marcar *::before,
+.pagina-marcar *::after {
     box-sizing: border-box;
 }
-body{
-    height: auto;
+
+/* Desfaz a regra global de <button> do base.css */
+.pagina-marcar button {
+    font: inherit;
+    color: inherit;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    transition: none;
 }
-main{
-    position: fixed;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%,-45%);
-    display: grid;
-    grid-template-areas: 
-    "titulo titulo"
-    "calendario marcar";
-    grid-template-columns: 65%;
-    width: auto;
-    height: 540px;
-    background-color: #FFFAFA;
-    padding: 25px 70px;
-    gap: 20px;
-    box-shadow: 0 10px 20px 0 rgba(0, 0, 0, 0.25);
+.pagina-marcar button:hover {
+    box-shadow: none;
+}
+.pagina-marcar button:active {
+    transform: none;
+}
+
+.pagina-marcar .ico {
+    flex-shrink: 0;
+    display: inline-block;
+    vertical-align: -2px;
+}
+.pagina-marcar .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ---------- cartão principal e título ---------- */
+.pagina-marcar .cartao {
+    max-width: 1120px;
+    margin: 0 auto;
+    background: var(--snow);
     border-radius: 15px;
+    box-shadow: var(--sombra-cartao);
+    padding: 20px 32px 32px;
 }
-.titulo{
-    grid-area: titulo;
-    width: 100%;
+.pagina-marcar .titulo {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    color:#071E3D;
-    border-bottom: #071E3D solid 4px;
+    border-bottom: 4px solid var(--navy);
     border-radius: 4px;
-    padding-top: 0px;
-    margin-top: -15px;
+    margin-bottom: 20px;
 }
-
-.titulo h1 {
+.pagina-marcar .btn-voltar {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 6px 10px 6px 4px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom: 6px;
+}
+.pagina-marcar .btn-voltar:hover {
+    background: var(--soft-2);
+    color: var(--navy-2);
+}
+.pagina-marcar .titulo h1 {
     width: 100%;
     text-align: center;
-    padding-bottom: 8px;
+    font-size: 26px;
+    line-height: 1.2;
+    padding-bottom: 6px;
+    text-wrap: balance;
 }
-.areaCalendario{
-    grid-area: calendario;
+.pagina-marcar .titulo p {
+    width: 100%;
+    text-align: center;
+    color: var(--slate);
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+/* ---------- colunas (desktop) ---------- */
+.pagina-marcar .colunas {
+    display: grid;
+    gap: 16px;
+    min-width: 0;
+}
+.pagina-marcar .col {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    width: 100%;
-    margin-left: -15px;
-    margin-top: -5px;
+    gap: 12px;
+    min-width: 0;
 }
-.areaCalendario p{
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    font-size: 35px;
-    color:#071E3D;
-    margin: -8px;
+.pagina-marcar .area-titulo {
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.3;
 }
-.areaMarcar{
-    grid-area: marcar;
+
+/* O calendário é o protagonista: no desktop fica com a maior coluna e acompanha a rolagem */
+@media (min-width: 700px) {
+    .pagina-marcar .colunas {
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+        column-gap: 28px;
+        align-items: start;
+    }
+    .pagina-marcar .colunas > .col:first-child {
+        position: sticky;
+        top: 16px;
+    }
+    .pagina-marcar .col-dir .lista-itens {
+        max-height: 440px;
+        overflow-y: auto;
+        padding: 3px;
+        margin: -3px;
+        scrollbar-gutter: stable;
+    }
+}
+@media (min-width: 1100px) {
+    .pagina-marcar .colunas {
+        grid-template-columns: minmax(0, 1.2fr) minmax(340px, 1fr);
+        column-gap: 36px;
+    }
+    .pagina-marcar .col-dir .lista-itens {
+        max-height: 500px;
+    }
+}
+
+/* ---------- calendário ---------- */
+.pagina-marcar .cal {
+    background: var(--white);
+    border: 2px solid var(--soft-2);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 0 6px 18px rgba(7, 30, 61, 0.1);
     display: flex;
     flex-direction: column;
-    margin-top: -5px;
-    height: 100%;
+    gap: 12px;
+}
+.pagina-marcar .cal-topo {
+    display: flex;
     align-items: center;
     justify-content: space-between;
-
+    gap: 8px;
+    padding-bottom: 4px;
 }
-.areaMarcar p{
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    font-size: 30px;
-    color:#071E3D;
-    
+.pagina-marcar .cal-topo h3 {
+    font-size: 21px;
+    font-weight: 700;
 }
-.monitores{
-    display: flex;
-    flex-direction: column;
-    justify-content:space-between;
-    gap: 15px;
-    margin-top: -105px;
+.pagina-marcar .cal-topo h3 span {
+    color: var(--slate);
+    font-weight: 500;
 }
-.monitor{
-    display: flex;
-    align-items: center;
+.pagina-marcar .nav {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--white);
+    display: grid;
+    place-items: center;
     cursor: pointer;
 }
-.monitor p{
-    font-size: 20px;
+.pagina-marcar .nav:hover {
+    background: var(--soft-2);
+    border-color: var(--navy-2);
 }
-.icone{
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.pagina-marcar .cal-grade {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 6px;
+}
+.pagina-marcar .cal-grade .dw {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--slate);
     text-align: center;
-    height: 50px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding-bottom: 6px;
 }
-.icone img{
-    height: 100%;
-}
-#marcar{
+.pagina-marcar .dia {
+    aspect-ratio: 1;
+    max-height: 72px;
+    min-width: 0;
+    border-radius: 14px;
+    cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100px;
-    width: 230px;
-    border-radius: 15px;
-    background-color: #071E3D;  
-    color: white;
-    font-size: 25px;
-    cursor: pointer;
-    gap: 5px;
-    justify-self: flex-end;
+    gap: 4px;
+    font-size: 17px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
 }
-#marcar img{
-    width: 40px;
+.pagina-marcar .dia:hover:not(:disabled) {
+    background: var(--soft);
 }
-#marcar.marcado{
-    background-color: #1B5E20; /* verde escuro: texto branco com contraste acima de 7:1 */
+.pagina-marcar .dia.fds {
+    color: var(--slate);
 }
-
-#marcar p{
-    color: white;
-    font-size: 25px;
-}
-
-
-
-.calendario{
-    border-radius: 10px;
-    overflow: hidden;
-    background-color: #FFFAFA;
-    width: 460px;
-    
-    
-}
-.calendario-header {
-  background-color: #4a90e2;
-  color: white;
-  text-align: center;
-  padding: 10px;
-  font-weight: bold;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.btn-mes {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 20px;
-  cursor: pointer;
-  padding: 0 10px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.btn-mes:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-/* Ícone SVG dentro de .btn-acao */
-.btn-acao svg {
-  width: 36px;
-  height: 36px;
-  flex-shrink: 0;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-th {
-  background-color: #f4f4f4;
-  padding: 18px;
-  text-transform: uppercase;
-  font-size: 0.8em;
-  color: #666;
-}
-td {
-  text-align: center;
-  padding: 18px;
-  border: 1px solid #e0e0e0;
-  transition: background-color 0.3s ease;
-}
-td:hover {
-  background-color: #e6f2ff;
-  cursor: pointer;
-}
-.fim-de-semana {
-  color: #888;
-}
-.dia-atual {
-  background-color: #4a90e2;
-  color: white;
-  font-weight: bold;
-  border-radius: 100%;
-}
-
-
-
-/* ========================================================================= */
-/* --- NOVOS ESTILOS PARA CORREÇÃO --- */
-/* ========================================================================= */
-
-/* Item de monitor da lista (criado pelo marcar_monitoria.js).
-   A borda transparente reserva o espaço da borda de seleção, para o layout não "pular". */
-.monitor-item {
-    border: 3px solid transparent;
-    border-radius: 10px;
-    padding: 6px 8px;
-    transition: background-color 0.2s, border-color 0.2s;
-}
-
-.monitor-item:not(.lotada):hover {
-    background-color: #f0f7ff;
-}
-
-/* Monitor que o usuário selecionou */
-.monitor-item.selecionado {
-    border-color: #071E3D;
-    background-color: #e6f2ff;
-}
-
-/* Estilo para o dia que o utilizador selecionou */
-.dia-selecionado {
-  border: #071E3D solid 3px; /* Cor principal do tema */  /* !important para garantir que sobreponha o .fim-de-semana */
-  font-weight: bold;
-  border-radius: 100%;
-}
-/* ========================================================================= */
-/* --- NOVOS ESTILOS PARA INTERFACE DE MONITOR --- */
-/* ========================================================================= */
-.form-monitor {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    gap: 10px;
-}
-.form-monitor label {
-    font-size: 14px;
-    font-weight: bold;
-    color: #071E3D;
-}
-.form-monitor input,
-.form-monitor textarea {
-    width: 100%;
-    padding: 8px;
-    border: 2px solid #1F4287;
-    border-radius: 10px;
-    font-size: 14px;
-}
-.form-monitor textarea {
-    height: 80px;
-    resize: vertical;
-}
-
-/* Renomeia o ID #marcar para uma classe genérica .btn-acao */
-.btn-acao {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100px;
-    width: 230px;
-    border-radius: 15px;
-    background-color: #071E3D;  
-    color: white;
-    font-size: 25px;
-    cursor: pointer;
-    gap: 5px;
-    justify-self: flex-end;
-}
-.btn-acao img{
-    width: 40px;
-}
-.btn-acao.marcado{
-    background-color: #1B5E20; /* verde escuro: texto branco com contraste acima de 7:1 */
-}
-/* Enquanto a requisição está em andamento (evita clique duplo) */
-.btn-acao.enviando{
-    opacity: 0.6;
-    cursor: wait;
-    pointer-events: none;
-}
-/* Depois de concluído, o botão fica verde e não aceita novo clique */
-.btn-acao.marcado{
-    cursor: default;
-    pointer-events: none;
-}
-.btn-acao p{
-    color: white;
-    font-size: 25px;
-}
-
-/* --- Otimização para Celular (Monitor) --- */
-@media (max-width: 900px) {
-    .btn-acao {
-        width: 100%;
-        height: 70px;
-        font-size: 20px;
-    }
-    .btn-acao p{
-        font-size: 20px;
-    }
-}
-
-/* Estilo especial para quando o utilizador
-   seleciona o dia de HOJE
-*/
-
-/* ========================================================================= */
-/* --- NOVO ESTILO PARA DIAS COM MONITORIA --- */
-/* ========================================================================= */
-
-/* Destaca os dias que têm monitorias disponíveis */
-.dia-com-monitoria {
-    background-color: #cceeff; /* Um azul claro para indicar disponibilidade */
-    font-weight: bold;
-    color: #071E3D;
-}
-
-/* Dias que já passaram: esmaecidos e sem cara de clicáveis.
-   Vem depois de .dia-com-monitoria para vencer o fundo azul de disponibilidade. */
-td.dia-passado,
-td.dia-passado.dia-com-monitoria {
-    color: #9aa3ad;
-    background-color: #f7f7f7;
-    font-weight: normal;
+.pagina-marcar .dia:disabled {
+    color: var(--disabled);
     cursor: not-allowed;
 }
-td.dia-passado:hover {
-    background-color: #f7f7f7;
+.pagina-marcar .dia.tem {
+    background: var(--avail);
+    color: var(--navy);
+    font-weight: 700;
+}
+.pagina-marcar .dia.tem:hover:not(:disabled) {
+    background: var(--avail-hover);
+}
+.pagina-marcar .dia.hoje {
+    box-shadow: inset 0 0 0 2px var(--blue);
+}
+.pagina-marcar .dia[aria-pressed='true'] {
+    background: var(--navy);
+    color: var(--white);
+    box-shadow: none;
+}
+.pagina-marcar .pontos {
+    display: flex;
+    gap: 3px;
+    height: 5px;
+    justify-content: center;
+}
+.pagina-marcar .pontos i {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--blue);
+}
+.pagina-marcar .dia[aria-pressed='true'] .pontos i {
+    background: var(--white);
+}
+.pagina-marcar .cal-rodape {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    font-size: 13px;
+    color: var(--slate);
+    border-top: 1px solid var(--line);
+    padding-top: 10px;
+}
+.pagina-marcar .cal-rodape b {
+    color: var(--navy);
+}
+.pagina-marcar .legenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.pagina-marcar .amostra {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    margin-right: 4px;
+    vertical-align: -1px;
+}
+.pagina-marcar .amostra-tem {
+    background: var(--avail);
+}
+.pagina-marcar .amostra-hoje {
+    box-shadow: inset 0 0 0 2px var(--blue);
 }
 
-/* Garante que o dia selecionado ainda tenha mais destaque */
-.dia-com-monitoria.dia-selecionado {
-    background-color: #071E3D;
-    color: white !important;
-}
-/* Card de Sugestão Recomendada */
-.sugestao-container {
-    width: 100%;
-    background: #f0f7ff;
-    border: 1px solid #bbe0ff;
-    border-radius: 10px;
-    padding: 10px 14px;
+/* ---------- listas e cards ---------- */
+.pagina-marcar .lista,
+.pagina-marcar .lista-itens {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+    gap: 8px;
+    min-width: 0;
 }
-
-.sugestao-header {
+.pagina-marcar .rotulo {
     display: flex;
     align-items: center;
     gap: 6px;
     font-size: 12px;
     font-weight: 700;
-    color: #1F4287;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
+    color: var(--navy-2);
 }
-
-.sugestao-body {
+.pagina-marcar .vaga {
+    width: 100%;
+    max-width: 100%;
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    text-align: left;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--white);
+    color: var(--navy);
+}
+.pagina-marcar button.vaga {
+    cursor: pointer;
+}
+.pagina-marcar button.vaga:hover:not(:disabled) {
+    border-color: var(--navy-2);
+    background: var(--soft);
+}
+.pagina-marcar .vaga[aria-pressed='true'] {
+    border: 3px solid var(--navy);
+    padding: 8px 10px;
+}
+.pagina-marcar .vaga:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+.pagina-marcar .av {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--soft-2);
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: 14px;
+}
+.pagina-marcar .vaga[aria-pressed='true'] .av {
+    background: var(--navy);
+    color: var(--white);
+}
+.pagina-marcar .vaga-info {
+    min-width: 0;
     display: flex;
     flex-direction: column;
+    line-height: 1.4;
 }
-
-.sugestao-body strong {
+.pagina-marcar .vaga-info b {
     font-size: 15px;
-    color: #071E3D;
+    overflow-wrap: anywhere;
 }
-
-.sugestao-body small {
+.pagina-marcar .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 12px;
+    font-size: 12.5px;
+    color: var(--slate);
+}
+.pagina-marcar .meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.pagina-marcar .meta .h {
+    color: var(--navy);
+    font-weight: 700;
+}
+.pagina-marcar .assunto {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     font-size: 12px;
-    color: #64748b;
+    color: var(--slate);
+    overflow-wrap: anywhere;
+}
+.pagina-marcar .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 99px;
+    white-space: nowrap;
+}
+.pagina-marcar .chip.ok {
+    background: var(--ok-soft);
+    color: var(--ok-ink);
+}
+.pagina-marcar .chip.warn {
+    background: var(--warn-soft);
+    color: var(--warn-ink);
+}
+.pagina-marcar .chip.bad {
+    background: var(--bad-soft);
+    color: var(--bad-ink);
+}
+.pagina-marcar .chip.info {
+    background: var(--soft-2);
+    color: var(--navy-2);
+}
+.pagina-marcar .chip.neutro {
+    background: var(--line);
+    color: var(--slate-ink);
+}
+.pagina-marcar .vazio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 22px;
+    border: 1px dashed #94a3b8;
+    border-radius: 10px;
+    background: var(--white);
+    color: var(--slate);
+    text-align: center;
+    font-size: 13.5px;
 }
 
-.btn-sugestao {
-    margin-top: 4px;
-    background-color: #4a90e2;
-    color: #ffffff;
-    border: none;
-    border-radius: 6px;
-    padding: 6px 12px;
+.pagina-marcar .dia-sel {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 10px 8px 12px;
+    background: var(--soft);
+    border: 1px solid var(--soft-2);
+    border-radius: 10px;
+}
+.pagina-marcar .dia-sel b {
+    flex: 1;
+    min-width: 0;
+    font-size: 14px;
+}
+.pagina-marcar .dia-sel b::first-letter {
+    text-transform: uppercase;
+}
+.pagina-marcar .link {
     font-size: 13px;
     font-weight: 600;
+    color: var(--navy-2);
+    padding: 4px 6px;
+    border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.2s;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+.pagina-marcar .link:hover {
+    background: var(--soft-2);
 }
 
-.btn-sugestao:hover {
-    background-color: #1F4287;
+.pagina-marcar .passos {
+    display: flex;
+    gap: 6px;
+    list-style: none;
+}
+.pagina-marcar .passos li {
+    flex: 1;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--slate);
+    border-top: 4px solid var(--line);
+    border-radius: 2px;
+    padding-top: 6px;
+}
+.pagina-marcar .passos li.on {
+    color: var(--navy);
+    border-color: var(--navy);
+}
+.pagina-marcar .passos li.feito {
+    color: var(--navy-2);
+    border-color: var(--blue);
 }
 
-/* --- Otimização para Celular --- */
-@media (max-width: 900px) {
-    main {
-        position: static; /* Remove o posicionamento fixo */
-        transform: none;
-        width: 95%;
-        height: auto;
-        margin: 20px auto;
-        padding: 15px;
-        grid-template-areas: 
-            "titulo"
-            "calendario"
-            "marcar"; /* Empilha tudo */
-        grid-template-columns: 1fr; /* Uma única coluna */
-    }
-
-    .areaCalendario {
-        margin-left: 0;
-    }
-
-    .calendario {
-        width: 100%; /* Calendário ocupa a largura total */
-    }
-    
-    th, td {
-        padding: 10px; /* Células do calendário menores */
-    }
-    
-    .areaCalendario p {
-        font-size: 24px;
-    }
-    
-    .areaMarcar {
-        margin-top: 20px;
-        gap: 20px;
-    }
-    
-    .monitores {
-        margin-top: 0;
-        gap: 20px;
-    }
-    
-    #marcar {
-        width: 100%;
-        height: 70px;
-        font-size: 20px;
-    }
-    #marcar p {
-        font-size: 20px;
-    }
-
+/* ---------- botões (mesmo bloco azul-marinho de raio 15px do .btn-acao antigo) ---------- */
+.pagina-marcar .btn {
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 13px 18px;
+    border: 0;
+    border-radius: 15px;
+    background: var(--navy);
+    color: var(--white);
+    font-size: 16px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
 }
-
-
-/* Vaga de monitoria sem vagas disponíveis */
-.monitor-item.lotada {
-    opacity: 0.55;
+.pagina-marcar .btn:hover:not(:disabled) {
+    background: var(--navy-2);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+.pagina-marcar .btn:active:not(:disabled) {
+    transform: scale(0.97);
+}
+.pagina-marcar .btn:disabled {
+    opacity: 0.4;
     cursor: not-allowed;
 }
-
-.monitor-item.lotada label {
-    cursor: not-allowed !important;
+.pagina-marcar .btn.sec {
+    background: var(--white);
+    color: var(--navy);
+    border: 2px solid var(--navy);
+}
+.pagina-marcar .btn.sec:hover:not(:disabled) {
+    background: var(--soft-2);
+}
+.pagina-marcar .linha {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.pagina-marcar .linha .btn {
+    flex: 1 1 150px;
 }
 
-.monitor-item .vagas-info {
-    color: #2e7d32;
-    font-weight: bold;
+/* ---------- revisão, avisos e sucesso ---------- */
+.pagina-marcar .revisao {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 15px;
+    box-shadow: var(--sombra-leve);
+}
+.pagina-marcar .revisao dl {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 6px 14px;
+}
+.pagina-marcar .revisao dt {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--slate);
+}
+.pagina-marcar .revisao dt .ico {
+    color: var(--navy-2);
+}
+.pagina-marcar .revisao dd {
+    min-width: 0;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+.pagina-marcar .revisao dd::first-letter {
+    text-transform: uppercase;
+}
+.pagina-marcar .aviso,
+.pagina-marcar .erro {
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+.pagina-marcar .aviso {
+    background: var(--warn-soft);
+    color: var(--warn-ink);
+    border-left: 4px solid var(--warn);
+}
+.pagina-marcar .erro {
+    background: var(--bad-soft);
+    color: var(--bad-ink);
+    border-left: 4px solid var(--bad);
+    font-weight: 500;
+}
+.pagina-marcar .sucesso {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 24px 8px;
+    text-align: center;
+}
+.pagina-marcar .ok-icone {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--ok);
+    color: var(--white);
+    display: grid;
+    place-items: center;
+}
+.pagina-marcar .sucesso h2 {
+    font-size: 21px;
+}
+.pagina-marcar .sucesso p {
+    color: var(--slate);
+}
+.pagina-marcar .sucesso .linha {
+    width: 100%;
+    max-width: 400px;
 }
 
-.monitor-item.lotada .vagas-info {
-    color: #c62828;
+/* ---------- formulário do monitor ---------- */
+.pagina-marcar .form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+}
+.pagina-marcar .campo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+.pagina-marcar .campo label {
+    font-size: 14px;
+    font-weight: 700;
+}
+.pagina-marcar .campo input,
+.pagina-marcar .campo textarea {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: 9px 11px;
+    border: 2px solid var(--navy-2);
+    border-radius: 10px;
+    background: var(--white);
+    color: var(--navy);
+    font: inherit;
+    font-size: 15px;
+}
+.pagina-marcar .campo textarea {
+    min-height: 72px;
+    resize: vertical;
+}
+.pagina-marcar .campo .dica {
+    min-height: 18px;
+    font-size: 12px;
+    color: var(--slate);
+}
+.pagina-marcar .campo.err input,
+.pagina-marcar .campo.err textarea {
+    border-color: var(--bad);
+}
+.pagina-marcar .campo.err .dica {
+    color: var(--bad-ink);
+    font-weight: 500;
+}
+.pagina-marcar .dois {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px;
+}
+.pagina-marcar .previa {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    padding: 10px 14px;
+    background: var(--sug-bg);
+    border: 1px solid var(--sug-line);
+    border-radius: 10px;
+}
+.pagina-marcar .minhas {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+.pagina-marcar .minhas ul {
+    list-style: none;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+}
+.pagina-marcar .minha {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    font-size: 13px;
+    border-top: 1px solid var(--line);
+}
+.pagina-marcar .minha:first-child {
+    border-top: 0;
+}
+.pagina-marcar .minha .h {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+.pagina-marcar .minha .l {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--slate);
+}
+.pagina-marcar .minha .l .ico {
+    margin-right: 4px;
+}
+.pagina-marcar .nada {
+    padding: 8px 12px;
+    font-size: 13px;
+    color: var(--slate);
+    background: var(--white);
+    border: 1px dashed #94a3b8;
+    border-radius: 10px;
+}
+
+/* ---------- carregando ---------- */
+.pagina-marcar .esqueleto {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.pagina-marcar .esqueleto i {
+    display: block;
+    height: 64px;
+    border-radius: 10px;
+    background: linear-gradient(90deg, var(--line), var(--soft), var(--line));
+    background-size: 200% 100%;
+}
+@media (prefers-reduced-motion: no-preference) {
+    .pagina-marcar .esqueleto i {
+        animation: marcar-brilho 1.2s linear infinite;
+    }
+}
+@keyframes marcar-brilho {
+    to {
+        background-position: -200% 0;
+    }
+}
+
+/* =========================================================================
+   Celular (< 700px): passo a passo, ações presas ao rodapé da tela
+   ========================================================================= */
+@media (max-width: 699px) {
+    .pagina-marcar {
+        padding: 12px 16px 0;
+    }
+    .pagina-marcar .cartao {
+        padding: 12px 14px 0;
+        border-radius: 12px;
+    }
+    .pagina-marcar .titulo {
+        margin-bottom: 12px;
+    }
+    .pagina-marcar .titulo h1 {
+        font-size: 20px;
+    }
+    .pagina-marcar .titulo p {
+        font-size: 13px;
+    }
+    .pagina-marcar .colunas {
+        gap: 14px;
+    }
+    .pagina-marcar .cal {
+        padding: 12px 10px;
+        gap: 10px;
+        border-radius: 14px;
+    }
+    .pagina-marcar .cal-topo h3 {
+        font-size: 18px;
+    }
+    .pagina-marcar .nav {
+        width: 40px;
+        height: 40px;
+    }
+    .pagina-marcar .cal-grade {
+        gap: 4px;
+    }
+    .pagina-marcar .cal-grade .dw {
+        font-size: 11px;
+    }
+    .pagina-marcar .dia {
+        font-size: 16px;
+        border-radius: 12px;
+    }
+    .pagina-marcar .vaga {
+        grid-template-columns: 40px minmax(0, 1fr);
+        row-gap: 6px;
+        padding: 10px;
+    }
+    .pagina-marcar .vaga > .chip {
+        grid-column: 2;
+        justify-self: start;
+    }
+    .pagina-marcar .vaga[aria-pressed='true'] {
+        padding: 8px;
+    }
+    .pagina-marcar .btn {
+        font-size: 15px;
+        padding: 12px 14px;
+        border-radius: 13px;
+    }
+    .pagina-marcar .linha .btn {
+        flex: 1 1 120px;
+    }
+    .pagina-marcar .dois {
+        gap: 8px;
+    }
+    .pagina-marcar .revisao {
+        padding: 14px;
+        border-radius: 13px;
+    }
+    .pagina-marcar .minha {
+        grid-template-columns: auto minmax(0, 1fr);
+        row-gap: 4px;
+    }
+    .pagina-marcar .minha .chip {
+        grid-column: 1 / -1;
+        justify-self: start;
+    }
+    .pagina-marcar .acoes {
+        position: sticky;
+        bottom: 0;
+        z-index: 5;
+        margin: 4px -14px 0;
+        padding: 10px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+        background: var(--snow);
+        border-top: 1px solid var(--line);
+    }
+    .pagina-marcar .revisao .acoes {
+        margin: 4px -14px -14px;
+        background: var(--white);
+        border-radius: 0 0 13px 13px;
+    }
+    .pagina-marcar .fim-cartao {
+        height: 14px;
+    }
 }

@@ -41,10 +41,9 @@ module.exports = [
                 chamadaApi: 'readonly',
                 escaparHtml: 'readonly',
                 MB_BETA_ORM: 'readonly',
-                renderCalendario: 'readonly',
-                iniciarNavegacaoCalendario: 'readonly',
-                selecionarDia: 'readonly',
-                getTdSelecionado: 'readonly'
+                // Tela de marcar monitoria (JS/marcar/): datas.js e componentes.js
+                MarcarDatas: 'readonly',
+                MarcarComponentes: 'readonly'
             }
         },
         rules: {
