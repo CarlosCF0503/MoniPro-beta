@@ -43,7 +43,9 @@ module.exports = [
                 MB_BETA_ORM: 'readonly',
                 // Tela de marcar monitoria (JS/marcar/): datas.js e componentes.js
                 MarcarDatas: 'readonly',
-                MarcarComponentes: 'readonly'
+                MarcarComponentes: 'readonly',
+                // Perfil do monitor (JS/perfil/): dados.js
+                PerfilDados: 'readonly'
             }
         },
         rules: {
