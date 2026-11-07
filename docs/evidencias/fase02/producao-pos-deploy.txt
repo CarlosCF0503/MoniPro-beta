@@ -1,0 +1,10 @@
+### 2026-10-12T20:49:36Z produção https://moni-pro.app.br após deploy 38306523756
+arquivos do frontend iguais à main: 29/29
+escaparHtml no api.js: 1
+T1 cabeçalhos API: 4/4
+T2 cabeçalhos frontend: 0/3; Server: nginx/1.18.0 (Ubuntu)
+T3 sem token: 401
+T4 token forjado: 401
+concluir sem token: 401
+T6 CORS externo: 403
+validação zod: {"success":false,"erro":"O nome completo é obrigatório.","campos":{"nome_compl

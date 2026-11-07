@@ -1,0 +1,84 @@
+### 2026-10-12T21:49:01.813Z — CT-08 a CT-11 em https://dev.moni-pro.app.br (sufixo 41813)
+
+== Preparação: 1 monitor e 2 alunos de teste
+  POST /auth/cadastro {"nome_completo":"[TESTE] Monitor CT","email":"ct.monitor.41813@teste.invalid","matricula":99941813,"tipo_usuario":"monitor","senha":"***"}
+    → 201 {"success":true,"mensagem":"Conta criada com sucesso!","id":25}
+  POST /auth/login {"identificador":"ct.monitor.41813@teste.invalid","senha":"***","tipo_usuario":"monitor"}
+    → 200 {"success":true,"token":"eyJ…[omitido]","usuario":{"id":25,"nome":"[TESTE] Monitor CT","tipo":"monitor"}}
+  POST /auth/cadastro {"nome_completo":"[TESTE] Aluno CT 1","email":"ct.aluno1.41813@teste.invalid","matricula":99841813,"tipo_usuario":"aluno","senha":"***"}
+    → 201 {"success":true,"mensagem":"Conta criada com sucesso!","id":26}
+  POST /auth/login {"identificador":"ct.aluno1.41813@teste.invalid","senha":"***","tipo_usuario":"aluno"}
+    → 200 {"success":true,"token":"eyJ…[omitido]","usuario":{"id":26,"nome":"[TESTE] Aluno CT 1","tipo":"aluno"}}
+  POST /auth/cadastro {"nome_completo":"[TESTE] Aluno CT 2","email":"ct.aluno2.41813@teste.invalid","matricula":99741813,"tipo_usuario":"aluno","senha":"***"}
+    → 201 {"success":true,"mensagem":"Conta criada com sucesso!","id":27}
+  POST /auth/login {"identificador":"ct.aluno2.41813@teste.invalid","senha":"***","tipo_usuario":"aluno"}
+    → 200 {"success":true,"token":"eyJ…[omitido]","usuario":{"id":27,"nome":"[TESTE] Aluno CT 2","tipo":"aluno"}}
+  GET /disciplinas
+    → 200 {"disciplinas":[{"id":1,"nome":"algoritmos"}]}
+  POST /monitorias {"id_disciplina":1,"horario":"2026-10-13T00:49:00.000Z","local":"[TESTE] <b>Sala de testes</b>","descricao":"[TESTE] Vaga criada para os casos de teste de sistema CT-08 a CT-11","capacidade":1}
+    → 201 {"success":true,"monitoria":{"id":10,"horario":"2026-10-13T00:49:00.000Z","descricao":"[TESTE] Vaga criada para os casos de teste de sistema CT-08 a CT-11","local":"[TESTE] <b>Sala de testes</b>","status":"ativa","capacidade":1,"id_monitor":25,"id_disciplina":1}}
+
+== CT-08 (RN-001): sair de monitoria que começa em menos de 24 h
+  POST /agendamentos {"id_monitoria":10,"data_hora":"2026-10-13T00:49:00.000Z"}
+    → 201 {"success":true,"agendamento":{"id":6,"data_hora":"2026-10-13T00:49:00.000Z","status":"pendente","id_monitoria":10,"id_aluno":26}}
+  [OK] CT-08: aluno 1 se inscreve na vaga (201)
+  DELETE /agendamentos/6
+    → 400 {"success":false,"erro":"Cancelamento não permitido: é necessário cancelar com no mínimo 24h de antecedência do horário agendado."}
+  [OK] CT-08: saída recusada com 400 e mensagem das 24 h
+  PUT /monitorias/10/cancelar
+    → 400 {"success":false,"erro":"Cancelamento não permitido: é necessário cancelar com no mínimo 24h de antecedência do horário agendado."}
+  [OK] CT-08: cancelamento da vaga pelo monitor também recusado (400, 24 h)
+
+== CT-09 (RF-003): exceder a capacidade da vaga
+  GET /monitorias/1?limit=100&page=1
+    → 200 {"monitorias":[{"id":2,"horario":"2026-04-10T18:00:00.000Z","descricao":"Aprofundamento em lógica de programação","local":"Laboratório ES, Bloco H","status":"ativa","capacidade":1,"id_monitor":7,"id_disciplina":1,"monitor":{"nome_completo":"Caique Almeida"},"vagas_disponiveis":1},{"id":3,"horario":"2026-04-20T21:30:00.000Z","descricao":"Matemática computacional","local":"Laboratório ES, Bloco H","
+  [OK] CT-09: listagem mostra a vaga com vagas_disponiveis = 0 (frontend exibe "Lotada")
+  POST /agendamentos {"id_monitoria":10,"data_hora":"2026-10-13T00:49:00.000Z"}
+    → 409 {"success":false,"erro":"Esta vaga de monitoria está lotada."}
+  [OK] CT-09: inscrição do aluno 2 recusada com 409 "lotada"
+
+== CT-10 (RNF-005): local com marcação HTML
+  [OK] CT-10: API devolve o local como texto, exatamente como digitado
+    local escapado pelo api.js publicado: [TESTE] &lt;b&gt;Sala de testes&lt;/b&gt;
+  [OK] CT-10: escaparHtml publicado neutraliza a marcação (sem "<b>" no HTML gerado)
+  [OK] CT-10: marcar_monitoria.js e perfil.js publicados escapam o local antes do innerHTML
+
+== CT-11 (RN-008): concluir agendamento e conferir a pontuação
+  GET /disciplinas/1/ranking
+    → 200 {"success":true,"ranking":[]}
+  PATCH /agendamentos/6/concluir
+    → 403 {"success":false,"erro":"Você não tem permissão para concluir este agendamento."}
+  [OK] CT-11: aluno 2 não consegue concluir o agendamento do aluno 1 (403)
+  PATCH /agendamentos/6/concluir
+    → 200 {"success":true,"mensagem":"Agendamento concluído e 10 pontos creditados com sucesso!","agendamento":{"id":6,"data_hora":"2026-10-13T00:49:00.000Z","status":"concluido","id_monitoria":10,"id_aluno":26}}
+  [OK] CT-11: aluno 1 conclui o próprio agendamento (200)
+  PATCH /agendamentos/6/concluir
+    → 400 {"success":false,"erro":"Este agendamento já foi concluído."}
+  [OK] CT-11: segunda conclusão recusada (400 "já foi concluído")
+  GET /disciplinas/1/ranking
+    → 200 {"success":true,"ranking":[{"id":26,"nome_completo":"[TESTE] Aluno CT 1","pontos":10}]}
+    pontos do aluno 1 no ranking: antes 0, depois 10
+  [OK] CT-11: pontuação aumenta uma única vez (+10)
+  GET /perfil
+    → 200 {"success":true,"user":{"id":26,"nome_completo":"[TESTE] Aluno CT 1","email":"ct.aluno1.41813@teste.invalid","matricula":99841813,"tipo_usuario":"aluno"}}
+  [FALHOU] CT-11: perfil do aluno informa a pontuação (o frontend exibe data.user.pontos)
+
+== Resumo
+  CT-08: 3/3 verificações ok
+  CT-09: 2/2 verificações ok
+  CT-10: 3/3 verificações ok
+  CT-11: 4/5 verificações ok
+
+Dados de teste criados: usuários 25, 26, 27; vaga 10; agendamento 6.
+
+### 2026-10-12T21:59:54.587Z — reteste do CT-11 após o PR #27
+== https://dev.moni-pro.app.br
+  POST /auth/login (aluno de teste 1) → 200, id 26
+  GET /perfil → 200 {"id":26,"nome_completo":"[TESTE] Aluno CT 1","pontos":10}
+  GET /disciplinas/1/ranking → 200, pontos do aluno 10
+  [OK] CT-11: perfil informa a pontuação (10), igual à do ranking
+== https://moni-pro.app.br
+  POST /auth/login (aluno de teste 1) → 200, id 26
+  GET /perfil → 200 {"id":26,"nome_completo":"[TESTE] Aluno CT 1","pontos":10}
+  GET /disciplinas/1/ranking → 200, pontos do aluno 10
+  [OK] CT-11: perfil informa a pontuação (10), igual à do ranking

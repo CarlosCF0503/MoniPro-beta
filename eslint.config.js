@@ -8,7 +8,9 @@ module.exports = [
             'node_modules/**',
             'prisma/migrations/**',
             'Monipro_web/Dockerfile',
-            '**/*.min.js'
+            '**/*.min.js',
+            // Evidências de teste: registros fixos, guardados como foram executados
+            'docs/evidencias/**'
         ]
     },
     js.configs.recommended,

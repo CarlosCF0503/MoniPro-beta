@@ -1,0 +1,25 @@
+{"level":30,"time":1791842478840,"pid":33980,"hostname":"[omitido]","id":1,"tipo_usuario":"aluno","msg":"Usuário cadastrado"}
+{"level":40,"time":1791842478911,"pid":33980,"hostname":"[omitido]","identificador":"n***@exemplo.com","tipo_usuario":"aluno","msg":"Tentativa de login falhou"}
+{"level":40,"time":1791842479034,"pid":33980,"hostname":"[omitido]","identificador":"a***@exemplo.com","tipo_usuario":"aluno","msg":"Tentativa de login falhou"}
+{"level":40,"time":1791842479277,"pid":33980,"hostname":"[omitido]","identificador":"n***@exemplo.com","tipo_usuario":"aluno","msg":"Tentativa de login falhou"}
+{"level":40,"time":1791842479338,"pid":33980,"hostname":"[omitido]","identificador":"a***@exemplo.com","tipo_usuario":"aluno","msg":"Tentativa de login falhou"}
+{"level":40,"time":1791842479400,"pid":33980,"hostname":"[omitido]","identificador":"a***@exemplo.com","tipo_usuario":"aluno","msg":"Tentativa de login falhou"}
+{"level":40,"time":1791842479463,"pid":33980,"hostname":"[omitido]","identificador":"n***@exemplo.com","tipo_usuario":"aluno","msg":"Tentativa de login falhou"}
+{"level":40,"time":1791842479537,"pid":33980,"hostname":"[omitido]","identificador":"***23","tipo_usuario":"aluno","msg":"Tentativa de login falhou"}
+{"level":40,"time":1791842479607,"pid":33980,"hostname":"[omitido]","identificador":"a***@exemplo.com","tipo_usuario":"aluno","msg":"Tentativa de login falhou"}
+{"level":30,"time":1791842480357,"pid":33980,"hostname":"[omitido]","id":1,"tipo_usuario":"aluno","msg":"Usuário cadastrado"}
+{"level":40,"time":1791842480425,"pid":33980,"hostname":"[omitido]","identificador":"a***@exemplo.edu","tipo_usuario":"aluno","msg":"Tentativa de login falhou"}
+
+=============================== Coverage summary ===============================
+Statements   : 86.06% ( 389/452 )
+Branches     : 68.32% ( 110/161 )
+Functions    : 80% ( 72/90 )
+Lines        : 86.81% ( 382/440 )
+================================================================================
+
+Test Suites: 7 passed, 7 total
+Tests:       69 passed, 69 total
+Snapshots:   0 total
+Time:        4.531 s, estimated 10 s
+Ran all test suites.
+Test results written to: ..\evid3\jest.json
