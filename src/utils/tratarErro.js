@@ -33,7 +33,7 @@ function tratarErro(error) {
             return { statusCode: 409, mensagem: 'Esta matrícula já está cadastrada.' };
         // Duas criações simultâneas da mesma disciplina: a segunda cai na unicidade do banco
         if (campo === 'nome')
-            return { statusCode: 409, mensagem: 'Já existe uma disciplina com esse nome.' };
+            return { statusCode: 409, mensagem: 'Já existe uma disciplina com este nome.' };
         return { statusCode: 409, mensagem: 'Registro duplicado. Verifique os dados informados.' };
     }
 

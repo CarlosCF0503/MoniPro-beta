@@ -2,15 +2,13 @@
 const disciplinaRepository = require('../repositories/disciplinaRepository');
 const { ErroConflito, ErroNaoEncontrado } = require('../utils/erros');
 
-const MENSAGEM_DUPLICADA = 'Já existe uma disciplina com esse nome.';
-
 class DisciplinaService {
     // O nome chega validado pelo schema. A unicidade no banco diferencia maiúsculas,
     // então a comparação sem diferenciar ("cálculo i" = "Cálculo I") é feita aqui.
     async criar({ nome }) {
         const existente = await disciplinaRepository.buscarPorNome(nome);
         if (existente) {
-            throw new ErroConflito(MENSAGEM_DUPLICADA);
+            throw new ErroConflito(`Já existe uma disciplina com este nome: "${existente.nome}".`);
         }
         return await disciplinaRepository.criar({ nome });
     }

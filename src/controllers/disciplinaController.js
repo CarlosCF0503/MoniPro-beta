@@ -11,7 +11,9 @@ exports.listar = async (req, res) => {
 // req.body já passou por criarDisciplinaSchema (nome sem espaços sobrando, 3 a 80 caracteres)
 exports.criar = async (req, res) => {
     const disciplina = await disciplinaService.criar({ nome: req.body.nome });
-    return res.status(201).json({ mensagem: 'Disciplina criada com sucesso.', disciplina });
+    return res
+        .status(201)
+        .json({ success: true, mensagem: 'Disciplina criada com sucesso.', disciplina });
 };
 
 exports.obterRanking = async (req, res) => {

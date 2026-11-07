@@ -73,6 +73,10 @@ describe('POST /disciplinas (cadastro de disciplina, Fase 03 P5)', () => {
         const resposta = await cadastrar({ nome: 'Cálculo I' }, tokenAluno);
 
         expect(resposta.status).toBe(403);
+        expect(resposta.body).toEqual({
+            success: false,
+            erro: 'Acesso permitido apenas a monitores.'
+        });
         expect(prisma.disciplina.create).not.toHaveBeenCalled();
     });
 
@@ -80,7 +84,11 @@ describe('POST /disciplinas (cadastro de disciplina, Fase 03 P5)', () => {
         const resposta = await cadastrar({ nome: '  Estruturas   de  Dados ' });
 
         expect(resposta.status).toBe(201);
-        expect(resposta.body.disciplina).toEqual({ id: 5, nome: 'Estruturas de Dados' });
+        expect(resposta.body).toEqual({
+            success: true,
+            mensagem: 'Disciplina criada com sucesso.',
+            disciplina: { id: 5, nome: 'Estruturas de Dados' }
+        });
         expect(prisma.disciplina.create).toHaveBeenCalledWith({
             data: { nome: 'Estruturas de Dados' }
         });
@@ -98,7 +106,7 @@ describe('POST /disciplinas (cadastro de disciplina, Fase 03 P5)', () => {
         const resposta = await cadastrar({ nome: 'cálculo i' });
 
         expect(resposta.status).toBe(409);
-        expect(resposta.body.erro).toBe('Já existe uma disciplina com esse nome.');
+        expect(resposta.body.erro).toBe('Já existe uma disciplina com este nome: "Cálculo I".');
         expect(prisma.disciplina.findFirst.mock.calls[0][0].where).toEqual({
             nome: { equals: 'cálculo i', mode: 'insensitive' }
         });
@@ -116,7 +124,7 @@ describe('POST /disciplinas (cadastro de disciplina, Fase 03 P5)', () => {
         const resposta = await cadastrar({ nome: 'Cálculo I' });
 
         expect(resposta.status).toBe(409);
-        expect(resposta.body.erro).toBe('Já existe uma disciplina com esse nome.');
+        expect(resposta.body.erro).toBe('Já existe uma disciplina com este nome.');
     });
 
     it.each([
