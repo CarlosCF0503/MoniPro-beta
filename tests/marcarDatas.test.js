@@ -87,6 +87,26 @@ describe('marcar monitoria — vagas', () => {
     });
 });
 
+describe('marcar monitoria — lista de horários', () => {
+    test('vai de 07:00 a 22:00, de 15 em 15 minutos', () => {
+        const lista = datas.horarios('');
+        expect(lista).toHaveLength(61);
+        expect(lista[0]).toBe('07:00');
+        expect(lista[1]).toBe('07:15');
+        expect(lista[lista.length - 1]).toBe('22:00');
+    });
+
+    test('mantém um horário fora da grade, na posição certa', () => {
+        const lista = datas.horarios('18:10');
+        expect(lista).toHaveLength(62);
+        expect(lista.indexOf('18:10')).toBe(lista.indexOf('18:00') + 1);
+    });
+
+    test('não duplica um horário que já está na grade', () => {
+        expect(datas.horarios('14:00')).toHaveLength(61);
+    });
+});
+
 describe('marcar monitoria — validação da nova vaga', () => {
     const agora = new Date(2026, 10, 6, 12, 0);
     const valido = {
