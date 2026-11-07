@@ -4,7 +4,7 @@ const { gerarToken } = require('./helpers/token');
 
 jest.mock('../src/config/bancoDeDados', () => ({
     usuario: {},
-    monitoria: { create: jest.fn(), findUnique: jest.fn() },
+    monitoria: { create: jest.fn(), findFirst: jest.fn(), findUnique: jest.fn() },
     agendamento: { findUnique: jest.fn(), findMany: jest.fn(), count: jest.fn() }
 }));
 

@@ -5,6 +5,7 @@ jest.mock('../src/config/bancoDeDados', () => ({
     usuario: {},
     monitoria: {
         create: jest.fn(),
+        findFirst: jest.fn(),
         findMany: jest.fn(),
         count: jest.fn(),
         findUnique: jest.fn(),
@@ -86,6 +87,36 @@ describe('POST /monitorias (Tarefa 21 — controle de acesso na criação de vag
 
         expect(resposta.status).toBe(401);
         expect(prisma.monitoria.create).not.toHaveBeenCalled();
+    });
+
+    it('retorna 409 quando o monitor já tem vaga ativa no mesmo horário', async () => {
+        prisma.monitoria.findFirst.mockResolvedValue({ id: 7 });
+
+        const resposta = await request(app)
+            .post('/monitorias')
+            .set('Authorization', `Bearer ${tokenMonitor}`)
+            .send(dadosVaga);
+
+        expect(resposta.status).toBe(409);
+        expect(resposta.body.erro).toBe('Você já tem uma vaga ativa neste mesmo horário.');
+        expect(prisma.monitoria.create).not.toHaveBeenCalled();
+    });
+
+    it('procura conflito só entre as vagas ativas do próprio monitor, no horário exato', async () => {
+        prisma.monitoria.findFirst.mockResolvedValue(null);
+        prisma.monitoria.create.mockResolvedValue({ id: 1, ...dadosVaga, id_monitor: 10 });
+
+        const resposta = await request(app)
+            .post('/monitorias')
+            .set('Authorization', `Bearer ${tokenMonitor}`)
+            .send(dadosVaga);
+
+        expect(resposta.status).toBe(201);
+        expect(prisma.monitoria.findFirst.mock.calls[0][0].where).toEqual({
+            id_monitor: 10,
+            horario: new Date(dadosVaga.horario),
+            status: 'ativa'
+        });
     });
 });
 

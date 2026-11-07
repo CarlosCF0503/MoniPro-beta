@@ -5,7 +5,7 @@ const { gerarToken } = require('./helpers/token');
 jest.mock('../src/config/bancoDeDados', () => {
     const prismaMock = {
         usuario: { create: jest.fn(), findFirst: jest.fn() },
-        monitoria: { create: jest.fn(), findUnique: jest.fn() },
+        monitoria: { create: jest.fn(), findFirst: jest.fn(), findUnique: jest.fn() },
         agendamento: { create: jest.fn(), findFirst: jest.fn(), count: jest.fn() },
         $queryRaw: jest.fn()
     };
