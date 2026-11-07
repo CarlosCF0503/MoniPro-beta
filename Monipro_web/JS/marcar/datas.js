@@ -25,6 +25,10 @@
     // Limites espelhados de src/schemas/monitoriaSchemas.js
     const LIMITE_LOCAL = 120;
     const LIMITE_DESCRICAO = 500;
+    // Lista de horários do formulário do monitor (validada pelo time): 07:00 a 22:00, de 15 em 15
+    const HORARIO_INICIO = 7 * 60;
+    const HORARIO_FIM = 22 * 60;
+    const HORARIO_PASSO = 15;
 
     /** Chave AAAA-MM-DD no fuso local (o calendário trabalha com o dia do usuário). */
     function chave(data) {
@@ -151,6 +155,24 @@
     }
 
     /**
+     * Horários oferecidos na lista ("HH:MM"). Um valor fora da grade (ex.: 18:10, de uma vaga
+     * antiga) entra na posição certa para não se perder.
+     */
+    function horarios(atual) {
+        const lista = [];
+        for (let m = HORARIO_INICIO; m <= HORARIO_FIM; m += HORARIO_PASSO) {
+            lista.push(
+                String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0')
+            );
+        }
+        if (atual && !lista.includes(atual)) {
+            lista.push(atual);
+            lista.sort();
+        }
+        return lista;
+    }
+
+    /**
      * Valida o formulário de nova vaga com as mesmas regras de monitoriaSchemas.js, mais o
      * conflito de horário com outra vaga do mesmo monitor no dia (só o front verifica hoje).
      * @returns {object} campo → mensagem; vazio quando está tudo certo.
@@ -201,6 +223,7 @@
         vagasDoDia,
         contarPorDia,
         dataDoFormulario,
+        horarios,
         validarVaga
     };
 

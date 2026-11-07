@@ -28,7 +28,8 @@
         ok: '<polyline points="20 6 9 17 4 12"/>',
         olho: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
         esquerda: '<polyline points="15 18 9 12 15 6"/>',
-        direita: '<polyline points="9 18 15 12 9 6"/>'
+        direita: '<polyline points="9 18 15 12 9 6"/>',
+        abaixo: '<polyline points="6 9 12 15 18 9"/>'
     };
 
     function icone(nome, tamanho, traco) {
@@ -244,6 +245,47 @@
         return '<dt>' + icone(nomeIcone) + rotulo + '</dt><dd>' + esc(valor) + '</dd>';
     }
 
+    /**
+     * Caixa do horário: um botão que abre uma lista curta com rolagem própria (padrão
+     * combobox/listbox do WAI-ARIA). Substitui o <input type="time">, que só abria pelo ícone
+     * do relógio, e o <select>, cuja lista nativa o navegador estica até o fim da página.
+     * @param {string} atual - horário escolhido ("HH:MM") ou ''.
+     * @param {string[]} ocupados - horários em que o monitor já tem vaga no dia.
+     * @param {string} atributos - aria-describedby/aria-invalid já montados.
+     */
+    function campoHora(atual, ocupados, atributos) {
+        const itens = D.horarios(atual)
+            .map(
+                (h) =>
+                    '<li role="option" id="h-' +
+                    h.replace(':', '') +
+                    '" data-hora="' +
+                    h +
+                    '" aria-selected="' +
+                    (h === atual) +
+                    '">' +
+                    h +
+                    (ocupados.includes(h) ? '<span class="tag-ocupado">já tem vaga</span>' : '') +
+                    '</li>'
+            )
+            .join('');
+        return (
+            '<div class="hora"><button type="button" id="f-hora" class="hora-btn" aria-haspopup="listbox" aria-expanded="false" aria-controls="lista-hora"' +
+            atributos +
+            '>' +
+            icone('relogio', 16) +
+            '<span class="valor' +
+            (atual ? '' : ' sem-valor') +
+            '">' +
+            esc(atual || 'Escolher') +
+            '</span><span class="seta">' +
+            icone('abaixo', 16, 2.5) +
+            '</span></button><ul class="hora-lista" id="lista-hora" role="listbox" aria-label="Horários" tabindex="-1" hidden>' +
+            itens +
+            '</ul></div>'
+        );
+    }
+
     window.MarcarComponentes = {
         icone,
         calendario,
@@ -251,6 +293,7 @@
         diaSelecionado,
         passos,
         carregando,
-        linhaResumo
+        linhaResumo,
+        campoHora
     };
 })();

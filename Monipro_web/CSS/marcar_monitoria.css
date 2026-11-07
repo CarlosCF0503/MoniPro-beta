@@ -679,12 +679,113 @@
     color: var(--slate);
 }
 .pagina-marcar .campo.err input,
-.pagina-marcar .campo.err textarea {
+.pagina-marcar .campo.err textarea,
+.pagina-marcar .campo.err .hora-btn {
     border-color: var(--bad);
 }
 .pagina-marcar .campo.err .dica {
     color: var(--bad-ink);
     font-weight: 500;
+}
+
+/* ---------- horário: caixa inteira clicável + lista curta com rolagem própria ----------
+   A lista nativa do <select> o navegador estica até o fim da página; esta fica em ~7 itens. */
+.pagina-marcar .hora {
+    position: relative;
+    min-width: 0;
+}
+.pagina-marcar .hora-btn {
+    width: 100%;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    border: 2px solid var(--navy-2);
+    border-radius: 10px;
+    background: var(--white);
+    color: var(--navy);
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+    text-align: left;
+    cursor: pointer;
+}
+.pagina-marcar .hora-btn:hover {
+    background: var(--soft);
+}
+.pagina-marcar .hora-btn .valor {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.pagina-marcar .hora-btn .valor.sem-valor {
+    color: var(--slate);
+}
+.pagina-marcar .hora-btn .seta {
+    display: inline-flex;
+    transition: transform 0.15s;
+}
+.pagina-marcar .hora-btn[aria-expanded='true'] .seta {
+    transform: rotate(180deg);
+}
+.pagina-marcar .hora-lista {
+    position: absolute;
+    z-index: 15;
+    left: 0;
+    right: 0;
+    top: calc(100% + 4px);
+    max-height: 252px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    list-style: none;
+    padding: 4px;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(7, 30, 61, 0.18);
+}
+.pagina-marcar .hora-lista[hidden] {
+    display: none;
+}
+.pagina-marcar .hora-lista:focus {
+    outline: none;
+}
+.pagina-marcar .hora-lista li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 7px;
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+.pagina-marcar .hora-lista li:hover {
+    background: var(--soft);
+}
+.pagina-marcar .hora-lista li.ativo {
+    background: var(--soft-2);
+    box-shadow: inset 0 0 0 2px var(--blue);
+}
+.pagina-marcar .hora-lista li[aria-selected='true'] {
+    background: var(--navy);
+    color: var(--white);
+    font-weight: 700;
+}
+.pagina-marcar .hora-lista .tag-ocupado {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--bad-ink);
+}
+.pagina-marcar .hora-lista li[aria-selected='true'] .tag-ocupado {
+    color: var(--white);
+}
+@media (prefers-reduced-motion: reduce) {
+    .pagina-marcar .hora-btn .seta {
+        transition: none;
+    }
 }
 .pagina-marcar .dois {
     display: grid;

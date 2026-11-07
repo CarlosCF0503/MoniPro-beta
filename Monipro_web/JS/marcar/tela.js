@@ -449,18 +449,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function previa() {
         const v = vagaDoForm();
+        let corpo;
+        if (!v) corpo = '<p class="vazio">Escolha um dia para ver a prévia.</p>';
+        // Sem horário o card mostraria "00:00"
+        else if (!S.form.hora) corpo = '<p class="vazio">Escolha o horário para ver a prévia.</p>';
+        else corpo = C.cardVaga(v, { estatico: true });
         return (
-            '<p class="rotulo">' +
-            C.icone('olho', 14) +
-            'Prévia: como o aluno vai ver</p>' +
-            (v
-                ? C.cardVaga(v, { estatico: true })
-                : '<p class="vazio">Escolha um dia para ver a prévia.</p>')
+            '<p class="rotulo">' + C.icone('olho', 14) + 'Prévia: como o aluno vai ver</p>' + corpo
         );
     }
 
     const DICAS = {
-        hora: 'Obrigatório',
+        hora: 'De 15 em 15 minutos',
         capacidade: 'Alunos por vaga',
         local: 'Ex.: Lab 3, Bloco C'
     };
@@ -501,7 +501,11 @@ document.addEventListener('DOMContentLoaded', () => {
             campo(
                 'hora',
                 'Horário',
-                '<input id="f-hora" type="time" value="' + esc(f.hora) + '"' + extra('hora') + '>',
+                C.campoHora(
+                    f.hora,
+                    minhasNoDia(f.dia).map((v) => D.hora(v.inicio)),
+                    extra('hora')
+                ),
                 e.hora,
                 DICAS.hora
             ) +
@@ -696,7 +700,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const bloco = raiz.querySelector('[data-campo="' + id + '"]');
             if (!bloco) return;
             bloco.classList.toggle('err', Boolean(e[id]));
-            const controle = bloco.querySelector('input, textarea');
+            const controle = bloco.querySelector('input, textarea, .hora-btn');
             if (e[id]) controle.setAttribute('aria-invalid', 'true');
             else controle.removeAttribute('aria-invalid');
             bloco.querySelector('.dica').textContent =
@@ -808,8 +812,121 @@ document.addEventListener('DOMContentLoaded', () => {
     raiz.addEventListener('focusout', (ev) => {
         const id = ev.target.id;
         if (!id || id.indexOf('f-') !== 0) return;
+        // Abrir a lista de horários move o foco do botão para a lista: ainda não é "sair do campo"
+        const destino = ev.relatedTarget;
+        if (destino && ev.target.closest('.hora') && destino.closest('.hora')) return;
         S.tocados[id.slice(2)] = true;
         atualizarFormulario();
+    });
+
+    // --- Lista de horários (combobox/listbox) ---
+    function partesHora() {
+        const botao = document.getElementById('f-hora');
+        const lista = document.getElementById('lista-hora');
+        if (!botao || !lista) return null;
+        return { botao, lista, itens: Array.from(lista.querySelectorAll('li')) };
+    }
+
+    // Marca o item ativo e rola só dentro da lista, sem mexer na página
+    function marcarAtivo(p, item) {
+        p.itens.forEach((x) => x.classList.toggle('ativo', x === item));
+        if (!item) return;
+        p.lista.setAttribute('aria-activedescendant', item.id);
+        const topo = item.offsetTop;
+        const fim = topo + item.offsetHeight;
+        if (topo < p.lista.scrollTop) p.lista.scrollTop = topo - 4;
+        else if (fim > p.lista.scrollTop + p.lista.clientHeight)
+            p.lista.scrollTop = fim - p.lista.clientHeight + 4;
+    }
+
+    function abrirHora() {
+        const p = partesHora();
+        if (!p) return;
+        p.lista.hidden = false;
+        p.botao.setAttribute('aria-expanded', 'true');
+        // Abre centralizada no horário escolhido (ou em 14:00, meio da tarde)
+        const inicial =
+            p.itens.find((x) => x.getAttribute('aria-selected') === 'true') ||
+            p.itens.find((x) => x.dataset.hora === '14:00') ||
+            p.itens[0];
+        p.lista.scrollTop = Math.max(
+            inicial.offsetTop - p.lista.clientHeight / 2 + inicial.offsetHeight / 2,
+            0
+        );
+        marcarAtivo(p, inicial);
+        p.lista.focus({ preventScroll: true });
+    }
+
+    function fecharHora(devolverFoco) {
+        const p = partesHora();
+        if (!p || p.lista.hidden) return;
+        p.lista.hidden = true;
+        p.botao.setAttribute('aria-expanded', 'false');
+        p.lista.removeAttribute('aria-activedescendant');
+        if (devolverFoco) p.botao.focus();
+    }
+
+    function escolherHora(item) {
+        const p = partesHora();
+        if (!p || !item) return;
+        S.form.hora = item.dataset.hora;
+        S.tocados.hora = true;
+        delete S.errosApi.hora;
+        p.itens.forEach((x) => x.setAttribute('aria-selected', String(x === item)));
+        const valor = p.botao.querySelector('.valor');
+        valor.textContent = S.form.hora;
+        valor.classList.remove('sem-valor');
+        fecharHora(true);
+        atualizarFormulario();
+    }
+
+    raiz.addEventListener('click', (ev) => {
+        if (ev.target.closest('.hora-btn')) {
+            const p = partesHora();
+            if (p && p.lista.hidden) abrirHora();
+            else fecharHora(true);
+            return;
+        }
+        const item = ev.target.closest('.hora-lista li');
+        if (item) escolherHora(item);
+    });
+
+    raiz.addEventListener('keydown', (ev) => {
+        if (
+            ev.target.closest('.hora-btn') &&
+            ['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(ev.key)
+        ) {
+            ev.preventDefault();
+            abrirHora();
+            return;
+        }
+        if (!ev.target.closest('.hora-lista')) return;
+        const p = partesHora();
+        const atual = p.lista.querySelector('li.ativo');
+        const mover = { ArrowDown: 1, ArrowUp: -1, PageDown: 4, PageUp: -4 }[ev.key];
+        if (mover) {
+            ev.preventDefault();
+            const i = Math.min(Math.max(p.itens.indexOf(atual) + mover, 0), p.itens.length - 1);
+            marcarAtivo(p, p.itens[i]);
+        } else if (ev.key === 'Home' || ev.key === 'End') {
+            ev.preventDefault();
+            marcarAtivo(p, p.itens[ev.key === 'Home' ? 0 : p.itens.length - 1]);
+        } else if (ev.key === 'Enter' || ev.key === ' ') {
+            ev.preventDefault();
+            escolherHora(atual);
+        } else if (ev.key === 'Escape') {
+            // stopPropagation: o Esc fecha só a lista, não o menu/janelas do base.js
+            ev.preventDefault();
+            ev.stopPropagation();
+            fecharHora(true);
+        } else if (ev.key === 'Tab') {
+            fecharHora(false);
+        }
+    });
+
+    // Clicar fora fecha a lista
+    document.addEventListener('pointerdown', (ev) => {
+        if (!ev.target.closest('.hora')) fecharHora(false);
     });
 
     // Calendário pelo teclado: setas mudam o dia, Home/End vão ao início/fim da semana
