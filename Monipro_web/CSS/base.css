@@ -1,7 +1,7 @@
 * {
     margin: 0;
     padding: 0;
-    font-family: "Inter", sans-serif;
+    font-family: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     box-sizing: border-box;
 }
 
@@ -152,11 +152,11 @@ header {
     background-color: #FFFAFA;
     border-radius: 25px;
     box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
-    
+
     display: grid;
     grid-template-areas: "icone icone" "areaSim areaNao";
     grid-template-columns: 1fr 1fr;
-    
+
     z-index: 2;
     opacity: 0;
     pointer-events: none;
@@ -179,12 +179,12 @@ header {
     background-color: #FFFAFA;
     border-radius: 25px;
     box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
-    
+
     display: grid;
     grid-template-areas: "icone icone" "areaSim areaNao";
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto 1fr;
-    
+
     z-index: 2;
     opacity: 0;
     pointer-events: none;
@@ -288,16 +288,16 @@ button:active {
     #menuLateral {
         width: 250px; /* Menu lateral mais estreito */
     }
-    
+
     .item:hover .icone{
         margin-right: 0; /* Remove o efeito de deslizar o ícone */
     }
-    
+
     .icone_sair p {
         font-size: 18px; /* Texto do modal menor */
         text-align: center;
     }
-    
+
     button {
         padding: 8px 35px; /* Botões do modal um pouco menores */
         font-size: 20px;
@@ -346,7 +346,7 @@ button:active {
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     z-index: 1000; /* Garante que fique acima de outros elementos */
-    
+
     /* Animação */
     transform: translateX(200%); /* Começa fora da tela */
     transition: transform 0.4s ease-in-out;
