@@ -13,8 +13,13 @@
     --white: #FFFFFF;
     --soft: #f0f4ff;
     --soft-2: #e0eaff;
-    --avail: #cceeff;
-    --avail-hover: #b5e3fb;
+    /* Calendário numa só família de azul do sistema (validado pelo time) */
+    --dia-tem: #e0eaff;
+    --dia-tem-hover: #cfdcfa;
+    --dia-sel: #1f4287;
+    --dia-sel-hover: #183670;
+    /* Duração única das transições da tela */
+    --dur: 0.2s;
     --sug-bg: #f0f7ff;
     --sug-line: #bbe0ff;
     --slate: #64748b;
@@ -244,7 +249,10 @@
     font-weight: 500;
     font-variant-numeric: tabular-nums;
 }
-.pagina-marcar .dia:hover:not(:disabled) {
+/* Disponível #e0eaff · selecionado #1f4287 (texto branco, ~10:1) · hoje = contorno #4a90e2.
+   O hover não vale para o dia selecionado: antes, com o mouse em cima logo depois do clique,
+   o selecionado ficava com o fundo claro do hover e texto branco (o "pisca"). */
+.pagina-marcar .dia:not([aria-pressed='true']):hover:not(:disabled) {
     background: var(--soft);
 }
 .pagina-marcar .dia.fds {
@@ -255,20 +263,29 @@
     cursor: not-allowed;
 }
 .pagina-marcar .dia.tem {
-    background: var(--avail);
+    background: var(--dia-tem);
     color: var(--navy);
     font-weight: 700;
 }
-.pagina-marcar .dia.tem:hover:not(:disabled) {
-    background: var(--avail-hover);
+.pagina-marcar .dia.tem:not([aria-pressed='true']):hover:not(:disabled) {
+    background: var(--dia-tem-hover);
 }
 .pagina-marcar .dia.hoje {
     box-shadow: inset 0 0 0 2px var(--blue);
 }
 .pagina-marcar .dia[aria-pressed='true'] {
-    background: var(--navy);
+    background: var(--dia-sel);
     color: var(--white);
+    font-weight: 700;
     box-shadow: none;
+}
+.pagina-marcar .dia[aria-pressed='true']:hover {
+    background: var(--dia-sel-hover);
+}
+.pagina-marcar .dia.hoje[aria-pressed='true'] {
+    box-shadow:
+        inset 0 0 0 2px var(--dia-sel),
+        inset 0 0 0 4px var(--white);
 }
 .pagina-marcar .pontos {
     display: flex;
@@ -280,7 +297,7 @@
     width: 5px;
     height: 5px;
     border-radius: 50%;
-    background: var(--blue);
+    background: var(--navy-2);
 }
 .pagina-marcar .dia[aria-pressed='true'] .pontos i {
     background: var(--white);
@@ -312,7 +329,7 @@
     vertical-align: -1px;
 }
 .pagina-marcar .amostra-tem {
-    background: var(--avail);
+    background: var(--dia-tem);
 }
 .pagina-marcar .amostra-hoje {
     box-shadow: inset 0 0 0 2px var(--blue);
@@ -357,9 +374,11 @@
     border-color: var(--navy-2);
     background: var(--soft);
 }
+/* Selecionado: anel de 2px por fora da borda, em vez de engrossar a borda para 3px — a borda
+   grossa mudava o tamanho do card e não dava para animar sem o card "pular" */
 .pagina-marcar .vaga[aria-pressed='true'] {
-    border: 3px solid var(--navy);
-    padding: 8px 10px;
+    border-color: var(--navy);
+    box-shadow: 0 0 0 2px var(--navy);
 }
 .pagina-marcar .vaga:disabled {
     cursor: not-allowed;
@@ -725,7 +744,7 @@
 }
 .pagina-marcar .hora-btn .seta {
     display: inline-flex;
-    transition: transform 0.15s;
+    transition: transform var(--dur) ease;
 }
 .pagina-marcar .hora-btn[aria-expanded='true'] .seta {
     transform: rotate(180deg);
@@ -930,9 +949,6 @@
         grid-column: 2;
         justify-self: start;
     }
-    .pagina-marcar .vaga[aria-pressed='true'] {
-        padding: 8px;
-    }
     .pagina-marcar .btn {
         font-size: 15px;
         padding: 12px 14px;
@@ -972,5 +988,98 @@
     }
     .pagina-marcar .fim-cartao {
         height: 14px;
+    }
+}
+
+/* =========================================================================
+   Transições: o mesmo ritmo (--dur, 0,2s) em todos os elementos clicáveis
+   ========================================================================= */
+.pagina-marcar .dia,
+.pagina-marcar .btn-voltar,
+.pagina-marcar .nav,
+.pagina-marcar .link,
+.pagina-marcar .hora-btn,
+.pagina-marcar .hora-lista li {
+    transition:
+        background-color var(--dur) ease,
+        color var(--dur) ease,
+        border-color var(--dur) ease,
+        box-shadow var(--dur) ease;
+}
+.pagina-marcar .btn {
+    transition:
+        background-color var(--dur) ease,
+        color var(--dur) ease,
+        border-color var(--dur) ease,
+        box-shadow var(--dur) ease,
+        opacity var(--dur) ease,
+        transform 0.1s ease;
+}
+.pagina-marcar .vaga {
+    transition:
+        background-color var(--dur) ease,
+        border-color var(--dur) ease,
+        box-shadow var(--dur) ease,
+        opacity var(--dur) ease;
+}
+.pagina-marcar .av,
+.pagina-marcar .pontos i {
+    transition:
+        background-color var(--dur) ease,
+        color var(--dur) ease;
+}
+
+/* Calendário e lista são redesenhados a cada clique: o item novo nasce com a aparência
+   anterior (.entrando) e o antigo com a de selecionado (.saindo); tela.js tira as classes
+   no quadro seguinte e a transição acontece (ver animarTroca). */
+.pagina-marcar .dia[aria-pressed='true'].entrando {
+    background: transparent;
+    color: var(--navy);
+    font-weight: 500;
+}
+.pagina-marcar .dia.tem[aria-pressed='true'].entrando {
+    background: var(--dia-tem);
+    font-weight: 700;
+}
+.pagina-marcar .dia.hoje[aria-pressed='true'].entrando {
+    box-shadow: inset 0 0 0 2px var(--blue);
+}
+.pagina-marcar .dia[aria-pressed='true'].entrando .pontos i {
+    background: var(--navy-2);
+}
+.pagina-marcar .dia.saindo {
+    background: var(--dia-sel);
+    color: var(--white);
+}
+.pagina-marcar .dia.saindo .pontos i {
+    background: var(--white);
+}
+.pagina-marcar .vaga[aria-pressed='true'].entrando {
+    border-color: var(--line);
+    box-shadow: 0 0 0 0 var(--navy);
+}
+.pagina-marcar .vaga[aria-pressed='true'].entrando .av {
+    background: var(--soft-2);
+    color: var(--navy);
+}
+.pagina-marcar .vaga.saindo {
+    border-color: var(--navy);
+    box-shadow: 0 0 0 2px var(--navy);
+}
+.pagina-marcar .vaga.saindo .av {
+    background: var(--navy);
+    color: var(--white);
+}
+/* Botão que acabou de sair de "desativado" (primeira escolha de vaga) */
+.pagina-marcar .btn.liberando:not(:disabled) {
+    opacity: 0.4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pagina-marcar *,
+    .pagina-marcar *::before,
+    .pagina-marcar *::after {
+        transition-duration: 0s !important;
+        animation-duration: 0s !important;
     }
 }
