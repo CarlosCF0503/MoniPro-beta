@@ -30,7 +30,7 @@ const HORARIO_VAGA = new Date('2026-12-01T13:00:00.000Z');
 describe('POST /agendamentos', () => {
     const corpo = { id_monitoria: 5, data_hora: '2026-09-10T14:00:00.000Z' };
     const postar = (token = tokenAluno) =>
-        request(app).post('/agendamentos').set('Authorization', `Bearer ${token}`).send(corpo);
+        request(app).post('/agendamentos').set('Cookie', `monipro_sessao=${token}`).send(corpo);
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -128,7 +128,7 @@ describe('POST /agendamentos', () => {
 
         const resposta = await request(app)
             .post('/agendamentos')
-            .set('Authorization', `Bearer ${tokenAluno}`)
+            .set('Cookie', `monipro_sessao=${tokenAluno}`)
             .send({ id_monitoria: 5 });
 
         expect(resposta.status).toBe(201);
@@ -178,7 +178,7 @@ describe('DELETE /agendamentos/:id', () => {
 
         const resposta = await request(app)
             .delete('/agendamentos/1')
-            .set('Authorization', `Bearer ${tokenAluno}`);
+            .set('Cookie', `monipro_sessao=${tokenAluno}`);
 
         expect(resposta.status).toBe(200);
         expect(prisma.agendamento.delete).toHaveBeenCalledTimes(1);
@@ -189,7 +189,7 @@ describe('DELETE /agendamentos/:id', () => {
 
         const resposta = await request(app)
             .delete('/agendamentos/1')
-            .set('Authorization', `Bearer ${tokenOutroAluno}`);
+            .set('Cookie', `monipro_sessao=${tokenOutroAluno}`);
 
         expect(resposta.status).toBe(403);
         expect(prisma.agendamento.delete).not.toHaveBeenCalled();
@@ -200,7 +200,7 @@ describe('DELETE /agendamentos/:id', () => {
 
         const resposta = await request(app)
             .delete('/agendamentos/1')
-            .set('Authorization', `Bearer ${tokenAluno}`);
+            .set('Cookie', `monipro_sessao=${tokenAluno}`);
 
         expect(resposta.status).toBe(400);
         expect(resposta.body.erro).toMatch(/24h/);
@@ -214,7 +214,7 @@ describe('Presença confirmada pelos dois lados (P2: aluno e monitor)', () => {
     const tokenOutroMonitor = gerarToken({ id: 31, tipo: 'monitor' });
     const pedir = (rota, token) => {
         const req = request(app).patch(`/agendamentos/1/${rota}`);
-        return token ? req.set('Authorization', `Bearer ${token}`) : req;
+        return token ? req.set('Cookie', `monipro_sessao=${token}`) : req;
     };
     const peloMonitor = (token = tokenMonitor) => pedir('concluir', token);
     const peloAluno = (token = tokenAluno) => pedir('presenca', token);

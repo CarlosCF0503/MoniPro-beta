@@ -76,7 +76,7 @@ describe('POST /auth/login', () => {
         expect(resposta.body.success).toBe(false);
     });
 
-    it('retorna 200 e um token quando as credenciais estão corretas', async () => {
+    it('retorna 200 e grava o cookie de sessão quando as credenciais estão corretas', async () => {
         const hash = await bcrypt.hash('senhaCorreta', 10);
         prisma.usuario.findFirst.mockResolvedValue({
             id: 1,
@@ -94,7 +94,8 @@ describe('POST /auth/login', () => {
 
         expect(resposta.status).toBe(200);
         expect(resposta.body.success).toBe(true);
-        expect(typeof resposta.body.token).toBe('string');
+        expect(resposta.body.token).toBeUndefined();
+        expect(resposta.headers['set-cookie'].join(';')).toMatch(/monipro_sessao=ey/);
     });
 });
 

@@ -31,13 +31,12 @@ class AutenticacaoController {
                 senha,
                 tipo_usuario
             );
-            // P3 (R7): a sessão vai no cookie httpOnly. O token ainda segue no corpo só durante
-            // a transição (primeiro PR), para páginas antigas em cache; sai no segundo PR.
+            // P3 (R7): a sessão vai só no cookie httpOnly; o corpo não leva o token
             res.cookie(NOME_COOKIE_SESSAO, token, {
                 ...opcoesCookieSessao,
                 maxAge: DURACAO_SESSAO_SEGUNDOS * 1000
             });
-            res.json({ success: true, token, usuario });
+            res.json({ success: true, usuario });
         } catch (error) {
             if (error instanceof ErroCredenciaisInvalidas) {
                 logger.warn(

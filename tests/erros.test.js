@@ -25,7 +25,7 @@ describe('middleware central de erro', () => {
 
         const resposta = await request(app)
             .delete('/agendamentos/999')
-            .set('Authorization', `Bearer ${tokenAluno}`);
+            .set('Cookie', `monipro_sessao=${tokenAluno}`);
 
         expect(resposta.status).toBe(404);
         expect(resposta.body).toEqual({ success: false, erro: 'Agendamento não encontrado.' });
@@ -36,7 +36,7 @@ describe('middleware central de erro', () => {
 
         const resposta = await request(app)
             .put('/monitorias/999/cancelar')
-            .set('Authorization', `Bearer ${tokenMonitor}`);
+            .set('Cookie', `monipro_sessao=${tokenMonitor}`);
 
         expect(resposta.status).toBe(404);
         expect(resposta.body.erro).toBe('Vaga de monitoria não encontrada.');
@@ -49,7 +49,7 @@ describe('middleware central de erro', () => {
 
         const resposta = await request(app)
             .post('/monitorias')
-            .set('Authorization', `Bearer ${tokenMonitor}`)
+            .set('Cookie', `monipro_sessao=${tokenMonitor}`)
             .send({ id_disciplina: 99, horario: '2026-12-10T14:00:00.000Z', local: 'Sala 12' });
 
         expect(resposta.status).toBe(400);
@@ -61,7 +61,7 @@ describe('middleware central de erro', () => {
 
         const resposta = await request(app)
             .get('/agendamentos')
-            .set('Authorization', `Bearer ${tokenAluno}`);
+            .set('Cookie', `monipro_sessao=${tokenAluno}`);
 
         expect(resposta.status).toBe(500);
         expect(resposta.body.erro).toBe('Ocorreu um erro inesperado. Tente novamente.');

@@ -39,7 +39,7 @@ describe('POST /monitorias (Tarefa 21 — controle de acesso na criação de vag
 
         const resposta = await request(app)
             .post('/monitorias')
-            .set('Authorization', `Bearer ${tokenMonitor}`)
+            .set('Cookie', `monipro_sessao=${tokenMonitor}`)
             .send(dadosVaga);
 
         expect(resposta.status).toBe(201);
@@ -55,7 +55,7 @@ describe('POST /monitorias (Tarefa 21 — controle de acesso na criação de vag
 
         const resposta = await request(app)
             .post('/monitorias')
-            .set('Authorization', `Bearer ${tokenMonitor}`)
+            .set('Cookie', `monipro_sessao=${tokenMonitor}`)
             .send({ ...dadosVaga, capacidade: 5 });
 
         expect(resposta.status).toBe(201);
@@ -65,7 +65,7 @@ describe('POST /monitorias (Tarefa 21 — controle de acesso na criação de vag
     it.each([0, -1, 2.5, '3'])('retorna 400 para capacidade inválida (%p)', async (capacidade) => {
         const resposta = await request(app)
             .post('/monitorias')
-            .set('Authorization', `Bearer ${tokenMonitor}`)
+            .set('Cookie', `monipro_sessao=${tokenMonitor}`)
             .send({ ...dadosVaga, capacidade });
 
         expect(resposta.status).toBe(400);
@@ -75,7 +75,7 @@ describe('POST /monitorias (Tarefa 21 — controle de acesso na criação de vag
     it('retorna 403 quando o token é de um aluno (isMonitor deve bloquear)', async () => {
         const resposta = await request(app)
             .post('/monitorias')
-            .set('Authorization', `Bearer ${tokenAluno}`)
+            .set('Cookie', `monipro_sessao=${tokenAluno}`)
             .send(dadosVaga);
 
         expect(resposta.status).toBe(403);
@@ -94,7 +94,7 @@ describe('POST /monitorias (Tarefa 21 — controle de acesso na criação de vag
 
         const resposta = await request(app)
             .post('/monitorias')
-            .set('Authorization', `Bearer ${tokenMonitor}`)
+            .set('Cookie', `monipro_sessao=${tokenMonitor}`)
             .send(dadosVaga);
 
         expect(resposta.status).toBe(409);
@@ -108,7 +108,7 @@ describe('POST /monitorias (Tarefa 21 — controle de acesso na criação de vag
 
         const resposta = await request(app)
             .post('/monitorias')
-            .set('Authorization', `Bearer ${tokenMonitor}`)
+            .set('Cookie', `monipro_sessao=${tokenMonitor}`)
             .send(dadosVaga);
 
         expect(resposta.status).toBe(201);
@@ -138,7 +138,7 @@ describe('GET /monitorias/:idDisciplina (Tarefa 22 — exigir autenticação na 
 
         const resposta = await request(app)
             .get('/monitorias/1')
-            .set('Authorization', `Bearer ${tokenAluno}`);
+            .set('Cookie', `monipro_sessao=${tokenAluno}`);
 
         expect(resposta.status).toBe(200);
         expect(resposta.body.monitorias).toHaveLength(1);
@@ -154,7 +154,7 @@ describe('GET /monitorias/:idDisciplina (Tarefa 22 — exigir autenticação na 
 
         const resposta = await request(app)
             .get('/monitorias/1')
-            .set('Authorization', `Bearer ${tokenAluno}`);
+            .set('Cookie', `monipro_sessao=${tokenAluno}`);
 
         const vagas = resposta.body.monitorias.map((m) => m.vagas_disponiveis);
         expect(vagas).toEqual([2, 0, 0]);
@@ -166,7 +166,7 @@ describe('GET /monitorias/:idDisciplina (Tarefa 22 — exigir autenticação na 
         prisma.monitoria.findMany.mockResolvedValue([]);
         prisma.monitoria.count.mockResolvedValue(0);
 
-        await request(app).get('/monitorias/1').set('Authorization', `Bearer ${tokenAluno}`);
+        await request(app).get('/monitorias/1').set('Cookie', `monipro_sessao=${tokenAluno}`);
 
         const { include } = prisma.monitoria.findMany.mock.calls[0][0];
         expect(include._count.select.inscricoes.where).toEqual({
@@ -196,7 +196,7 @@ describe('PUT /monitorias/:id/cancelar', () => {
 
         const resposta = await request(app)
             .put('/monitorias/1/cancelar')
-            .set('Authorization', `Bearer ${tokenMonitor}`);
+            .set('Cookie', `monipro_sessao=${tokenMonitor}`);
 
         expect(resposta.status).toBe(200);
         expect(prisma.monitoria.update).toHaveBeenCalledTimes(1);
@@ -212,7 +212,7 @@ describe('PUT /monitorias/:id/cancelar', () => {
 
         const resposta = await request(app)
             .put('/monitorias/1/cancelar')
-            .set('Authorization', `Bearer ${tokenMonitor}`);
+            .set('Cookie', `monipro_sessao=${tokenMonitor}`);
 
         expect(resposta.status).toBe(403);
         expect(prisma.monitoria.update).not.toHaveBeenCalled();
@@ -228,7 +228,7 @@ describe('PUT /monitorias/:id/cancelar', () => {
 
         const resposta = await request(app)
             .put('/monitorias/1/cancelar')
-            .set('Authorization', `Bearer ${tokenMonitor}`);
+            .set('Cookie', `monipro_sessao=${tokenMonitor}`);
 
         expect(resposta.status).toBe(400);
         expect(resposta.body.erro).toMatch(/24h/);
@@ -251,7 +251,7 @@ describe('PATCH /monitorias/:id/finalizar (finalização pelo monitor)', () => {
     const finalizar = (token, corpo, id = 1) =>
         request(app)
             .patch(`/monitorias/${id}/finalizar`)
-            .set('Authorization', `Bearer ${token}`)
+            .set('Cookie', `monipro_sessao=${token}`)
             .send(corpo);
 
     it('retorna 200 e grava status realizada + data_fim quando o monitor dono finaliza', async () => {

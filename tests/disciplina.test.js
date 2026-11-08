@@ -26,7 +26,7 @@ describe('GET /disciplinas (Tarefa 32)', () => {
     it('lista as disciplinas para usuário autenticado', async () => {
         const resposta = await request(app)
             .get('/disciplinas')
-            .set('Authorization', `Bearer ${tokenAluno}`);
+            .set('Cookie', `monipro_sessao=${tokenAluno}`);
 
         expect(resposta.status).toBe(200);
         expect(resposta.body.disciplinas).toEqual([{ id: 1, nome: 'Cálculo I' }]);
@@ -58,7 +58,7 @@ describe('POST /disciplinas (cadastro de disciplina, Fase 03 P5)', () => {
 
     const cadastrar = (corpo, token = tokenMonitor) => {
         const req = request(app).post('/disciplinas');
-        if (token) req.set('Authorization', `Bearer ${token}`);
+        if (token) req.set('Cookie', `monipro_sessao=${token}`);
         return req.send(corpo);
     };
 
@@ -168,7 +168,7 @@ describe('GET /disciplinas/:id/ranking', () => {
 
     const ranking = (id = 1, token = tokenAluno) => {
         const req = request(app).get(`/disciplinas/${id}/ranking`);
-        if (token) req.set('Authorization', `Bearer ${token}`);
+        if (token) req.set('Cookie', `monipro_sessao=${token}`);
         return req;
     };
 

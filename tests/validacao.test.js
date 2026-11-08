@@ -112,7 +112,7 @@ describe('POST /monitorias — schema', () => {
     it('retorna 400 para horário fora do formato ISO e capacidade inválida', async () => {
         const resposta = await request(app)
             .post('/monitorias')
-            .set('Authorization', `Bearer ${tokenMonitor}`)
+            .set('Cookie', `monipro_sessao=${tokenMonitor}`)
             .send({ id_disciplina: 1, horario: '10/09/2026 14h', local: 'Sala 12', capacidade: 0 });
 
         expect(resposta.status).toBe(400);
@@ -124,12 +124,15 @@ describe('POST /monitorias — schema', () => {
     it('ignora status enviado pelo cliente (vaga nasce ativa)', async () => {
         prisma.monitoria.create.mockResolvedValue({ id: 1 });
 
-        await request(app).post('/monitorias').set('Authorization', `Bearer ${tokenMonitor}`).send({
-            id_disciplina: 1,
-            horario: '2026-12-10T14:00:00.000Z',
-            local: 'Sala 12',
-            status: 'cancelada'
-        });
+        await request(app)
+            .post('/monitorias')
+            .set('Cookie', `monipro_sessao=${tokenMonitor}`)
+            .send({
+                id_disciplina: 1,
+                horario: '2026-12-10T14:00:00.000Z',
+                local: 'Sala 12',
+                status: 'cancelada'
+            });
 
         expect(prisma.monitoria.create.mock.calls[0][0].data.status).toBe('ativa');
     });
@@ -141,7 +144,7 @@ describe('POST /agendamentos — schema', () => {
     it('retorna 400 quando id_monitoria não é um número', async () => {
         const resposta = await request(app)
             .post('/agendamentos')
-            .set('Authorization', `Bearer ${tokenAluno}`)
+            .set('Cookie', `monipro_sessao=${tokenAluno}`)
             .send({ id_monitoria: 'abc', data_hora: '2026-12-10T14:00:00.000Z' });
 
         expect(resposta.status).toBe(400);
@@ -151,7 +154,7 @@ describe('POST /agendamentos — schema', () => {
     it('retorna 400 quando a data/hora enviada não está em ISO 8601', async () => {
         const resposta = await request(app)
             .post('/agendamentos')
-            .set('Authorization', `Bearer ${tokenAluno}`)
+            .set('Cookie', `monipro_sessao=${tokenAluno}`)
             .send({ id_monitoria: 5, data_hora: 'amanhã às 14h' });
 
         expect(resposta.status).toBe(400);
@@ -166,7 +169,7 @@ describe('POST /agendamentos — schema', () => {
 
         const resposta = await request(app)
             .post('/agendamentos')
-            .set('Authorization', `Bearer ${tokenAluno}`)
+            .set('Cookie', `monipro_sessao=${tokenAluno}`)
             .send({ id_monitoria: 5, data_hora: '2026-12-10T14:00:00.000Z', status: 'concluido' });
 
         expect(resposta.status).toBe(201);

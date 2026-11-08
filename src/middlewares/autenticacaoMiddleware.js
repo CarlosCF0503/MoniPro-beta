@@ -5,27 +5,11 @@ const sessaoRepository = require('../repositories/sessaoRepository');
 const { lerCookie } = require('../utils/cookies');
 const { ErroNaoAutorizado } = require('../utils/erros');
 
-// P3 (R7): o token vem do cookie httpOnly. Durante a transição (primeiro PR) o cabeçalho
-// Authorization: Bearer ainda é aceito, para quem estiver com a página antiga aberta; ele sai
-// no segundo PR, depois que o frontend publicado usar só o cookie.
-function extrairToken(req) {
-    const doCookie = lerCookie(req, NOME_COOKIE_SESSAO);
-    if (doCookie) return { token: doCookie };
-
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return { erro: 'Token não fornecido' };
-
-    const partes = authHeader.split(' ');
-    if (partes.length !== 2) return { erro: 'Erro de token' };
-
-    const [esquema, token] = partes;
-    if (!/^Bearer$/i.test(esquema)) return { erro: 'Token mal formatado' };
-    return { token };
-}
-
+// P3 (R7): o token vem só do cookie httpOnly. O cabeçalho Authorization: Bearer, aceito
+// durante a transição, deixou de valer.
 const autenticar = async (req, res, next) => {
-    const { token, erro } = extrairToken(req);
-    if (erro) return res.status(401).json({ erro });
+    const token = lerCookie(req, NOME_COOKIE_SESSAO);
+    if (!token) return res.status(401).json({ erro: 'Sessão não encontrada. Faça login.' });
 
     let decodificado;
     try {
@@ -35,8 +19,7 @@ const autenticar = async (req, res, next) => {
     }
 
     try {
-        // Revogação: o token só vale enquanto a versão dele for a atual do usuário. Tokens
-        // emitidos antes desta mudança não têm "v" e contam como versão 0 (o padrão da coluna).
+        // Revogação: o token só vale enquanto a versão dele for a atual do usuário
         const versaoAtual = await sessaoRepository.buscarVersao(decodificado.id);
         if (versaoAtual === null || (decodificado.v ?? 0) !== versaoAtual) {
             return res.status(401).json({ erro: 'Sessão encerrada. Faça login novamente.' });
