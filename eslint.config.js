@@ -50,7 +50,9 @@ module.exports = [
                 MarcarDatas: 'readonly',
                 MarcarComponentes: 'readonly',
                 // Perfil do monitor (JS/perfil/): dados.js
-                PerfilDados: 'readonly'
+                PerfilDados: 'readonly',
+                // R3 (LGPD): excluir a conta (JS/perfil/excluir_conta.js)
+                PerfilExcluirConta: 'readonly'
             }
         },
         rules: {
