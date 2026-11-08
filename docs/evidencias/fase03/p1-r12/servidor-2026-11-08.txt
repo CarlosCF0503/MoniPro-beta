@@ -1,0 +1,29 @@
+# Leitura do servidor Oracle (P1 / R12), 08/11/2026
+# Só leitura. Senhas, segredos e certificados omitidos (<definido> = variável preenchida).
+
+## Produção: ~/moni-pro-beta (projeto moni-pro-beta)
+commit: cd87596 Merge pull request #55 from CarlosCF0503/develop
+DATABASE_URL=postgres://monipro:***@db:5432/db_monipro
+DB_CA_CERT=<definido>   JWT_SECRET=<definido, 43 caracteres>   POSTGRES_PASSWORD=<definido>
+volume do banco: moni-pro-beta_pgdata   porta no host: 127.0.0.1:5432
+containers: backend Up, db Up (healthy), frontend Up
+prisma migrate status: "6 migrations found in prisma/migrations" / "Database schema is up to date!"
+
+SSL do backend até o banco:
+  antes do PR #55 (código e14628c): [{"ssl":false,"version":null}]
+  depois do PR #55 (código cd87596): [{"ssl":true,"version":"TLSv1.3","cipher":"TLS_AES_256_GCM_SHA384"}]
+
+## Homologação: ~/moni-pro-beta-develop (projeto monipro-dev)
+commit: 7af4729 Merge pull request #54 from CarlosCF0503/feat/p1-banco-hml-seed
+DATABASE_URL=postgres://monipro:***@db:5432/db_monipro_dev
+DB_CA_CERT=<definido>   JWT_SECRET=<definido, 43 caracteres>   POSTGRES_PASSWORD=<definido>
+volume do banco: monipro-dev_pgdata   porta no host: 127.0.0.1:5433
+containers: backend Up, db Up (healthy), frontend Up
+prisma migrate status: "6 migrations found in prisma/migrations" / "Database schema is up to date!"
+SSL do backend até o banco: [{"ssl":true,"version":"TLSv1.3"}]
+
+## Conclusão
+- Cada ambiente usa o próprio container Postgres, com database, volume e senha próprios.
+- Nenhum .env aponta para a Aiven. Os dumps da Aiven ficam em ~/backups/ (aiven_prod_final.dump, 07/11).
+- Pendente: o banco de homologação foi criado a partir do mesmo dump de produção e ainda tem cópia
+  dos usuários reais. Ele deve ser recriado vazio, com migrações e o seed fictício (prisma/seed.js).
