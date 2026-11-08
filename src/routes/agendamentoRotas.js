@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const agendamentoController = require('../controllers/agendamentoController');
-const { autenticar } = require('../middlewares/autenticacaoMiddleware');
+const { autenticar, isMonitor } = require('../middlewares/autenticacaoMiddleware');
 const validarCorpo = require('../middlewares/validarCorpo');
 const { criarAgendamentoSchema } = require('../schemas/agendamentoSchemas');
 
@@ -11,6 +11,7 @@ const { criarAgendamentoSchema } = require('../schemas/agendamentoSchemas');
 router.post('/', autenticar, validarCorpo(criarAgendamentoSchema), agendamentoController.criar);
 router.get('/', autenticar, agendamentoController.listar);
 router.delete('/:id', autenticar, agendamentoController.deletar);
-router.patch('/:id/concluir', autenticar, agendamentoController.concluir);
+// P2 (R4): quem confirma a presença é o monitor dono da vaga, não o aluno
+router.patch('/:id/concluir', autenticar, isMonitor, agendamentoController.concluir);
 
 module.exports = router;

@@ -3,6 +3,7 @@
 // Tarefa 9: o corpo de criar já chega validado por schemas/agendamentoSchemas.js.
 const agendamentoService = require('../services/agendamentoService');
 const { obterParametrosPaginacao, montarPaginacao } = require('../utils/paginacao');
+const { PONTOS_MONITOR, PONTOS_ALUNO } = require('../utils/regrasConclusao');
 
 class AgendamentoController {
     async criar(req, res) {
@@ -33,13 +34,14 @@ class AgendamentoController {
         res.json({ success: true, mensagem: 'Inscrição cancelada com sucesso.' });
     }
 
+    // P2 (R4): o monitor dono da vaga confirma a presença do aluno depois do horário
     async concluir(req, res) {
         const idAgendamento = parseInt(req.params.id, 10);
         const resultado = await agendamentoService.concluir(idAgendamento, req.usuario.id);
 
         res.json({
             success: true,
-            mensagem: 'Agendamento concluído e 10 pontos creditados com sucesso!',
+            mensagem: `Presença confirmada. +${PONTOS_MONITOR} pontos para você e +${PONTOS_ALUNO} para o aluno.`,
             agendamento: resultado
         });
     }

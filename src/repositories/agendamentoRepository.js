@@ -1,6 +1,7 @@
 // src/repositories/agendamentoRepository.js
 
 const prisma = require('../config/bancoDeDados');
+const { PONTOS_MONITOR, PONTOS_ALUNO } = require('../utils/regrasConclusao');
 
 class AgendamentoRepository {
     // Executa `fn` dentro de uma transação interativa. `fn` recebe o cliente da transação (tx),
@@ -88,16 +89,25 @@ class AgendamentoRepository {
         });
     }
 
-    // Conclui o agendamento do próprio aluno e credita os pontos numa única transação.
-    // O updateMany condicional (dono + status ainda pendente/confirmado) torna a conclusão
-    // idempotente: duas requisições simultâneas não creditam os pontos duas vezes.
+    // Agendamento com o dono e o horário da vaga, para a confirmação de presença (P2).
+    async buscarPorIdComMonitoria(id) {
+        return await prisma.agendamento.findUnique({
+            where: { id: parseInt(id) },
+            include: { monitoria: { select: { id_monitor: true, horario: true } } }
+        });
+    }
+
+    // Confirma a presença e credita os pontos (D1) numa única transação.
+    // O updateMany condicional (monitor da vaga + status ainda pendente/confirmado) torna a
+    // confirmação idempotente: duas requisições simultâneas não creditam os pontos duas vezes.
     // Retorna null se nenhuma linha foi alterada.
-    async concluirEIncrementarPontos(idAgendamento, idAluno) {
+    async concluirEPontuar(idAgendamento, idMonitor, idAluno) {
         return await prisma.$transaction(async (tx) => {
             const { count } = await tx.agendamento.updateMany({
                 where: {
                     id: idAgendamento,
                     id_aluno: idAluno,
+                    monitoria: { is: { id_monitor: idMonitor } },
                     status: { in: ['pendente', 'confirmado'] }
                 },
                 data: { status: 'concluido' }
@@ -105,8 +115,12 @@ class AgendamentoRepository {
             if (count === 0) return null;
 
             await tx.usuario.update({
+                where: { id: idMonitor },
+                data: { pontos: { increment: PONTOS_MONITOR } }
+            });
+            await tx.usuario.update({
                 where: { id: idAluno },
-                data: { pontos: { increment: 10 } }
+                data: { pontos: { increment: PONTOS_ALUNO } }
             });
 
             return await tx.agendamento.findUnique({ where: { id: idAgendamento } });

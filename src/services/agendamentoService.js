@@ -1,5 +1,6 @@
 const agendamentoRepository = require('../repositories/agendamentoRepository');
 const { validarAntecedenciaCancelamento } = require('../utils/validarAntecedencia');
+const { validarJanelaConfirmacao } = require('../utils/regrasConclusao');
 const {
     ErroValidacao,
     ErroRegraNegocio,
@@ -69,28 +70,34 @@ class AgendamentoService {
         return await agendamentoRepository.deletar(id);
     }
 
-    async concluir(id, idAluno) {
-        const agendamento = await agendamentoRepository.buscarPorId(id);
+    // P2 (R4): só o monitor dono da vaga confirma a presença, depois do horário da sessão e
+    // dentro do prazo (D1). Os pontos são creditados ao monitor e ao aluno uma única vez.
+    async concluir(id, idMonitor) {
+        const agendamento = await agendamentoRepository.buscarPorIdComMonitoria(id);
         if (!agendamento) {
             throw new ErroNaoEncontrado('Agendamento não encontrado.');
         }
-        if (agendamento.id_aluno !== idAluno) {
-            throw new ErroNaoAutorizado('Você não tem permissão para concluir este agendamento.');
+        if (agendamento.monitoria.id_monitor !== idMonitor) {
+            throw new ErroNaoAutorizado(
+                'Só o monitor responsável pela vaga pode confirmar a presença.'
+            );
         }
         if (agendamento.status === 'concluido') {
-            throw new ErroRegraNegocio('Este agendamento já foi concluído.');
+            throw new ErroRegraNegocio('A presença deste aluno já foi confirmada.');
         }
         if (agendamento.status === 'cancelado') {
-            throw new ErroRegraNegocio('Não é possível concluir um agendamento cancelado.');
+            throw new ErroRegraNegocio('Não é possível confirmar um agendamento cancelado.');
         }
+        validarJanelaConfirmacao(agendamento.monitoria.horario);
 
-        const agendamentoAtualizado = await agendamentoRepository.concluirEIncrementarPontos(
+        const agendamentoAtualizado = await agendamentoRepository.concluirEPontuar(
             id,
-            idAluno
+            idMonitor,
+            agendamento.id_aluno
         );
-        // Outra requisição concluiu o mesmo agendamento entre a leitura e a escrita
+        // Outra requisição confirmou o mesmo agendamento entre a leitura e a escrita
         if (!agendamentoAtualizado) {
-            throw new ErroRegraNegocio('Este agendamento já foi concluído.');
+            throw new ErroRegraNegocio('A presença deste aluno já foi confirmada.');
         }
         return agendamentoAtualizado;
     }
