@@ -15,7 +15,7 @@ module.exports = [
     },
     js.configs.recommended,
     {
-        files: ['src/**/*.js', 'tests/**/*.js', 'scripts/**/*.js', '*.js'],
+        files: ['src/**/*.js', 'tests/**/*.js', 'scripts/**/*.js', 'prisma/*.js', '*.js'],
         languageOptions: {
             ecmaVersion: 2022,
             sourceType: 'commonjs',
