@@ -1018,6 +1018,8 @@
    ========================================================================= */
 .pp-dlg {
     width: min(440px, calc(100vw - 32px));
+    /* base.css zera a margem de tudo (* { margin: 0 }), o que tira o centro padrão do <dialog> */
+    margin: auto;
     padding: 0;
     border: 0;
     border-radius: 16px;
