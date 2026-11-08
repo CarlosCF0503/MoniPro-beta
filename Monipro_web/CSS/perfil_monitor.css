@@ -1384,11 +1384,20 @@
     padding-top: 12px;
     border-top: 1px solid var(--line);
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
     font-size: 14px;
+}
+/* O botão de texto tem respiro lateral para o fundo do hover; aqui ele alinha com o link */
+.pagina-perfil .pp-privacidade .pp-btn-texto-perigo {
+    margin-left: -12px;
+}
+/* No celular os dados já terminam com uma linha (cel-dl) */
+.pagina-perfil .cel-corpo .pp-privacidade {
+    border-top: 0;
+    margin-top: 8px;
+    padding-top: 0;
 }
 .pagina-perfil .pp-privacidade a {
     color: var(--navy-2);
@@ -1397,6 +1406,7 @@
 .pp-dlg .pp-exc-lista {
     margin: 0;
     padding: 10px 12px 10px 30px;
+    list-style: disc;
     border-radius: 10px;
     background: var(--bad-soft);
     font-size: 13px;

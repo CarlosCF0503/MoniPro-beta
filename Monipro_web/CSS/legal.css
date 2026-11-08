@@ -16,13 +16,6 @@
     outline-offset: 2px;
 }
 
-/* Nos perfis, no celular, a barra de seções fica fixa embaixo: o rodapé sobe acima dela */
-@media (max-width: 699px) {
-    .rodape-legal.acima-da-barra {
-        padding-bottom: 96px;
-    }
-}
-
 /* Frase de consentimento no cadastro, logo acima do botão "Cadastrar" */
 .aviso-consentimento {
     font-size: 13px;
