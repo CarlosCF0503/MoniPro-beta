@@ -1,0 +1,62 @@
+{"level":30,"time":1791835476005,"pid":10644,"hostname":"[omitido]","id":1,"tipo_usuario":"aluno","msg":"Usuário cadastrado"}
+{"level":40,"time":1791835476016,"pid":10644,"hostname":"[omitido]","identificador":"aluno.teste@exemplo.edu","tipo_usuario":"aluno","msg":"Tentativa de login falhou"}
+{"level":30,"time":1791835476240,"pid":10644,"hostname":"[omitido]","id":1,"tipo_usuario":"aluno","msg":"Usuário cadastrado"}
+{"level":40,"time":1791835476249,"pid":10644,"hostname":"[omitido]","identificador":"naoexiste@exemplo.com","tipo_usuario":"aluno","msg":"Tentativa de login falhou"}
+{"level":40,"time":1791835476376,"pid":10644,"hostname":"[omitido]","identificador":"ana@exemplo.com","tipo_usuario":"aluno","msg":"Tentativa de login falhou"}
+----------------------------|---------|----------|---------|---------|-------------------
+File                        | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s
+----------------------------|---------|----------|---------|---------|-------------------
+All files                   |   83.63 |    64.23 |   75.28 |   84.34 |
+ src                        |    93.1 |    66.66 |   66.66 |    93.1 |
+  app.js                    |    93.1 |    66.66 |   66.66 |    93.1 | 36,51
+ src/config                 |   66.66 |       50 |     100 |    62.5 |
+  env.js                    |   66.66 |       50 |     100 |    62.5 | 9-11
+ src/controllers            |   67.64 |       25 |   56.25 |   67.64 |
+  agendamentoController.js  |   92.85 |       50 |     100 |   92.85 | 23
+  autenticacaoController.js |     100 |       50 |     100 |     100 | 26
+  disciplinaController.js   |    37.5 |        0 |       0 |    37.5 | 8-9,13-15,19-26
+  monitoriaController.js    |   76.92 |      100 |      75 |   76.92 | 26-31
+  perfilController.js       |   27.27 |      100 |       0 |   27.27 | 8-25
+ src/middlewares            |   91.11 |    73.07 |     100 |     100 |
+  autenticacaoMiddleware.js |   86.36 |       75 |     100 |     100 | 9-15
+  tratadorDeErros.js        |   88.88 |    83.33 |     100 |     100 | 12
+  validarCorpo.js           |     100 |     62.5 |     100 |     100 | 11,16-18
+ src/repositories           |   74.46 |       50 |   70.83 |   73.91 |
+  agendamentoRepository.js  |   94.73 |    44.44 |     100 |   94.44 | 66
+  disciplinaRepository.js   |      40 |      100 |       0 |      40 | 5-15
+  monitoriaRepository.js    |   57.14 |    57.14 |   66.66 |   57.14 | 47-73,90-105
+  perfilRepository.js       |   66.66 |      100 |       0 |   66.66 | 5
+  usuarioRepository.js      |   83.33 |      100 |      75 |   83.33 | 30
+ src/routes                 |     100 |      100 |     100 |     100 |
+  agendamentoRotas.js       |     100 |      100 |     100 |     100 |
+  autenticacaoRotas.js      |     100 |      100 |     100 |     100 |
+  disciplinaRotas.js        |     100 |      100 |     100 |     100 |
+  monitoriaRotas.js         |     100 |      100 |     100 |     100 |
+  perfilRotas.js            |     100 |      100 |     100 |     100 |
+ src/schemas                |     100 |    85.71 |     100 |     100 |
+  agendamentoSchemas.js     |     100 |      100 |     100 |     100 |
+  autenticacaoSchemas.js    |     100 |      100 |     100 |     100 |
+  comuns.js                 |     100 |       80 |     100 |     100 | 15,44
+  monitoriaSchemas.js       |     100 |      100 |     100 |     100 |
+ src/services               |   81.55 |     73.8 |   61.11 |   81.37 |
+  agendamentoService.js     |   94.44 |       90 |     100 |   94.44 | 63,69
+  autenticacaoService.js    |   85.18 |    66.66 |     100 |   85.18 | 15,24,40,54
+  disciplinaService.js      |   42.85 |        0 |       0 |   42.85 | 8-17
+  monitoriaService.js       |   86.36 |    83.33 |   66.66 |   85.71 | 17,37,53
+  perfilService.js          |   45.45 |        0 |       0 |   45.45 | 9-21
+ src/utils                  |   82.14 |    51.42 |     100 |   83.01 |
+  erros.js                  |     100 |        0 |     100 |     100 | 7-45
+  logger.js                 |     100 |      100 |     100 |     100 |
+  paginacao.js              |    92.3 |    45.45 |     100 |     100 | 5-11
+  tratarErro.js             |   57.14 |       50 |     100 |   57.14 | 29-34,38,42,49
+  validarAntecedencia.js    |     100 |      100 |     100 |     100 |
+ tests/helpers              |     100 |      100 |     100 |     100 |
+  token.js                  |     100 |      100 |     100 |     100 |
+----------------------------|---------|----------|---------|---------|-------------------
+
+Test Suites: 5 passed, 5 total
+Tests:       54 passed, 54 total
+Snapshots:   0 total
+Time:        2.377 s
+Ran all test suites.
+Test results written to: <pasta temporária>jest.json

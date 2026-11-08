@@ -1,0 +1,65 @@
+### 2026-10-12T20:05:48Z alvo https://dev.moni-pro.app.br
+--- T1 cabeçalhos da API (/teste)
+HTTP/1.1 200 OK
+--- T2 cabeçalhos do frontend (/index.html)
+HTTP/1.1 200 OK
+Server: nginx/1.18.0 (Ubuntu)
+--- T3 rota protegida sem token
+{"erro":"Token não fornecido"} [HTTP 401]
+--- T4 token forjado
+{"erro":"Token inválido"} [HTTP 401]
+--- T5 criar vaga sem token
+{"erro":"Token não fornecido"} [HTTP 401]
+--- T6 CORS origem não autorizada
+HTTP/1.1 200 OK
+
+--- T7 CORS origem legítima
+HTTP/1.1 200 OK
+--- T8 certificado TLS
+--- T9 limite de tentativas de login (11 tentativas, conta inexistente)
+1:401 2:401 3:401 4:401 5:401 6:401 7:401 8:401 9:401 10:401 11:429
+--- T10 mensagem retornada após bloqueio
+{"erro":"Muitas tentativas. Tente novamente mais tarde."}
+--- T1b corpo de /teste
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <
+--- T1c cabeçalhos da API (/perfil, sem token)
+HTTP/1.1 401 Unauthorized
+Content-Security-Policy: default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Resource-Policy: same-origin
+Referrer-Policy: no-referrer
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+X-Content-Type-Options: nosniff
+X-Frame-Options: SAMEORIGIN
+--- T6b CORS origem não autorizada em rota da API
+HTTP/1.1 403 Forbidden
+{"success":false,"erro":"Origem não permitida pelo CORS."}
+
+--- T7b CORS origem legítima em rota da API
+HTTP/1.1 401 Unauthorized
+Access-Control-Allow-Origin: https://dev.moni-pro.app.br
+--- T8 certificado TLS
+subject=CN=dev.moni-pro.app.br
+issuer=C=US, O=Let's Encrypt, CN=YR2
+notAfter=Nov 24 16:16:10 2026 GMT
+subject=CN=moni-pro.app.br
+issuer=C=US, O=Let's Encrypt, CN=YR2
+notAfter=Nov 18 13:44:31 2026 GMT
+--- T11 protocolo TLS negociado
+New, TLSv1.3, Cipher is TLS_AES_256_GCM_SHA384
+Protocol: TLSv1.3
+--- T12 TLS 1.0 aceito?
+0C350000:error:0A0000BF:SSL routines:tls_setup_handshake:no protocols available:../openssl-3.5.7/ssl/statem/statem_lib.c:155:
+New, (NONE), Cipher is (NONE)
+--- T2p cabeçalhos do frontend em produção
+HTTP/1.1 200 OK
+Server: nginx/1.18.0 (Ubuntu)
+--- T1p cabeçalhos da API em produção
+3
+### 2026-10-12T21:01:56Z T13 — forjar X-Forwarded-For para contornar o limite de login (https://dev.moni-pro.app.br)
+1:401 2:401 3:401 4:401 5:401 6:401 7:401 8:401 9:401 10:401 11:429 12:429
