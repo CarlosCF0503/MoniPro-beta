@@ -61,8 +61,10 @@ describe('POST /auth/login — cookie de sessão', () => {
         const conteudo = jwt.decode(token);
         expect(conteudo).toMatchObject({ id: 7, tipo: 'aluno', v: 3 });
         expect(conteudo.exp - conteudo.iat).toBe(7200);
-        // O e-mail não vai mais no token
+        // O e-mail não vai mais no token, e o token não vai no corpo da resposta
         expect(conteudo.email).toBeUndefined();
+        expect(resposta.body.token).toBeUndefined();
+        expect(resposta.body.usuario).toEqual({ id: 7, nome: 'Ana Aluna', tipo: 'aluno' });
     });
 
     it('não grava cookie quando as credenciais estão erradas', async () => {
@@ -92,7 +94,7 @@ describe('Autenticação pelo cookie', () => {
         expect(sessaoRepository.buscarVersao).toHaveBeenCalledWith(7);
     });
 
-    it('retorna 401 sem cookie e sem cabeçalho Authorization', async () => {
+    it('retorna 401 sem o cookie', async () => {
         const resposta = await request(app).get('/auth/sessao');
 
         expect(resposta.status).toBe(401);
@@ -125,14 +127,15 @@ describe('Autenticação pelo cookie', () => {
         expect(resposta.status).toBe(401);
     });
 
-    it('ainda aceita Authorization: Bearer durante a transição', async () => {
+    it('não aceita mais o token no cabeçalho Authorization: Bearer', async () => {
         const token = gerarToken({ id: 7, tipo: 'aluno' });
 
         const resposta = await request(app)
             .get('/auth/sessao')
             .set('Authorization', `Bearer ${token}`);
 
-        expect(resposta.status).toBe(200);
+        expect(resposta.status).toBe(401);
+        expect(sessaoRepository.buscarVersao).not.toHaveBeenCalled();
     });
 });
 
@@ -166,14 +169,8 @@ describe('POST /auth/sair — revogação', () => {
 
         await request(app).post('/auth/sair').set('Cookie', comCookie(copia));
 
-        const pelaCopiaNoCookie = await request(app)
-            .get('/auth/sessao')
-            .set('Cookie', comCookie(copia));
-        const pelaCopiaNoBearer = await request(app)
-            .get('/auth/sessao')
-            .set('Authorization', `Bearer ${copia}`);
-        expect(pelaCopiaNoCookie.status).toBe(401);
-        expect(pelaCopiaNoBearer.status).toBe(401);
+        const depois = await request(app).get('/auth/sessao').set('Cookie', comCookie(copia));
+        expect(depois.status).toBe(401);
     });
 
     it('retorna 401 sem sessão e não mexe na versão', async () => {

@@ -28,7 +28,7 @@ describe('GET /perfil', () => {
 
         const resposta = await request(app)
             .get('/perfil')
-            .set('Authorization', `Bearer ${tokenAluno}`);
+            .set('Cookie', `monipro_sessao=${tokenAluno}`);
 
         expect(resposta.status).toBe(200);
         expect(resposta.body.user.pontos).toBe(10);
@@ -43,7 +43,7 @@ describe('GET /perfil', () => {
             pontos: 0
         });
 
-        await request(app).get('/perfil').set('Authorization', `Bearer ${tokenAluno}`);
+        await request(app).get('/perfil').set('Cookie', `monipro_sessao=${tokenAluno}`);
 
         const { select } = prisma.usuario.findUnique.mock.calls[0][0];
         expect(select.senha).toBeUndefined();
@@ -54,7 +54,7 @@ describe('GET /perfil', () => {
 
         const resposta = await request(app)
             .get('/perfil')
-            .set('Authorization', `Bearer ${tokenAluno}`);
+            .set('Cookie', `monipro_sessao=${tokenAluno}`);
 
         expect(resposta.status).toBe(404);
     });
@@ -86,7 +86,7 @@ describe('GET /perfil/monitorias', () => {
 
         const resposta = await request(app)
             .get('/perfil/monitorias')
-            .set('Authorization', `Bearer ${tokenMonitor}`);
+            .set('Cookie', `monipro_sessao=${tokenMonitor}`);
 
         expect(resposta.status).toBe(200);
         expect(resposta.body.monitorias[0].inscritos).toBe(2);
@@ -98,7 +98,9 @@ describe('GET /perfil/monitorias', () => {
         prisma.monitoria.findMany.mockResolvedValue([]);
         prisma.monitoria.count.mockResolvedValue(0);
 
-        await request(app).get('/perfil/monitorias').set('Authorization', `Bearer ${tokenMonitor}`);
+        await request(app)
+            .get('/perfil/monitorias')
+            .set('Cookie', `monipro_sessao=${tokenMonitor}`);
 
         const consulta = prisma.monitoria.findMany.mock.calls[0][0];
         expect(consulta.where).toEqual({ id_monitor: 30 });
@@ -113,7 +115,7 @@ describe('GET /perfil/monitorias', () => {
 
         const resposta = await request(app)
             .get('/perfil/monitorias?limit=100')
-            .set('Authorization', `Bearer ${tokenMonitor}`);
+            .set('Cookie', `monipro_sessao=${tokenMonitor}`);
 
         expect(prisma.monitoria.findMany.mock.calls[0][0].take).toBe(100);
         expect(resposta.body.paginacao.limit).toBe(100);
@@ -140,7 +142,7 @@ describe('GET /perfil/agendamentos (RF-004)', () => {
     it('filtra pelo aluno do token, nunca por um id vindo da requisição', async () => {
         await request(app)
             .get('/perfil/agendamentos?id_aluno=99')
-            .set('Authorization', `Bearer ${tokenAluno}`);
+            .set('Cookie', `monipro_sessao=${tokenAluno}`);
 
         const consulta = prisma.agendamento.findMany.mock.calls[0][0];
         expect(consulta.where).toEqual({ id_aluno: 20 });
@@ -148,13 +150,17 @@ describe('GET /perfil/agendamentos (RF-004)', () => {
     });
 
     it('ordena da sessão mais recente para a mais antiga', async () => {
-        await request(app).get('/perfil/agendamentos').set('Authorization', `Bearer ${tokenAluno}`);
+        await request(app)
+            .get('/perfil/agendamentos')
+            .set('Cookie', `monipro_sessao=${tokenAluno}`);
 
         expect(prisma.agendamento.findMany.mock.calls[0][0].orderBy).toEqual({ data_hora: 'desc' });
     });
 
     it('traz a disciplina e só o nome do monitor, sem e-mail nem matrícula', async () => {
-        await request(app).get('/perfil/agendamentos').set('Authorization', `Bearer ${tokenAluno}`);
+        await request(app)
+            .get('/perfil/agendamentos')
+            .set('Cookie', `monipro_sessao=${tokenAluno}`);
 
         const { include } = prisma.agendamento.findMany.mock.calls[0][0];
         expect(include.monitoria.include.disciplina).toBe(true);
@@ -171,7 +177,7 @@ describe('GET /perfil/agendamentos (RF-004)', () => {
 
         const resposta = await request(app)
             .get('/perfil/agendamentos?page=2&limit=10')
-            .set('Authorization', `Bearer ${tokenAluno}`);
+            .set('Cookie', `monipro_sessao=${tokenAluno}`);
 
         expect(resposta.status).toBe(200);
         expect(resposta.body.agendamentos).toEqual(agendamentos);
@@ -197,7 +203,9 @@ describe('GET /perfil/monitorias (RF-004)', () => {
     });
 
     it('ordena da vaga mais recente para a mais antiga', async () => {
-        await request(app).get('/perfil/monitorias').set('Authorization', `Bearer ${tokenMonitor}`);
+        await request(app)
+            .get('/perfil/monitorias')
+            .set('Cookie', `monipro_sessao=${tokenMonitor}`);
 
         expect(prisma.monitoria.findMany.mock.calls[0][0].orderBy).toEqual({ horario: 'desc' });
     });
