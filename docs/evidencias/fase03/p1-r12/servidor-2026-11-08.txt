@@ -25,5 +25,5 @@ SSL do backend até o banco: [{"ssl":true,"version":"TLSv1.3"}]
 ## Conclusão
 - Cada ambiente usa o próprio container Postgres, com database, volume e senha próprios.
 - Nenhum .env aponta para a Aiven. Os dumps da Aiven ficam em ~/backups/ (aiven_prod_final.dump, 07/11).
-- Pendente: o banco de homologação foi criado a partir do mesmo dump de produção e ainda tem cópia
-  dos usuários reais. Ele deve ser recriado vazio, com migrações e o seed fictício (prisma/seed.js).
+- O banco de homologação tinha sido criado a partir do mesmo dump de produção. Ele foi recriado
+  vazio, com migrações e o seed fictício, no mesmo dia (ver hml-recriada.txt).
