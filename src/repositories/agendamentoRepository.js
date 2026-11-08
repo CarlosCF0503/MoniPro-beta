@@ -93,7 +93,7 @@ class AgendamentoRepository {
     async buscarPorIdComMonitoria(id) {
         return await prisma.agendamento.findUnique({
             where: { id: parseInt(id) },
-            include: { monitoria: { select: { id_monitor: true, horario: true } } }
+            include: { monitoria: { select: { id_monitor: true, horario: true, status: true } } }
         });
     }
 

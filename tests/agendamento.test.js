@@ -307,6 +307,24 @@ describe('PATCH /agendamentos/:id/concluir (P2: confirmação pelo monitor)', ()
         expect(prisma.usuario.update).not.toHaveBeenCalled();
     });
 
+    it('retorna 400 quando a vaga foi cancelada', async () => {
+        prisma.agendamento.findUnique.mockResolvedValue(
+            agendamento({
+                monitoria: {
+                    id_monitor: 30,
+                    horario: new Date(Date.now() - 2 * HORA),
+                    status: 'cancelada'
+                }
+            })
+        );
+
+        const resposta = await concluir();
+
+        expect(resposta.status).toBe(400);
+        expect(resposta.body.erro).toMatch(/vaga cancelada/);
+        expect(prisma.usuario.update).not.toHaveBeenCalled();
+    });
+
     it('retorna 400 ao concluir um agendamento já concluído', async () => {
         prisma.agendamento.findUnique.mockResolvedValue(agendamento({ status: 'concluido' }));
 

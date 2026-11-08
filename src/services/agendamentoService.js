@@ -88,6 +88,10 @@ class AgendamentoService {
         if (agendamento.status === 'cancelado') {
             throw new ErroRegraNegocio('Não é possível confirmar um agendamento cancelado.');
         }
+        // Cancelar a vaga não muda o status das inscrições, então a checagem é feita aqui
+        if (agendamento.monitoria.status === 'cancelada') {
+            throw new ErroRegraNegocio('Não é possível confirmar presença numa vaga cancelada.');
+        }
         validarJanelaConfirmacao(agendamento.monitoria.horario);
 
         const agendamentoAtualizado = await agendamentoRepository.concluirEPontuar(
