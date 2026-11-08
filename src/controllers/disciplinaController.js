@@ -1,18 +1,19 @@
 // src/controllers/disciplinaController.js
 // Tarefa 8: erros sobem para o middleware central (src/middlewares/tratadorDeErros.js).
-const disciplinaRepository = require('../repositories/disciplinaRepository');
 const disciplinaService = require('../services/disciplinaService');
 const { ErroValidacao } = require('../utils/erros');
 
 exports.listar = async (req, res) => {
-    const disciplinas = await disciplinaRepository.buscarTodas();
+    const disciplinas = await disciplinaService.listar();
     return res.status(200).json({ disciplinas });
 };
 
+// req.body já passou por criarDisciplinaSchema (nome sem espaços sobrando, 3 a 80 caracteres)
 exports.criar = async (req, res) => {
-    const nome = typeof req.body?.nome === 'string' ? req.body.nome.trim() : '';
-    const disciplina = await disciplinaService.criar({ nome });
-    return res.status(201).json({ mensagem: 'Disciplina criada com sucesso.', disciplina });
+    const disciplina = await disciplinaService.criar({ nome: req.body.nome });
+    return res
+        .status(201)
+        .json({ success: true, mensagem: 'Disciplina criada com sucesso.', disciplina });
 };
 
 exports.obterRanking = async (req, res) => {
@@ -22,6 +23,6 @@ exports.obterRanking = async (req, res) => {
         throw new ErroValidacao('ID de disciplina inválido.', { id: 'ID de disciplina inválido.' });
     }
 
-    const ranking = await disciplinaRepository.buscarRankingPorDisciplina(idDisciplina);
+    const ranking = await disciplinaService.obterRanking(idDisciplina);
     return res.status(200).json({ success: true, ranking });
 };

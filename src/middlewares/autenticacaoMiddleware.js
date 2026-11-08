@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../config/env');
+const { ErroNaoAutorizado } = require('../utils/erros');
 
 const autenticar = (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -24,9 +25,9 @@ const isMonitor = (req, res, next) => {
         return next();
     }
 
-    return res
-        .status(403)
-        .json({ erro: 'Acesso negado. Apenas Monitores podem cadastrar disciplinas.' });
+    // Vai para o tratador central, que responde { success: false, erro }. A mensagem é genérica
+    // porque este middleware protege também as rotas de monitoria, não só as de disciplina.
+    return next(new ErroNaoAutorizado('Acesso permitido apenas a monitores.'));
 };
 
 module.exports = {

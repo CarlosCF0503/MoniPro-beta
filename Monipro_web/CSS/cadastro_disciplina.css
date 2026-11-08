@@ -1,0 +1,345 @@
+/* =========================================================================
+   Nova disciplina (cadastro_disciplina.html)
+   Usa .dashboard-wrapper e .page-header de escolha_disciplina.css. Tudo aqui fica dentro de
+   .cadastro-disciplina para não herdar a regra global de <button> do base.css
+   (padding 45px, fonte 25px). Cores de base.css.
+   ========================================================================= */
+
+.cadastro-disciplina {
+    --navy: #071e3d;
+    --navy-2: #1f4287;
+    --blue: #4a90e2;
+    --white: #ffffff;
+    --soft: #f0f4ff;
+    --soft-2: #e0eaff;
+    --slate: #64748b;
+    --slate-ink: #334155;
+    --line: #e2e8f0;
+    --bad: #c62828;
+    --bad-ink: #b3261e;
+    --warn-ink: #8a5300;
+    --warn-soft: #fff3dc;
+    --warn-line: #f0c674;
+    --dur: 0.2s;
+}
+
+/* Formulário de um campo só: a coluna inteira (título, linha e cartão) fica centralizada e
+   cresce com a página (68% da largura, entre 720px e 1100px), em vez dos 1300px da grade de
+   Minhas Disciplinas com o cartão encostado à esquerda. O espaço acima vem só do
+   padding do .dashboard-wrapper. */
+.dashboard-container.cadastro-disciplina {
+    max-width: clamp(720px, 68vw, 1100px);
+    padding-top: 0;
+}
+
+.cadastro-disciplina .page-header {
+    margin-bottom: 24px;
+}
+
+.cd-cartao {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.05),
+        0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    padding: 28px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* O display: flex acima venceria o atributo hidden, e o aluno veria o formulário por um instante */
+.cd-cartao[hidden] {
+    display: none;
+}
+
+/* --- campo --- */
+.cd-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.cd-campo label {
+    font-weight: 700;
+    color: var(--navy);
+    font-size: 15px;
+}
+
+.cd-obrigatorio {
+    color: var(--bad);
+}
+
+.cd-caixa {
+    display: flex;
+    align-items: center;
+    background: var(--soft);
+    border: 2px solid var(--navy);
+    border-radius: 8px;
+    height: 50px;
+    padding: 0 14px;
+    transition: border-color var(--dur);
+}
+
+.cd-caixa:focus-within {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(31, 66, 135, 0.3);
+}
+
+.cd-caixa.invalido {
+    border-color: var(--bad);
+    background: #fff7f7;
+}
+
+.cd-caixa input {
+    border: 0;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    min-width: 0;
+    font-family: inherit;
+    font-size: 16px; /* 16px evita o zoom automático do iOS ao focar */
+    font-weight: 500;
+    color: var(--slate-ink);
+}
+
+.cd-caixa input::placeholder {
+    color: #6b7a90;
+}
+
+.cd-rodape-campo {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13.5px;
+    min-height: 20px;
+}
+
+.cd-erro {
+    margin: 0;
+    color: var(--bad-ink);
+    font-weight: 600;
+}
+
+.cd-contador {
+    flex: none;
+    color: var(--slate);
+    font-variant-numeric: tabular-nums;
+}
+
+.cd-contador.perto-do-limite {
+    color: var(--warn-ink);
+    font-weight: 700;
+}
+
+.cd-aviso {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    background: var(--warn-soft);
+    color: var(--warn-ink);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.cd-aviso[hidden] {
+    display: none;
+}
+
+.cd-aviso svg {
+    flex: none;
+}
+
+/* --- disciplinas já cadastradas --- */
+.cd-existentes h2 {
+    margin: 0 0 8px;
+    font-size: 14px;
+    color: var(--navy);
+}
+
+.cd-tags {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.cd-tags li {
+    font-size: 13px;
+    background: var(--soft-2);
+    color: var(--navy-2);
+    padding: 3px 10px;
+    border-radius: 99px;
+}
+
+.cd-tags li.repetida {
+    background: var(--warn-soft);
+    color: var(--warn-ink);
+    font-weight: 700;
+    outline: 1px solid var(--warn-line);
+}
+
+/* --- botões --- */
+.cd-acoes {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.cadastro-disciplina .cd-botao {
+    min-height: 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 24px;
+    border: 2px solid var(--navy);
+    border-radius: 15px;
+    background: var(--navy);
+    color: var(--white);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+        background var(--dur),
+        box-shadow var(--dur),
+        transform 0.1s;
+}
+
+.cadastro-disciplina .cd-botao:hover:not(:disabled) {
+    background: var(--navy-2);
+    border-color: var(--navy-2);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.cadastro-disciplina .cd-botao:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+.cadastro-disciplina .cd-botao:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.cadastro-disciplina .cd-botao-secundario {
+    background: var(--white);
+    color: var(--navy);
+}
+
+.cadastro-disciplina .cd-botao-secundario:hover:not(:disabled) {
+    background: #e6f2ff;
+    color: var(--navy);
+    border-color: var(--navy);
+}
+
+.giro {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: var(--white);
+    border-radius: 50%;
+    animation: cd-girar 0.8s linear infinite;
+}
+
+@keyframes cd-girar {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* --- telas largas: a caixa e o que está dentro crescem com a largura da página ---
+   Em 1024px fica quase igual ao tamanho base; em 1920px chega perto do máximo. */
+@media (min-width: 769px) {
+    .cadastro-disciplina .title-area h1 {
+        font-size: clamp(28px, 2.5vw, 38px);
+    }
+
+    .cadastro-disciplina .title-area p {
+        font-size: clamp(15px, 1.15vw, 18px);
+    }
+
+    .cadastro-disciplina .btn-voltar {
+        font-size: clamp(14px, 1.05vw, 16px);
+    }
+
+    .cd-cartao {
+        padding: clamp(28px, 2.8vw, 48px);
+        gap: clamp(20px, 2vw, 32px);
+        border-radius: 16px;
+    }
+
+    .cd-campo label {
+        font-size: clamp(15px, 1.2vw, 18px);
+    }
+
+    .cd-caixa {
+        height: clamp(50px, 4.2vw, 64px);
+        padding: 0 clamp(14px, 1.3vw, 20px);
+        border-radius: 10px;
+    }
+
+    .cd-caixa input {
+        font-size: clamp(16px, 1.25vw, 19px);
+    }
+
+    .cd-rodape-campo,
+    .cd-aviso {
+        font-size: clamp(13.5px, 1vw, 15.5px);
+    }
+
+    .cd-existentes h2 {
+        font-size: clamp(14px, 1.1vw, 17px);
+        margin-bottom: 12px;
+    }
+
+    .cd-tags {
+        gap: 8px;
+    }
+
+    .cd-tags li {
+        font-size: clamp(13px, 1vw, 15px);
+        padding: 4px 12px;
+    }
+
+    .cadastro-disciplina .cd-botao {
+        min-height: clamp(46px, 3.8vw, 56px);
+        padding: 11px clamp(24px, 2.2vw, 36px);
+        font-size: clamp(15px, 1.15vw, 17px);
+    }
+}
+
+/* --- celular --- */
+@media (max-width: 768px) {
+    .cd-cartao {
+        padding: 18px 15px;
+    }
+
+    /* Botões empilhados e com largura total, "Cadastrar" em cima */
+    .cd-acoes {
+        flex-direction: column-reverse;
+    }
+
+    .cadastro-disciplina .cd-botao {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .giro {
+        animation: none;
+    }
+
+    .cd-caixa,
+    .cadastro-disciplina .cd-botao {
+        transition: none;
+    }
+}
