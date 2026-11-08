@@ -17,6 +17,18 @@ class MonitoriaRepository {
         });
     }
 
+    // Vaga ativa do mesmo monitor que começa exatamente no mesmo horário (ou null)
+    async buscarAtivaDoMonitorNoHorario(idMonitor, horario) {
+        return await prisma.monitoria.findFirst({
+            where: {
+                id_monitor: idMonitor,
+                horario: new Date(horario),
+                status: 'ativa'
+            },
+            select: { id: true }
+        });
+    }
+
     async buscarPorDisciplina(idDisciplina, { skip, take } = {}) {
         const where = {
             id_disciplina: idDisciplina,
@@ -109,7 +121,11 @@ class MonitoriaRepository {
             prisma.monitoria.findMany({
                 where,
                 include: {
-                    disciplina: { select: { nome: true } }
+                    disciplina: { select: { nome: true } },
+                    // Inscrições que ocupam vaga (tudo que não foi cancelado), como em buscarPorDisciplina
+                    _count: {
+                        select: { inscricoes: { where: { status: { not: 'cancelado' } } } }
+                    }
                 },
                 orderBy: { horario: 'desc' },
                 skip,

@@ -8,12 +8,14 @@ module.exports = [
             'node_modules/**',
             'prisma/migrations/**',
             'Monipro_web/Dockerfile',
-            '**/*.min.js'
+            '**/*.min.js',
+            // Evidências de teste: registros fixos, guardados como foram executados
+            'docs/evidencias/**'
         ]
     },
     js.configs.recommended,
     {
-        files: ['src/**/*.js', 'tests/**/*.js', 'scripts/**/*.js', '*.js'],
+        files: ['src/**/*.js', 'tests/**/*.js', 'scripts/**/*.js', 'prisma/*.js', '*.js'],
         languageOptions: {
             ecmaVersion: 2022,
             sourceType: 'commonjs',
@@ -41,10 +43,11 @@ module.exports = [
                 chamadaApi: 'readonly',
                 escaparHtml: 'readonly',
                 MB_BETA_ORM: 'readonly',
-                renderCalendario: 'readonly',
-                iniciarNavegacaoCalendario: 'readonly',
-                selecionarDia: 'readonly',
-                getTdSelecionado: 'readonly'
+                // Tela de marcar monitoria (JS/marcar/): datas.js e componentes.js
+                MarcarDatas: 'readonly',
+                MarcarComponentes: 'readonly',
+                // Perfil do monitor (JS/perfil/): dados.js
+                PerfilDados: 'readonly'
             }
         },
         rules: {

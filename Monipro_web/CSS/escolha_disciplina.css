@@ -180,3 +180,71 @@ main.dashboard-wrapper {
     border-color: #1F4287;
     box-shadow: 0 0 0 3px rgba(31, 66, 135, 0.3);
 }
+
+/* ==============================================
+   BOTÃO "+ NOVA DISCIPLINA" (só para monitor; o JS tira o hidden)
+   ============================================== */
+.header-direita {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.btn-nova-disciplina {
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: 12px;
+    background: #071e3d;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition:
+        background 0.2s,
+        box-shadow 0.2s;
+}
+
+.btn-nova-disciplina:hover {
+    background: #1f4287;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.btn-nova-disciplina[hidden] {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .header-direita {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .btn-nova-disciplina {
+        justify-content: center;
+    }
+    .lista-vazia {
+        flex-direction: column;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .btn-nova-disciplina {
+        transition: none;
+    }
+}
+
+/* Lista vazia: texto e, para monitor, o link para cadastrar a primeira */
+.lista-vazia {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    padding: 40px;
+    font-size: 16px;
+}

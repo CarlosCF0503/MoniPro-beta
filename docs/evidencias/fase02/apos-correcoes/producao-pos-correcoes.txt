@@ -1,0 +1,23 @@
+### 2026-10-12T21:28:56Z https://moni-pro.app.br (após PRs #21–#26)
+  frontend igual à main: 29/29
+  T2 frontend: CSP=1 HSTS=1 XFO=DENY nosniff=1 | Server: nginx/1.18.0 (Ubuntu)
+  T1 API: 4/4 | Server: nginx/1.18.0 (Ubuntu)
+  R10 cabeçalhos de limite geral: RateLimit-Policy: 120;w=60
+  R5 login inexistente: {"success":false,"erro":"E-mail/matrícula ou senha incorretos."}
+  R5 matrícula não numérica: {"success":false,"erro":"E-mail/matrícula ou senha incorretos."} [401]
+### 2026-10-12T21:29:15Z https://dev.moni-pro.app.br (após PRs #21–#26)
+  frontend igual à main: 29/29
+  T2 frontend: CSP=1 HSTS=1 XFO=DENY nosniff=1 | Server: nginx/1.18.0 (Ubuntu)
+  T1 API: 4/4 | Server: nginx/1.18.0 (Ubuntu)
+  R10 cabeçalhos de limite geral: RateLimit-Policy: 120;w=60
+  R5 login inexistente: {"success":false,"erro":"E-mail/matrícula ou senha incorretos."}
+  R5 matrícula não numérica: {"success":false,"erro":"E-mail/matrícula ou senha incorretos."} [401]
+### 2026-10-12T21:39:55Z cabeçalho Server após server_tokens off
+https://moni-pro.app.br/index.html      Server: nginx | CSP=1 HSTS=1
+https://moni-pro.app.br/perfil          Server: nginx | CSP=1 HSTS=1
+https://moni-pro.app.br/naoexiste-404   Server: nginx | CSP=1 HSTS=1
+https://dev.moni-pro.app.br/index.html      Server: nginx | CSP=1 HSTS=1
+https://dev.moni-pro.app.br/perfil          Server: nginx | CSP=1 HSTS=1
+https://dev.moni-pro.app.br/naoexiste-404   Server: nginx | CSP=1 HSTS=1
+página de erro do Nginx (versão no corpo?):
+nginx

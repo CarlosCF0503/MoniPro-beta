@@ -5,11 +5,22 @@ const {
     ErroValidacao,
     ErroRegraNegocio,
     ErroNaoAutorizado,
-    ErroNaoEncontrado
+    ErroNaoEncontrado,
+    ErroConflito
 } = require('../utils/erros');
 
 class MonitoriaService {
     async criar(dados) {
+        // O monitor não pode ter duas vagas ativas começando no mesmo horário. A tela de criar
+        // vaga já avisa; aqui a regra vale também para chamadas diretas à API.
+        const conflito = await monitoriaRepository.buscarAtivaDoMonitorNoHorario(
+            dados.id_monitor,
+            dados.horario
+        );
+        if (conflito) {
+            throw new ErroConflito('Você já tem uma vaga ativa neste mesmo horário.');
+        }
+
         try {
             return await monitoriaRepository.criar(dados);
         } catch (error) {

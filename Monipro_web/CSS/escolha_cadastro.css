@@ -6,7 +6,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 body, html {
@@ -113,15 +113,15 @@ body, html {
     box-shadow: 0 8px 15px rgba(7, 30, 61, 0.1);
 }
 
-.opcao img { 
-    width: 60px; 
-    margin-bottom: 12px; 
+.opcao img {
+    width: 60px;
+    margin-bottom: 12px;
     opacity: 0.9;
 }
 
-.opcao span { 
-    font-size: 18px; 
-    font-weight: 700; 
+.opcao span {
+    font-size: 18px;
+    font-weight: 700;
 }
 
 /* ==============================================
@@ -139,9 +139,9 @@ body, html {
     transition: color 0.2s;
 }
 
-.link-voltar a:hover { 
+.link-voltar a:hover {
     color: #071E3D;
-    text-decoration: underline; 
+    text-decoration: underline;
 }
 
 /* ==============================================
@@ -151,7 +151,7 @@ body, html {
     .split-layout {
         flex-direction: column;
     }
-    
+
     .visual-side {
         display: none;
     }
@@ -165,23 +165,23 @@ body, html {
 
 /* Adaptação dos botões para telas muito pequenas */
 @media (max-width: 400px) {
-    .opcoes { 
-        flex-direction: column; 
-        align-items: center; 
+    .opcoes {
+        flex-direction: column;
+        align-items: center;
     }
-    
+
     /* Transforma os quadrados em retângulos horizontais no celular */
-    .opcao  { 
-        width: 100%; 
-        max-width: 280px; 
-        height: 90px; 
-        flex-direction: row; 
-        gap: 20px; 
+    .opcao  {
+        width: 100%;
+        max-width: 280px;
+        height: 90px;
+        flex-direction: row;
+        gap: 20px;
     }
-    
-    .opcao img { 
-        margin-bottom: 0; 
-        width: 40px; 
+
+    .opcao img {
+        margin-bottom: 0;
+        width: 40px;
     }
 }
 /* Foco visível para quem navega pelo teclado (WCAG 2.4.7).

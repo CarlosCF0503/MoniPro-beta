@@ -10,6 +10,8 @@ COPY *.html /usr/share/nginx/html/
 COPY CSS/ /usr/share/nginx/html/CSS/
 COPY JS/ /usr/share/nginx/html/JS/
 COPY IMG/ /usr/share/nginx/html/IMG/
+# Fonte Inter hospedada no site (a CSP font-src 'self' bloqueia o Google Fonts); ver CSS/fontes.css
+COPY fonts/ /usr/share/nginx/html/fonts/
 
 # Template do JS/config.js: o entrypoint padrão da imagem nginx roda envsubst sobre os
 # arquivos de /etc/nginx/templates no arranque do container, gerando JS/config.js a partir

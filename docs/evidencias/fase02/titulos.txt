@@ -1,0 +1,59 @@
+## <repo>\tests\validacao.test.js
+  ok | POST /auth/cadastro — schema e política de senha | retorna 400 para senha curta
+  ok | POST /auth/cadastro — schema e política de senha | retorna 400 para senha sem número
+  ok | POST /auth/cadastro — schema e política de senha | retorna 400 para senha sem letra
+  ok | POST /auth/cadastro — schema e política de senha | retorna 400 com mensagem por campo para e-mail inválido e tipo desconhecido
+  ok | POST /auth/cadastro — schema e política de senha | lista todos os campos obrigatórios ausentes
+  ok | POST /auth/cadastro — schema e política de senha | aceita matrícula como string numérica e descarta campos não declarados (ex.: pontos)
+  ok | POST /auth/login — schema | retorna 400 (não 401) quando faltam campos
+  ok | POST /auth/login — schema | não aplica a política de senha forte no login (contas antigas continuam entrando)
+  ok | POST /monitorias — schema | retorna 400 para horário fora do formato ISO e capacidade inválida
+  ok | POST /monitorias — schema | ignora status enviado pelo cliente (vaga nasce ativa)
+  ok | POST /agendamentos — schema | retorna 400 quando id_monitoria não é um número
+  ok | POST /agendamentos — schema | retorna 400 quando falta a data/hora
+  ok | POST /agendamentos — schema | ignora status enviado pelo cliente (agendamento nasce pendente)
+## <repo>\tests\auth.test.js
+  ok | POST /auth/cadastro | cria a conta e retorna 201 quando os dados são válidos
+  ok | POST /auth/cadastro | retorna 400 quando faltam campos obrigatórios
+  ok | POST /auth/login | retorna 401 para usuário inexistente
+  ok | POST /auth/login | retorna 401 quando a senha está incorreta
+  ok | POST /auth/login | retorna 200 e um token quando as credenciais estão corretas
+## <repo>\tests\agendamento.test.js
+  ok | POST /agendamentos | cria o agendamento e retorna 201 quando há vaga e não há inscrição duplicada
+  ok | POST /agendamentos | retorna 400 e bloqueia inscrição duplicada na mesma monitoria
+  ok | POST /agendamentos | retorna 409 e não cria quando a vaga está lotada (Tarefa 23)
+  ok | POST /agendamentos | aceita novas inscrições até atingir a capacidade configurada
+  ok | POST /agendamentos | não conta agendamentos cancelados como vagas ocupadas
+  ok | POST /agendamentos | trava a linha da monitoria dentro da transação antes de contar
+  ok | POST /agendamentos | retorna 400 quando a monitoria não existe
+  ok | POST /agendamentos | retorna 401 quando não há token
+  ok | DELETE /agendamentos/:id | cancela e retorna 200 quando o aluno dono do agendamento cancela
+  ok | DELETE /agendamentos/:id | retorna 403 quando outro aluno tenta cancelar o agendamento
+  ok | DELETE /agendamentos/:id | retorna 400 (RN-001) quando faltam menos de 24h para o horário agendado
+  ok | PATCH /agendamentos/:id/concluir | conclui o agendamento do próprio aluno e credita os pontos
+  ok | PATCH /agendamentos/:id/concluir | retorna 403 e não credita pontos quando outro aluno tenta concluir
+  ok | PATCH /agendamentos/:id/concluir | retorna 403 quando um monitor tenta concluir o agendamento de um aluno
+  ok | PATCH /agendamentos/:id/concluir | retorna 400 ao concluir um agendamento cancelado
+  ok | PATCH /agendamentos/:id/concluir | não credita pontos duas vezes quando a conclusão concorrente já ocorreu
+## <repo>\tests\monitoria.test.js
+  ok | POST /monitorias (Tarefa 21 — controle de acesso na criação de vagas) | retorna 201 quando o token é de um monitor
+  ok | POST /monitorias (Tarefa 21 — controle de acesso na criação de vagas) | repassa capacidade informada ao criar a vaga (Tarefa 23)
+  ok | POST /monitorias (Tarefa 21 — controle de acesso na criação de vagas) | retorna 400 para capacidade inválida (0)
+  ok | POST /monitorias (Tarefa 21 — controle de acesso na criação de vagas) | retorna 400 para capacidade inválida (-1)
+  ok | POST /monitorias (Tarefa 21 — controle de acesso na criação de vagas) | retorna 400 para capacidade inválida (2.5)
+  ok | POST /monitorias (Tarefa 21 — controle de acesso na criação de vagas) | retorna 400 para capacidade inválida ("3")
+  ok | POST /monitorias (Tarefa 21 — controle de acesso na criação de vagas) | retorna 403 quando o token é de um aluno (isMonitor deve bloquear)
+  ok | POST /monitorias (Tarefa 21 — controle de acesso na criação de vagas) | retorna 401 quando não há token
+  ok | GET /monitorias/:idDisciplina (Tarefa 22 — exigir autenticação na listagem) | retorna 401 quando a requisição não está autenticada
+  ok | GET /monitorias/:idDisciplina (Tarefa 22 — exigir autenticação na listagem) | retorna 200 e a lista quando a requisição está autenticada
+  ok | GET /monitorias/:idDisciplina (Tarefa 22 — exigir autenticação na listagem) | expõe vagas_disponiveis = capacidade - inscrições ativas, sem vazar _count (Tarefa 23)
+  ok | GET /monitorias/:idDisciplina (Tarefa 22 — exigir autenticação na listagem) | pede ao Prisma a contagem apenas de inscrições não canceladas
+  ok | PUT /monitorias/:id/cancelar | retorna 200 quando o monitor dono da vaga cancela
+  ok | PUT /monitorias/:id/cancelar | retorna 403 quando quem tenta cancelar não é o monitor dono da vaga
+  ok | PUT /monitorias/:id/cancelar | retorna 400 (RN-001) quando faltam menos de 24h para o horário da monitoria
+## <repo>\tests\erros.test.js
+  ok | middleware central de erro | retorna 404 quando o agendamento da URL não existe
+  ok | middleware central de erro | retorna 404 quando a vaga de monitoria da URL não existe
+  ok | middleware central de erro | traduz violação de FK (P2003) em 400 com o campo da disciplina
+  ok | middleware central de erro | retorna 500 com mensagem genérica e loga o erro inesperado sem expô-lo
+  ok | middleware central de erro | retorna 400 em JSON quando o corpo é um JSON malformado
