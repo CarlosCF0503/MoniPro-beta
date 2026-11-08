@@ -34,15 +34,37 @@ class AgendamentoController {
         res.json({ success: true, mensagem: 'Inscrição cancelada com sucesso.' });
     }
 
-    // P2 (R4): o monitor dono da vaga confirma a presença do aluno depois do horário
+    // P2 (R4): o monitor dono da vaga confirma a presença do aluno
     async concluir(req, res) {
-        const idAgendamento = parseInt(req.params.id, 10);
-        const resultado = await agendamentoService.concluir(idAgendamento, req.usuario.id);
-
+        const { agendamento, concluiu } = await agendamentoService.registrarPresenca(
+            parseInt(req.params.id, 10),
+            'monitor',
+            req.usuario.id
+        );
         res.json({
             success: true,
-            mensagem: `Presença confirmada. +${PONTOS_MONITOR} pontos para você e +${PONTOS_ALUNO} para o aluno.`,
-            agendamento: resultado
+            concluido: concluiu,
+            mensagem: concluiu
+                ? `Presença confirmada pelos dois. +${PONTOS_MONITOR} pontos para você e +${PONTOS_ALUNO} para o aluno.`
+                : 'Presença registrada. Os pontos entram quando o aluno também confirmar.',
+            agendamento
+        });
+    }
+
+    // P2 (R4): o aluno confirma a própria presença
+    async confirmarPresenca(req, res) {
+        const { agendamento, concluiu } = await agendamentoService.registrarPresenca(
+            parseInt(req.params.id, 10),
+            'aluno',
+            req.usuario.id
+        );
+        res.json({
+            success: true,
+            concluido: concluiu,
+            mensagem: concluiu
+                ? `Presença confirmada pelos dois. +${PONTOS_ALUNO} pontos para você.`
+                : 'Presença registrada. Os pontos entram quando o monitor também confirmar.',
+            agendamento
         });
     }
 }

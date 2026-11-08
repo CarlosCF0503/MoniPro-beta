@@ -11,7 +11,9 @@ const { criarAgendamentoSchema } = require('../schemas/agendamentoSchemas');
 router.post('/', autenticar, validarCorpo(criarAgendamentoSchema), agendamentoController.criar);
 router.get('/', autenticar, agendamentoController.listar);
 router.delete('/:id', autenticar, agendamentoController.deletar);
-// P2 (R4): quem confirma a presença é o monitor dono da vaga, não o aluno
+// P2 (R4): a presença vale quando os dois confirmam. O monitor dono da vaga confirma em
+// /concluir e o aluno inscrito confirma a própria presença em /presenca.
 router.patch('/:id/concluir', autenticar, isMonitor, agendamentoController.concluir);
+router.patch('/:id/presenca', autenticar, agendamentoController.confirmarPresenca);
 
 module.exports = router;

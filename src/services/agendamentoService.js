@@ -70,40 +70,59 @@ class AgendamentoService {
         return await agendamentoRepository.deletar(id);
     }
 
-    // P2 (R4): só o monitor dono da vaga confirma a presença, depois do horário da sessão e
-    // dentro do prazo (D1). Os pontos são creditados ao monitor e ao aluno uma única vez.
-    async concluir(id, idMonitor) {
-        const agendamento = await agendamentoRepository.buscarPorIdComMonitoria(id);
-        if (!agendamento) {
-            throw new ErroNaoEncontrado('Agendamento não encontrado.');
-        }
-        if (agendamento.monitoria.id_monitor !== idMonitor) {
-            throw new ErroNaoAutorizado(
-                'Só o monitor responsável pela vaga pode confirmar a presença.'
-            );
-        }
-        if (agendamento.status === 'concluido') {
-            throw new ErroRegraNegocio('A presença deste aluno já foi confirmada.');
-        }
-        if (agendamento.status === 'cancelado') {
-            throw new ErroRegraNegocio('Não é possível confirmar um agendamento cancelado.');
-        }
-        // Cancelar a vaga não muda o status das inscrições, então a checagem é feita aqui
-        if (agendamento.monitoria.status === 'cancelada') {
-            throw new ErroRegraNegocio('Não é possível confirmar presença numa vaga cancelada.');
-        }
-        validarJanelaConfirmacao(agendamento.monitoria.horario);
+    // P2 (R4): a presença vale quando o aluno e o monitor da vaga confirmam, cada um do seu
+    // lado, depois do início da sessão e em até 7 dias. Quem confirma por último conclui o
+    // agendamento, e os pontos (D1) entram uma única vez. `lado` é 'aluno' ou 'monitor'.
+    async registrarPresenca(id, lado, idUsuario) {
+        return await agendamentoRepository.emTransacao(async (tx) => {
+            const ag = await agendamentoRepository.bloquearParaPresenca(id, tx);
+            if (!ag) {
+                throw new ErroNaoEncontrado('Agendamento não encontrado.');
+            }
+            const ehMonitor = lado === 'monitor';
+            if ((ehMonitor ? ag.id_monitor : ag.id_aluno) !== idUsuario) {
+                throw new ErroNaoAutorizado(
+                    ehMonitor
+                        ? 'Só o monitor responsável pela vaga pode confirmar a presença.'
+                        : 'Só o aluno inscrito pode confirmar a própria presença.'
+                );
+            }
+            if (ag.status === 'concluido') {
+                throw new ErroRegraNegocio(
+                    'Esta presença já foi confirmada pelo aluno e pelo monitor.'
+                );
+            }
+            if (ag.status === 'cancelado') {
+                throw new ErroRegraNegocio('Não é possível confirmar um agendamento cancelado.');
+            }
+            // Cancelar a vaga não muda o status das inscrições, então a checagem é feita aqui
+            if (ag.status_vaga === 'cancelada') {
+                throw new ErroRegraNegocio(
+                    'Não é possível confirmar presença numa vaga cancelada.'
+                );
+            }
+            const campo = ehMonitor ? 'presenca_monitor_em' : 'presenca_aluno_em';
+            if (ag[campo]) {
+                throw new ErroRegraNegocio(
+                    ehMonitor
+                        ? 'Você já confirmou a presença deste aluno. Falta o aluno confirmar.'
+                        : 'Você já confirmou a sua presença. Falta o monitor confirmar.'
+                );
+            }
+            validarJanelaConfirmacao(ag.horario);
 
-        const agendamentoAtualizado = await agendamentoRepository.concluirEPontuar(
-            id,
-            idMonitor,
-            agendamento.id_aluno
-        );
-        // Outra requisição confirmou o mesmo agendamento entre a leitura e a escrita
-        if (!agendamentoAtualizado) {
-            throw new ErroRegraNegocio('A presença deste aluno já foi confirmada.');
-        }
-        return agendamentoAtualizado;
+            const concluiu = Boolean(ehMonitor ? ag.presenca_aluno_em : ag.presenca_monitor_em);
+            const agendamento = await agendamentoRepository.registrarPresenca(
+                id,
+                campo,
+                new Date(),
+                concluiu,
+                tx
+            );
+            if (concluiu)
+                await agendamentoRepository.creditarPontos(ag.id_monitor, ag.id_aluno, tx);
+            return { agendamento, concluiu };
+        });
     }
 }
 

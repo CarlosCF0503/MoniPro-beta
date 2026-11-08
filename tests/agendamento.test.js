@@ -13,6 +13,7 @@ jest.mock('../src/config/bancoDeDados', () => ({
         findUnique: jest.fn(),
         findFirst: jest.fn(),
         updateMany: jest.fn(),
+        update: jest.fn(),
         delete: jest.fn()
     }
 }));
@@ -207,173 +208,189 @@ describe('DELETE /agendamentos/:id', () => {
     });
 });
 
-describe('PATCH /agendamentos/:id/concluir (P2: confirmação pelo monitor)', () => {
+describe('Presença confirmada pelos dois lados (P2: aluno e monitor)', () => {
     const HORA = 60 * 60 * 1000;
     const DIA = 24 * HORA;
     const tokenOutroMonitor = gerarToken({ id: 31, tipo: 'monitor' });
-    const concluir = (token = tokenMonitor) => {
-        const req = request(app).patch('/agendamentos/1/concluir');
+    const pedir = (rota, token) => {
+        const req = request(app).patch(`/agendamentos/1/${rota}`);
         return token ? req.set('Authorization', `Bearer ${token}`) : req;
     };
-    // Agendamento do aluno 20 numa vaga do monitor 30
-    const agendamento = (extra = {}, horario = new Date(Date.now() - 2 * HORA)) => ({
+    const peloMonitor = (token = tokenMonitor) => pedir('concluir', token);
+    const peloAluno = (token = tokenAluno) => pedir('presenca', token);
+
+    // Linha travada: inscrição do aluno 20 numa vaga do monitor 30, que começou há 2 h
+    const linha = (extra = {}) => ({
         id: 1,
         id_aluno: 20,
         status: 'pendente',
-        monitoria: { id_monitor: 30, horario },
+        presenca_aluno_em: null,
+        presenca_monitor_em: null,
+        id_monitor: 30,
+        horario: new Date(Date.now() - 2 * HORA),
+        status_vaga: 'realizada',
         ...extra
     });
 
     beforeEach(() => {
         jest.clearAllMocks();
         prisma.$transaction.mockImplementation((fn) => fn(prisma));
+        prisma.agendamento.update.mockImplementation(async ({ data }) => ({ id: 1, ...data }));
     });
 
-    it('retorna 401 sem token', async () => {
-        const resposta = await concluir(null);
-
-        expect(resposta.status).toBe(401);
-        expect(prisma.agendamento.findUnique).not.toHaveBeenCalled();
-    });
-
-    it('retorna 403 quando um aluno tenta concluir, mesmo sendo o dono do agendamento', async () => {
-        const resposta = await concluir(tokenAluno);
-
-        expect(resposta.status).toBe(403);
-        expect(prisma.agendamento.findUnique).not.toHaveBeenCalled();
-        expect(prisma.usuario.update).not.toHaveBeenCalled();
-    });
-
-    it('retorna 403 quando o monitor de outra vaga tenta concluir', async () => {
-        prisma.agendamento.findUnique.mockResolvedValue(agendamento());
-
-        const resposta = await concluir(tokenOutroMonitor);
-
-        expect(resposta.status).toBe(403);
-        expect(prisma.agendamento.updateMany).not.toHaveBeenCalled();
-        expect(prisma.usuario.update).not.toHaveBeenCalled();
-    });
-
-    it('retorna 404 quando o agendamento não existe', async () => {
-        prisma.agendamento.findUnique.mockResolvedValue(null);
-
-        const resposta = await concluir();
-
-        expect(resposta.status).toBe(404);
-    });
-
-    it('retorna 400 antes do horário da sessão, informando a partir de quando confirmar', async () => {
-        prisma.agendamento.findUnique.mockResolvedValue(
-            agendamento({}, new Date(Date.now() + 3 * HORA))
-        );
-
-        const resposta = await concluir();
-
-        expect(resposta.status).toBe(400);
-        expect(resposta.body.erro).toMatch(/depois do horário da sessão \(\d{2}\/\d{2}\/\d{4}/);
-        expect(prisma.agendamento.updateMany).not.toHaveBeenCalled();
-        expect(prisma.usuario.update).not.toHaveBeenCalled();
-    });
-
-    it('retorna 400 depois do prazo de 7 dias', async () => {
-        prisma.agendamento.findUnique.mockResolvedValue(
-            agendamento({}, new Date(Date.now() - 7 * DIA - HORA))
-        );
-
-        const resposta = await concluir();
-
-        expect(resposta.status).toBe(400);
-        expect(resposta.body.erro).toMatch(/prazo/);
-        expect(prisma.usuario.update).not.toHaveBeenCalled();
-    });
-
-    it('aceita a confirmação no último dia do prazo', async () => {
-        prisma.agendamento.findUnique
-            .mockResolvedValueOnce(agendamento({}, new Date(Date.now() - 7 * DIA + HORA)))
-            .mockResolvedValueOnce({ id: 1, id_aluno: 20, status: 'concluido' });
-        prisma.agendamento.updateMany.mockResolvedValue({ count: 1 });
-
-        const resposta = await concluir();
-
-        expect(resposta.status).toBe(200);
-    });
-
-    it('retorna 400 ao concluir um agendamento cancelado', async () => {
-        prisma.agendamento.findUnique.mockResolvedValue(agendamento({ status: 'cancelado' }));
-
-        const resposta = await concluir();
-
-        expect(resposta.status).toBe(400);
-        expect(prisma.usuario.update).not.toHaveBeenCalled();
-    });
-
-    it('retorna 400 quando a vaga foi cancelada', async () => {
-        prisma.agendamento.findUnique.mockResolvedValue(
-            agendamento({
-                monitoria: {
-                    id_monitor: 30,
-                    horario: new Date(Date.now() - 2 * HORA),
-                    status: 'cancelada'
-                }
-            })
-        );
-
-        const resposta = await concluir();
-
-        expect(resposta.status).toBe(400);
-        expect(resposta.body.erro).toMatch(/vaga cancelada/);
-        expect(prisma.usuario.update).not.toHaveBeenCalled();
-    });
-
-    it('retorna 400 ao concluir um agendamento já concluído', async () => {
-        prisma.agendamento.findUnique.mockResolvedValue(agendamento({ status: 'concluido' }));
-
-        const resposta = await concluir();
-
-        expect(resposta.status).toBe(400);
-        expect(resposta.body.erro).toMatch(/já foi confirmada/);
-        expect(prisma.usuario.update).not.toHaveBeenCalled();
-    });
-
-    it('confirma a presença e credita +10 ao monitor e +2 ao aluno (D1)', async () => {
-        prisma.agendamento.findUnique
-            .mockResolvedValueOnce(agendamento())
-            .mockResolvedValueOnce({ id: 1, id_aluno: 20, status: 'concluido' });
-        prisma.agendamento.updateMany.mockResolvedValue({ count: 1 });
-
-        const resposta = await concluir();
-
-        expect(resposta.status).toBe(200);
-        expect(resposta.body.agendamento.status).toBe('concluido');
-        expect(resposta.body.mensagem).toMatch(/\+10 pontos para você e \+2 para o aluno/);
-        // O update condicional filtra pelo monitor da vaga e pelo status ainda aberto
-        expect(prisma.agendamento.updateMany).toHaveBeenCalledWith({
-            where: {
-                id: 1,
-                id_aluno: 20,
-                monitoria: { is: { id_monitor: 30 } },
-                status: { in: ['pendente', 'confirmado'] }
-            },
-            data: { status: 'concluido' }
+    describe('autorização', () => {
+        it('401 sem token nas duas rotas', async () => {
+            expect((await peloMonitor(null)).status).toBe(401);
+            expect((await peloAluno(null)).status).toBe(401);
+            expect(prisma.$queryRaw).not.toHaveBeenCalled();
         });
-        expect(prisma.usuario.update).toHaveBeenCalledTimes(2);
-        expect(prisma.usuario.update).toHaveBeenCalledWith({
-            where: { id: 30 },
-            data: { pontos: { increment: 10 } }
+
+        it('403 quando um aluno chama a rota do monitor', async () => {
+            const resposta = await peloMonitor(tokenAluno);
+
+            expect(resposta.status).toBe(403);
+            expect(prisma.$queryRaw).not.toHaveBeenCalled();
         });
-        expect(prisma.usuario.update).toHaveBeenCalledWith({
-            where: { id: 20 },
-            data: { pontos: { increment: 2 } }
+
+        it('403 quando o monitor de outra vaga confirma', async () => {
+            prisma.$queryRaw.mockResolvedValue([linha()]);
+
+            const resposta = await peloMonitor(tokenOutroMonitor);
+
+            expect(resposta.status).toBe(403);
+            expect(prisma.agendamento.update).not.toHaveBeenCalled();
+        });
+
+        it('403 quando outro aluno, ou o monitor, usa a rota do aluno', async () => {
+            prisma.$queryRaw.mockResolvedValue([linha()]);
+
+            expect((await peloAluno(tokenOutroAluno)).status).toBe(403);
+            expect((await peloAluno(tokenMonitor)).status).toBe(403);
+            expect(prisma.agendamento.update).not.toHaveBeenCalled();
+        });
+
+        it('404 quando o agendamento não existe', async () => {
+            prisma.$queryRaw.mockResolvedValue([]);
+
+            expect((await peloMonitor()).status).toBe(404);
         });
     });
 
-    it('não credita pontos duas vezes quando a confirmação concorrente já ocorreu', async () => {
-        prisma.agendamento.findUnique.mockResolvedValue(agendamento());
-        prisma.agendamento.updateMany.mockResolvedValue({ count: 0 });
+    describe('regras', () => {
+        it.each([
+            [
+                'antes do horário',
+                { horario: new Date(Date.now() + 3 * HORA) },
+                /depois do horário da sessão \(\d{2}\/\d{2}\/\d{4}/
+            ],
+            [
+                'depois do prazo de 7 dias',
+                { horario: new Date(Date.now() - 7 * DIA - HORA) },
+                /prazo/
+            ],
+            ['vaga cancelada', { status_vaga: 'cancelada' }, /vaga cancelada/],
+            ['inscrição cancelada', { status: 'cancelado' }, /cancelado/],
+            ['já confirmada pelos dois', { status: 'concluido' }, /aluno e pelo monitor/]
+        ])('400 %s', async (_nome, extra, mensagem) => {
+            prisma.$queryRaw.mockResolvedValue([linha(extra)]);
 
-        const resposta = await concluir();
+            const resposta = await peloAluno();
 
-        expect(resposta.status).toBe(400);
-        expect(prisma.usuario.update).not.toHaveBeenCalled();
+            expect(resposta.status).toBe(400);
+            expect(resposta.body.erro).toMatch(mensagem);
+            expect(prisma.agendamento.update).not.toHaveBeenCalled();
+            expect(prisma.usuario.update).not.toHaveBeenCalled();
+        });
+
+        it('aceita no último dia do prazo', async () => {
+            prisma.$queryRaw.mockResolvedValue([
+                linha({ horario: new Date(Date.now() - 7 * DIA + HORA) })
+            ]);
+
+            expect((await peloMonitor()).status).toBe(200);
+        });
+
+        it('400 quando o mesmo lado confirma duas vezes', async () => {
+            prisma.$queryRaw.mockResolvedValue([linha({ presenca_monitor_em: new Date() })]);
+            const doMonitor = await peloMonitor();
+            prisma.$queryRaw.mockResolvedValue([linha({ presenca_aluno_em: new Date() })]);
+            const doAluno = await peloAluno();
+
+            expect(doMonitor.status).toBe(400);
+            expect(doMonitor.body.erro).toMatch(/Falta o aluno/);
+            expect(doAluno.status).toBe(400);
+            expect(doAluno.body.erro).toMatch(/Falta o monitor/);
+            expect(prisma.usuario.update).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('pontos só com as duas confirmações (D1)', () => {
+        it('a primeira confirmação, do monitor, registra sem concluir nem pontuar', async () => {
+            prisma.$queryRaw.mockResolvedValue([linha()]);
+
+            const resposta = await peloMonitor();
+
+            expect(resposta.status).toBe(200);
+            expect(resposta.body.concluido).toBe(false);
+            expect(resposta.body.mensagem).toMatch(/quando o aluno também confirmar/);
+            const { data } = prisma.agendamento.update.mock.calls[0][0];
+            expect(data.presenca_monitor_em).toBeInstanceOf(Date);
+            expect(data.status).toBeUndefined();
+            expect(prisma.usuario.update).not.toHaveBeenCalled();
+        });
+
+        it('a primeira confirmação, do aluno, registra sem concluir nem pontuar', async () => {
+            prisma.$queryRaw.mockResolvedValue([linha()]);
+
+            const resposta = await peloAluno();
+
+            expect(resposta.status).toBe(200);
+            expect(resposta.body.concluido).toBe(false);
+            expect(resposta.body.mensagem).toMatch(/quando o monitor também confirmar/);
+            expect(
+                prisma.agendamento.update.mock.calls[0][0].data.presenca_aluno_em
+            ).toBeInstanceOf(Date);
+            expect(prisma.usuario.update).not.toHaveBeenCalled();
+        });
+
+        it('o monitor confirmando depois do aluno conclui e credita +10 e +2', async () => {
+            prisma.$queryRaw.mockResolvedValue([linha({ presenca_aluno_em: new Date() })]);
+
+            const resposta = await peloMonitor();
+
+            expect(resposta.status).toBe(200);
+            expect(resposta.body.concluido).toBe(true);
+            expect(resposta.body.mensagem).toMatch(/\+10 pontos para você e \+2 para o aluno/);
+            expect(prisma.agendamento.update.mock.calls[0][0].data.status).toBe('concluido');
+            expect(prisma.usuario.update).toHaveBeenCalledTimes(2);
+            expect(prisma.usuario.update).toHaveBeenCalledWith({
+                where: { id: 30 },
+                data: { pontos: { increment: 10 } }
+            });
+            expect(prisma.usuario.update).toHaveBeenCalledWith({
+                where: { id: 20 },
+                data: { pontos: { increment: 2 } }
+            });
+        });
+
+        it('o aluno confirmando depois do monitor também conclui e credita', async () => {
+            prisma.$queryRaw.mockResolvedValue([linha({ presenca_monitor_em: new Date() })]);
+
+            const resposta = await peloAluno();
+
+            expect(resposta.body.concluido).toBe(true);
+            expect(resposta.body.mensagem).toMatch(/\+2 pontos para você/);
+            expect(prisma.usuario.update).toHaveBeenCalledTimes(2);
+        });
+
+        it('trava a inscrição na mesma transação da escrita (SELECT ... FOR UPDATE)', async () => {
+            prisma.$queryRaw.mockResolvedValue([linha()]);
+
+            await peloAluno();
+
+            expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+            const sql = prisma.$queryRaw.mock.calls[0][0].join('?');
+            expect(sql).toMatch(/FOR UPDATE OF a/);
+        });
     });
 });
