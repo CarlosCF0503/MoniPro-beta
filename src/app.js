@@ -37,7 +37,12 @@ app.use(
             } else {
                 callback(new ErroNaoAutorizado('Origem não permitida pelo CORS.'));
             }
-        }
+        },
+        // P3 (R7): o navegador só envia o cookie de sessão em chamadas de outra origem
+        // (ex.: frontend local em outra porta) se a API permitir credenciais. A lista de
+        // origens acima continua valendo, e é ela que barra com 403 as requisições que
+        // alteram dados vindas de outro site (proteção contra CSRF, junto do SameSite=Strict).
+        credentials: true
     })
 );
 // R10: limite geral para todas as rotas, contra abuso e varredura automatizada. É bem mais
