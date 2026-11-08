@@ -25,6 +25,14 @@ class UsuarioRepository {
         });
     }
 
+    // R3 (LGPD): o último login conta o prazo de retenção de contas paradas
+    async registrarAcesso(id, quando = new Date()) {
+        await prisma.usuario.update({
+            where: { id: parseInt(id) },
+            data: { ultimo_acesso: quando }
+        });
+    }
+
     // O ID continua sendo único no banco, então o findUnique continua funcionando perfeitamente aqui!
     async buscarPorId(id) {
         return await prisma.usuario.findUnique({

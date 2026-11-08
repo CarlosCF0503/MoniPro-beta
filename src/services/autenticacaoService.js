@@ -5,6 +5,7 @@ const sessaoRepository = require('../repositories/sessaoRepository');
 const { DURACAO_SESSAO_SEGUNDOS } = require('../config/sessao');
 const { JWT_SECRET } = require('../config/env');
 const { ErroCredenciaisInvalidas, ErroConflito } = require('../utils/erros');
+const logger = require('../utils/logger');
 
 const MENSAGEM_CREDENCIAIS_INVALIDAS = 'E-mail/matrícula ou senha incorretos.';
 // Hash de uma senha que ninguém usa, com o mesmo custo dos hashes reais: comparado
@@ -60,6 +61,17 @@ class AutenticacaoService {
         );
         if (!usuarioValido || !senhaValida) {
             throw new ErroCredenciaisInvalidas(MENSAGEM_CREDENCIAIS_INVALIDAS);
+        }
+
+        // R3 (LGPD): registra o login. Uma falha aqui não impede a entrada; no pior caso a
+        // conta parece parada há mais tempo do que está.
+        try {
+            await usuarioRepository.registrarAcesso(usuario.id);
+        } catch (erro) {
+            logger.warn(
+                { id: usuario.id, err: erro.message },
+                'Não foi possível registrar o acesso'
+            );
         }
 
         // P3 (R7): validade de 2 h (D2) e a versão da sessão ("v"), conferida pelo middleware
