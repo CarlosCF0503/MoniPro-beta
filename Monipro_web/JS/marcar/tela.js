@@ -5,7 +5,7 @@
 // As duas montagens usam o mesmo estado, então mudar a largura no meio do fluxo não perde nada.
 // Depende de: toast.js, api.js, marcar/datas.js, marcar/componentes.js.
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const D = window.MarcarDatas;
     const C = window.MarcarComponentes;
     const esc = escaparHtml;
@@ -20,9 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
     const disciplinaID = params.get('disciplinaID');
     const disciplinaNome = params.get('disciplinaNome') || 'Disciplina';
-    const token = localStorage.getItem('monipro_token');
 
-    if (!disciplinaID || !token) {
+    if (!disciplinaID) {
         showToast('Informações inválidas. Redirecionando...', 'error');
         setTimeout(() => {
             window.location.href = 'base.html';
@@ -30,11 +29,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    // P3 (R7): quem está logado vem de GET /auth/sessao (o token fica no cookie httpOnly)
     let usuario;
     try {
-        usuario = JSON.parse(atob(token.split('.')[1]));
-    } catch {
-        localStorage.removeItem('monipro_token');
+        usuario = await obterSessao();
+    } catch (erro) {
+        showToast(erro.message || 'Falha na comunicação com o servidor.', 'error', erro);
+        return;
+    }
+    if (!usuario) {
         window.location.href = 'index.html';
         return;
     }
@@ -216,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const nova = D.normalizarVaga({
                     ...r.monitoria,
                     vagas_disponiveis: r.monitoria.capacidade,
-                    monitor: { nome_completo: usuario.nome_completo }
+                    monitor: { nome_completo: usuario.nome }
                 });
                 S.vagas.push(nova);
                 S.vagas.sort((a, b) => a.inicio - b.inicio);
@@ -439,7 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const capacidade = Math.max(Math.floor(Number(S.form.capacidade)) || 1, 1);
         return {
             inicio,
-            monitor: usuario.nome_completo || 'Você',
+            monitor: usuario.nome || 'Você',
             local: S.form.local.trim(),
             descricao: S.form.descricao.trim(),
             capacidade,
