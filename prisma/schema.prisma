@@ -29,16 +29,16 @@ enum StatusAgendamento {
 model Usuario {
   id            Int          @id @default(autoincrement())
   nome_completo String
-  email         String       
+  email         String
   senha         String
   tipo_usuario  TipoUsuario
-  matricula     Int          
+  matricula     Int
   pontos        Int          @default(0) // <-- CAMPO DE GAMIFICAÇÃO
 
   monitorias_criadas Monitoria[]   @relation("MonitorParaMonitoria")
   meus_agendamentos  Agendamento[] @relation("AlunoParaAgendamento")
 
-  @@unique([email, tipo_usuario]) 
+  @@unique([email, tipo_usuario])
   @@unique([matricula, tipo_usuario])
   @@map("usuarios")
 }
@@ -77,6 +77,9 @@ model Agendamento {
   id           Int               @id @default(autoincrement())
   data_hora    DateTime
   status       StatusAgendamento @default(pendente)
+  // P2 (R4): a presença vale quando os dois confirmam; aí o status vira concluido
+  presenca_aluno_em   DateTime?
+  presenca_monitor_em DateTime?
 
   id_monitoria Int
   monitoria    Monitoria         @relation(fields: [id_monitoria], references: [id])

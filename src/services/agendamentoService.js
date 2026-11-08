@@ -1,5 +1,6 @@
 const agendamentoRepository = require('../repositories/agendamentoRepository');
 const { validarAntecedenciaCancelamento } = require('../utils/validarAntecedencia');
+const { validarJanelaConfirmacao } = require('../utils/regrasConclusao');
 const {
     ErroValidacao,
     ErroRegraNegocio,
@@ -69,30 +70,59 @@ class AgendamentoService {
         return await agendamentoRepository.deletar(id);
     }
 
-    async concluir(id, idAluno) {
-        const agendamento = await agendamentoRepository.buscarPorId(id);
-        if (!agendamento) {
-            throw new ErroNaoEncontrado('Agendamento não encontrado.');
-        }
-        if (agendamento.id_aluno !== idAluno) {
-            throw new ErroNaoAutorizado('Você não tem permissão para concluir este agendamento.');
-        }
-        if (agendamento.status === 'concluido') {
-            throw new ErroRegraNegocio('Este agendamento já foi concluído.');
-        }
-        if (agendamento.status === 'cancelado') {
-            throw new ErroRegraNegocio('Não é possível concluir um agendamento cancelado.');
-        }
+    // P2 (R4): a presença vale quando o aluno e o monitor da vaga confirmam, cada um do seu
+    // lado, depois do início da sessão e em até 7 dias. Quem confirma por último conclui o
+    // agendamento, e os pontos (D1) entram uma única vez. `lado` é 'aluno' ou 'monitor'.
+    async registrarPresenca(id, lado, idUsuario) {
+        return await agendamentoRepository.emTransacao(async (tx) => {
+            const ag = await agendamentoRepository.bloquearParaPresenca(id, tx);
+            if (!ag) {
+                throw new ErroNaoEncontrado('Agendamento não encontrado.');
+            }
+            const ehMonitor = lado === 'monitor';
+            if ((ehMonitor ? ag.id_monitor : ag.id_aluno) !== idUsuario) {
+                throw new ErroNaoAutorizado(
+                    ehMonitor
+                        ? 'Só o monitor responsável pela vaga pode confirmar a presença.'
+                        : 'Só o aluno inscrito pode confirmar a própria presença.'
+                );
+            }
+            if (ag.status === 'concluido') {
+                throw new ErroRegraNegocio(
+                    'Esta presença já foi confirmada pelo aluno e pelo monitor.'
+                );
+            }
+            if (ag.status === 'cancelado') {
+                throw new ErroRegraNegocio('Não é possível confirmar um agendamento cancelado.');
+            }
+            // Cancelar a vaga não muda o status das inscrições, então a checagem é feita aqui
+            if (ag.status_vaga === 'cancelada') {
+                throw new ErroRegraNegocio(
+                    'Não é possível confirmar presença numa vaga cancelada.'
+                );
+            }
+            const campo = ehMonitor ? 'presenca_monitor_em' : 'presenca_aluno_em';
+            if (ag[campo]) {
+                throw new ErroRegraNegocio(
+                    ehMonitor
+                        ? 'Você já confirmou a presença deste aluno. Falta o aluno confirmar.'
+                        : 'Você já confirmou a sua presença. Falta o monitor confirmar.'
+                );
+            }
+            validarJanelaConfirmacao(ag.horario);
 
-        const agendamentoAtualizado = await agendamentoRepository.concluirEIncrementarPontos(
-            id,
-            idAluno
-        );
-        // Outra requisição concluiu o mesmo agendamento entre a leitura e a escrita
-        if (!agendamentoAtualizado) {
-            throw new ErroRegraNegocio('Este agendamento já foi concluído.');
-        }
-        return agendamentoAtualizado;
+            const concluiu = Boolean(ehMonitor ? ag.presenca_aluno_em : ag.presenca_monitor_em);
+            const agendamento = await agendamentoRepository.registrarPresenca(
+                id,
+                campo,
+                new Date(),
+                concluiu,
+                tx
+            );
+            if (concluiu)
+                await agendamentoRepository.creditarPontos(ag.id_monitor, ag.id_aluno, tx);
+            return { agendamento, concluiu };
+        });
     }
 }
 
