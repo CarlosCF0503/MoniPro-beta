@@ -9,10 +9,12 @@
         "test": "jest --runInBand",
         "seed": "node prisma/seed.js",
         "lint": "eslint . && prettier --check .",
-        "lint:fix": "eslint . --fix && prettier --write ."
+        "lint:fix": "eslint . --fix && prettier --write .",
+        "test:e2e": "playwright test"
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
+        "@playwright/test": "1.64.1",
         "@prisma/config": "^7.10.1",
         "@types/pg": "^8.18.0",
         "eslint": "^10.9.1",

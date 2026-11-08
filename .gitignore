@@ -3,3 +3,6 @@ node_modules/
 ca.pem
 # Prisma Client gerado: recriado por "npm run generate" (ou pelo postinstall) em cada ambiente
 prisma/.prisma/
+# Saídas dos testes de ponta a ponta (Playwright, R1)
+e2e-resultados/
+e2e-relatorio/

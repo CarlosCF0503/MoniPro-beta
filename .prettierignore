@@ -17,3 +17,7 @@ Monipro_web/**/*.css
 
 # Evidências de teste são registros fixos (saídas e scripts como foram executados): não se formatam
 docs/evidencias
+
+# Saídas dos testes de ponta a ponta (Playwright, R1)
+e2e-resultados
+e2e-relatorio
