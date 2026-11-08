@@ -41,6 +41,13 @@
     const TERMINO_PASSO = 15;
     const TERMINO_MAXIMO = 240;
 
+    // P2 (R4) e D1: o monitor confirma a presença depois do início da sessão, em até 7 dias,
+    // e cada confirmação vale +10 pontos para ele e +2 para o aluno (as mesmas regras da API)
+    const DIAS_CONFIRMACAO = 7;
+    const PONTOS_MONITOR = 10;
+    const PONTOS_ALUNO = 2;
+    const MS_DIA = 24 * 60 * 60 * 1000;
+
     const ATIVAS = ['ativa', 'pendente'];
     const REALIZADAS = ['realizada', 'concluida'];
 
@@ -178,6 +185,47 @@
         return grupos;
     }
 
+    /** Inscrição de GET /monitorias/monitor/agendamentos no formato da tela. */
+    function normalizarInscricao(a) {
+        return {
+            id: a.id,
+            idVaga: a.id_monitoria,
+            aluno: (a.aluno && a.aluno.nome_completo) || 'Aluno',
+            status: String(a.status || '').toLowerCase()
+        };
+    }
+
+    /** Map idVaga -> inscrições em ordem alfabética, sem as canceladas. */
+    function agruparInscricoes(lista) {
+        const mapa = new Map();
+        lista.forEach((i) => {
+            if (i.status === 'cancelado') return;
+            if (!mapa.has(i.idVaga)) mapa.set(i.idVaga, []);
+            mapa.get(i.idVaga).push(i);
+        });
+        mapa.forEach((l) => l.sort((a, b) => a.aluno.localeCompare(b.aluno, 'pt-BR')));
+        return mapa;
+    }
+
+    function limiteConfirmacao(vaga) {
+        return new Date(vaga.inicio.getTime() + DIAS_CONFIRMACAO * MS_DIA);
+    }
+
+    /** 'confirmada' | 'cancelada' | 'antes' (sessão não começou) | 'confirmar' | 'expirada' */
+    function situacaoPresenca(inscricao, vaga, agora) {
+        if (inscricao.status === 'concluido') return 'confirmada';
+        if (inscricao.status === 'cancelado' || vaga.status === 'cancelada') return 'cancelada';
+        if (agora < vaga.inicio) return 'antes';
+        if (agora > limiteConfirmacao(vaga)) return 'expirada';
+        return 'confirmar';
+    }
+
+    /** Quantas presenças desta vaga ainda podem ser confirmadas agora. */
+    function presencasAConfirmar(inscricoes, vaga, agora) {
+        return (inscricoes || []).filter((i) => situacaoPresenca(i, vaga, agora) === 'confirmar')
+            .length;
+    }
+
     function plural(n, um, varios) {
         return n + ' ' + (n === 1 ? um : varios);
     }
@@ -187,6 +235,9 @@
         MESES_CURTOS,
         DIAS_SEMANA,
         HORAS_CANCELAMENTO,
+        DIAS_CONFIRMACAO,
+        PONTOS_MONITOR,
+        PONTOS_ALUNO,
         hora,
         diaMes,
         diaCurto,
@@ -201,6 +252,11 @@
         podeCancelar,
         opcoesTermino,
         agruparPorMes,
+        normalizarInscricao,
+        agruparInscricoes,
+        limiteConfirmacao,
+        situacaoPresenca,
+        presencasAConfirmar,
         plural
     };
 

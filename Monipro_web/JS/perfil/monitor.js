@@ -53,7 +53,10 @@ document.addEventListener('DOMContentLoaded', () => {
         abaCel: 'vagas', // celular: vagas | horas | perfil
         filtroCel: 'aberto', // celular, aba Vagas: aberto | historico
         alvo: null,
-        gatilho: null
+        gatilho: null,
+        // P2: inscrições das vagas do monitor, por vaga (Map idVaga -> lista)
+        inscricoes: new Map(),
+        inscricoesErro: false
     };
 
     // --- 3. Ícones (traço arredondado, currentColor, como no header) ---
@@ -148,14 +151,51 @@ document.addEventListener('DOMContentLoaded', () => {
         );
     }
     const AVISO_24H = 'Cancelamento só até ' + D.HORAS_CANCELAMENTO + 'h antes';
+    // P2 (R4): presença confirmada pelo monitor depois do início da sessão (D1)
+    const inscricoesDa = (v) => S.inscricoes.get(v.id) || [];
+    const aConfirmar = (v) => D.presencasAConfirmar(inscricoesDa(v), v, S.agora);
+    // Aviso quando há presenças a confirmar em vagas do Histórico (já finalizadas), que não
+    // aparecem na aba aberta. atributo: 'data-aba' (computador) ou 'data-filtro' (celular).
+    function avisoPresencas(L, atributo) {
+        const n = L.historico.reduce((soma, v) => soma + aConfirmar(v), 0);
+        if (!n) return '';
+        return (
+            '<div class="pp-aviso-presenca" role="status">' +
+            icone('pessoas', 18) +
+            '<span><strong>' +
+            D.plural(n, 'presença a confirmar', 'presenças a confirmar') +
+            '</strong> em vagas já finalizadas. O prazo é de ' +
+            D.DIAS_CONFIRMACAO +
+            ' dias depois de cada sessão.</span><button type="button" class="pp-btn pp-btn-sec pp-btn-p" ' +
+            atributo +
+            '="historico">Ver no Histórico</button></div>'
+        );
+    }
+    function botaoPresencas(v) {
+        const n = aConfirmar(v);
+        if (!n) return '';
+        return (
+            '<button type="button" class="pp-btn pp-btn-sec" data-acao="detalhes" data-id="' +
+            esc(v.id) +
+            '">' +
+            icone('ok', 16) +
+            (n === 1 ? 'Confirmar presença' : 'Confirmar presenças (' + n + ')') +
+            '</button>'
+        );
+    }
     function acoes(v) {
         const g = D.grupo(v, S.agora);
         if (g === 'finalizar')
             return (
                 '<div class="vg-acoes">' +
+                botaoPresencas(v) +
                 botaoFinalizar(v, 'Finalizar', 'pp-btn pp-btn-pri') +
                 '</div>'
             );
+        if (g === 'historico') {
+            const presencas = botaoPresencas(v);
+            return presencas ? '<div class="vg-acoes">' + presencas + '</div>' : '';
+        }
         if (g === 'proximas')
             return (
                 '<div class="vg-acoes">' +
@@ -293,14 +333,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 proximas: 'Nenhuma vaga marcada. Abra uma para os alunos poderem se inscrever.',
                 historico: 'Vagas finalizadas e canceladas aparecem aqui.'
             }[S.aba];
-            painel = lista.length
-                ? '<p class="pp-dica">' +
-                  dica +
-                  '</p><ul class="vagas-lista">' +
-                  lista.map(itemVaga).join('') +
-                  '</ul>' +
-                  (S.aba === 'historico' ? maisAntigas() : '')
-                : '<p class="pp-vazio">' + vazio + '</p>';
+            painel =
+                (S.aba === 'historico' ? '' : avisoPresencas(L, 'data-aba')) +
+                (lista.length
+                    ? '<p class="pp-dica">' +
+                      dica +
+                      '</p><ul class="vagas-lista">' +
+                      lista.map(itemVaga).join('') +
+                      '</ul>' +
+                      (S.aba === 'historico' ? maisAntigas() : '')
+                    : '<p class="pp-vazio">' + vazio + '</p>');
         }
 
         const numeros = temDados()
@@ -401,6 +443,12 @@ document.addEventListener('DOMContentLoaded', () => {
                   (v.fim ? ' · ' + D.duracao((v.fim - v.inicio) / 60000) : '')
                 : '<span class="ponto perigo"></span>Cancelada';
         else sub = D.hora(v.inicio) + ' · ' + textoInscritos(v, true);
+        const n = aConfirmar(v);
+        if (n)
+            sub +=
+                ' · <span class="lc-presenca">' +
+                D.plural(n, 'presença', 'presenças') +
+                ' a confirmar</span>';
         return (
             '<li class="lc' +
             (g === 'finalizar' ? ' lc-atencao' : '') +
@@ -456,6 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (S.filtroCel === 'historico') corpo = historicoCel(L);
         else
             corpo =
+                avisoPresencas(L, 'data-filtro') +
                 (L.finalizar.length
                     ? '<h2 class="lc-secao atencao">Para finalizar · ' +
                       L.finalizar.length +
@@ -615,9 +664,13 @@ document.addEventListener('DOMContentLoaded', () => {
         S.erro = null;
         render();
         try {
-            const [perfil, lista] = await Promise.all([
+            const [perfil, lista, inscricoes] = await Promise.all([
                 chamadaApi('/perfil'),
-                chamadaApi('/perfil/monitorias?limit=' + LIMITE + '&page=1')
+                chamadaApi('/perfil/monitorias?limit=' + LIMITE + '&page=1'),
+                // P2: sem a lista de inscritos o perfil continua funcionando; só some o botão
+                chamadaApi('/monitorias/monitor/agendamentos?limit=' + LIMITE + '&page=1').catch(
+                    () => null
+                )
             ]);
             if (perfil.statusHttp === 401 || lista.statusHttp === 401) return sessaoExpirada();
             if (!perfil.success || !perfil.user)
@@ -625,6 +678,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!lista.success)
                 throw new Error(mensagemDaApi(lista, 'Não foi possível carregar suas vagas.'));
             S.usuario = perfil.user;
+            S.inscricoesErro = !inscricoes || !inscricoes.success;
+            S.inscricoes = D.agruparInscricoes(
+                ((inscricoes && inscricoes.agendamentos) || []).map(D.normalizarInscricao)
+            );
             S.vagas = (lista.monitorias || []).map(D.normalizar);
             S.total = lista.paginacao ? lista.paginacao.total : S.vagas.length;
             S.pagina = 1;
@@ -664,7 +721,79 @@ document.addEventListener('DOMContentLoaded', () => {
     const dlgDet = document.getElementById('dlg-detalhes');
     const vagaPorId = (id) => S.vagas.find((v) => String(v.id) === String(id));
 
+    function presencasHTML(v) {
+        if (v.status === 'cancelada') return '';
+        const lista = inscricoesDa(v);
+        let nota;
+        if (S.inscricoesErro) nota = 'Não foi possível carregar os inscritos desta vaga.';
+        else if (!lista.length) nota = 'Ninguém se inscreveu nesta vaga.';
+        else if (S.agora < v.inicio)
+            nota = 'Você poderá confirmar a presença dos alunos depois do início da sessão.';
+        else if (S.agora > D.limiteConfirmacao(v))
+            nota =
+                'O prazo de ' +
+                D.DIAS_CONFIRMACAO +
+                ' dias para confirmar terminou em ' +
+                D.diaMes(D.limiteConfirmacao(v)) +
+                '.';
+        else
+            nota =
+                'Confirme até ' +
+                D.diaMes(D.limiteConfirmacao(v)) +
+                ' às ' +
+                D.hora(D.limiteConfirmacao(v)) +
+                '. Cada presença vale +' +
+                D.PONTOS_MONITOR +
+                ' pontos para você e +' +
+                D.PONTOS_ALUNO +
+                ' para o aluno.';
+        const itens = lista
+            .map((i) => {
+                const sit = D.situacaoPresenca(i, v, S.agora);
+                let lado = '';
+                if (sit === 'confirmar')
+                    lado =
+                        '<button type="button" class="pp-btn pp-btn-sec pp-btn-p" data-acao="presenca" data-id="' +
+                        esc(v.id) +
+                        '" data-ag="' +
+                        esc(i.id) +
+                        '" aria-label="Confirmar presença de ' +
+                        esc(i.aluno) +
+                        '">Confirmar presença</button>';
+                else if (sit === 'confirmada')
+                    lado =
+                        '<span class="pill pill-ok" tabindex="-1" id="pres-' +
+                        esc(i.id) +
+                        '">' +
+                        icone('ok', 12) +
+                        'Presença confirmada</span>';
+                else if (sit === 'expirada')
+                    lado = '<span class="pp-insc-estado">Não confirmada</span>';
+                return (
+                    '<li><span class="pp-insc-nome">' +
+                    icone('pessoa', 16) +
+                    esc(i.aluno) +
+                    '</span>' +
+                    lado +
+                    '</li>'
+                );
+            })
+            .join('');
+        return (
+            '<section class="pp-insc" aria-labelledby="insc-titulo"><h3 id="insc-titulo">Presença dos inscritos</h3><p class="pp-insc-nota">' +
+            nota +
+            '</p>' +
+            (itens ? '<ul>' + itens + '</ul>' : '') +
+            '</section>'
+        );
+    }
+
     function abrirDetalhes(v) {
+        S.alvo = v;
+        preencherDetalhes(v);
+        dlgDet.showModal();
+    }
+    function preencherDetalhes(v) {
         const g = D.grupo(v, S.agora);
         document.getElementById('det-titulo').textContent = v.disciplina;
         let acoesDet = '';
@@ -693,8 +822,47 @@ document.addEventListener('DOMContentLoaded', () => {
             '</dd></div><div><dt>Inscritos</dt><dd>' +
             textoInscritos(v) +
             '</dd></div></dl>' +
+            presencasHTML(v) +
             acoesDet;
-        dlgDet.showModal();
+    }
+
+    // P2 (R4): PATCH /agendamentos/:id/concluir, feito pelo monitor dono da vaga
+    async function confirmarPresenca(botao) {
+        const vaga = vagaPorId(botao.dataset.id);
+        const inscricao = vaga && inscricoesDa(vaga).find((i) => String(i.id) === botao.dataset.ag);
+        if (!inscricao) return;
+        botao.disabled = true;
+        botao.textContent = 'Confirmando…';
+        try {
+            const dados = await chamadaApi('/agendamentos/' + inscricao.id + '/concluir', {
+                method: 'PATCH'
+            });
+            if (dados.statusHttp === 401) return sessaoExpirada();
+            if (dados.erro || !dados.success) {
+                showToast(
+                    mensagemDaApi(dados, 'Não foi possível confirmar a presença.'),
+                    'error',
+                    dados
+                );
+                botao.disabled = false;
+                botao.textContent = 'Confirmar presença';
+                return;
+            }
+            inscricao.status = 'concluido';
+            if (S.usuario) S.usuario.pontos = (Number(S.usuario.pontos) || 0) + D.PONTOS_MONITOR;
+            render();
+            preencherDetalhes(vaga);
+            const marca = document.getElementById('pres-' + inscricao.id);
+            if (marca) marca.focus();
+            showToast(
+                dados.mensagem || 'Presença de ' + inscricao.aluno + ' confirmada.',
+                'success'
+            );
+        } catch (erro) {
+            showToast('Erro de rede. Verifique a conexão e tente de novo.', 'error', erro);
+            botao.disabled = false;
+            botao.textContent = 'Confirmar presença';
+        }
     }
     dlgDet.addEventListener('click', (ev) => {
         if (ev.target === dlgDet) dlgDet.close(); // toque fora do painel
@@ -985,6 +1153,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const acao = b.dataset.acao;
         if (acao === 'recarregar') return carregar();
         if (acao === 'mais') return carregarMais();
+        if (acao === 'presenca') return confirmarPresenca(b);
         const vaga = vagaPorId(b.dataset.id);
         if (!vaga) return;
         const deDentro = b.closest('dialog');

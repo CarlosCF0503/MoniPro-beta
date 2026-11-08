@@ -1134,6 +1134,87 @@
     width: 100%;
 }
 
+/* P2: presença dos inscritos, confirmada pelo monitor */
+.pp-dlg .pp-insc {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 4px;
+}
+.pp-dlg .pp-insc h3 {
+    margin: 0;
+    font-size: 15px;
+    color: var(--navy);
+}
+.pp-dlg .pp-insc-nota {
+    margin: 0;
+    font-size: 13px;
+    color: var(--slate-ink);
+}
+.pp-dlg .pp-insc ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+.pp-dlg .pp-insc li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line);
+}
+.pp-dlg .pp-insc-nome {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+.pp-dlg .pp-insc-nome .ico {
+    flex: none;
+    color: var(--slate);
+}
+.pp-dlg .pp-insc .pp-btn-p {
+    min-height: 40px;
+    padding: 0 14px;
+    font-size: 13px;
+}
+.pp-dlg .pp-insc-estado {
+    font-size: 13px;
+    color: var(--slate);
+}
+.pp-aviso-presenca {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px 12px;
+    margin-bottom: 14px;
+    padding: 12px 14px;
+    border: 1px solid var(--warn-line);
+    border-radius: 12px;
+    background: var(--warn-soft);
+    color: var(--warn-ink);
+    font-size: 14px;
+}
+.pp-aviso-presenca > span {
+    flex: 1 1 220px;
+}
+.pp-aviso-presenca .ico {
+    flex: none;
+}
+.pp-aviso-presenca .pp-btn {
+    margin-left: auto;
+}
+.lc-presenca {
+    color: var(--warn-ink);
+    font-weight: 700;
+}
+
 /* Horário de término: caixa inteira clicável + lista curta com rolagem própria.
    Mesmo padrão de .hora-btn/.hora-lista em marcar_monitoria.css (~7 itens visíveis). */
 .pp-dlg .hora {

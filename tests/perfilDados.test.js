@@ -119,3 +119,59 @@ describe('perfil do monitor — dados', () => {
         ]);
     });
 });
+
+describe('perfil do monitor — presença dos inscritos (P2, D1)', () => {
+    const passada = vaga({ horario: new Date(2026, 10, 5, 14).toISOString() });
+    const inscricao = (status, id = 1, nome = 'Bia') => ({ id, idVaga: 1, aluno: nome, status });
+
+    test('normalizarInscricao pega o nome do aluno e o status em minúsculas', () => {
+        expect(
+            D.normalizarInscricao({
+                id: 9,
+                id_monitoria: 4,
+                status: 'PENDENTE',
+                aluno: { nome_completo: 'Ana' }
+            })
+        ).toEqual({ id: 9, idVaga: 4, aluno: 'Ana', status: 'pendente' });
+        expect(D.normalizarInscricao({ id: 1, id_monitoria: 4 }).aluno).toBe('Aluno');
+    });
+
+    test('agruparInscricoes separa por vaga, ordena pelo nome e tira as canceladas', () => {
+        const mapa = D.agruparInscricoes([
+            { id: 1, idVaga: 4, aluno: 'Caio', status: 'pendente' },
+            { id: 2, idVaga: 4, aluno: 'Ágata', status: 'concluido' },
+            { id: 3, idVaga: 5, aluno: 'Bia', status: 'cancelado' }
+        ]);
+        expect(mapa.get(4).map((i) => i.aluno)).toEqual(['Ágata', 'Caio']);
+        expect(mapa.has(5)).toBe(false);
+    });
+
+    test('só dá para confirmar depois do início e em até 7 dias', () => {
+        const futura = vaga({});
+        expect(D.situacaoPresenca(inscricao('pendente'), futura, AGORA)).toBe('antes');
+        expect(D.situacaoPresenca(inscricao('pendente'), passada, AGORA)).toBe('confirmar');
+        expect(D.situacaoPresenca(inscricao('confirmado'), passada, AGORA)).toBe('confirmar');
+        const noLimite = new Date(2026, 10, 12, 14, 0);
+        expect(D.situacaoPresenca(inscricao('pendente'), passada, noLimite)).toBe('confirmar');
+        const depois = new Date(2026, 10, 12, 14, 1);
+        expect(D.situacaoPresenca(inscricao('pendente'), passada, depois)).toBe('expirada');
+        expect(D.limiteConfirmacao(passada)).toEqual(noLimite);
+    });
+
+    test('presença confirmada e vaga cancelada não oferecem o botão', () => {
+        expect(D.situacaoPresenca(inscricao('concluido'), passada, AGORA)).toBe('confirmada');
+        const cancelada = vaga({ horario: passada.inicio.toISOString(), status: 'cancelada' });
+        expect(D.situacaoPresenca(inscricao('pendente'), cancelada, AGORA)).toBe('cancelada');
+    });
+
+    test('presencasAConfirmar conta só as que podem ser confirmadas agora', () => {
+        const lista = [
+            inscricao('pendente', 1),
+            inscricao('concluido', 2),
+            inscricao('pendente', 3)
+        ];
+        expect(D.presencasAConfirmar(lista, passada, AGORA)).toBe(2);
+        expect(D.presencasAConfirmar(lista, vaga({}), AGORA)).toBe(0);
+        expect(D.presencasAConfirmar(undefined, passada, AGORA)).toBe(0);
+    });
+});
