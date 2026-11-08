@@ -41,8 +41,9 @@
     const TERMINO_PASSO = 15;
     const TERMINO_MAXIMO = 240;
 
-    // P2 (R4) e D1: o monitor confirma a presença depois do início da sessão, em até 7 dias,
-    // e cada confirmação vale +10 pontos para ele e +2 para o aluno (as mesmas regras da API)
+    // P2 (R4) e D1: aluno e monitor confirmam a presença, cada um do seu lado, depois do início
+    // da sessão e em até 7 dias. Com as duas confirmações, o monitor ganha +10 e o aluno +2
+    // (as mesmas regras da API)
     const DIAS_CONFIRMACAO = 7;
     const PONTOS_MONITOR = 10;
     const PONTOS_ALUNO = 2;
@@ -185,13 +186,15 @@
         return grupos;
     }
 
-    /** Inscrição de GET /monitorias/monitor/agendamentos no formato da tela. */
+    /** Inscrição da API (monitor ou aluno) no formato da tela. */
     function normalizarInscricao(a) {
         return {
             id: a.id,
             idVaga: a.id_monitoria,
             aluno: (a.aluno && a.aluno.nome_completo) || 'Aluno',
-            status: String(a.status || '').toLowerCase()
+            status: String(a.status || '').toLowerCase(),
+            alunoConfirmou: Boolean(a.presenca_aluno_em),
+            monitorConfirmou: Boolean(a.presenca_monitor_em)
         };
     }
 
@@ -211,19 +214,93 @@
         return new Date(vaga.inicio.getTime() + DIAS_CONFIRMACAO * MS_DIA);
     }
 
-    /** 'confirmada' | 'cancelada' | 'antes' (sessão não começou) | 'confirmar' | 'expirada' */
-    function situacaoPresenca(inscricao, vaga, agora) {
+    /**
+     * Situação da presença vista por um dos lados (lado: 'monitor' ou 'aluno'):
+     * 'confirmada' (os dois confirmaram) | 'cancelada' | 'antes' (sessão não começou) |
+     * 'expirada' (prazo acabou) | 'aguardando' (este lado já confirmou, falta o outro) |
+     * 'confirmar' (este lado ainda pode confirmar)
+     */
+    function situacaoPresenca(inscricao, vaga, agora, lado) {
         if (inscricao.status === 'concluido') return 'confirmada';
         if (inscricao.status === 'cancelado' || vaga.status === 'cancelada') return 'cancelada';
         if (agora < vaga.inicio) return 'antes';
         if (agora > limiteConfirmacao(vaga)) return 'expirada';
-        return 'confirmar';
+        const jaConfirmou =
+            lado === 'aluno' ? inscricao.alunoConfirmou : inscricao.monitorConfirmou;
+        return jaConfirmou ? 'aguardando' : 'confirmar';
     }
 
-    /** Quantas presenças desta vaga ainda podem ser confirmadas agora. */
+    /** Quantas presenças desta vaga o monitor ainda pode confirmar agora. */
     function presencasAConfirmar(inscricoes, vaga, agora) {
-        return (inscricoes || []).filter((i) => situacaoPresenca(i, vaga, agora) === 'confirmar')
-            .length;
+        return (inscricoes || []).filter(
+            (i) => situacaoPresenca(i, vaga, agora, 'monitor') === 'confirmar'
+        ).length;
+    }
+
+    // --- Perfil do aluno ---
+
+    /** Inscrição de GET /perfil/agendamentos no formato do perfil do aluno. */
+    function normalizarMinhaInscricao(a) {
+        const m = a.monitoria || {};
+        return {
+            id: a.id,
+            disciplina: (m.disciplina && m.disciplina.nome) || 'Disciplina',
+            monitor: (m.monitor && m.monitor.nome_completo) || 'Monitor',
+            local: m.local || 'Local a definir',
+            inicio: new Date(m.horario || a.data_hora),
+            fim: m.data_fim ? new Date(m.data_fim) : null,
+            status: String(a.status || '').toLowerCase(),
+            statusVaga: String(m.status || '').toLowerCase(),
+            alunoConfirmou: Boolean(a.presenca_aluno_em),
+            monitorConfirmou: Boolean(a.presenca_monitor_em)
+        };
+    }
+
+    /** Situação da presença vista pelo aluno (ver situacaoPresenca). */
+    function situacaoDoAluno(inscricao, agora) {
+        return situacaoPresenca(
+            inscricao,
+            { inicio: inscricao.inicio, status: inscricao.statusVaga },
+            agora,
+            'aluno'
+        );
+    }
+
+    /**
+     * Separa nas três listas do perfil do aluno: para confirmar (da mais antiga, que vence
+     * antes), próximas (em ordem de data) e histórico (da mais recente).
+     */
+    function separarInscricoes(lista, agora) {
+        const confirmar = [];
+        const proximas = [];
+        const historico = [];
+        lista.forEach((i) => {
+            const sit = situacaoDoAluno(i, agora);
+            if (sit === 'confirmar') confirmar.push(i);
+            else if (sit === 'antes') proximas.push(i);
+            else historico.push(i);
+        });
+        confirmar.sort((a, b) => a.inicio - b.inicio);
+        proximas.sort((a, b) => a.inicio - b.inicio);
+        historico.sort((a, b) => b.inicio - a.inicio);
+        return { confirmar, proximas, historico };
+    }
+
+    /** RN-001: o aluno só cancela a inscrição com 24h ou mais até o início. */
+    function podeCancelarInscricao(inscricao, agora) {
+        if (inscricao.status === 'cancelado' || inscricao.statusVaga === 'cancelada') return false;
+        return inscricao.inicio - agora >= HORAS_CANCELAMENTO * 60 * 60 * 1000;
+    }
+
+    /** [{ disciplina, n }] das presenças confirmadas pelos dois, da maior para a menor. */
+    function presencasPorDisciplina(lista) {
+        const mapa = new Map();
+        lista.forEach((i) => {
+            if (i.status === 'concluido') mapa.set(i.disciplina, (mapa.get(i.disciplina) || 0) + 1);
+        });
+        return Array.from(mapa, ([disciplina, n]) => ({ disciplina, n })).sort(
+            (a, b) => b.n - a.n || a.disciplina.localeCompare(b.disciplina, 'pt-BR')
+        );
     }
 
     function plural(n, um, varios) {
@@ -257,6 +334,11 @@
         limiteConfirmacao,
         situacaoPresenca,
         presencasAConfirmar,
+        normalizarMinhaInscricao,
+        situacaoDoAluno,
+        separarInscricoes,
+        podeCancelarInscricao,
+        presencasPorDisciplina,
         plural
     };
 

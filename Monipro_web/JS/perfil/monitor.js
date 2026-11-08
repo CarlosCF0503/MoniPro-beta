@@ -742,14 +742,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 D.diaMes(D.limiteConfirmacao(v)) +
                 ' às ' +
                 D.hora(D.limiteConfirmacao(v)) +
-                '. Cada presença vale +' +
+                '. O aluno também confirma pelo perfil dele. Com as duas confirmações, você ganha +' +
                 D.PONTOS_MONITOR +
-                ' pontos para você e +' +
+                ' pontos e o aluno +' +
                 D.PONTOS_ALUNO +
-                ' para o aluno.';
+                '.';
         const itens = lista
             .map((i) => {
-                const sit = D.situacaoPresenca(i, v, S.agora);
+                const sit = D.situacaoPresenca(i, v, S.agora, 'monitor');
                 let lado = '';
                 if (sit === 'confirmar')
                     lado =
@@ -767,13 +767,24 @@ document.addEventListener('DOMContentLoaded', () => {
                         '">' +
                         icone('ok', 12) +
                         'Presença confirmada</span>';
+                else if (sit === 'aguardando')
+                    lado =
+                        '<span class="pp-insc-estado" tabindex="-1" id="pres-' +
+                        esc(i.id) +
+                        '">' +
+                        icone('relogio', 12) +
+                        'Aguardando o aluno</span>';
                 else if (sit === 'expirada')
                     lado = '<span class="pp-insc-estado">Não confirmada</span>';
                 return (
                     '<li><span class="pp-insc-nome">' +
                     icone('pessoa', 16) +
+                    '<span>' +
                     esc(i.aluno) +
-                    '</span>' +
+                    (sit === 'confirmar' && i.alunoConfirmou
+                        ? '<small>Já confirmou a presença</small>'
+                        : '') +
+                    '</span></span>' +
                     lado +
                     '</li>'
                 );
@@ -848,8 +859,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 botao.textContent = 'Confirmar presença';
                 return;
             }
-            inscricao.status = 'concluido';
-            if (S.usuario) S.usuario.pontos = (Number(S.usuario.pontos) || 0) + D.PONTOS_MONITOR;
+            inscricao.monitorConfirmou = true;
+            if (dados.concluido) {
+                inscricao.status = 'concluido';
+                if (S.usuario)
+                    S.usuario.pontos = (Number(S.usuario.pontos) || 0) + D.PONTOS_MONITOR;
+            }
             render();
             preencherDetalhes(vaga);
             const marca = document.getElementById('pres-' + inscricao.id);

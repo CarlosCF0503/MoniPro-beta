@@ -1,7 +1,8 @@
 /* =========================================================================
-   Perfil do monitor
+   Perfil do monitor e perfil do aluno (perfil_monitor.html e perfil_aluno.html)
    Montagem decidida pelo time: >= 700px abas + coluna lateral (opção A);
-   < 700px abas no rodapé: Vagas, Horas, Perfil (opção C).
+   < 700px abas no rodapé (opção C): Vagas, Horas, Perfil no monitor;
+   Monitorias, Pontos, Perfil no aluno.
    Tudo fica dentro de .pagina-perfil e .pp-dlg para não herdar a regra global
    de <button> do base.css (padding 45px, fonte 25px). Cores de base.css.
    ========================================================================= */
@@ -1187,8 +1188,21 @@
     font-size: 13px;
 }
 .pp-dlg .pp-insc-estado {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     font-size: 13px;
     color: var(--slate);
+}
+.pp-dlg .pp-insc-nome > span {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.pp-dlg .pp-insc-nome small {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ok);
 }
 .pp-aviso-presenca {
     display: flex;
@@ -1211,6 +1225,11 @@
 }
 .pp-aviso-presenca .pp-btn {
     margin-left: auto;
+}
+.pagina-perfil .pp-nota-presenca {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--warn-ink);
 }
 .lc-presenca {
     color: var(--warn-ink);

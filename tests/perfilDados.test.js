@@ -120,7 +120,7 @@ describe('perfil do monitor — dados', () => {
     });
 });
 
-describe('perfil do monitor — presença dos inscritos (P2, D1)', () => {
+describe('presença confirmada pelo aluno e pelo monitor (P2, D1)', () => {
     const passada = vaga({ horario: new Date(2026, 10, 5, 14).toISOString() });
     const inscricao = (status, id = 1, nome = 'Bia') => ({ id, idVaga: 1, aluno: nome, status });
 
@@ -132,7 +132,17 @@ describe('perfil do monitor — presença dos inscritos (P2, D1)', () => {
                 status: 'PENDENTE',
                 aluno: { nome_completo: 'Ana' }
             })
-        ).toEqual({ id: 9, idVaga: 4, aluno: 'Ana', status: 'pendente' });
+        ).toEqual({
+            id: 9,
+            idVaga: 4,
+            aluno: 'Ana',
+            status: 'pendente',
+            alunoConfirmou: false,
+            monitorConfirmou: false
+        });
+        const marcada = D.normalizarInscricao({ id: 2, presenca_aluno_em: '2026-11-06T15:00:00Z' });
+        expect(marcada.alunoConfirmou).toBe(true);
+        expect(marcada.monitorConfirmou).toBe(false);
         expect(D.normalizarInscricao({ id: 1, id_monitoria: 4 }).aluno).toBe('Aluno');
     });
 
@@ -164,14 +174,115 @@ describe('perfil do monitor — presença dos inscritos (P2, D1)', () => {
         expect(D.situacaoPresenca(inscricao('pendente'), cancelada, AGORA)).toBe('cancelada');
     });
 
-    test('presencasAConfirmar conta só as que podem ser confirmadas agora', () => {
+    test('quem já confirmou fica aguardando o outro lado', () => {
+        const doAluno = { ...inscricao('pendente'), alunoConfirmou: true };
+        expect(D.situacaoPresenca(doAluno, passada, AGORA, 'aluno')).toBe('aguardando');
+        expect(D.situacaoPresenca(doAluno, passada, AGORA, 'monitor')).toBe('confirmar');
+        const doMonitor = { ...inscricao('pendente'), monitorConfirmou: true };
+        expect(D.situacaoPresenca(doMonitor, passada, AGORA, 'monitor')).toBe('aguardando');
+        expect(D.situacaoPresenca(doMonitor, passada, AGORA, 'aluno')).toBe('confirmar');
+        // Depois do prazo, uma confirmação só de um lado não vale mais
+        expect(D.situacaoPresenca(doAluno, passada, new Date(2026, 10, 13), 'aluno')).toBe(
+            'expirada'
+        );
+    });
+
+    test('presencasAConfirmar conta só as que o monitor ainda pode confirmar', () => {
         const lista = [
             inscricao('pendente', 1),
             inscricao('concluido', 2),
-            inscricao('pendente', 3)
+            inscricao('pendente', 3),
+            { ...inscricao('pendente', 4), monitorConfirmou: true }
         ];
         expect(D.presencasAConfirmar(lista, passada, AGORA)).toBe(2);
         expect(D.presencasAConfirmar(lista, vaga({}), AGORA)).toBe(0);
         expect(D.presencasAConfirmar(undefined, passada, AGORA)).toBe(0);
+    });
+});
+
+describe('perfil do aluno — inscrições (P2)', () => {
+    const insc = (campos) =>
+        D.normalizarMinhaInscricao({
+            id: 1,
+            status: 'pendente',
+            presenca_aluno_em: null,
+            presenca_monitor_em: null,
+            ...campos,
+            monitoria: {
+                horario: new Date(2026, 10, 5, 14).toISOString(),
+                local: 'Sala 204',
+                status: 'realizada',
+                disciplina: { nome: 'Cálculo I' },
+                monitor: { nome_completo: 'Ana Ribeiro' },
+                ...(campos.monitoria || {})
+            }
+        });
+
+    test('normalizarMinhaInscricao junta inscrição e vaga', () => {
+        const i = insc({ presenca_monitor_em: '2026-11-05T18:00:00Z' });
+        expect(i).toMatchObject({
+            disciplina: 'Cálculo I',
+            monitor: 'Ana Ribeiro',
+            local: 'Sala 204',
+            statusVaga: 'realizada',
+            alunoConfirmou: false,
+            monitorConfirmou: true
+        });
+        expect(i.inicio).toEqual(new Date(2026, 10, 5, 14));
+        expect(
+            D.normalizarMinhaInscricao({ id: 2, data_hora: '2026-11-05T14:00:00Z' }).disciplina
+        ).toBe('Disciplina');
+    });
+
+    test('separarInscricoes: para confirmar, próximas e histórico, cada uma na sua ordem', () => {
+        const lista = [
+            insc({ id: 1 }), // 05/11, ninguém confirmou -> confirmar
+            insc({ id: 2, monitoria: { horario: new Date(2026, 10, 6, 9).toISOString() } }), // confirmar
+            insc({
+                id: 3,
+                monitoria: { horario: new Date(2026, 10, 10, 9).toISOString(), status: 'ativa' }
+            }), // próxima
+            insc({
+                id: 4,
+                monitoria: { horario: new Date(2026, 10, 9, 9).toISOString(), status: 'ativa' }
+            }), // próxima
+            insc({ id: 5, status: 'concluido' }), // histórico
+            insc({ id: 6, presenca_aluno_em: '2026-11-05T18:00:00Z' }), // aguardando -> histórico
+            insc({
+                id: 7,
+                monitoria: { horario: new Date(2026, 10, 10, 9).toISOString(), status: 'cancelada' }
+            }) // vaga cancelada
+        ];
+        const L = D.separarInscricoes(lista, AGORA);
+        expect(L.confirmar.map((i) => i.id)).toEqual([1, 2]);
+        expect(L.proximas.map((i) => i.id)).toEqual([4, 3]);
+        expect(L.historico.map((i) => i.id).sort()).toEqual([5, 6, 7]);
+        expect(D.situacaoDoAluno(lista[5], AGORA)).toBe('aguardando');
+    });
+
+    test('podeCancelarInscricao segue a RN-001 (24h antes) e recusa vaga cancelada', () => {
+        const futura = (horas, status = 'ativa') =>
+            insc({
+                monitoria: {
+                    horario: new Date(AGORA.getTime() + horas * 3600e3).toISOString(),
+                    status
+                }
+            });
+        expect(D.podeCancelarInscricao(futura(48), AGORA)).toBe(true);
+        expect(D.podeCancelarInscricao(futura(23), AGORA)).toBe(false);
+        expect(D.podeCancelarInscricao(futura(48, 'cancelada'), AGORA)).toBe(false);
+    });
+
+    test('presencasPorDisciplina conta só as confirmadas pelos dois', () => {
+        const lista = [
+            insc({ status: 'concluido' }),
+            insc({ status: 'concluido' }),
+            insc({ status: 'concluido', monitoria: { disciplina: { nome: 'Algoritmos' } } }),
+            insc({ status: 'pendente', monitoria: { disciplina: { nome: 'Banco de Dados' } } })
+        ];
+        expect(D.presencasPorDisciplina(lista)).toEqual([
+            { disciplina: 'Cálculo I', n: 2 },
+            { disciplina: 'Algoritmos', n: 1 }
+        ]);
     });
 });
