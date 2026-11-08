@@ -245,9 +245,20 @@ describe('POST /auth/cadastro — RN-006 (perfis separados)', () => {
     it('retorna 409 quando dois cadastros simultâneos esbarram na unicidade do banco', async () => {
         prisma.usuario.findFirst.mockResolvedValue(null);
         prisma.usuario.create.mockRejectedValue(
+            // Formato real do @prisma/adapter-pg (capturado de um Postgres 17): sem meta.target
             Object.assign(new Error('Unique constraint'), {
                 code: 'P2002',
-                meta: { target: ['email'] }
+                meta: {
+                    modelName: 'Usuario',
+                    driverAdapterError: {
+                        cause: {
+                            originalCode: '23505',
+                            kind: 'UniqueConstraintViolation',
+                            constraint: { index: 'usuarios_email_tipo_usuario_key' },
+                            table: 'usuarios'
+                        }
+                    }
+                }
             })
         );
 

@@ -115,9 +115,20 @@ describe('POST /disciplinas (cadastro de disciplina, Fase 03 P5)', () => {
 
     it('retorna 409 quando duas criações simultâneas esbarram na unicidade do banco', async () => {
         prisma.disciplina.create.mockRejectedValue(
+            // Formato real do @prisma/adapter-pg (capturado de um Postgres 17): sem meta.target
             Object.assign(new Error('Unique constraint'), {
                 code: 'P2002',
-                meta: { target: ['nome'] }
+                meta: {
+                    modelName: 'Disciplina',
+                    driverAdapterError: {
+                        cause: {
+                            originalCode: '23505',
+                            kind: 'UniqueConstraintViolation',
+                            constraint: { index: 'disciplinas_nome_key' },
+                            table: 'disciplinas'
+                        }
+                    }
+                }
             })
         );
 

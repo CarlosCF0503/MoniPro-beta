@@ -7,6 +7,29 @@ const { ErroAplicacao } = require('./erros');
 
 const MENSAGEM_PADRAO = 'Ocorreu um erro inesperado. Tente novamente.';
 
+// Restrições únicas de prisma/schema.prisma, pelo nome que o Postgres dá ao índice
+const CAMPO_POR_INDICE = {
+    disciplinas_nome_key: 'nome',
+    usuarios_email_tipo_usuario_key: 'email',
+    usuarios_matricula_tipo_usuario_key: 'matricula'
+};
+
+/**
+ * Descobre qual campo repetido gerou o P2002. Sem adaptador, o Prisma informa
+ * meta.target (["email"]); com o @prisma/adapter-pg, que é o que roda aqui, o campo
+ * não vem e só o nome do índice aparece em meta.driverAdapterError.cause.constraint.
+ * @param {Object} [meta]
+ * @returns {string|undefined}
+ */
+function campoDuplicado(meta) {
+    const alvo = meta?.target;
+    if (Array.isArray(alvo)) return alvo[0];
+    if (typeof alvo === 'string') return CAMPO_POR_INDICE[alvo];
+    const restricao = meta?.driverAdapterError?.cause?.constraint;
+    if (Array.isArray(restricao?.fields)) return restricao.fields[0];
+    return CAMPO_POR_INDICE[restricao?.index];
+}
+
 /**
  * Mapeia erros de aplicação, do Prisma (P2xxx) e do body-parser para
  * { statusCode, mensagem, campos? }. Erros desconhecidos viram 500 com
@@ -26,7 +49,7 @@ function tratarErro(error) {
 
     // --- Erros do Prisma ---
     if (error.code === 'P2002') {
-        const campo = error.meta?.target?.[0];
+        const campo = campoDuplicado(error.meta);
         if (campo === 'email')
             return { statusCode: 409, mensagem: 'Este e-mail já está cadastrado.' };
         if (campo === 'matricula')
