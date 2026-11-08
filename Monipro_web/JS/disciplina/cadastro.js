@@ -1,24 +1,26 @@
 // JS/disciplina/cadastro.js
 // Tela "Nova disciplina" (cadastro_disciplina.html). Só monitores chegam aqui pelo botão de
 // Minhas Disciplinas; quem abre o endereço direto sem ser monitor volta para a lista.
-/* global DisciplinaRegras, chamadaApi, mensagemDaApi, showToast */
+/* global DisciplinaRegras, chamadaApi, mensagemDaApi, obterSessao, showToast */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const R = DisciplinaRegras;
     const LISTA = 'escolha_disciplina.html';
 
     // --- 1. Acesso ---
-    const token = localStorage.getItem('monipro_token');
-    if (!token) {
+    // P3 (R7): o perfil vem de GET /auth/sessao (só decide o que mostrar; quem barra é a API)
+    let usuario;
+    try {
+        usuario = await obterSessao();
+    } catch (erro) {
+        showToast(erro.message || 'Falha na comunicação com o servidor.', 'error', erro);
+        return;
+    }
+    if (!usuario) {
         window.location.href = 'index.html';
         return;
     }
-    const perfil = R.perfilDoToken(token);
-    if (!perfil) {
-        localStorage.removeItem('monipro_token');
-        window.location.href = 'index.html';
-        return;
-    }
+    const perfil = String(usuario.tipo || '').toLowerCase();
     if (perfil !== 'monitor') {
         showToast('Apenas monitores podem cadastrar disciplinas.', 'error');
         setTimeout(() => {
@@ -106,7 +108,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function sessaoExpirada() {
-        localStorage.removeItem('monipro_token');
         showToast('Sua sessão expirou. Entre de novo.', 'error');
         setTimeout(() => {
             window.location.href = 'index.html';

@@ -1,0 +1,31 @@
+# Recriação do banco de homologação com dados fictícios (P1 / R12)
+# Data: 08/11/2026, por volta de 14:59 (horário de Brasília), no servidor Oracle, em ~/moni-pro-beta-develop.
+# Motivo: o db_monipro_dev tinha sido restaurado com o mesmo dump de produção e guardava cópia dos
+# usuários reais (28, inclusive os [TESTE] 25 a 27). Aprovado pela equipe.
+
+## Antes
+usuarios | 28   (mesmo md5 de id+email que a produção: 81d6edc2…)
+
+## Passos
+1. backup: ~/backups/hml-antes-reset-20261108-1759.dump (20K, 5 tabelas com dados)
+2. docker-compose -p monipro-dev stop backend
+   DROP DATABASE db_monipro_dev WITH (FORCE); CREATE DATABASE db_monipro_dev OWNER monipro
+3. prisma migrate deploy: "6 migrations found" / "All migrations have been successfully applied."
+4. SEED_AMBIENTE=hml npm run seed (senha das contas via SEED_SENHA, omitida):
+   seed (hml): 5 disciplinas, 3 monitores, 5 alunos, 25 vagas e 5 inscrições.
+5. docker-compose -p monipro-dev start backend
+
+## Depois
+usuarios | 8
+não fictícios | 0
+disciplinas | 5
+monitorias | 25
+agendamentos | 5
+prisma migrate status: Database schema is up to date!
+
+## Conferência pelas URLs públicas
+hml  monitor1@ficticio.invalid (monitor)        HTTP 200
+hml  matrícula 991001 (aluno1, aluno)           HTTP 200
+hml  conta do T16, apagada junto com o banco    HTTP 401
+prod monitor1@ficticio.invalid (não existe lá)  HTTP 401
+prod: 25 usuários, 0 fictícios (sem alteração)

@@ -1,0 +1,16 @@
+# T16 invertido (P1 / R12): conta criada em homologação não entra em produção
+# Executado em 2026-11-08T17:42:11Z (UTC) de uma máquina externa, contra as URLs públicas.
+# Prod: main cd87596 (PR #55). Hml: develop 7af4729. Senha da conta omitida.
+
+## 1. Cadastro em https://dev.moni-pro.app.br/auth/cadastro
+corpo: {"nome_completo":"[FICTÍCIO] T16 invertido","email":"t16.202611081442@ficticio.invalid","matricula":990219,"senha":"<omitida>","tipo_usuario":"aluno"}
+{"success":true,"mensagem":"Conta criada com sucesso!","id":33}
+HTTP 201
+
+## 2. Controle: login da mesma conta em https://dev.moni-pro.app.br/auth/login
+{"success":true,"token":"eyJ…[omitido]","usuario":{"id":33,"nome":"[FICT�CIO] T16 invertido","tipo":"aluno"}}
+HTTP 200
+
+## 3. Login da mesma conta em https://moni-pro.app.br/auth/login (esperado: 401)
+{"success":false,"erro":"E-mail/matrícula ou senha incorretos."}
+HTTP 401

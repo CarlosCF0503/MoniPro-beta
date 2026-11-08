@@ -1,6 +1,7 @@
 // src/repositories/agendamentoRepository.js
 
 const prisma = require('../config/bancoDeDados');
+const { PONTOS_MONITOR, PONTOS_ALUNO } = require('../utils/regrasConclusao');
 
 class AgendamentoRepository {
     // Executa `fn` dentro de uma transação interativa. `fn` recebe o cliente da transação (tx),
@@ -88,28 +89,39 @@ class AgendamentoRepository {
         });
     }
 
-    // Conclui o agendamento do próprio aluno e credita os pontos numa única transação.
-    // O updateMany condicional (dono + status ainda pendente/confirmado) torna a conclusão
-    // idempotente: duas requisições simultâneas não creditam os pontos duas vezes.
-    // Retorna null se nenhuma linha foi alterada.
-    async concluirEIncrementarPontos(idAgendamento, idAluno) {
-        return await prisma.$transaction(async (tx) => {
-            const { count } = await tx.agendamento.updateMany({
-                where: {
-                    id: idAgendamento,
-                    id_aluno: idAluno,
-                    status: { in: ['pendente', 'confirmado'] }
-                },
-                data: { status: 'concluido' }
-            });
-            if (count === 0) return null;
+    // P2 (R4): trava a inscrição (SELECT ... FOR UPDATE) até o fim da transação e traz os dados
+    // da vaga. Assim, aluno e monitor confirmando ao mesmo tempo são atendidos um depois do
+    // outro, e só o segundo conclui e credita os pontos.
+    async bloquearParaPresenca(id, db = prisma) {
+        const linhas = await db.$queryRaw`
+            SELECT a."id", a."id_aluno", a."status"::text AS "status",
+                   a."presenca_aluno_em", a."presenca_monitor_em",
+                   m."id_monitor", m."horario", m."status"::text AS "status_vaga"
+            FROM "agendamentos" a
+            JOIN "monitorias" m ON m."id" = a."id_monitoria"
+            WHERE a."id" = ${parseInt(id)}
+            FOR UPDATE OF a
+        `;
+        return linhas[0] || null;
+    }
 
-            await tx.usuario.update({
-                where: { id: idAluno },
-                data: { pontos: { increment: 10 } }
-            });
+    // Grava a confirmação de um dos lados; com `concluir`, marca o agendamento como concluído.
+    async registrarPresenca(id, campo, quando, concluir, db = prisma) {
+        return await db.agendamento.update({
+            where: { id: parseInt(id) },
+            data: { [campo]: quando, ...(concluir ? { status: 'concluido' } : {}) }
+        });
+    }
 
-            return await tx.agendamento.findUnique({ where: { id: idAgendamento } });
+    // D1: +10 para o monitor e +2 para o aluno quando a presença é confirmada pelos dois
+    async creditarPontos(idMonitor, idAluno, db = prisma) {
+        await db.usuario.update({
+            where: { id: idMonitor },
+            data: { pontos: { increment: PONTOS_MONITOR } }
+        });
+        await db.usuario.update({
+            where: { id: idAluno },
+            data: { pontos: { increment: PONTOS_ALUNO } }
         });
     }
 }

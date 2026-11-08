@@ -1,0 +1,70 @@
+# Limpeza dos registros [TESTE] em produção (P1 / R12)
+# Data: 08/11/2026, por volta de 14:36 (horário de Brasília), no servidor Oracle.
+# Banco: container moni-pro-beta_db_1, database db_monipro (produção).
+# Script: scripts/limpar-registros-teste.sql (PR #54), sha256 c64e1fc8033a4ecc…
+
+## 0. Backup feito antes
+arquivo: ~/backups/prod-antes-limpeza-teste-20261108-1735.dump (20K, pg_dump -Fc)
+restauração de teste num contêiner postgres:17 descartável: restore ok
+  usuarios | 28
+  testes   | 3
+  monitorias | 12
+  agendamentos | 6
+
+## 1. Simulação (sem -v confirmar=1): terminou em ROLLBACK
+Mostrou os mesmos registros do passo 2 (3 usuários, 1 vaga, 1 agendamento) e "restantes = 0".
+>> ROLLBACK: nada foi apagado.
+
+## 2. Execução com -v confirmar=1
+$ docker-compose exec -T db psql -U monipro -d db_monipro -v ON_ERROR_STOP=1 -v confirmar=1 < scripts/limpar-registros-teste.sql
+BEGIN
+SELECT 3
+== Usuários de teste encontrados
+ id |   nome_completo    |             email              | tipo_usuario
+----+--------------------+--------------------------------+--------------
+ 25 | [TESTE] Monitor CT | ct.monitor.41813@teste.invalid | monitor
+ 26 | [TESTE] Aluno CT 1 | ct.aluno1.41813@teste.invalid  | aluno
+ 27 | [TESTE] Aluno CT 2 | ct.aluno2.41813@teste.invalid  | aluno
+(3 rows)
+
+== Agendamentos removidos (do aluno de teste ou em vaga de monitor de teste)
+ id | id_monitoria | id_aluno
+----+--------------+----------
+  6 |           10 |       26
+(1 row)
+
+DELETE 1
+== Vagas removidas
+ id | id_monitor | id_disciplina |       horario
+----+------------+---------------+---------------------
+ 10 |         25 |             1 | 2026-10-13 00:49:00
+(1 row)
+
+DELETE 1
+== Usuários removidos
+ id |             email
+----+--------------------------------
+ 26 | ct.aluno1.41813@teste.invalid
+ 25 | ct.monitor.41813@teste.invalid
+ 27 | ct.aluno2.41813@teste.invalid
+(3 rows)
+
+DELETE 3
+== Conferência: deve ser 0
+ restantes
+-----------
+         0
+(1 row)
+
+COMMIT
+>> COMMIT: registros de teste apagados.
+
+## 3. Conferência depois
+usuarios | 25
+usuarios [TESTE] | 0
+monitorias | 11
+agendamentos | 5
+agendamentos sem vaga ou sem aluno | 0
+alunos com pontos no ranking | 0 (nenhum aluno de teste no ranking)
+
+Login em https://moni-pro.app.br/auth/login com ct.aluno1.41813@teste.invalid: HTTP 401

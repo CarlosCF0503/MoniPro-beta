@@ -5,6 +5,11 @@ const autenticacaoService = require('../services/autenticacaoService');
 const { ErroCredenciaisInvalidas } = require('../utils/erros');
 const logger = require('../utils/logger');
 const { mascararIdentificador } = require('../utils/mascararIdentificador');
+const {
+    NOME_COOKIE_SESSAO,
+    DURACAO_SESSAO_SEGUNDOS,
+    opcoesCookieSessao
+} = require('../config/sessao');
 
 class AutenticacaoController {
     async cadastrar(req, res) {
@@ -21,8 +26,17 @@ class AutenticacaoController {
         const { identificador, senha, tipo_usuario } = req.body;
 
         try {
-            const resultado = await autenticacaoService.login(identificador, senha, tipo_usuario);
-            res.json(resultado);
+            const { token, usuario } = await autenticacaoService.login(
+                identificador,
+                senha,
+                tipo_usuario
+            );
+            // P3 (R7): a sessão vai só no cookie httpOnly; o corpo não leva o token
+            res.cookie(NOME_COOKIE_SESSAO, token, {
+                ...opcoesCookieSessao,
+                maxAge: DURACAO_SESSAO_SEGUNDOS * 1000
+            });
+            res.json({ success: true, usuario });
         } catch (error) {
             if (error instanceof ErroCredenciaisInvalidas) {
                 logger.warn(
@@ -32,6 +46,20 @@ class AutenticacaoController {
             }
             throw error;
         }
+    }
+
+    // GET /auth/sessao: quem está logado (o JavaScript da página não lê mais o token)
+    async sessao(req, res) {
+        const { id, nome_completo, tipo } = req.usuario;
+        res.set('Cache-Control', 'no-store');
+        res.json({ success: true, usuario: { id, nome: nome_completo, tipo } });
+    }
+
+    // POST /auth/sair: revoga as sessões do usuário e apaga o cookie
+    async sair(req, res) {
+        await autenticacaoService.sair(req.usuario.id);
+        res.clearCookie(NOME_COOKIE_SESSAO, opcoesCookieSessao);
+        res.json({ success: true, mensagem: 'Sessão encerrada.' });
     }
 }
 

@@ -56,10 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (dados.success) {
-                // Chave padrão do app: 'monipro_token'
-                localStorage.setItem('monipro_token', dados.token);
-                localStorage.setItem('monipro_usuario', JSON.stringify(dados.usuario));
-
+                // P3 (R7): a sessão ficou no cookie httpOnly que a API gravou; nada a guardar aqui
                 if (typeof showToast === 'function')
                     showToast('Login realizado com sucesso!', 'success');
                 setTimeout(() => {
