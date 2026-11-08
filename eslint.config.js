@@ -41,6 +41,9 @@ module.exports = [
                 showToast: 'readonly',
                 mensagemDaApi: 'readonly',
                 chamadaApi: 'readonly',
+                // P3 (R7): sessão em cookie httpOnly (api.js)
+                obterSessao: 'readonly',
+                encerrarSessao: 'readonly',
                 escaparHtml: 'readonly',
                 MB_BETA_ORM: 'readonly',
                 // Tela de marcar monitoria (JS/marcar/): datas.js e componentes.js

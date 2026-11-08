@@ -37,34 +37,21 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- 3. FUNÇÕES DE AUTENTICAÇÃO E PERFIL ---
-    // Decodifica o token JWT para ler os dados do usuário
-    const parseJwt = (token) => {
-        try {
-            return JSON.parse(atob(token.split('.')[1]));
-        } catch (e) {
-            return null;
-        }
-    };
+    // P3 (R7): quem está logado vem de GET /auth/sessao (obterSessao, em api.js)
+    const paginaDoPerfil = (user) =>
+        String(user.tipo).toLowerCase() === 'monitor' ? 'perfil_monitor.html' : 'perfil_aluno.html';
 
     // Redireciona de forma dinâmica para a tela correta baseado no perfil
-    const handleProfileRedirect = () => {
-        const token = localStorage.getItem('monipro_token');
-        if (!token) {
-            window.location.href = 'index.html';
+    const handleProfileRedirect = async () => {
+        let user;
+        try {
+            user = await obterSessao();
+        } catch (erro) {
+            if (typeof showToast === 'function')
+                showToast('Não foi possível conectar ao servidor.', 'error', erro);
             return;
         }
-
-        const user = parseJwt(token);
-        if (user) {
-            const tipo = user.tipo || user.tipo_usuario;
-            if (String(tipo).toLowerCase() === 'monitor') {
-                window.location.href = 'perfil_monitor.html';
-            } else {
-                window.location.href = 'perfil_aluno.html';
-            }
-        } else {
-            window.location.href = 'index.html';
-        }
+        window.location.href = user ? paginaDoPerfil(user) : 'index.html';
     };
 
     // --- 4. EVENT LISTENERS (CLIQUES) ---
@@ -97,8 +84,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Ação de confirmar o Logout
     if (confirmLogoutButton) {
-        confirmLogoutButton.addEventListener('click', () => {
-            localStorage.removeItem('monipro_token');
+        confirmLogoutButton.addEventListener('click', async () => {
+            confirmLogoutButton.disabled = true;
+            // P3 (R7): o servidor revoga o token e apaga o cookie
+            await encerrarSessao();
             if (typeof showToast === 'function') {
                 showToast('Sessão encerrada com sucesso!', 'success');
             }
@@ -113,25 +102,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const dashLinkPerfil = document.getElementById('dash-link-perfil');
 
     if (dashNomeUsuario && dashLinkPerfil) {
-        const token = localStorage.getItem('monipro_token');
-        if (token) {
-            const user = parseJwt(token);
-            if (user) {
-                // Removemos a variável redundante e garantimos que o split opera numa string válida
-                dashNomeUsuario.textContent = user.nome_completo
-                    ? String(user.nome_completo).split(' ')[0]
-                    : String(user.email).split('@')[0];
-
-                // Define o link correto dinamicamente para evitar o erro 404
-                const tipo = user.tipo || user.tipo_usuario;
-                if (String(tipo).toLowerCase() === 'monitor') {
-                    dashLinkPerfil.href = 'perfil_monitor.html';
-                } else {
-                    dashLinkPerfil.href = 'perfil_aluno.html';
+        obterSessao().then(
+            (user) => {
+                if (!user) {
+                    window.location.href = 'index.html';
+                    return;
                 }
+                dashNomeUsuario.textContent = String(user.nome || 'Usuário').split(' ')[0];
+                // Define o link correto dinamicamente para evitar o erro 404
+                dashLinkPerfil.href = paginaDoPerfil(user);
+            },
+            (erro) => {
+                if (typeof showToast === 'function')
+                    showToast('Não foi possível conectar ao servidor.', 'error', erro);
             }
-        } else {
-            window.location.href = 'index.html';
-        }
+        );
     }
 });

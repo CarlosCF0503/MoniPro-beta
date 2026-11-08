@@ -51,16 +51,6 @@
         return [...(lista || [])].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
     }
 
-    // Leitura do perfil no token (só para decidir o que mostrar; quem barra é o 403 da API)
-    function perfilDoToken(token) {
-        try {
-            const dados = JSON.parse(atob(String(token).split('.')[1]));
-            return String(dados.tipo || dados.tipo_usuario || '').toLowerCase() || null;
-        } catch {
-            return null;
-        }
-    }
-
     const api = {
         NOME_MINIMO,
         NOME_MAXIMO,
@@ -68,8 +58,7 @@
         chave,
         acharRepetida,
         validarNome,
-        ordenar,
-        perfilDoToken
+        ordenar
     };
 
     if (typeof module !== 'undefined' && module.exports) module.exports = api;

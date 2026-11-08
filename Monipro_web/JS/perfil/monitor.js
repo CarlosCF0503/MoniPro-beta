@@ -7,7 +7,7 @@
 // As duas montagens usam o mesmo estado, então girar o celular ou redimensionar não perde nada.
 // Depende de: api.js (chamadaApi, mensagemDaApi, escaparHtml), toast.js, perfil/dados.js.
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const D = window.PerfilDados;
     const esc = escaparHtml;
     const raiz = document.getElementById('perfil-app');
@@ -16,23 +16,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!raiz || !D) return;
 
     // --- 1. Sessão ---
-    const token = localStorage.getItem('monipro_token');
-    if (!token) {
+    // P3 (R7): quem está logado vem de GET /auth/sessao (o token fica no cookie httpOnly)
+    let usuarioSessao;
+    try {
+        usuarioSessao = await obterSessao();
+    } catch (erro) {
+        showToast(erro.message || 'Falha na comunicação com o servidor.', 'error', erro);
+        return;
+    }
+    if (!usuarioSessao) {
         showToast('Sessão expirada. Faça login novamente.', 'error');
         setTimeout(() => {
             window.location.href = 'index.html';
         }, 1500);
         return;
     }
-    let usuarioToken;
-    try {
-        usuarioToken = JSON.parse(atob(token.split('.')[1]));
-    } catch {
-        localStorage.removeItem('monipro_token');
-        window.location.href = 'index.html';
-        return;
-    }
-    if (usuarioToken.tipo !== 'monitor') {
+    if (usuarioSessao.tipo !== 'monitor') {
         window.location.href = 'perfil_aluno.html';
         return;
     }
@@ -653,7 +652,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 8. Carga ---
     function sessaoExpirada() {
-        localStorage.removeItem('monipro_token');
         showToast('Sessão expirada. Faça login novamente.', 'error');
         setTimeout(() => {
             window.location.href = 'index.html';

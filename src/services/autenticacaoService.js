@@ -1,6 +1,8 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const usuarioRepository = require('../repositories/usuarioRepository');
+const sessaoRepository = require('../repositories/sessaoRepository');
+const { DURACAO_SESSAO_SEGUNDOS } = require('../config/sessao');
 const { JWT_SECRET } = require('../config/env');
 const { ErroCredenciaisInvalidas, ErroConflito } = require('../utils/erros');
 
@@ -60,22 +62,27 @@ class AutenticacaoService {
             throw new ErroCredenciaisInvalidas(MENSAGEM_CREDENCIAIS_INVALIDAS);
         }
 
+        // P3 (R7): validade de 2 h (D2) e a versão da sessão ("v"), conferida pelo middleware
         const token = jwt.sign(
             {
                 id: usuario.id,
                 nome_completo: usuario.nome_completo,
-                email: usuario.email,
-                tipo: usuario.tipo_usuario
+                tipo: usuario.tipo_usuario,
+                v: usuario.versao_token ?? 0
             },
             JWT_SECRET,
-            { expiresIn: '24h' }
+            { expiresIn: DURACAO_SESSAO_SEGUNDOS }
         );
 
         return {
-            success: true,
             token,
             usuario: { id: usuario.id, nome: usuario.nome_completo, tipo: usuario.tipo_usuario }
         };
+    }
+
+    // P3 (R7): invalida todas as sessões do usuário, inclusive cópias do token
+    async sair(idUsuario) {
+        await sessaoRepository.incrementarVersao(idUsuario);
     }
 }
 

@@ -22,6 +22,14 @@ function escaparHtml(valor) {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
 }
+// P3 (R7): o token não fica mais no localStorage. Apaga o que versões antigas gravaram.
+try {
+    localStorage.removeItem('monipro_token');
+    localStorage.removeItem('monipro_usuario');
+} catch {
+    // localStorage bloqueado (modo privado restrito): nada a limpar
+}
+
 /**
  * Função centralizada para realizar pedidos ao backend.
  * @param {string} endpoint - O caminho da rota (ex: '/auth/login', '/perfil')
@@ -29,22 +37,15 @@ function escaparHtml(valor) {
  * @returns {Promise<object>} - A resposta do servidor (garantida como objeto)
  */
 async function chamadaApi(endpoint, opcoes = {}) {
-    // Tenta recuperar o token salvo no navegador
-    const token = localStorage.getItem('monipro_token');
-
     // Configura os cabeçalhos (headers) padrão
     const cabecalhos = {
         'Content-Type': 'application/json',
         ...opcoes.headers
     };
 
-    // Se o usuário estiver logado, injeta o token de Autorização automaticamente
-    if (token) {
-        cabecalhos['Authorization'] = `Bearer ${token}`;
-    }
-
-    // Junta as opções originais com os novos cabeçalhos
-    const configuracao = { ...opcoes, headers: cabecalhos };
+    // P3 (R7): a sessão vai no cookie httpOnly monipro_sessao, que o navegador envia sozinho.
+    // credentials: 'include' cobre também o frontend local servido em outra porta.
+    const configuracao = { ...opcoes, headers: cabecalhos, credentials: 'include' };
 
     try {
         // Faz a requisição para a URL Base + Endpoint
@@ -88,4 +89,36 @@ async function chamadaApi(endpoint, opcoes = {}) {
             { cause: erro }
         );
     }
+}
+
+// P3 (R7): o JavaScript não lê o token (cookie httpOnly). Quem está logado vem de
+// GET /auth/sessao, consultado uma vez por página e compartilhado entre os scripts.
+let sessaoAtual = null;
+
+/**
+ * Usuário logado: { id, nome, tipo }, ou null se não há sessão válida (401).
+ * Erros de rede sobem como exceção, para a página avisar em vez de mandar ao login.
+ * @returns {Promise<{id:number, nome:string, tipo:string}|null>}
+ */
+function obterSessao() {
+    if (!sessaoAtual) {
+        sessaoAtual = chamadaApi('/auth/sessao').then(
+            (dados) => (dados.success && dados.usuario ? dados.usuario : null),
+            (erro) => {
+                sessaoAtual = null;
+                throw erro;
+            }
+        );
+    }
+    return sessaoAtual;
+}
+
+/** Encerra a sessão no servidor (revoga o token e apaga o cookie). Não lança erro. */
+async function encerrarSessao() {
+    try {
+        await chamadaApi('/auth/sair', { method: 'POST' });
+    } catch (erro) {
+        console.warn('[MoniPro] Não foi possível avisar o servidor do "sair".', erro);
+    }
+    sessaoAtual = null;
 }

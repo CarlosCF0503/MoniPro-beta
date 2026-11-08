@@ -1,23 +1,21 @@
 // monipro-web/JS/perfil.js
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const token = localStorage.getItem('monipro_token');
+    // P3 (R7): quem está logado vem de GET /auth/sessao (o token fica no cookie httpOnly)
     let userData;
-
-    if (!token) {
+    try {
+        userData = await obterSessao();
+    } catch (erro) {
+        if (typeof showToast === 'function')
+            showToast(erro.message || 'Falha na comunicação com o servidor.', 'error', erro);
+        return;
+    }
+    if (!userData) {
         if (typeof showToast === 'function')
             showToast('Sessão expirada. Faça login novamente.', 'error');
         setTimeout(() => {
             window.location.href = 'index.html';
         }, 1500);
-        return;
-    }
-
-    try {
-        userData = JSON.parse(atob(token.split('.')[1]));
-    } catch (e) {
-        localStorage.removeItem('monipro_token');
-        window.location.href = 'index.html';
         return;
     }
 
@@ -76,7 +74,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Se token inválido/expirado, redireciona para login
             if (data.statusHttp === 401) {
-                localStorage.removeItem('monipro_token');
                 setTimeout(() => {
                     window.location.href = 'index.html';
                 }, 1500);

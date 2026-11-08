@@ -3,23 +3,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     const containerDisciplinas = document.querySelector('.disciplinas');
     if (!containerDisciplinas) return;
 
-    // "+ Nova disciplina" só para monitor. Ler o token aqui decide só o que aparece:
+    // "+ Nova disciplina" só para monitor. A sessão aqui decide só o que aparece:
     // quem barra de verdade é o 403 do POST /disciplinas.
-    const ehMonitor = (() => {
-        try {
-            const token = localStorage.getItem('monipro_token');
-            const dados = token ? JSON.parse(atob(token.split('.')[1])) : null;
-            return String(dados?.tipo || dados?.tipo_usuario || '').toLowerCase() === 'monitor';
-        } catch {
-            return false;
-        }
-    })();
+    // A sessão e a lista são pedidas juntas; falha na sessão só esconde o botão.
     const btnNova = document.getElementById('btnNovaDisciplina');
-    if (btnNova) btnNova.hidden = !ehMonitor;
+    let ehMonitor;
 
     try {
-        // ✅ Usa a função centralizada (já trata JSON, token e erros de rede)
-        const dados = await chamadaApi('/disciplinas');
+        // ✅ Usa a função centralizada (já trata JSON, sessão e erros de rede)
+        const [dados, usuario] = await Promise.all([
+            chamadaApi('/disciplinas'),
+            obterSessao().catch(() => null)
+        ]);
+        ehMonitor = !!usuario && String(usuario.tipo).toLowerCase() === 'monitor';
+        if (btnNova) btnNova.hidden = !ehMonitor;
 
         // ✅ Verifica se o servidor retornou erro (status 4xx/5xx)
         if (dados.erro || dados.statusHttp >= 400) {

@@ -32,13 +32,6 @@ describe('cadastro de disciplina — regras da tela', () => {
         expect(LISTA.map((d) => d.id)).toEqual([1, 2, 3]);
     });
 
-    test('perfilDoToken lê o tipo do JWT e devolve null para token inválido', () => {
-        const corpo = Buffer.from(JSON.stringify({ id: 1, tipo: 'monitor' })).toString('base64');
-        expect(R.perfilDoToken(`x.${corpo}.y`)).toBe('monitor');
-        expect(R.perfilDoToken('lixo')).toBeNull();
-        expect(R.perfilDoToken(null)).toBeNull();
-    });
-
     // A tela avisa antes de enviar com as mesmas mensagens que a API devolveria
     test.each([
         ['', 'O nome da disciplina é obrigatório.'],
