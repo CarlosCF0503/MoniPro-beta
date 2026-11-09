@@ -7,6 +7,7 @@
         "start": "node src/server.js",
         "dev": "nodemon src/server.js",
         "test": "jest --runInBand",
+        "test:int": "jest --config jest.integracao.config.js --runInBand",
         "seed": "node prisma/seed.js",
         "lint": "eslint . && prettier --check .",
         "lint:fix": "eslint . --fix && prettier --write ."
