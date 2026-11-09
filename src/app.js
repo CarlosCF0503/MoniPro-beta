@@ -20,6 +20,7 @@ const perfilRotas = require('./routes/perfilRotas');
 const saudeController = require('./controllers/saudeController');
 const tratadorDeErros = require('./middlewares/tratadorDeErros');
 const { ErroNaoAutorizado } = require('./utils/erros');
+const { limiteRequisicoesPorMinuto } = require('./config/limites');
 
 // Middlewares globais
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
@@ -47,10 +48,11 @@ app.use(
 );
 // R10: limite geral para todas as rotas, contra abuso e varredura automatizada. É bem mais
 // permissivo que o authLimiter de /auth (10 tentativas/15 min), e por minuto, porque alunos
-// na rede da faculdade podem compartilhar o mesmo IP público (NAT).
+// na rede da faculdade podem compartilhar o mesmo IP público (NAT). Padrão: 120 (ver
+// src/config/limites.js).
 const limiteGeral = rateLimit({
     windowMs: 60 * 1000,
-    max: 120,
+    max: limiteRequisicoesPorMinuto(),
     standardHeaders: true,
     legacyHeaders: false,
     message: { erro: 'Muitas requisições. Aguarde um minuto e tente novamente.' }
