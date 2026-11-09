@@ -1,0 +1,50 @@
+# R1: testes de integração com nome de cada caso e prova de que pegam erro (execução local)
+# Executado em 2026-11-09T00:37:46Z (UTC) na develop c306813, contra um PostgreSQL 17 descartável em contêiner local.
+# DATABASE_URL_INTEGRACAO apontando para localhost/monipro_integracao (senha omitida).
+
+## 1. Suíte completa (nome e resultado de cada teste, do relatório JSON do Jest)
+tests/integracao/concorrencia.int.test.js
+  ✓ Presença confirmada pelos dois lados ao mesmo tempo (P2, RN-008) › aluno e monitor confirmando juntos concluem uma vez e creditam os pontos uma vez (367 ms)
+  ✓ Presença confirmada pelos dois lados ao mesmo tempo (P2, RN-008) › a mesma confirmação enviada duas vezes ao mesmo tempo grava só uma (52 ms)
+  ✓ Presença confirmada pelos dois lados ao mesmo tempo (P2, RN-008) › não confirma presença numa vaga cancelada, mesmo com a inscrição ativa (43 ms)
+  ✓ Capacidade da vaga com inscrições simultâneas (CT-09) › cinco alunos disputando a última vaga: só um entra, os outros recebem 409 (122 ms)
+  ✓ Capacidade da vaga com inscrições simultâneas (CT-09) › o mesmo aluno clicando duas vezes fica com uma inscrição só (51 ms)
+tests/integracao/sessao.int.test.js
+  ✓ Sessão em cookie com revogação no "sair" (P3, R7) › o token copiado antes do "sair" recebe 401 depois dele, e um novo login funciona (108 ms)
+  ✓ Sessão em cookie com revogação no "sair" (P3, R7) › login pela matrícula no perfil errado: 401 com a mesma mensagem de senha errada (136 ms)
+  ✓ Sessão em cookie com revogação no "sair" (P3, R7) › usuário removido do banco: a sessão dele deixa de valer (26 ms)
+tests/integracao/unicidade.int.test.js
+  ✓ RN-006: um e-mail pode ter um perfil de aluno e um de monitor › o mesmo e-mail e a mesma matrícula como aluno e como monitor: 201 nos dois (323 ms)
+  ✓ RN-006: um e-mail pode ter um perfil de aluno e um de monitor › e-mail repetido no mesmo perfil: 409 (139 ms)
+  ✓ RN-006: um e-mail pode ter um perfil de aluno e um de monitor › matrícula repetida no mesmo perfil: 409 (144 ms)
+  ✓ RN-006: um e-mail pode ter um perfil de aluno e um de monitor › dois cadastros iguais ao mesmo tempo: um 201 e um 409 da restrição do banco (139 ms)
+  ✓ Disciplina com nome único (P5) › nome repetido sem diferenciar maiúsculas: 409 com o nome já salvo (38 ms)
+  ✓ Disciplina com nome único (P5) › duas criações ao mesmo tempo gravam uma linha só (52 ms)
+tests/integracao/limpeza.int.test.js
+  ✓ scripts/limpar-registros-teste.sql (P1) › sem confirmar: mostra o que apagaria e desfaz tudo (250 ms)
+  ✓ scripts/limpar-registros-teste.sql (P1) › com confirmar=1: apaga os registros de teste e o que depende deles, e mais nada (195 ms)
+16 de 16 passaram
+
+## 2. Mutação: sem o FOR UPDATE que trava a vaga (bloquearMonitoria). Esperado: o teste de capacidade falha
+    - Expected  - 4
+    + Received  + 4
+    -   409,
+    -   409,
+    -   409,
+    -   409,
+    +   201,
+    +   201,
+    +   201,
+    +   201,
+Tests:       1 failed, 4 skipped, 5 total
+
+## 3. Mutação: sem o FOR UPDATE OF a que trava a inscrição (bloquearParaPresenca). Esperado: os testes de presença simultânea falham
+Tests:       2 failed, 2 skipped, 1 passed, 5 total
+
+## 4. Mutação: campo novo no schema.prisma sem migração. Esperado: a suíte nem começa
+O schema.prisma tem mudanças sem migração (crie uma com "prisma migrate dev"):
+[*] Changed the `usuarios` table
+  [+] Added column `campo_sem_migracao`
+
+## 5. Código restaurado: suíte completa de novo
+Tests:       16 passed, 16 total

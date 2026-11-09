@@ -1,0 +1,41 @@
+# P2 (R4) e P3 (R7) na homologação: sessão em cookie, revogação, origem e presença dos dois lados
+# Executado em 2026-11-09T00:34:00Z (UTC) contra https://dev.moni-pro.app.br (develop c306813).
+# Contas de teste fictícias (ids 9 e 10). Senha e tokens omitidos.
+
+## 1. Login do aluno de teste: o corpo não leva token; a sessão vem só no cookie
+{"success":true,"usuario":{"id":9,"nome":"[FICTÍCIO] Aluno Teste","tipo":"aluno"}}
+HTTP 200
+cabeçalho Set-Cookie:
+Set-Cookie: monipro_sessao=eyJ…[omitido]; Max-Age=7200; Path=/; Expires=Mon, 09 Nov 2026 02:34:00 GMT; HttpOnly; Secure; SameSite=Strict
+
+## 2. GET /auth/sessao com o cookie
+{"success":true,"usuario":{"id":9,"nome":"[FICTÍCIO] Aluno Teste","tipo":"aluno"}}
+HTTP 200
+
+## 3. P2: perfil e inscrições do aluno depois da confirmação dos dois lados (feita pelas telas em 08/11, 21h19-21h20 UTC)
+{'id': 9, 'nome_completo': '[FICTÍCIO] Aluno Teste', 'tipo_usuario': 'aluno', 'pontos': 2}
+{'id': 7, 'status': 'concluido', 'data_hora': '2026-11-08T21:19:00.000Z', 'presenca_aluno_em': '2026-11-08T21:19:48.444Z', 'presenca_monitor_em': '2026-11-08T21:20:35.664Z', 'disciplina': 'Algoritmos'}
+
+## 4. P2: o aluno tenta confirmar de novo a presença 7 (esperado: 400, sem novos pontos)
+{"success":false,"erro":"Esta presença já foi confirmada pelo aluno e pelo monitor."}
+HTTP 400
+{'id': 9, 'nome_completo': '[FICTÍCIO] Aluno Teste', 'tipo_usuario': 'aluno', 'pontos': 2}
+
+## 5. P2: o aluno chama a rota de confirmação do monitor (esperado: 403)
+{"success":false,"erro":"Acesso permitido apenas a monitores."}
+HTTP 403
+
+## 6. P3: requisição que altera dados vinda de outro site (esperado: 403)
+{"success":false,"erro":"Origem não permitida pelo CORS."}
+HTTP 403
+
+## 7. P3: sair e reaproveitar o cookie copiado antes do sair (esperado: 200 e depois 401)
+{"success":true,"mensagem":"Sessão encerrada."}
+HTTP 200
+{"erro":"Sessão encerrada. Faça login novamente."}
+HTTP 401
+
+## 8. P2: perfil do monitor de teste (+10 da confirmação dos dois lados)
+HTTP 200
+{'id': 10, 'nome_completo': '[FICTÍCIO] Monitor Teste', 'tipo_usuario': 'monitor', 'pontos': 10}
+sair do monitor: HTTP 200
