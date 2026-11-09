@@ -1,0 +1,39 @@
+# R1: CT-01 a CT-11 no navegador (Playwright), execução do CI
+# Workflow "Testes de ponta a ponta", PR #68 (commit 69c53d4 sobre a develop c306813, com #65, #66 e #67).
+# https://github.com/CarlosCF0503/MoniPro-beta/actions/runs/42540267091
+# Pilha docker-compose.e2e.yml (Postgres 17 com SSL, backend, frontend, Nginx). Projetos: computador (1280x800) e celular (Pixel 7).
+
+shell: /usr/bin/bash -e {0}
+##[endgroup]
+Running 30 tests using 2 workers
+  ✓   2 [computador] › e2e/ct01-cadastro.spec.js:17:5 › CT-01 cadastro de monitor pela tela (4.9s)
+  ✓   1 [computador] › e2e/ct01-cadastro.spec.js:17:5 › CT-01 cadastro de aluno pela tela (5.0s)
+  ✓   4 [computador] › e2e/ct02-login.spec.js:26:1 › CT-02 monitor entra pela matrícula (1.7s)
+  ✓   3 [computador] › e2e/ct02-login.spec.js:16:1 › CT-02 aluno entra pelo e-mail e vê a página principal (1.9s)
+  ✓   5 [computador] › e2e/ct02-login.spec.js:34:1 › CT-02 credenciais erradas e perfil errado exibem erro e não entram (1.0s)
+  ✓   6 [computador] › e2e/ct03-ct05-monitoria.spec.js:40:1 › CT-03 a disciplina abre o calendário com o dia que tem vaga (977ms)
+  ✓   7 [computador] › e2e/ct03-ct05-monitoria.spec.js:60:1 › CT-04 o aluno agenda pela tela e a inscrição aparece no perfil (1.5s)
+  ✓   8 [computador] › e2e/ct03-ct05-monitoria.spec.js:87:1 › CT-05 o monitor cria a vaga pela tela e o aluno a vê no calendário (2.2s)
+  ✓   9 [computador] › e2e/ct06-ct08-cancelamentos.spec.js:23:1 › CT-06 o aluno sai de uma monitoria pelo perfil (887ms)
+  ✓  10 [computador] › e2e/ct06-ct08-cancelamentos.spec.js:45:1 › CT-06 o monitor cancela uma vaga pelo perfil e ela fica como cancelada (797ms)
+  ✓  11 [computador] › e2e/ct06-ct08-cancelamentos.spec.js:69:1 › CT-08 a menos de 24 horas o aluno não consegue sair da monitoria (772ms)
+  ✓  13 [computador] › e2e/ct09-ct11-regras.spec.js:25:1 › CT-09 a vaga lota: a tela mostra "Lotada" e a nova inscrição é recusada (1.2s)
+  ✓  14 [computador] › e2e/ct09-ct11-regras.spec.js:77:1 › CT-10 local e assunto com HTML aparecem como texto, sem formatar nem executar (821ms)
+  ✓  15 [computador] › e2e/ct09-ct11-regras.spec.js:121:1 › CT-11 com a presença confirmada pelos dois, a pontuação sobe uma vez só (1.2s)
+  ✓  12 [computador] › e2e/ct07-sair.spec.js:7:1 › CT-07 sair pelo menu encerra a sessão e volta ao login (4.4s)
+  ✓  16 [celular] › e2e/ct01-cadastro.spec.js:17:5 › CT-01 cadastro de aluno pela tela (4.6s)
+  ✓  17 [celular] › e2e/ct01-cadastro.spec.js:17:5 › CT-01 cadastro de monitor pela tela (4.5s)
+  ✓  18 [celular] › e2e/ct02-login.spec.js:16:1 › CT-02 aluno entra pelo e-mail e vê a página principal (1.9s)
+  ✓  20 [celular] › e2e/ct02-login.spec.js:34:1 › CT-02 credenciais erradas e perfil errado exibem erro e não entram (644ms)
+  ✓  19 [celular] › e2e/ct02-login.spec.js:26:1 › CT-02 monitor entra pela matrícula (1.8s)
+  ✓  21 [celular] › e2e/ct03-ct05-monitoria.spec.js:40:1 › CT-03 a disciplina abre o calendário com o dia que tem vaga (935ms)
+  ✓  22 [celular] › e2e/ct03-ct05-monitoria.spec.js:60:1 › CT-04 o aluno agenda pela tela e a inscrição aparece no perfil (1.3s)
+  ✓  24 [celular] › e2e/ct06-ct08-cancelamentos.spec.js:23:1 › CT-06 o aluno sai de uma monitoria pelo perfil (962ms)
+  ✓  23 [celular] › e2e/ct03-ct05-monitoria.spec.js:87:1 › CT-05 o monitor cria a vaga pela tela e o aluno a vê no calendário (1.9s)
+  ✓  25 [celular] › e2e/ct06-ct08-cancelamentos.spec.js:45:1 › CT-06 o monitor cancela uma vaga pelo perfil e ela fica como cancelada (839ms)
+  ✓  26 [celular] › e2e/ct06-ct08-cancelamentos.spec.js:69:1 › CT-08 a menos de 24 horas o aluno não consegue sair da monitoria (765ms)
+  ✓  28 [celular] › e2e/ct09-ct11-regras.spec.js:25:1 › CT-09 a vaga lota: a tela mostra "Lotada" e a nova inscrição é recusada (1.3s)
+  ✓  29 [celular] › e2e/ct09-ct11-regras.spec.js:77:1 › CT-10 local e assunto com HTML aparecem como texto, sem formatar nem executar (1.0s)
+  ✓  30 [celular] › e2e/ct09-ct11-regras.spec.js:121:1 › CT-11 com a presença confirmada pelos dois, a pontuação sobe uma vez só (1.5s)
+  ✓  27 [celular] › e2e/ct07-sair.spec.js:7:1 › CT-07 sair pelo menu encerra a sessão e volta ao login (4.3s)
+  30 passed (30.6s)

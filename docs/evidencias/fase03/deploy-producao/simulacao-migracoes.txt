@@ -1,0 +1,34 @@
+# Simulação do estado do banco de produção antes do release (base para a correção do PR #68)
+# Executado em 2026-11-09T00:42:50Z (UTC) num PostgreSQL 17 descartável em contêiner local, com as migrações do commit d92a234.
+# Estado montado igual ao de prod: as duas migrações de 08/11 pendentes e o registro órfão 20260910120000_add_capacidade_monitoria.
+
+## 1. prisma migrate status (passo 2 do deploy.yml antigo)
+Prisma schema loaded from prisma\schema.prisma.
+Datasource "db": PostgreSQL database "diag", schema "public" at "localhost:5436"
+8 migrations found in prisma/migrations
+Your local migration history and the migrations table from your database are different:
+The last common migration is: 20261021120000_add_data_fim_monitoria
+The migrations have not yet been applied:
+20261108180000_add_versao_token_usuario
+20261108190000_add_presenca_agendamento
+The migration from the database are not found locally in prisma/migrations:
+20260910120000_add_capacidade_monitoria
+código de saída: 1   <- com set -e, o deploy parava aqui
+
+## 2. prisma migrate deploy (passo 3, o que aplica as pendentes)
+Prisma schema loaded from prisma\schema.prisma.
+Datasource "db": PostgreSQL database "diag", schema "public" at "localhost:5436"
+8 migrations found in prisma/migrations
+Applying migration `20261108180000_add_versao_token_usuario`
+Applying migration `20261108190000_add_presenca_agendamento`
+The following migration(s) have been applied:
+migrations/
+  └─ 20261108180000_add_versao_token_usuario/
+    └─ migration.sql
+  └─ 20261108190000_add_presenca_agendamento/
+    └─ migration.sql
+All migrations have been successfully applied.
+código de saída: 0
+
+## 3. Colunas das duas migrações depois do passo 3 (esperado: 3)
+usuarios.versao_token, agendamentos.presenca_monitor_em, agendamentos.presenca_aluno_em  (3)

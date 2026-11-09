@@ -1,0 +1,62 @@
+# R3 (LGPD): telas no navegador (Chromium, Playwright), execução local
+# Executado em 2026-11-09T00:41:39Z (UTC) contra a pilha docker-compose.e2e.yml com a develop c306813 (http://localhost:8088).
+# Três tamanhos: computador (1280x800), celular (Pixel 7) e 360 px. Contas fictícias @e2e.invalid criadas na hora.
+# O erro 400 da tentativa com senha errada é esperado e não conta como erro de console.
+
+OK    [computador] aviso abre sem login
+OK    [computador] aviso sem rolagem lateral
+OK    [computador] link no login
+OK    [computador] login sem rolagem lateral
+OK    [computador] frase de consentimento no cadastro
+OK    [computador] link na escolha de perfil
+OK    [computador] rodapé na página inicial
+OK    [computador] botão Excluir minha conta no perfil
+OK    [computador] perfil sem rolagem lateral
+OK    [computador] diálogo abre
+OK    [computador] foco vai para a senha
+OK    [computador] senha vazia avisa sem chamar a API
+OK    [computador] senha errada mostra "Senha incorreta."
+OK    [computador] "Manter conta" fecha e devolve o foco
+OK    [computador] exclusão volta ao login
+OK    [computador] cookie de sessão apagado
+OK    [computador] a conta excluída não entra mais
+OK    [computador] botão no perfil do monitor
+OK    [computador] sem erros no console
+OK    [celular] aviso abre sem login
+OK    [celular] aviso sem rolagem lateral
+OK    [celular] link no login
+OK    [celular] login sem rolagem lateral
+OK    [celular] frase de consentimento no cadastro
+OK    [celular] link na escolha de perfil
+OK    [celular] rodapé na página inicial
+OK    [celular] botão Excluir minha conta no perfil
+OK    [celular] perfil sem rolagem lateral
+OK    [celular] diálogo abre
+OK    [celular] foco vai para a senha
+OK    [celular] senha vazia avisa sem chamar a API
+OK    [celular] senha errada mostra "Senha incorreta."
+OK    [celular] "Manter conta" fecha e devolve o foco
+OK    [celular] exclusão volta ao login
+OK    [celular] cookie de sessão apagado
+OK    [celular] a conta excluída não entra mais
+OK    [celular] botão no perfil do monitor
+OK    [celular] sem erros no console
+OK    [360px] aviso abre sem login
+OK    [360px] aviso sem rolagem lateral
+OK    [360px] link no login
+OK    [360px] login sem rolagem lateral
+OK    [360px] frase de consentimento no cadastro
+OK    [360px] link na escolha de perfil
+OK    [360px] rodapé na página inicial
+OK    [360px] botão Excluir minha conta no perfil
+OK    [360px] perfil sem rolagem lateral
+OK    [360px] diálogo abre
+OK    [360px] foco vai para a senha
+OK    [360px] senha vazia avisa sem chamar a API
+OK    [360px] senha errada mostra "Senha incorreta."
+OK    [360px] "Manter conta" fecha e devolve o foco
+OK    [360px] exclusão volta ao login
+OK    [360px] cookie de sessão apagado
+OK    [360px] a conta excluída não entra mais
+OK    [360px] botão no perfil do monitor
+OK    [360px] sem erros no console

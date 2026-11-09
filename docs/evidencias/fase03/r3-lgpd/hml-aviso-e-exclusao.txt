@@ -1,0 +1,45 @@
+# R3 (LGPD) na homologação: Aviso de Privacidade publicado e rota de exclusão da conta
+# Executado em 2026-11-09T00:41:12Z (UTC) contra https://dev.moni-pro.app.br (develop c306813, PR #67).
+# Conta de teste fictícia aluno.teste (id 9). Senha e token omitidos. Nenhuma conta foi excluída.
+
+## 1. Aviso de Privacidade: página pública, sem login
+GET /privacidade.html: HTTP 200
+Aviso de Privacidade
+Versão 1.0 · em vigor desde 9 de novembro de 2026
+1. Quem é responsável pelos seus dados
+2. Quais dados usamos
+3. Para que usamos e com qual base legal
+4. Com quem compartilhamos
+5. Por quanto tempo guardamos
+6. Seus direitos e como exercê-los
+7. Como protegemos
+contato do responsável publicado como: [contato a definir pela equipe] (decisão D4 pendente)
+
+## 2. Link para o aviso nas páginas (ocorrências de href="privacidade.html")
+index.html: 1
+escolha_cadastro.html: 1
+cadastro.html: 1
+base.html: 1
+escolha_disciplina.html: 1
+marcar_monitoria.html: 1
+cadastro_disciplina.html: 1
+perfis (o link é montado pelo JS em JS/perfil/excluir_conta.js): 1
+cadastro, frase de ciência: Ao criar a conta você declara ter lido o
+
+## 3. DELETE /perfil sem sessão (esperado: 401)
+{"erro":"Sessão não encontrada. Faça login."}
+HTTP 401
+
+## 4. Login da conta de teste: a migração 20261109120000_lgpd_retencao está aplicada (o login lê a tabela usuarios com as colunas novas do schema; sem a migração, a consulta daria 500)
+{"success":true,"usuario":{"id":9,"nome":"[FICTÍCIO] Aluno Teste","tipo":"aluno"}}
+HTTP 200
+
+## 5. DELETE /perfil com senha errada (esperado: 400, conta mantida)
+{"success":false,"erro":"Senha incorreta.","campos":{"senha":"Senha incorreta."}}
+HTTP 400
+GET /perfil depois da tentativa: HTTP 200 (conta continua ativa)
+
+## 6. DELETE /perfil vindo de outro site (esperado: 403)
+{"success":false,"erro":"Origem não permitida pelo CORS."}
+HTTP 403
+sair: HTTP 200
