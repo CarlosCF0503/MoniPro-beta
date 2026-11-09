@@ -35,6 +35,10 @@ model Usuario {
   matricula     Int
   pontos        Int          @default(0) // <-- CAMPO DE GAMIFICAÇÃO
   versao_token  Int          @default(0) // P3 (R7): o "sair" incrementa e revoga os JWT emitidos antes
+  // R3 (LGPD): o último login conta o prazo de retenção de contas paradas; a conta excluída
+  // (ou parada além do prazo) é anonimizada, e anonimizado_em guarda quando
+  ultimo_acesso  DateTime?   @default(now())
+  anonimizado_em DateTime?
 
   monitorias_criadas Monitoria[]   @relation("MonitorParaMonitoria")
   meus_agendamentos  Agendamento[] @relation("AlunoParaAgendamento")

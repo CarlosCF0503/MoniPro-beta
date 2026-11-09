@@ -380,7 +380,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             icone('matricula', 16) +
             '</span><span><small>Matrícula</small>' +
             esc(u ? u.matricula : '') +
-            '</span></li></ul></section>' +
+            '</span></li></ul>' +
+            // R3 (LGPD): Aviso de Privacidade e "Excluir minha conta" (excluir_conta.js)
+            (u ? PerfilExcluirConta.blocoHTML() : '') +
+            '</section>' +
             '<section class="pp-cartao pp-cert" aria-labelledby="h-cert"><h2 id="h-cert">Certificados</h2>' +
             certificadosHTML() +
             '</section></div>' +
@@ -594,7 +597,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             esc(u ? u.email : '—') +
             '</dd></div><div><dt>Matrícula</dt><dd>' +
             esc(u ? u.matricula : '—') +
-            '</dd></div></dl></div>'
+            '</dd></div></dl>' +
+            (u ? PerfilExcluirConta.blocoHTML() : '') +
+            '</div>'
         );
     }
     function telaCelular(L) {

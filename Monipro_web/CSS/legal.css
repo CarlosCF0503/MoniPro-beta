@@ -1,0 +1,30 @@
+/* R3 (LGPD): rodapé com o link do Aviso de Privacidade, presente em todas as páginas. */
+.rodape-legal {
+    text-align: center;
+    padding: 16px 16px 24px;
+    font-family: 'Inter', 'Segoe UI', Roboto, Arial, sans-serif;
+    font-size: 13px;
+}
+
+.rodape-legal a {
+    color: #1f4287;
+    font-weight: 600;
+}
+
+.rodape-legal a:focus-visible {
+    outline: 3px solid #1f4287;
+    outline-offset: 2px;
+}
+
+/* Frase de consentimento no cadastro, logo acima do botão "Cadastrar" */
+.aviso-consentimento {
+    font-size: 13px;
+    line-height: 1.4;
+    margin: 4px 0 10px;
+    color: #334155;
+}
+
+.aviso-consentimento a {
+    color: #1f4287;
+    font-weight: 600;
+}

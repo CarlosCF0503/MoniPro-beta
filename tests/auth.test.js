@@ -2,7 +2,7 @@ const request = require('supertest');
 const bcrypt = require('bcryptjs');
 
 jest.mock('../src/config/bancoDeDados', () => ({
-    usuario: { create: jest.fn(), findFirst: jest.fn(), findUnique: jest.fn() },
+    usuario: { create: jest.fn(), findFirst: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
     monitoria: {},
     agendamento: {}
 }));
