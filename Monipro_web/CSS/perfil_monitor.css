@@ -1375,3 +1375,59 @@
         transition: none;
     }
 }
+
+/* R3 (LGPD): Aviso de Privacidade e "Excluir minha conta" nos dados do usuário, e o diálogo
+   que pede a senha (JS/perfil/excluir_conta.js). */
+.pagina-perfil .pp-privacidade {
+    width: 100%;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 14px;
+}
+/* O botão de texto tem respiro lateral para o fundo do hover; aqui ele alinha com o link */
+.pagina-perfil .pp-privacidade .pp-btn-texto-perigo {
+    margin-left: -12px;
+}
+/* No celular os dados já terminam com uma linha (cel-dl) */
+.pagina-perfil .cel-corpo .pp-privacidade {
+    border-top: 0;
+    margin-top: 8px;
+    padding-top: 0;
+}
+.pagina-perfil .pp-privacidade a {
+    color: var(--navy-2);
+    font-weight: 600;
+}
+.pp-dlg .pp-exc-lista {
+    margin: 0;
+    padding: 10px 12px 10px 30px;
+    list-style: disc;
+    border-radius: 10px;
+    background: var(--bad-soft);
+    font-size: 13px;
+    color: var(--slate-ink);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.pp-dlg #exc-senha {
+    min-height: 44px;
+    padding: 0 12px;
+    border: 1.5px solid var(--line-2);
+    border-radius: 10px;
+    font: inherit;
+    color: var(--navy);
+    background: var(--white);
+}
+.pp-dlg #exc-senha:focus-visible {
+    outline: 3px solid var(--navy-2);
+    outline-offset: 1px;
+}
+.pp-dlg #exc-senha[aria-invalid='true'] {
+    border-color: var(--bad);
+}

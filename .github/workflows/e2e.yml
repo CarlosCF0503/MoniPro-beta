@@ -1,0 +1,61 @@
+name: Testes de ponta a ponta
+
+# R1 (Fase 03): casos CT-01 a CT-11 no navegador (Playwright), no computador e no celular,
+# contra a pilha completa e descartável de docker-compose.e2e.yml (Postgres com SSL, backend,
+# frontend e um Nginx na frente, como no servidor). Nada aqui toca hml ou produção.
+# O relatório (com trace e capturas das falhas) fica como artefato da execução: é a evidência
+# da Fase 03.
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+
+jobs:
+  e2e:
+    name: Playwright CT-01 a CT-11
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Instalar o Chromium do Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Subir a pilha E2E
+        run: docker compose -f docker-compose.e2e.yml up -d --build --wait
+
+      - name: Rodar os testes de ponta a ponta
+        run: npm run test:e2e
+
+      - name: Registros dos containers
+        if: failure()
+        run: |
+          mkdir -p e2e-resultados
+          docker compose -f docker-compose.e2e.yml logs --no-color > e2e-resultados/containers.log 2>&1 || true
+
+      - name: Guardar relatório, traces e capturas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-relatorio
+          path: |
+            e2e-relatorio/
+            e2e-resultados/
+          retention-days: 30
+
+      - name: Derrubar a pilha
+        if: always()
+        run: docker compose -f docker-compose.e2e.yml down -v

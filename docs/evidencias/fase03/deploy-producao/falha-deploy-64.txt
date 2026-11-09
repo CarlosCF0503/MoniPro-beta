@@ -1,0 +1,21 @@
+# Deploy de produção do #64 (develop -> main, 08/11/2026 22:26 UTC): falha no passo "prisma migrate status"
+# Workflow "Deploy Main (MoniPro Produção)", execução 42530234986, commit dbbc80e:
+# https://github.com/CarlosCF0503/MoniPro-beta/actions/runs/42530234986
+# Trecho final do passo "Executar comandos via SSH" (o build das imagens, antes disso, terminou sem erro).
+
+out: Successfully tagged moni-pro-beta_frontend:latest
+Starting moni-pro-beta_db_1 ... done
+err: Prisma schema loaded from prisma/schema.prisma.
+out: Datasource "db": PostgreSQL database "db_monipro", schema "public" at "db:5432"
+out: 8 migrations found in prisma/migrations
+err: Your local migration history and the migrations table from your database are different:
+err: The last common migration is: 20261021120000_add_data_fim_monitoria
+err: The migrations have not yet been applied:
+err: 20261108180000_add_versao_token_usuario
+err: 20261108190000_add_presenca_agendamento
+err: The migration from the database are not found locally in prisma/migrations:
+err: 20260910120000_add_capacidade_monitoria
+2026/11/08 22:26:52 Process exited with status 1
+
+# Situação depois da falha (conferida em 08/11, 23h50 UTC): o site continuou no ar com o código anterior
+# (/saude 200, sem o JS de P3), porque o "docker-compose up -d" não chegou a rodar. Nenhuma migração foi aplicada.

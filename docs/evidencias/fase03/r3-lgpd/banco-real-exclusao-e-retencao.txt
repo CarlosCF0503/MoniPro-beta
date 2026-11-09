@@ -1,0 +1,34 @@
+# R3 (LGPD): exclusão da conta e rotina de retenção contra um PostgreSQL 17 real (execução local)
+# Executado em 2026-11-09T00:40:24Z (UTC) com o código de feat/r3-lgpd 845e454 (o mesmo que entrou na develop pelo #67),
+# num banco descartável em contêiner local, com as 9 migrações aplicadas do zero. Contas e dados fictícios (@r3.invalid).
+# A API roda em processo (supertest); o scripts/retencao.js roda como no servidor, simulando e depois com --aplicar.
+
+OK    conta nova já começa com ultimo_acesso (default now)
+OK    login 200
+OK    login atualizou ultimo_acesso
+OK    senha errada 400
+OK    exclusão 200
+OK    conta anonimizada no banco
+OK    inscrição futura cancelada
+OK    inscrição passada mantida (histórico/ranking)
+OK    sessão revogada depois da exclusão
+OK    login com o e-mail antigo não entra mais
+OK    mesmo e-mail e matrícula podem criar conta nova
+OK    monitor exclui a conta
+OK    vaga futura do monitor cancelada
+OK    vaga passada mantida (horas)
+     | retenção (simulação, nada foi alterado):
+     |   contas sem acesso há mais de 12 meses: 1
+     |   inscrições com mais de 2 anos: 1
+     |   vagas com mais de 2 anos: 1
+     | Rode de novo com --aplicar para aplicar.
+OK    simulação conta 1 conta parada
+OK    simulação não alterou nada
+     | retenção:
+     |   contas sem acesso há mais de 12 meses: 1
+     |   inscrições com mais de 2 anos: 1
+     |   vagas com mais de 2 anos: 1
+OK    conta parada anonimizada
+OK    conta ativa intacta
+OK    vaga de 3 anos apagada (com a inscrição)
+OK    vaga recente mantida

@@ -40,6 +40,14 @@ services:
 
     restart: always
 
+    # R3 (LGPD): os registros dos containers giram por tamanho (até 5 arquivos de 10 MB por
+    # serviço); o mais antigo é apagado. Sem isso o Docker guarda os logs para sempre.
+    logging: &logs-rotativos
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
   backend:
 
     build:
@@ -64,6 +72,8 @@ services:
 
     restart: always
 
+    logging: *logs-rotativos
+
   frontend:
 
     build:
@@ -80,6 +90,8 @@ services:
       - backend
 
     restart: always
+
+    logging: *logs-rotativos
 
 volumes:
   pgdata:

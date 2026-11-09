@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="IMG/MoniPro-mini.png">
+    <link rel="stylesheet" href="CSS/fontes.css">
+    <link rel="stylesheet" href="CSS/privacidade.css">
+    <title>Aviso de Privacidade - MoniPro</title>
+</head>
+<body>
+
+<!-- R3 (LGPD), Fase 03. Os prazos da seção "Por quanto tempo" são os de src/config/retencao.js
+     (decisão D4); ao mudar um, mude o outro. Página pública: abre sem login. -->
+<main class="aviso">
+    <header class="aviso-topo">
+        <a class="aviso-logo" href="index.html"><img src="IMG/MoniPro-Logo.png" alt="MoniPro, voltar ao login"></a>
+        <h1>Aviso de Privacidade</h1>
+        <p class="aviso-versao">Versão 1.0 · em vigor desde <time datetime="2026-11-09">9 de novembro de 2026</time></p>
+        <p class="aviso-lede">Este aviso explica, em linguagem simples, quais dados pessoais o MoniPro usa, para quê, por quanto tempo e como você pode exercer os seus direitos pela Lei Geral de Proteção de Dados (LGPD, Lei nº 13.709/2018).</p>
+    </header>
+
+    <nav class="aviso-indice" aria-label="Seções do aviso">
+        <a href="#responsavel">Responsável</a>
+        <a href="#dados">Dados</a>
+        <a href="#finalidade">Finalidade</a>
+        <a href="#compartilhamento">Compartilhamento</a>
+        <a href="#prazos">Prazos</a>
+        <a href="#direitos">Seus direitos</a>
+        <a href="#seguranca">Segurança</a>
+    </nav>
+
+    <section id="responsavel">
+        <h2>1. Quem é responsável pelos seus dados</h2>
+        <p>O MoniPro é um sistema de agendamento de monitorias acadêmicas desenvolvido como Projeto Integrador por estudantes da UniEVANGÉLICA. A equipe do projeto é a responsável (controladora) pelo tratamento dos dados descritos aqui.</p>
+        <!-- PENDENTE (D4): confirmar com o orientador quem consta como controlador e qual canal de contato publicar. -->
+        <p>Para falar sobre os seus dados, escreva para <strong id="contato-privacidade">[contato a definir pela equipe]</strong>.</p>
+    </section>
+
+    <section id="dados">
+        <h2>2. Quais dados usamos</h2>
+        <ul>
+            <li><strong>Cadastro:</strong> nome completo, e-mail, matrícula e perfil (aluno ou monitor). A senha é guardada só como <em>hash</em> (não é possível lê-la de volta).</li>
+            <li><strong>Uso do sistema:</strong> as vagas que você cria (monitor) ou em que se inscreve (aluno), as confirmações de presença e a sua pontuação.</li>
+            <li><strong>Acesso:</strong> a data do seu último login.</li>
+            <li><strong>Registros técnicos:</strong> data, rota acessada e resultado das requisições. Nas falhas de login, o e-mail ou a matrícula digitados aparecem mascarados: só a primeira letra e o domínio do e-mail (<code>a***@exemplo.com</code>) ou os dois últimos dígitos da matrícula (<code>***42</code>).</li>
+        </ul>
+        <p>O MoniPro não usa cookies de publicidade nem de rastreamento. O único cookie é o da sessão (<code>monipro_sessao</code>), necessário para você continuar logado; ele expira em 2 horas ou quando você sai.</p>
+    </section>
+
+    <section id="finalidade">
+        <h2>3. Para que usamos e com qual base legal</h2>
+        <ul>
+            <li><strong>Criar a sua conta e permitir o login</strong>, marcar e cancelar monitorias e confirmar presenças: execução do serviço que você pediu ao se cadastrar (art. 7º, V).</li>
+            <li><strong>Mostrar pontos e ranking</strong> da gamificação: o ranking exibe só o nome e os pontos, nunca e-mail ou matrícula. Base: execução do serviço (art. 7º, V).</li>
+            <li><strong>Manter o sistema seguro</strong> (limite de tentativas de login, investigação de falhas): legítimo interesse (art. 7º, IX).</li>
+        </ul>
+    </section>
+
+    <section id="compartilhamento">
+        <h2>4. Com quem compartilhamos</h2>
+        <p>Não vendemos nem cedemos os seus dados. Eles ficam num servidor contratado na <strong>Oracle Cloud</strong>, que atua como operadora: guarda e processa os dados só para manter o sistema no ar. Outros usuários veem apenas o necessário para o agendamento: o aluno vê o nome do monitor da vaga; o monitor vê o nome de quem se inscreveu.</p>
+    </section>
+
+    <section id="prazos">
+        <h2>5. Por quanto tempo guardamos</h2>
+        <div class="aviso-tabela">
+            <table>
+                <thead><tr><th scope="col">Dado</th><th scope="col">Prazo</th><th scope="col">O que acontece depois</th></tr></thead>
+                <tbody>
+                    <tr><td>Conta sem nenhum login</td><td>12 meses</td><td>A conta é anonimizada: nome, e-mail, matrícula e senha são apagados.</td></tr>
+                    <tr><td>Inscrições e vagas</td><td>2 anos</td><td>São apagadas. Os pontos já ganhos continuam na conta.</td></tr>
+                    <tr><td>Registros técnicos</td><td>Rotação automática</td><td>Cada serviço guarda até 5 arquivos de 10 MB; o mais antigo é apagado quando um novo começa.</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p>Você também pode excluir a sua conta a qualquer momento (veja abaixo).</p>
+    </section>
+
+    <section id="direitos">
+        <h2>6. Seus direitos e como exercê-los</h2>
+        <p>Pela LGPD (art. 18) você pode, entre outros direitos:</p>
+        <ul>
+            <li><strong>Confirmar e acessar</strong> os seus dados: eles aparecem na página <em>Meu perfil</em>.</li>
+            <li><strong>Excluir a sua conta:</strong> em <em>Meu perfil</em>, use <em>Excluir minha conta</em> e confirme com a sua senha. A conta é anonimizada na hora, as suas inscrições e vagas futuras são canceladas e você sai do sistema. O histórico de monitorias passadas fica, mas sem nada que identifique você.</li>
+            <li><strong>Corrigir dados</strong>, pedir informações sobre o uso ou fazer qualquer outro pedido: escreva para o contato da seção 1. Respondemos em até 15 dias.</li>
+        </ul>
+        <p>Se achar que os seus direitos não foram atendidos, você pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD).</p>
+    </section>
+
+    <section id="seguranca">
+        <h2>7. Como protegemos</h2>
+        <p>Conexão criptografada (HTTPS) entre o seu navegador e o sistema e entre o sistema e o banco de dados, senhas com <em>hash</em> bcrypt, sessão em cookie que o JavaScript da página não consegue ler, limite de tentativas de login e acesso de cada pessoa só aos próprios dados.</p>
+        <p>Se este aviso mudar, a nova versão e a data aparecem no topo desta página.</p>
+    </section>
+
+    <p class="aviso-voltar"><a href="index.html">← Voltar ao MoniPro</a></p>
+</main>
+
+</body>
+</html>

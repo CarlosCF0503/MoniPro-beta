@@ -60,18 +60,18 @@ jobs:
             #    continuaria servindo a imagem antiga do Monipro_web/.
             docker-compose build
 
-            # 2) Checagem de segurança ANTES de aplicar qualquer coisa: "migrate status"
-            #    só lê o estado das migrations, não altera nada no banco. A engine de
-            #    conexão do Prisma CLI é diferente do adapter customizado (pg.Pool + DB_CA_CERT)
-            #    usado em runtime pelo app — então esse passo também serve pra detectar cedo
-            #    (e sem risco) se o Aiven vai recusar a conexão TLS da engine de migration.
-            #    Se falhar aqui (ex.: certificado autoassinado), o "set -e" já interrompe o
-            #    deploy antes de tentar aplicar de verdade ou trocar os containers.
-            docker-compose run --rm backend npx prisma migrate status
+            # 2) Estado das migrations, só para o registro do deploy (não altera nada).
+            #    O "migrate status" sai com erro sempre que há migration pendente, ou seja,
+            #    em todo release que traz uma migration nova. Com o "set -e" ele barrava o
+            #    deploy antes do passo 3, que é justamente o que aplica as pendentes
+            #    (aconteceu no #64, em 08/11/2026). Por isso o resultado não interrompe.
+            docker-compose run --rm backend npx prisma migrate status || echo "migrate status: há migrations pendentes ou divergentes (ver acima); o passo 3 aplica as pendentes."
 
             # 3) Aplica as migrations pendentes do Prisma ANTES de trocar os containers,
             #    usando --rm para rodar num container descartável com o mesmo ambiente/rede
             #    já definidos no serviço "backend" (DATABASE_URL vem do .env via env_file).
+            #    É este passo que barra o deploy (set -e) se o banco recusar a conexão (TLS,
+            #    senha) ou se uma migration falhar; os containers em produção não são trocados.
             docker-compose run --rm backend npx prisma migrate deploy
 
             # 4) Só agora sobe os containers, já com o schema atualizado no banco

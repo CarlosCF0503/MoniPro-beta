@@ -1,6 +1,9 @@
 // src/controllers/perfilController.js
 // Tarefa 8: erros sobem para o middleware central (src/middlewares/tratadorDeErros.js).
 const perfilService = require('../services/perfilService');
+const privacidadeService = require('../services/privacidadeService');
+const { NOME_COOKIE_SESSAO, opcoesCookieSessao } = require('../config/sessao');
+const logger = require('../utils/logger');
 const { obterParametrosPaginacao, montarPaginacao } = require('../utils/paginacao');
 
 class PerfilController {
@@ -27,6 +30,14 @@ class PerfilController {
             monitorias: dados,
             paginacao: montarPaginacao(paginacao, total)
         });
+    }
+
+    // DELETE /perfil (R3): anonimiza a conta, revoga as sessões e apaga o cookie
+    async excluirConta(req, res) {
+        await privacidadeService.excluirConta(req.usuario.id, req.body.senha);
+        logger.info({ id: req.usuario.id }, 'Conta excluída (anonimizada) a pedido do titular');
+        res.clearCookie(NOME_COOKIE_SESSAO, opcoesCookieSessao);
+        res.json({ success: true, mensagem: 'Sua conta foi excluída.' });
     }
 }
 

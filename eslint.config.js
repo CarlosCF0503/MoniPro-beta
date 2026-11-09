@@ -10,7 +10,10 @@ module.exports = [
             'Monipro_web/Dockerfile',
             '**/*.min.js',
             // Evidências de teste: registros fixos, guardados como foram executados
-            'docs/evidencias/**'
+            'docs/evidencias/**',
+            // Saídas do Playwright (R1)
+            'e2e-resultados/**',
+            'e2e-relatorio/**'
         ]
     },
     js.configs.recommended,
@@ -23,6 +26,19 @@ module.exports = [
                 ...globals.node,
                 ...globals.jest
             }
+        },
+        rules: {
+            'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }]
+        }
+    },
+    {
+        // R1: testes de ponta a ponta (Playwright). Rodam no Node, mas o código passado a
+        // page.evaluate() roda no navegador (window, fetch).
+        files: ['e2e/**/*.js'],
+        languageOptions: {
+            ecmaVersion: 2022,
+            sourceType: 'commonjs',
+            globals: { ...globals.node, ...globals.browser }
         },
         rules: {
             'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }]
@@ -50,7 +66,9 @@ module.exports = [
                 MarcarDatas: 'readonly',
                 MarcarComponentes: 'readonly',
                 // Perfil do monitor (JS/perfil/): dados.js
-                PerfilDados: 'readonly'
+                PerfilDados: 'readonly',
+                // R3 (LGPD): excluir a conta (JS/perfil/excluir_conta.js)
+                PerfilExcluirConta: 'readonly'
             }
         },
         rules: {

@@ -43,3 +43,47 @@ jobs:
       # do Prisma (ver PR do R9).
       - name: Auditoria de dependências de produção
         run: npm audit --omit=dev --audit-level=critical
+
+  # R1 (Fase 03): testes de integração contra um PostgreSQL 17 real, criado vazio a cada
+  # execução. Validam as migrações num banco do zero, a ausência de mudanças no schema.prisma
+  # sem migração, as travas de concorrência (presença e capacidade), as restrições únicas e o
+  # script de limpeza de P1. O banco só existe dentro do job: nunca é hml nem produção.
+  integracao:
+    name: Integração com PostgreSQL real
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: monipro
+          POSTGRES_PASSWORD: integracao # pragma: allowlist secret
+          POSTGRES_DB: monipro_integracao
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U monipro -d monipro_integracao"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL_INTEGRACAO: postgres://monipro:integracao@localhost:5432/monipro_integracao # pragma: allowlist secret
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instalar dependências
+        run: npm ci
+
+      # O teste do script de limpeza roda no psql de verdade
+      - name: Conferir o cliente psql
+        run: command -v psql || (sudo apt-get update && sudo apt-get install -y postgresql-client)
+
+      - name: Rodar testes de integração
+        run: npm run test:int

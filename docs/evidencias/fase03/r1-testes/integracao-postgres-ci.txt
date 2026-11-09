@@ -1,0 +1,19 @@
+# R1: testes de integração com PostgreSQL 17 real, execução do CI
+# Job "Integração com PostgreSQL real", PR #68 (commit 69c53d4 sobre a develop c306813).
+# https://github.com/CarlosCF0503/MoniPro-beta/actions/runs/42540267216
+# Banco criado vazio no service postgres:17; globalSetup aplica as migrações do zero e compara com o schema.prisma.
+
+PASS tests/integracao/concorrencia.int.test.js
+PASS tests/integracao/unicidade.int.test.js
+PASS tests/integracao/limpeza.int.test.js
+PASS tests/integracao/sessao.int.test.js
+Test Suites: 4 passed, 4 total
+Tests:       16 passed, 16 total
+Snapshots:   0 total
+Time:        2.816 s
+Ran all test suites.
+Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?
+
+## Testes de unidade e de API no mesmo commit (job "Testes, lint e auditoria de dependências")
+Test Suites: 17 passed, 17 total
+Tests:       237 passed, 237 total

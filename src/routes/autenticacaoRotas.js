@@ -6,11 +6,13 @@ const autenticacaoController = require('../controllers/autenticacaoController');
 const validarCorpo = require('../middlewares/validarCorpo');
 const { autenticar } = require('../middlewares/autenticacaoMiddleware');
 const { cadastroSchema, loginSchema } = require('../schemas/autenticacaoSchemas');
+const { limiteTentativasAuth } = require('../config/limites');
 
-// Limita tentativas de login/cadastro por IP para dificultar força bruta
+// Limita tentativas de login/cadastro por IP para dificultar força bruta (padrão: 10; ver
+// src/config/limites.js)
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 10,
+    max: limiteTentativasAuth(),
     standardHeaders: true,
     legacyHeaders: false,
     message: { erro: 'Muitas tentativas. Tente novamente mais tarde.' }
