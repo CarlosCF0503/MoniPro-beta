@@ -85,6 +85,9 @@ model Agendamento {
   // P2 (R4): a presença vale quando os dois confirmam; aí o status vira concluido
   presenca_aluno_em   DateTime?
   presenca_monitor_em DateTime?
+  // Editar vaga: preenchido quando a vaga muda de dia, horário ou local. A partir daí o aluno
+  // pode cancelar sem a antecedência de 24h da RN-001 (até o início)
+  liberado_cancelar_em DateTime?
 
   id_monitoria Int
   monitoria    Monitoria         @relation(fields: [id_monitoria], references: [id])

@@ -273,6 +273,18 @@ describe('perfil do aluno — inscrições (P2)', () => {
         expect(D.podeCancelarInscricao(futura(48, 'cancelada'), AGORA)).toBe(false);
     });
 
+    test('podeCancelarInscricao libera até o início quando a vaga mudou (editar vaga)', () => {
+        const mudou = (horas) =>
+            insc({
+                liberado_cancelar_em: AGORA.toISOString(),
+                monitoria: { horario: new Date(AGORA.getTime() + horas * 3600e3).toISOString() }
+            });
+        expect(mudou(2).liberado).toBe(true);
+        expect(D.podeCancelarInscricao(mudou(2), AGORA)).toBe(true);
+        expect(D.podeCancelarInscricao(mudou(-0.1), AGORA)).toBe(false);
+        expect(insc({}).liberado).toBe(false);
+    });
+
     test('presencasPorDisciplina conta só as confirmadas pelos dois', () => {
         const lista = [
             insc({ status: 'concluido' }),

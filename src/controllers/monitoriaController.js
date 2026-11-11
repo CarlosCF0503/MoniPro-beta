@@ -50,6 +50,21 @@ class MonitoriaController {
         });
     }
 
+    async atualizar(req, res) {
+        const { monitoria, alterouQuandoOuOnde, inscritos } = await monitoriaService.atualizar(
+            parseInt(req.params.id, 10),
+            req.usuario.id,
+            req.body
+        );
+        res.json({
+            success: true,
+            mensagem: 'Vaga de monitoria atualizada com sucesso.',
+            monitoria,
+            // Inscritos liberados para cancelar sem a regra das 24h (0 se só lugares/assunto mudaram)
+            liberados: alterouQuandoOuOnde ? inscritos : 0
+        });
+    }
+
     async cancelar(req, res) {
         const monitoria = await monitoriaService.cancelar(parseInt(req.params.id), req.usuario.id);
         res.json({

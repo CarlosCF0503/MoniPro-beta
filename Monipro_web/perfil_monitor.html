@@ -289,6 +289,46 @@
       </div>
     </dialog>
 
+    <!-- Editar vaga: só vaga ativa e futura do próprio monitor (PATCH /monitorias/:id) -->
+    <dialog class="pp-dlg" id="dlg-editar" aria-labelledby="ed-titulo">
+      <form method="dialog" id="ed-form" novalidate>
+        <div>
+          <h2 id="ed-titulo">Editar vaga</h2>
+          <p class="pp-sub" id="ed-sub"></p>
+        </div>
+        <div class="pp-dois">
+          <div class="pp-campo">
+            <label class="pp-rotulo" for="ed-data">Dia</label>
+            <input class="pp-input" type="date" id="ed-data" name="ed-data">
+          </div>
+          <div class="pp-campo">
+            <label class="pp-rotulo" for="ed-hora">Horário</label>
+            <input class="pp-input" type="time" id="ed-hora" name="ed-hora" step="1800">
+          </div>
+        </div>
+        <p class="pp-dica-campo" id="ed-nota-24h" hidden>Faltam menos de 24h: dia e horário não mudam mais. Local, lugares e assunto ainda podem mudar.</p>
+        <div class="pp-campo">
+          <label class="pp-rotulo" for="ed-local">Local</label>
+          <input class="pp-input" type="text" id="ed-local" name="ed-local" maxlength="120" autocomplete="off">
+        </div>
+        <div class="pp-campo">
+          <label class="pp-rotulo" for="ed-cap">Lugares</label>
+          <input class="pp-input" type="number" id="ed-cap" name="ed-cap" min="1" step="1" inputmode="numeric" aria-describedby="ed-cap-dica">
+          <span class="pp-dica-campo" id="ed-cap-dica"></span>
+        </div>
+        <div class="pp-campo">
+          <label class="pp-rotulo" for="ed-desc">Assunto (opcional)</label>
+          <textarea class="pp-input" id="ed-desc" name="ed-desc" rows="2" maxlength="500" placeholder="Ex.: Lista 3, integrais"></textarea>
+        </div>
+        <p class="pp-info" id="ed-aviso" hidden></p>
+        <p class="pp-erro" id="ed-erro" role="alert"></p>
+        <div class="pp-acoes">
+          <button type="button" class="pp-btn pp-btn-sec" data-fechar>Voltar</button>
+          <button type="submit" class="pp-btn pp-btn-pri" id="ed-salvar">Salvar alterações</button>
+        </div>
+      </form>
+    </dialog>
+
     <div id="toast-container"></div>
     <script src="JS/config.js"></script>
     <script src="JS/api.js" defer></script>

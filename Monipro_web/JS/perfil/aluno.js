@@ -90,6 +90,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const situacao = (i) => D.situacaoDoAluno(i, S.agora);
     const confirmadas = () => S.inscricoes.filter((i) => i.status === 'concluido').length;
     const AVISO_24H = 'Cancelamento só até ' + D.HORAS_CANCELAMENTO + 'h antes';
+    const AVISO_MUDOU = 'A vaga mudou: pode cancelar até o início';
+    const notaMudou = (i, t) =>
+        i.liberado ? '<span class="nota-24h">' + icone('relogio', t) + AVISO_MUDOU + '</span>' : '';
     const SITUACOES = {
         confirmar: ['pill-atencao', 'relogio', 'Confirme sua presença'],
         antes: ['pill-aberta', 'calendario', 'Inscrito'],
@@ -161,7 +164,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return (
                 '<div class="vg-acoes">' +
                 (D.podeCancelarInscricao(i, S.agora)
-                    ? botaoCancelar(i)
+                    ? notaMudou(i, 12) + botaoCancelar(i)
                     : '<span class="nota-24h">' + icone('relogio', 12) + AVISO_24H + '</span>') +
                 '</div>'
             );
@@ -633,7 +636,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 '<div class="pp-det-acoes">' + botaoConfirmar(i, 'pp-btn pp-btn-pri') + '</div>';
         else if (sit === 'antes')
             acoesDet = D.podeCancelarInscricao(i, S.agora)
-                ? '<div class="pp-det-acoes">' + botaoCancelar(i) + '</div>'
+                ? (i.liberado
+                      ? '<p class="nota-24h nota-bloco">' +
+                        icone('relogio', 14) +
+                        AVISO_MUDOU +
+                        '.</p>'
+                      : '') +
+                  '<div class="pp-det-acoes">' +
+                  botaoCancelar(i) +
+                  '</div>'
                 : '<p class="nota-24h nota-bloco">' +
                   icone('relogio', 14) +
                   AVISO_24H +

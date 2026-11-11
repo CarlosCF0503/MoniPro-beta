@@ -1431,3 +1431,14 @@
 .pp-dlg #exc-senha[aria-invalid='true'] {
     border-color: var(--bad);
 }
+
+/* Campos de formulário nos diálogos (editar vaga) */
+.pp-dlg .pp-input { min-height: 44px; padding: 0 12px; border: 1.5px solid var(--line-2); border-radius: 10px; font: inherit; color: var(--navy); background: var(--white); width: 100%; }
+.pp-dlg textarea.pp-input { padding: 10px 12px; min-height: 64px; resize: vertical; }
+.pp-dlg .pp-input:focus-visible { outline: 3px solid var(--navy-2); outline-offset: 1px; }
+.pp-dlg .pp-input[aria-invalid='true'] { border-color: var(--bad); }
+.pp-dlg .pp-input:disabled { background: var(--soft); color: var(--slate); }
+.pp-dlg .pp-dois { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pp-dlg .pp-dica-campo { font-size: 12px; color: var(--slate); }
+.pp-dlg .pp-info { background: var(--soft); color: var(--navy-2); border-radius: 10px; padding: 10px 12px; font-size: 13px; }
+.pp-dlg .pp-info[hidden] { display: none; }

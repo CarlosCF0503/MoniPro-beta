@@ -114,6 +114,62 @@ class MonitoriaRepository {
         return await prisma.monitoria.findUnique({ where: { id: parseInt(id) } });
     }
 
+    // --- Editar vaga (RF-009) ---
+
+    async emTransacao(fn) {
+        return await prisma.$transaction(fn);
+    }
+
+    // Trava a linha da vaga (SELECT ... FOR UPDATE) até o fim da transação. A inscrição
+    // (agendamentoService.criar) trava a mesma linha, então editar os lugares e se inscrever ao
+    // mesmo tempo acontecem um depois do outro, e a contagem de inscritos não fica velha.
+    async bloquearParaEdicao(id, db = prisma) {
+        const linhas = await db.$queryRaw`
+            SELECT "id", "id_monitor", "horario", "local", "status"::text AS "status"
+            FROM "monitorias"
+            WHERE "id" = ${parseInt(id)}
+            FOR UPDATE
+        `;
+        return linhas[0] || null;
+    }
+
+    // Inscrições que ocupam vaga (tudo que não foi cancelado), como em buscarPorDisciplina
+    async contarInscritos(idMonitoria, db = prisma) {
+        return await db.agendamento.count({
+            where: { id_monitoria: parseInt(idMonitoria), status: { not: 'cancelado' } }
+        });
+    }
+
+    // Outra vaga ativa do mesmo monitor no horário exato (a própria vaga fica de fora)
+    async buscarOutraAtivaNoHorario(idMonitor, horario, idIgnorar, db = prisma) {
+        return await db.monitoria.findFirst({
+            where: {
+                id_monitor: idMonitor,
+                horario: new Date(horario),
+                status: 'ativa',
+                id: { not: parseInt(idIgnorar) }
+            },
+            select: { id: true }
+        });
+    }
+
+    async atualizar(id, dados, db = prisma) {
+        return await db.monitoria.update({ where: { id: parseInt(id) }, data: dados });
+    }
+
+    // Vaga mudou de dia, horário ou local: as inscrições ativas passam a poder ser canceladas
+    // sem a antecedência de 24h. Com novo horário, data_hora acompanha a vaga (Tarefa 31).
+    async liberarInscricoes(idMonitoria, quando, novoHorario, db = prisma) {
+        const { count } = await db.agendamento.updateMany({
+            where: { id_monitoria: parseInt(idMonitoria), status: { not: 'cancelado' } },
+            data: {
+                liberado_cancelar_em: quando,
+                ...(novoHorario ? { data_hora: novoHorario } : {})
+            }
+        });
+        return count;
+    }
+
     async buscarPorMonitor(idMonitor, { skip, take } = {}) {
         const where = { id_monitor: idMonitor };
 

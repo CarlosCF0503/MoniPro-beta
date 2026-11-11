@@ -198,6 +198,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (g === 'proximas')
             return (
                 '<div class="vg-acoes">' +
+                botaoEditar(v) +
                 (D.podeCancelar(v, S.agora)
                     ? botaoCancelar(v)
                     : '<span class="nota-24h">' + icone('relogio', 12) + AVISO_24H + '</span>') +
@@ -818,8 +819,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 '</div>';
         else if (g === 'proximas')
             acoesDet = D.podeCancelar(v, S.agora)
-                ? '<div class="pp-det-acoes">' + botaoCancelar(v) + '</div>'
-                : '<p class="nota-24h nota-bloco">' +
+                ? '<div class="pp-det-acoes">' + botaoEditar(v) + botaoCancelar(v) + '</div>'
+                : '<div class="pp-det-acoes">' +
+                  botaoEditar(v) +
+                  '</div><p class="nota-24h nota-bloco">' +
                   icone('relogio', 14) +
                   AVISO_24H +
                   '. Faltam menos de ' +
@@ -1150,6 +1153,127 @@ document.addEventListener('DOMContentLoaded', async () => {
         render();
         document.getElementById('aba-' + chave).focus();
     }
+    // Editar vaga (PATCH /monitorias/:id). Dia e horário só mudam até 24h antes; local, lugares
+    // e assunto, até o início. Lugares nunca abaixo do número de inscritos. Se dia, horário ou
+    // local mudarem, os inscritos podem cancelar sem a regra das 24h (o e-mail vem no plano 3).
+    const dlgEd = document.getElementById('dlg-editar');
+    const edForm = document.getElementById('ed-form');
+    const ed = (id) => document.getElementById('ed-' + id);
+    const isoDia = (d) =>
+        d.getFullYear() +
+        '-' +
+        String(d.getMonth() + 1).padStart(2, '0') +
+        '-' +
+        String(d.getDate()).padStart(2, '0');
+    function botaoEditar(v, classe) {
+        return (
+            '<button type="button" class="' +
+            (classe || 'pp-btn pp-btn-sec') +
+            '" data-acao="editar" data-id="' +
+            esc(v.id) +
+            '">Editar</button>'
+        );
+    }
+    function edMudancas(v) {
+        const novo = new Date(ed('data').value + 'T' + ed('hora').value);
+        return {
+            novo,
+            // Por minuto: os segundos do horário gravado não contam como mudança
+            quando: !isNaN(novo) && Math.floor(novo / 60000) !== Math.floor(v.inicio / 60000),
+            local: ed('local').value.trim() !== v.local
+        };
+    }
+    function edAtualizarAviso() {
+        const v = S.alvo;
+        const m = edMudancas(v);
+        const aviso = ed('aviso');
+        if ((m.quando || m.local) && v.inscritos)
+            aviso.textContent =
+                (v.inscritos === 1
+                    ? 'O aluno inscrito vê a mudança no perfil e pode'
+                    : 'Os ' + v.inscritos + ' alunos inscritos veem a mudança no perfil e podem') +
+                ' cancelar sem a regra das 24h.';
+        else if (m.quando || m.local) aviso.textContent = 'Ninguém se inscreveu ainda.';
+        aviso.hidden = !(m.quando || m.local);
+    }
+    function abrirEditar(v) {
+        S.alvo = v;
+        const perto = v.inicio - S.agora < D.HORAS_CANCELAMENTO * 3600e3;
+        ed('sub').textContent =
+            v.disciplina + ' · ' + D.diaCurto(v.inicio) + ' às ' + D.hora(v.inicio);
+        ed('data').value = isoDia(v.inicio);
+        ed('data').min = isoDia(new Date());
+        ed('hora').value = D.hora(v.inicio);
+        ed('data').disabled = ed('hora').disabled = perto;
+        ed('nota-24h').hidden = !perto;
+        ed('local').value = v.local;
+        ed('cap').value = v.capacidade;
+        ed('cap').min = Math.max(1, v.inscritos || 0);
+        ed('cap-dica').textContent = v.inscritos
+            ? 'Mínimo ' +
+              v.inscritos +
+              ': já há ' +
+              D.plural(v.inscritos, 'inscrito', 'inscritos') +
+              '.'
+            : 'Ninguém inscrito ainda.';
+        ed('desc').value = v.descricao || '';
+        ed('erro').textContent = '';
+        edForm.querySelectorAll('[aria-invalid]').forEach((c) => c.removeAttribute('aria-invalid'));
+        edAtualizarAviso();
+        dlgEd.showModal();
+    }
+    edForm.addEventListener('input', edAtualizarAviso);
+    edForm.addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const v = S.alvo;
+        const m = edMudancas(v);
+        const cap = Number(ed('cap').value);
+        const erro = (campo, texto) => {
+            ed('erro').textContent = texto;
+            ed(campo).setAttribute('aria-invalid', 'true');
+            ed(campo).focus();
+        };
+        edForm.querySelectorAll('[aria-invalid]').forEach((c) => c.removeAttribute('aria-invalid'));
+        if (m.quando && m.novo <= new Date())
+            return erro('hora', 'Escolha um dia e horário que ainda não passaram.');
+        if (!ed('local').value.trim()) return erro('local', 'Informe onde a monitoria acontece.');
+        if (!Number.isInteger(cap) || cap < Math.max(1, v.inscritos || 0))
+            return erro(
+                'cap',
+                'Lugares não pode ficar abaixo de ' + Math.max(1, v.inscritos || 0) + '.'
+            );
+        const btn = ed('salvar');
+        btn.disabled = true;
+        btn.textContent = 'Salvando…';
+        const r = await chamadaApi('/monitorias/' + v.id, {
+            method: 'PATCH',
+            body: JSON.stringify(
+                Object.assign(m.quando ? { horario: m.novo.toISOString() } : {}, {
+                    local: ed('local').value.trim(),
+                    capacidade: cap,
+                    descricao: ed('desc').value.trim()
+                })
+            )
+        });
+        btn.disabled = false;
+        btn.textContent = 'Salvar alterações';
+        if (!r.success)
+            return (ed('erro').textContent = mensagemDaApi(r, 'Não foi possível salvar a vaga.'));
+        if (m.quando) v.inicio = m.novo;
+        v.local = ed('local').value.trim();
+        v.capacidade = cap;
+        v.descricao = ed('desc').value.trim();
+        dlgEd.close();
+        showToast(
+            r.liberados
+                ? 'Vaga atualizada. Os inscritos podem cancelar sem a regra das 24h.'
+                : 'Vaga atualizada.',
+            'success'
+        );
+        render();
+    });
+    dlgEd.querySelector('[data-fechar]').addEventListener('click', () => dlgEd.close());
+
     function aoAgir(ev) {
         const aba = ev.target.closest('[data-aba]');
         if (aba) return trocarAba(aba.dataset.aba);
@@ -1180,6 +1304,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (acao === 'detalhes') abrirDetalhes(vaga);
         else if (acao === 'finalizar') abrirFinalizar(vaga);
         else if (acao === 'cancelar') abrirCancelar(vaga);
+        else if (acao === 'editar') abrirEditar(vaga);
     }
     raiz.addEventListener('click', aoAgir);
     dlgDet.addEventListener('click', aoAgir);

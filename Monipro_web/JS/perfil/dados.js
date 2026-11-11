@@ -103,7 +103,8 @@
             fim: m.data_fim ? new Date(m.data_fim) : null,
             status: String(m.status || '').toLowerCase(),
             capacidade: Number(m.capacidade) || 1,
-            inscritos: Number.isInteger(m.inscritos) ? m.inscritos : null
+            inscritos: Number.isInteger(m.inscritos) ? m.inscritos : null,
+            descricao: m.descricao || ''
         };
     }
 
@@ -252,7 +253,9 @@
             status: String(a.status || '').toLowerCase(),
             statusVaga: String(m.status || '').toLowerCase(),
             alunoConfirmou: Boolean(a.presenca_aluno_em),
-            monitorConfirmou: Boolean(a.presenca_monitor_em)
+            monitorConfirmou: Boolean(a.presenca_monitor_em),
+            // A vaga mudou de dia, horário ou local depois da inscrição (editar vaga)
+            liberado: Boolean(a.liberado_cancelar_em)
         };
     }
 
@@ -286,9 +289,13 @@
         return { confirmar, proximas, historico };
     }
 
-    /** RN-001: o aluno só cancela a inscrição com 24h ou mais até o início. */
+    /**
+     * RN-001: o aluno só cancela a inscrição com 24h ou mais até o início. Se a vaga mudou de
+     * dia, horário ou local depois da inscrição, pode cancelar até o início.
+     */
     function podeCancelarInscricao(inscricao, agora) {
         if (inscricao.status === 'cancelado' || inscricao.statusVaga === 'cancelada') return false;
+        if (inscricao.liberado) return inscricao.inicio > agora;
         return inscricao.inicio - agora >= HORAS_CANCELAMENTO * 60 * 60 * 1000;
     }
 
