@@ -25,6 +25,11 @@ class UsuarioRepository {
         });
     }
 
+    // Plano 14: corrigir o e-mail de uma conta que ainda não confirmou
+    async atualizarEmail(id, email) {
+        await prisma.usuario.update({ where: { id: parseInt(id) }, data: { email } });
+    }
+
     // R3 (LGPD): o último login conta o prazo de retenção de contas paradas
     async registrarAcesso(id, quando = new Date()) {
         await prisma.usuario.update({

@@ -3,6 +3,7 @@
 // Tarefa 9: os corpos já chegam validados por schemas/autenticacaoSchemas.js.
 const autenticacaoService = require('../services/autenticacaoService');
 const redefinicaoSenhaService = require('../services/redefinicaoSenhaService');
+const confirmacaoEmailService = require('../services/confirmacaoEmailService');
 const { ErroCredenciaisInvalidas } = require('../utils/erros');
 const logger = require('../utils/logger');
 const { mascararIdentificador } = require('../utils/mascararIdentificador');
@@ -18,7 +19,7 @@ class AutenticacaoController {
         logger.info({ id: usuario.id, tipo_usuario: req.body.tipo_usuario }, 'Usuário cadastrado');
         res.status(201).json({
             success: true,
-            mensagem: 'Conta criada com sucesso!',
+            mensagem: 'Conta criada. Enviamos um link para confirmar o seu e-mail.',
             id: usuario.id
         });
     }
@@ -65,6 +66,32 @@ class AutenticacaoController {
         // Quem redefiniu neste navegador também sai: entra de novo com a senha nova
         res.clearCookie(NOME_COOKIE_SESSAO, opcoesCookieSessao);
         res.json({ success: true, mensagem: 'Senha alterada. Entre com a senha nova.' });
+    }
+
+    // POST /auth/email/confirmar (RF-018): abre o link do e-mail e libera o login
+    async confirmarEmail(req, res) {
+        await confirmacaoEmailService.confirmar(req.body.token);
+        res.json({ success: true, mensagem: 'E-mail confirmado. Agora você já pode entrar.' });
+    }
+
+    // POST /auth/email/reenviar (RF-018): a resposta é sempre a mesma, exista a conta ou não
+    async reenviarConfirmacao(req, res) {
+        await confirmacaoEmailService.reenviar(req.body.identificador, req.body.tipo_usuario);
+        res.json({
+            success: true,
+            mensagem:
+                'Se existir uma conta esperando confirmação, enviamos um link novo para o e-mail dela.'
+        });
+    }
+
+    // POST /auth/email/corrigir (plano 14): troca o e-mail digitado errado e manda o link para ele
+    async corrigirEmail(req, res) {
+        const email = await autenticacaoService.corrigirEmail(req.body);
+        res.json({
+            success: true,
+            mensagem: 'E-mail corrigido. Enviamos o link de confirmação para o endereço novo.',
+            email
+        });
     }
 
     // GET /auth/sessao: quem está logado (o JavaScript da página não lê mais o token)

@@ -3,11 +3,14 @@
 // estas classes e o middleware central (src/middlewares/tratadorDeErros.js)
 // monta a resposta HTTP — sem decidir status por error.message.includes(...).
 
+// `codigo` (opcional) é um identificador estável para o frontend decidir o que mostrar sem
+// depender do texto da mensagem (ex.: "email_nao_confirmado" no login)
 class ErroAplicacao extends Error {
-    constructor(mensagem, statusCode = 400) {
+    constructor(mensagem, statusCode = 400, codigo) {
         super(mensagem);
         this.name = this.constructor.name;
         this.statusCode = statusCode;
+        if (codigo) this.codigo = codigo;
     }
 }
 

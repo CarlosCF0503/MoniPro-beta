@@ -11,7 +11,7 @@ function tratadorDeErros(error, req, res, next) {
     // Resposta já começou a ser enviada: delega ao handler padrão do Express
     if (res.headersSent) return next(error);
 
-    const { statusCode, mensagem, campos } = tratarErro(error);
+    const { statusCode, mensagem, campos, codigo } = tratarErro(error);
 
     if (statusCode >= 500) {
         logger.error(
@@ -23,7 +23,8 @@ function tratadorDeErros(error, req, res, next) {
     res.status(statusCode).json({
         success: false,
         erro: mensagem,
-        ...(campos && { campos })
+        ...(campos && { campos }),
+        ...(codigo && { codigo })
     });
 }
 

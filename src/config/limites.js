@@ -5,7 +5,8 @@
 
 const PADRAO_TENTATIVAS_AUTH = 10; // login + cadastro, a cada 15 minutos
 const PADRAO_REQUISICOES_MINUTO = 120; // todas as rotas
-// Recuperar senha (RF-008): pedidos de link por hora, por e-mail e por IP
+// Recuperar senha (RF-008) e reenviar a confirmação do e-mail (plano 14): pedidos de link por
+// hora, por conta e por IP. Cada rota tem os próprios contadores.
 const PADRAO_PEDIDOS_SENHA_EMAIL = 3;
 const PADRAO_PEDIDOS_SENHA_IP = 10;
 
