@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- O link traz o token na URL: não repassar o endereço para outros sites -->
+    <meta name="referrer" content="no-referrer">
+    <link rel="icon" href="IMG/MoniPro-mini.png">
+    <link rel="stylesheet" href="CSS/fontes.css">
+    <link rel="stylesheet" href="CSS/legal.css">
+    <link rel="stylesheet" href="CSS/login.css">
+    <link rel="stylesheet" href="CSS/redefinir_senha.css">
+    <title>Redefinir senha - MoniPro</title>
+</head>
+<body>
+<main class="split-layout">
+    <section class="form-side">
+        <div class="form-container">
+            <img src="IMG/MoniPro-Logo.png" alt="Logo MoniPro" class="logo">
+
+            <!-- Etapa 1: pedir o link (sem token na URL) -->
+            <div id="etapa-pedir">
+                <div class="header-text">
+                    <h1 class="text1">Esqueceu a senha?</h1>
+                    <p>Informe o e-mail da sua conta. Enviamos um link para criar uma senha nova.</p>
+                </div>
+                <form id="formPedir" novalidate>
+                    <div class="profile-section">
+                        <p class="profile-title">Qual é a sua conta?</p>
+                        <div class="profile-selector">
+                            <input type="radio" id="radioAluno" name="tipo_usuario" value="aluno" checked>
+                            <label for="radioAluno" class="btn-profile">Aluno</label>
+                            <input type="radio" id="radioMonitor" name="tipo_usuario" value="monitor">
+                            <label for="radioMonitor" class="btn-profile">Monitor</label>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <div class="icone"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></div>
+                        <label for="inputEmail" class="sr-only">E-mail</label>
+                        <input type="email" id="inputEmail" placeholder="seu.nome@exemplo.edu.br" autocomplete="email" required>
+                    </div>
+                    <p class="rs-erro" id="erroPedir" role="alert"></p>
+                    <input type="submit" id="enviarLink" class="rs-botao" value="Enviar link">
+                    <div class="link-cadastro"><p class="cadastro">Lembrou a senha?</p><a href="index.html">Voltar ao login</a></div>
+                </form>
+            </div>
+
+            <!-- Etapa 1b: resposta genérica (a mesma exista a conta ou não) -->
+            <div id="etapa-enviado" class="rs-caixa" hidden tabindex="-1">
+                <div class="rs-ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></div>
+                <h1 class="text1">Confira seu e-mail</h1>
+                <p>Se existir uma conta com <strong id="emailEnviado"></strong>, você vai receber um link em alguns minutos. O link vale por 30 minutos e só funciona uma vez.</p>
+                <p class="rs-dica">Não chegou? Veja a caixa de spam ou peça de novo daqui a 1 minuto.</p>
+                <button type="button" class="rs-sec" id="pedirDeNovo">Usar outro e-mail</button>
+                <div class="link-cadastro"><a href="index.html">Voltar ao login</a></div>
+            </div>
+
+            <!-- Etapa 2: criar a senha nova (com ?token=...) -->
+            <div id="etapa-nova" hidden>
+                <div class="header-text">
+                    <h1 class="text1">Crie uma senha nova</h1>
+                    <p>Depois de salvar, você entra de novo com a senha nova. As outras sessões abertas são encerradas.</p>
+                </div>
+                <form id="formNova" novalidate>
+                    <div class="input-group input-group-senha">
+                        <div class="icone"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                        <label for="inputNova" class="sr-only">Senha nova</label>
+                        <input type="password" id="inputNova" placeholder="Senha nova" autocomplete="new-password" aria-describedby="regras">
+                        <button type="button" class="olho" aria-label="Mostrar senha" data-target="inputNova"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                    </div>
+                    <ul class="rs-regras" id="regras" aria-live="polite">
+                        <li data-regra="tam">Pelo menos 8 caracteres</li>
+                        <li data-regra="letra">Pelo menos uma letra</li>
+                        <li data-regra="num">Pelo menos um número</li>
+                    </ul>
+                    <div class="input-group input-group-senha">
+                        <div class="icone"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                        <label for="inputConfirma" class="sr-only">Repita a senha nova</label>
+                        <input type="password" id="inputConfirma" placeholder="Repita a senha nova" autocomplete="new-password">
+                    </div>
+                    <p class="rs-erro" id="erroNova" role="alert"></p>
+                    <input type="submit" id="salvarNova" class="rs-botao" value="Salvar senha nova">
+                </form>
+            </div>
+
+            <!-- Etapa 2b: senha trocada -->
+            <div id="etapa-feito" class="rs-caixa" hidden tabindex="-1">
+                <div class="rs-ico ok"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <h1 class="text1">Senha alterada</h1>
+                <p>Entre com a senha nova. Se não foi você quem pediu a troca, avise a coordenação.</p>
+                <a class="rs-pri" href="index.html">Ir para o login</a>
+            </div>
+
+            <!-- Link vencido, já usado ou adulterado -->
+            <div id="etapa-invalido" class="rs-caixa" hidden tabindex="-1">
+                <div class="rs-ico perigo"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg></div>
+                <h1 class="text1">Este link não vale mais</h1>
+                <p>O link de redefinição dura 30 minutos e só pode ser usado uma vez. Peça um novo para continuar.</p>
+                <a class="rs-pri" href="redefinir_senha.html">Pedir novo link</a>
+            </div>
+
+            <p class="rodape-legal"><a href="privacidade.html">Aviso de Privacidade</a></p>
+        </div>
+    </section>
+    <section class="visual-side"><div class="visual-content"><h2>Sua jornada acadêmica, mais organizada.</h2></div></section>
+</main>
+<div id="toast-container"></div>
+<script src="JS/toast.js" defer></script>
+<script src="JS/config.js"></script>
+<script src="JS/api.js" defer></script>
+<script src="JS/login.js" defer></script>
+<script src="JS/redefinir_senha.js" defer></script>
+</body>
+</html>

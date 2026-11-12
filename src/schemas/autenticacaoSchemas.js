@@ -40,4 +40,22 @@ const loginSchema = z.object({
     tipo_usuario: tipoUsuario
 });
 
-module.exports = { cadastroSchema, loginSchema };
+// RF-008: pedir o link de redefinição. O e-mail só precisa ter formato válido: a resposta é a
+// mesma exista a conta ou não.
+const esqueciSenhaSchema = z.object({
+    email: cadastroSchema.shape.email,
+    tipo_usuario: tipoUsuario
+});
+
+// RF-008: criar a senha nova com o token do link. A senha segue a mesma política do cadastro.
+// O token tem 43 caracteres (32 bytes em base64url); o limite folgado só barra lixo.
+const redefinirSenhaSchema = z.object({
+    token: z
+        .string({ error: 'O link de redefinição está incompleto.' })
+        .trim()
+        .min(20, 'O link de redefinição está incompleto.')
+        .max(200, 'O link de redefinição está incompleto.'),
+    senha: senhaForte
+});
+
+module.exports = { cadastroSchema, loginSchema, esqueciSenhaSchema, redefinirSenhaSchema };
