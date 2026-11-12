@@ -42,8 +42,19 @@ function urlDoApp(env = process.env) {
     return (explicita || publica || origens[0] || 'https://moni-pro.app.br').replace(/\/+$/, '');
 }
 
+// Problemas de configuração que não impedem o servidor de subir, mas quebram os e-mails.
+// O server.js mostra no log ao iniciar. Sem APP_URL, o link sai com a primeira origem
+// pública de ALLOWED_ORIGINS, que pode ser a de outro ambiente (a hml mandando link da produção).
+function avisosEmail(env = process.env) {
+    if (transporteEmail(env) !== 'smtp' || (env.APP_URL || '').trim()) return [];
+    return [
+        `APP_URL não definida: os links dos e-mails vão usar ${urlDoApp(env)}. ` +
+            'Defina APP_URL no .env com o endereço deste ambiente.'
+    ];
+}
+
 function remetente(env = process.env) {
     return env.EMAIL_REMETENTE || 'MoniPro <nao-responda@moni-pro.app.br>';
 }
 
-module.exports = { transporteEmail, configSmtp, urlDoApp, remetente };
+module.exports = { transporteEmail, configSmtp, urlDoApp, remetente, avisosEmail };
