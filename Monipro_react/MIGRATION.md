@@ -24,7 +24,7 @@ Uma tela só conta como **feita** quando passou em lint, build e comparação vi
 | Início (dashboard) | `base.html` | `src/telas/Base.jsx` | ✅ feito | |
 | Minhas disciplinas | `escolha_disciplina.html` | `src/telas/EscolhaDisciplina.jsx` | ✅ feito | Busca continua sem filtrar, igual ao original |
 | Nova disciplina | `cadastro_disciplina.html` | `src/telas/CadastroDisciplina.jsx` | ✅ feito | Regras em `src/disciplinaRegras.js`. Ajuste pendente: travar envio duplo com `useRef` (o original trava de forma síncrona) |
-| Marcar monitoria | `marcar_monitoria.html` | `src/telas/MarcarMonitoria.jsx` | 🔄 em andamento | |
+| Marcar monitoria | `marcar_monitoria.html` | `src/telas/MarcarMonitoria.jsx` | ✅ feito | Componentes e datas em `src/telas/marcar/`. O foco continua no card de vaga após o clique (o original perde o foco ao redesenhar); melhor para teclado, sem diferença visual |
 | Perfil do aluno | `perfil_aluno.html` | `src/telas/PerfilAluno.jsx` | 🔄 em andamento | |
 | Perfil do monitor | `perfil_monitor.html` | `src/telas/PerfilMonitor.jsx` | ⏳ pendente | Depende de `src/perfil/` |
 | Perfil (antigo) | `perfil.html` | — | ➖ não migrar | Legado: substituído por `perfil_aluno` e `perfil_monitor`, nenhuma tela aponta para ele. Continua em `Monipro_web` como está; remoção (e a linha do README) fica para um PR à parte |
