@@ -94,6 +94,8 @@ describe('Mudança de dia, horário ou local libera o cancelamento (ajuste da RN
         const atualizado = await h.prisma.agendamento.findUnique({ where: { id: outro.id } });
         expect(atualizado.liberado_cancelar_em).not.toBeNull();
         expect(atualizado.data_hora.getTime()).toBe(novoHorario.getTime());
+        expect(atualizado.horario_anterior.getTime()).toBe(vaga.horario.getTime());
+        expect(atualizado.local_anterior).toBe('Sala 101');
 
         const cancelamento = await request(app)
             .delete(`/agendamentos/${agendamento.id}`)
@@ -121,5 +123,27 @@ describe('Mudança de dia, horário ou local libera o cancelamento (ajuste da RN
             .set('Cookie', await h.cookieDe(aluno));
         expect(cancelamento.status).toBe(400);
         expect(cancelamento.body.erro).toMatch(/24h/);
+    });
+});
+
+describe('Como a vaga era antes (perfil do aluno)', () => {
+    it('depois de duas edições, o anterior continua sendo o da inscrição', async () => {
+        const monitor = await h.criarUsuario('monitor');
+        const aluno = await h.criarUsuario('aluno');
+        const disciplina = await h.criarDisciplina();
+        const vaga = await h.criarVaga({ monitor, disciplina, emMs: 5 * h.DIA });
+        const agendamento = await h.inscrever(aluno, vaga);
+        const cookie = await h.cookieDe(monitor);
+        const editar = (corpo) =>
+            request(app).patch(`/monitorias/${vaga.id}`).set('Cookie', cookie).send(corpo);
+
+        expect((await editar({ local: 'Sala 202' })).status).toBe(200);
+        expect(
+            (await editar({ local: 'Sala 303', horario: new Date(Date.now() + 6 * h.DIA) })).status
+        ).toBe(200);
+
+        const final = await h.prisma.agendamento.findUnique({ where: { id: agendamento.id } });
+        expect(final.local_anterior).toBe('Sala 101');
+        expect(final.horario_anterior.getTime()).toBe(vaga.horario.getTime());
     });
 });

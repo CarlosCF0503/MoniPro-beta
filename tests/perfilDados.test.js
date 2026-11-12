@@ -285,6 +285,26 @@ describe('perfil do aluno — inscrições (P2)', () => {
         expect(insc({}).liberado).toBe(false);
     });
 
+    test('mudancasDaVaga descreve o antes só do que de fato mudou', () => {
+        const horario = (h) => new Date(2026, 10, 12, h, 0).toISOString();
+        const mudou = (campos) =>
+            insc({
+                liberado_cancelar_em: AGORA.toISOString(),
+                monitoria: { horario: horario(16), local: 'Bloco D, sala 5' },
+                ...campos
+            });
+        expect(
+            D.mudancasDaVaga(mudou({ horario_anterior: horario(14), local_anterior: 'Sala 2' }))
+        ).toEqual(['Horário alterado: era qui, 12 nov às 14:00.', 'Local alterado: era Sala 2.']);
+        // Voltou a ser como era: não há o que mostrar
+        expect(
+            D.mudancasDaVaga(
+                mudou({ horario_anterior: horario(16), local_anterior: 'Bloco D, sala 5' })
+            )
+        ).toEqual([]);
+        expect(D.mudancasDaVaga(insc({}))).toEqual([]);
+    });
+
     test('presencasPorDisciplina conta só as confirmadas pelos dois', () => {
         const lista = [
             insc({ status: 'concluido' }),

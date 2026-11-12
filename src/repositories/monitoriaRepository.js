@@ -159,14 +159,30 @@ class MonitoriaRepository {
 
     // Vaga mudou de dia, horário ou local: as inscrições ativas passam a poder ser canceladas
     // sem a antecedência de 24h. Com novo horário, data_hora acompanha a vaga (Tarefa 31).
-    async liberarInscricoes(idMonitoria, quando, novoHorario, db = prisma) {
+    // `antes` é a vaga antes desta edição ({ horario, local }); o anterior só é gravado onde
+    // ainda está vazio, para guardar como a vaga era quando o aluno se inscreveu, mesmo depois
+    // de várias edições.
+    async liberarInscricoes(idMonitoria, quando, { novoHorario, mudouLocal, antes }, db = prisma) {
+        const ativas = { id_monitoria: parseInt(idMonitoria), status: { not: 'cancelado' } };
         const { count } = await db.agendamento.updateMany({
-            where: { id_monitoria: parseInt(idMonitoria), status: { not: 'cancelado' } },
+            where: ativas,
             data: {
                 liberado_cancelar_em: quando,
                 ...(novoHorario ? { data_hora: novoHorario } : {})
             }
         });
+        if (novoHorario) {
+            await db.agendamento.updateMany({
+                where: { ...ativas, horario_anterior: null },
+                data: { horario_anterior: antes.horario }
+            });
+        }
+        if (mudouLocal) {
+            await db.agendamento.updateMany({
+                where: { ...ativas, local_anterior: null },
+                data: { local_anterior: antes.local }
+            });
+        }
         return count;
     }
 

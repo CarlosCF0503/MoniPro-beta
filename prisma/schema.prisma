@@ -88,6 +88,9 @@ model Agendamento {
   // Editar vaga: preenchido quando a vaga muda de dia, horário ou local. A partir daí o aluno
   // pode cancelar sem a antecedência de 24h da RN-001 (até o início)
   liberado_cancelar_em DateTime?
+  // Como a vaga era quando o aluno se inscreveu (só o que mudou), para o perfil mostrar o antes
+  horario_anterior     DateTime?
+  local_anterior       String?
 
   id_monitoria Int
   monitoria    Monitoria         @relation(fields: [id_monitoria], references: [id])

@@ -90,7 +90,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const situacao = (i) => D.situacaoDoAluno(i, S.agora);
     const confirmadas = () => S.inscricoes.filter((i) => i.status === 'concluido').length;
     const AVISO_24H = 'Cancelamento só até ' + D.HORAS_CANCELAMENTO + 'h antes';
-    const AVISO_MUDOU = 'A vaga mudou: pode cancelar até o início';
+    const AVISO_MUDOU = 'Pode cancelar até o início';
+    // Editar vaga: o que mudou desde a inscrição ("Horário alterado: era ...")
+    const textoMudou = (i) => D.mudancasDaVaga(i).join(' ') || 'A vaga foi alterada.';
     const notaMudou = (i, t) =>
         i.liberado ? '<span class="nota-24h">' + icone('relogio', t) + AVISO_MUDOU + '</span>' : '';
     const SITUACOES = {
@@ -249,6 +251,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             esc(i.monitor) +
             '</span></div>' +
             (nota ? '<p class="pp-nota-presenca">' + nota + '</p>' : '') +
+            (sit === 'antes' && i.liberado
+                ? '<p class="pp-nota-presenca">' + esc(textoMudou(i)) + '</p>'
+                : '') +
             '</div>' +
             acoes(i) +
             '</li>'
@@ -387,7 +392,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     function linhaCel(i) {
         const sit = situacao(i);
         let sub;
-        if (sit === 'antes') sub = D.hora(i.inicio) + ' · ' + esc(i.monitor);
+        if (sit === 'antes')
+            sub =
+                (i.liberado ? '<span class="lc-presenca">Vaga alterada</span> · ' : '') +
+                D.hora(i.inicio) +
+                ' · ' +
+                esc(i.monitor);
         else if (sit === 'confirmar')
             sub =
                 '<span class="lc-presenca">Prazo: ' +
@@ -639,8 +649,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ? (i.liberado
                       ? '<p class="nota-24h nota-bloco">' +
                         icone('relogio', 14) +
-                        AVISO_MUDOU +
-                        '.</p>'
+                        '<span>' +
+                        esc(textoMudou(i)) +
+                        ' Você pode cancelar até o início.</span></p>'
                       : '') +
                   '<div class="pp-det-acoes">' +
                   botaoCancelar(i) +

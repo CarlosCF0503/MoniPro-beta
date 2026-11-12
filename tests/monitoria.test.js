@@ -433,6 +433,35 @@ describe('PATCH /monitorias/:id (editar vaga, RF-009 e RN-010)', () => {
         );
     });
 
+    it('guarda como a vaga era, só onde o anterior ainda está vazio', async () => {
+        const vaga = vagaNoBanco();
+        prisma.$queryRaw.mockResolvedValue([vaga]);
+
+        const resposta = await editar({
+            horario: daqui(5 * 24 * HORA).toISOString(),
+            local: 'Sala 30'
+        });
+
+        expect(resposta.status).toBe(200);
+        const [, horario, local] = prisma.agendamento.updateMany.mock.calls.map((c) => c[0]);
+        expect(horario.where).toEqual({
+            id_monitoria: 7,
+            status: { not: 'cancelado' },
+            horario_anterior: null
+        });
+        expect(horario.data.horario_anterior.getTime()).toBe(vaga.horario.getTime());
+        expect(local.where.local_anterior).toBeNull();
+        expect(local.data).toEqual({ local_anterior: 'Sala 12' });
+    });
+
+    it('mudar só o local não mexe no horário anterior', async () => {
+        await editar({ local: 'Sala 30' });
+
+        const chamadas = prisma.agendamento.updateMany.mock.calls.map((c) => c[0].data);
+        expect(chamadas).toHaveLength(2);
+        expect(chamadas[1]).toEqual({ local_anterior: 'Sala 12' });
+    });
+
     it('mudar lugares e assunto não libera ninguém', async () => {
         const resposta = await editar({ capacidade: 4, descricao: 'Lista 3' });
 

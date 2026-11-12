@@ -255,7 +255,9 @@
             alunoConfirmou: Boolean(a.presenca_aluno_em),
             monitorConfirmou: Boolean(a.presenca_monitor_em),
             // A vaga mudou de dia, horário ou local depois da inscrição (editar vaga)
-            liberado: Boolean(a.liberado_cancelar_em)
+            liberado: Boolean(a.liberado_cancelar_em),
+            horarioAnterior: a.horario_anterior ? new Date(a.horario_anterior) : null,
+            localAnterior: a.local_anterior || null
         };
     }
 
@@ -310,6 +312,20 @@
         );
     }
 
+    /**
+     * O que mudou na vaga desde a inscrição, em frases para o aluno. Fica vazio se a vaga voltou
+     * a ser como era (o horário é comparado por minuto).
+     */
+    function mudancasDaVaga(inscricao) {
+        const lista = [];
+        const antes = inscricao.horarioAnterior;
+        if (antes && Math.floor(antes / 60000) !== Math.floor(inscricao.inicio / 60000))
+            lista.push('Horário alterado: era ' + diaCurto(antes) + ' às ' + hora(antes) + '.');
+        if (inscricao.localAnterior && inscricao.localAnterior !== inscricao.local)
+            lista.push('Local alterado: era ' + inscricao.localAnterior + '.');
+        return lista;
+    }
+
     function plural(n, um, varios) {
         return n + ' ' + (n === 1 ? um : varios);
     }
@@ -345,6 +361,7 @@
         situacaoDoAluno,
         separarInscricoes,
         podeCancelarInscricao,
+        mudancasDaVaga,
         presencasPorDisciplina,
         plural
     };

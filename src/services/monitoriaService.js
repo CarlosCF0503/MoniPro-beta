@@ -184,7 +184,16 @@ class MonitoriaService {
             const monitoria = await monitoriaRepository.atualizar(id, alteracoes, tx);
             const alterouQuandoOuOnde = Boolean(novoHorario || alteracoes.local !== undefined);
             if (alterouQuandoOuOnde && inscritos > 0) {
-                await monitoriaRepository.liberarInscricoes(id, agora, novoHorario, tx);
+                await monitoriaRepository.liberarInscricoes(
+                    id,
+                    agora,
+                    {
+                        novoHorario,
+                        mudouLocal: alteracoes.local !== undefined,
+                        antes: { horario: new Date(vaga.horario), local: vaga.local }
+                    },
+                    tx
+                );
             }
             return { monitoria, alterouQuandoOuOnde, inscritos };
         });
