@@ -8,6 +8,9 @@ module.exports = [
             'node_modules/**',
             'prisma/migrations/**',
             'Monipro_web/Dockerfile',
+            // Front em React (migração do Monipro_web): tem o próprio eslint.config.js e as
+            // próprias dependências. Lint dele: "npm run lint" dentro da pasta.
+            'Monipro_react/**',
             '**/*.min.js',
             // Evidências de teste: registros fixos, guardados como foram executados
             'docs/evidencias/**',

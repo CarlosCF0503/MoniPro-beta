@@ -6,3 +6,5 @@ prisma/.prisma/
 # Saídas dos testes de ponta a ponta (Playwright, R1)
 e2e-resultados/
 e2e-relatorio/
+# Build do front em React (migração do Monipro_web)
+Monipro_react/dist/
