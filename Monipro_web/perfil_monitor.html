@@ -289,6 +289,58 @@
       </div>
     </dialog>
 
+    <!-- Editar vaga: só vaga ativa e futura do próprio monitor (PATCH /monitorias/:id) -->
+    <dialog class="pp-dlg" id="dlg-editar" aria-labelledby="ed-titulo">
+      <form method="dialog" id="ed-form" novalidate>
+        <div>
+          <h2 id="ed-titulo">Editar vaga</h2>
+          <p class="pp-sub" id="ed-sub"></p>
+        </div>
+        <div class="pp-dois">
+          <div class="pp-campo">
+            <label class="pp-rotulo" for="ed-data">Dia</label>
+            <!-- Calendário próprio: o do navegador muda de cara em cada um e nem sempre abre -->
+            <button type="button" class="pp-input pp-hora-btn" id="ed-data" aria-haspopup="true" aria-expanded="false" aria-controls="ed-cal">
+              <span class="valor"></span>
+              <svg class="seta" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
+          <div class="pp-campo">
+            <label class="pp-rotulo" for="ed-hora">Horário</label>
+            <!-- Lista curta de horários, como em "Abrir nova vaga": o campo de hora nativo só abria pelo ícone do relógio -->
+            <div class="pp-hora">
+              <button type="button" class="pp-input pp-hora-btn" id="ed-hora" aria-haspopup="listbox" aria-expanded="false" aria-controls="ed-hora-lista">
+                <span class="valor"></span>
+                <svg class="seta" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <ul class="pp-hora-lista" id="ed-hora-lista" role="listbox" aria-label="Horários" tabindex="-1" hidden></ul>
+            </div>
+          </div>
+          <div class="pp-cal" id="ed-cal" role="group" aria-label="Escolher o dia" hidden></div>
+        </div>
+        <p class="pp-dica-campo" id="ed-nota-24h" hidden>Faltam menos de 24h: dia e horário não mudam mais. Local, lugares e assunto ainda podem mudar.</p>
+        <div class="pp-campo">
+          <label class="pp-rotulo" for="ed-local">Local</label>
+          <input class="pp-input" type="text" id="ed-local" name="ed-local" maxlength="120" autocomplete="off">
+        </div>
+        <div class="pp-campo">
+          <label class="pp-rotulo" for="ed-cap">Lugares</label>
+          <input class="pp-input" type="number" id="ed-cap" name="ed-cap" min="1" step="1" inputmode="numeric" aria-describedby="ed-cap-dica">
+          <span class="pp-dica-campo" id="ed-cap-dica"></span>
+        </div>
+        <div class="pp-campo">
+          <label class="pp-rotulo" for="ed-desc">Assunto (opcional)</label>
+          <textarea class="pp-input" id="ed-desc" name="ed-desc" rows="2" maxlength="500" placeholder="Ex.: Lista 3, integrais"></textarea>
+        </div>
+        <p class="pp-info" id="ed-aviso" hidden></p>
+        <p class="pp-erro" id="ed-erro" role="alert"></p>
+        <div class="pp-acoes">
+          <button type="button" class="pp-btn pp-btn-sec" data-fechar>Voltar</button>
+          <button type="submit" class="pp-btn pp-btn-pri" id="ed-salvar">Salvar alterações</button>
+        </div>
+      </form>
+    </dialog>
+
     <div id="toast-container"></div>
     <script src="JS/config.js"></script>
     <script src="JS/api.js" defer></script>

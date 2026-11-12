@@ -12,7 +12,9 @@ jest.mock('../src/config/bancoDeDados', () => ({
         update: jest.fn(),
         updateMany: jest.fn()
     },
-    agendamento: { findMany: jest.fn(), count: jest.fn() }
+    agendamento: { findMany: jest.fn(), count: jest.fn(), updateMany: jest.fn() },
+    $transaction: jest.fn(),
+    $queryRaw: jest.fn()
 }));
 
 const prisma = require('../src/config/bancoDeDados');
@@ -376,4 +378,212 @@ describe('PATCH /monitorias/:id/finalizar (finalização pelo monitor)', () => {
 
         expect(resposta.status).toBe(400);
     });
+});
+
+describe('PATCH /monitorias/:id (editar vaga, RF-009 e RN-010)', () => {
+    const HORA = 60 * 60 * 1000;
+    const daqui = (ms) => new Date(Date.now() + ms);
+    const vagaNoBanco = (extra = {}) => ({
+        id: 7,
+        id_monitor: 10,
+        horario: daqui(3 * 24 * HORA),
+        local: 'Sala 12',
+        status: 'ativa',
+        ...extra
+    });
+    const editar = (corpo, token = tokenMonitor, id = 7) =>
+        request(app)
+            .patch(`/monitorias/${id}`)
+            .set('Cookie', `monipro_sessao=${token}`)
+            .send(corpo);
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        prisma.$transaction.mockImplementation((fn) => fn(prisma));
+        prisma.$queryRaw.mockResolvedValue([vagaNoBanco()]);
+        prisma.agendamento.count.mockResolvedValue(2);
+        prisma.agendamento.updateMany.mockResolvedValue({ count: 2 });
+        prisma.monitoria.findFirst.mockResolvedValue(null);
+        prisma.monitoria.update.mockImplementation(({ data }) => ({ id: 7, ...data }));
+    });
+
+    it('muda só o local e libera os inscritos para cancelar sem as 24h', async () => {
+        const resposta = await editar({ local: 'Sala 30' });
+
+        expect(resposta.status).toBe(200);
+        expect(resposta.body.liberados).toBe(2);
+        expect(prisma.monitoria.update.mock.calls[0][0]).toEqual({
+            where: { id: 7 },
+            data: { local: 'Sala 30' }
+        });
+        const liberar = prisma.agendamento.updateMany.mock.calls[0][0];
+        expect(liberar.where).toEqual({ id_monitoria: 7, status: { not: 'cancelado' } });
+        expect(liberar.data.liberado_cancelar_em).toBeInstanceOf(Date);
+        expect(liberar.data.data_hora).toBeUndefined();
+    });
+
+    it('com novo horário, a data_hora das inscrições acompanha a vaga', async () => {
+        const novo = daqui(5 * 24 * HORA).toISOString();
+        const resposta = await editar({ horario: novo });
+
+        expect(resposta.status).toBe(200);
+        expect(prisma.monitoria.update.mock.calls[0][0].data.horario.toISOString()).toBe(novo);
+        expect(prisma.agendamento.updateMany.mock.calls[0][0].data.data_hora.toISOString()).toBe(
+            novo
+        );
+    });
+
+    it('guarda como a vaga era, só onde o anterior ainda está vazio', async () => {
+        const vaga = vagaNoBanco();
+        prisma.$queryRaw.mockResolvedValue([vaga]);
+
+        const resposta = await editar({
+            horario: daqui(5 * 24 * HORA).toISOString(),
+            local: 'Sala 30'
+        });
+
+        expect(resposta.status).toBe(200);
+        const [, horario, local] = prisma.agendamento.updateMany.mock.calls.map((c) => c[0]);
+        expect(horario.where).toEqual({
+            id_monitoria: 7,
+            status: { not: 'cancelado' },
+            horario_anterior: null
+        });
+        expect(horario.data.horario_anterior.getTime()).toBe(vaga.horario.getTime());
+        expect(local.where.local_anterior).toBeNull();
+        expect(local.data).toEqual({ local_anterior: 'Sala 12' });
+    });
+
+    it('mudar só o local não mexe no horário anterior', async () => {
+        await editar({ local: 'Sala 30' });
+
+        const chamadas = prisma.agendamento.updateMany.mock.calls.map((c) => c[0].data);
+        expect(chamadas).toHaveLength(2);
+        expect(chamadas[1]).toEqual({ local_anterior: 'Sala 12' });
+    });
+
+    it('mudar lugares e assunto não libera ninguém', async () => {
+        const resposta = await editar({ capacidade: 4, descricao: 'Lista 3' });
+
+        expect(resposta.status).toBe(200);
+        expect(resposta.body.liberados).toBe(0);
+        expect(prisma.agendamento.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('mesmo local e mesmo horário enviados de novo não contam como mudança', async () => {
+        const vaga = vagaNoBanco();
+        prisma.$queryRaw.mockResolvedValue([vaga]);
+
+        const resposta = await editar({ local: 'Sala 12', horario: vaga.horario.toISOString() });
+
+        expect(resposta.status).toBe(200);
+        expect(resposta.body.liberados).toBe(0);
+        expect(prisma.agendamento.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('sem inscritos, mudar o local não mexe nas inscrições', async () => {
+        prisma.agendamento.count.mockResolvedValue(0);
+
+        const resposta = await editar({ local: 'Sala 30' });
+
+        expect(resposta.status).toBe(200);
+        expect(resposta.body.liberados).toBe(0);
+        expect(prisma.agendamento.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('retorna 403 quando outro monitor tenta editar', async () => {
+        const resposta = await editar(
+            { local: 'Sala 30' },
+            gerarToken({ id: 11, tipo: 'monitor' })
+        );
+
+        expect(resposta.status).toBe(403);
+        expect(prisma.monitoria.update).not.toHaveBeenCalled();
+    });
+
+    it('retorna 403 para aluno (isMonitor) e 401 sem sessão', async () => {
+        expect((await editar({ local: 'Sala 30' }, tokenAluno)).status).toBe(403);
+        const semSessao = await request(app).patch('/monitorias/7').send({ local: 'Sala 30' });
+        expect(semSessao.status).toBe(401);
+    });
+
+    it('retorna 404 quando a vaga não existe', async () => {
+        prisma.$queryRaw.mockResolvedValue([]);
+        expect((await editar({ local: 'Sala 30' })).status).toBe(404);
+    });
+
+    it('retorna 409 quando os lugares ficariam abaixo dos inscritos', async () => {
+        prisma.agendamento.count.mockResolvedValue(3);
+
+        const resposta = await editar({ capacidade: 2 });
+
+        expect(resposta.status).toBe(409);
+        expect(resposta.body.erro).toMatch(/3 inscritos/);
+        expect(prisma.monitoria.update).not.toHaveBeenCalled();
+    });
+
+    it('aceita lugares iguais ao número de inscritos', async () => {
+        prisma.agendamento.count.mockResolvedValue(3);
+        expect((await editar({ capacidade: 3 })).status).toBe(200);
+    });
+
+    it('com 23h até o início, recusa mudar o horário, mas aceita mudar o local', async () => {
+        prisma.$queryRaw.mockResolvedValue([vagaNoBanco({ horario: daqui(23 * HORA) })]);
+
+        const horario = await editar({ horario: daqui(4 * 24 * HORA).toISOString() });
+        expect(horario.status).toBe(400);
+        expect(horario.body.erro).toMatch(/24h/);
+
+        const local = await editar({ local: 'Sala 30' });
+        expect(local.status).toBe(200);
+    });
+
+    it('recusa um novo horário que já passou', async () => {
+        const resposta = await editar({ horario: daqui(-HORA).toISOString() });
+
+        expect(resposta.status).toBe(400);
+        expect(resposta.body.campos).toHaveProperty('horario');
+    });
+
+    it('retorna 409 quando o monitor já tem outra vaga ativa no novo horário', async () => {
+        prisma.monitoria.findFirst.mockResolvedValue({ id: 8 });
+
+        const resposta = await editar({ horario: daqui(5 * 24 * HORA).toISOString() });
+
+        expect(resposta.status).toBe(409);
+        expect(prisma.monitoria.findFirst.mock.calls[0][0].where.id).toEqual({ not: 7 });
+    });
+
+    it.each(['cancelada', 'realizada', 'concluida'])(
+        'retorna 400 para vaga com status %s',
+        async (status) => {
+            prisma.$queryRaw.mockResolvedValue([vagaNoBanco({ status })]);
+            expect((await editar({ local: 'Sala 30' })).status).toBe(400);
+        }
+    );
+
+    it('retorna 400 para vaga que já começou', async () => {
+        prisma.$queryRaw.mockResolvedValue([vagaNoBanco({ horario: daqui(-10 * 60 * 1000) })]);
+
+        const resposta = await editar({ local: 'Sala 30' });
+
+        expect(resposta.status).toBe(400);
+        expect(resposta.body.erro).toMatch(/começou/);
+    });
+
+    it('retorna 400 com corpo vazio e ignora campos que não podem mudar', async () => {
+        expect((await editar({})).status).toBe(400);
+
+        const resposta = await editar({ local: 'Sala 30', id_monitor: 99, status: 'cancelada' });
+        expect(resposta.status).toBe(200);
+        expect(prisma.monitoria.update.mock.calls[0][0].data).toEqual({ local: 'Sala 30' });
+    });
+
+    it.each([{ capacidade: 0 }, { capacidade: '3' }, { local: '   ' }, { horario: 'amanhã' }])(
+        'retorna 400 para corpo inválido %p',
+        async (corpo) => {
+            expect((await editar(corpo)).status).toBe(400);
+            expect(prisma.$transaction).not.toHaveBeenCalled();
+        }
+    );
 });

@@ -90,6 +90,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const situacao = (i) => D.situacaoDoAluno(i, S.agora);
     const confirmadas = () => S.inscricoes.filter((i) => i.status === 'concluido').length;
     const AVISO_24H = 'Cancelamento só até ' + D.HORAS_CANCELAMENTO + 'h antes';
+    const AVISO_MUDOU = 'Pode cancelar até o início';
+    // Editar vaga: o que mudou desde a inscrição ("Horário alterado: era ...")
+    const textoMudou = (i) => D.mudancasDaVaga(i).join(' ') || 'A vaga foi alterada.';
+    const notaMudou = (i, t) =>
+        i.liberado ? '<span class="nota-24h">' + icone('relogio', t) + AVISO_MUDOU + '</span>' : '';
     const SITUACOES = {
         confirmar: ['pill-atencao', 'relogio', 'Confirme sua presença'],
         antes: ['pill-aberta', 'calendario', 'Inscrito'],
@@ -161,7 +166,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return (
                 '<div class="vg-acoes">' +
                 (D.podeCancelarInscricao(i, S.agora)
-                    ? botaoCancelar(i)
+                    ? notaMudou(i, 12) + botaoCancelar(i)
                     : '<span class="nota-24h">' + icone('relogio', 12) + AVISO_24H + '</span>') +
                 '</div>'
             );
@@ -246,6 +251,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             esc(i.monitor) +
             '</span></div>' +
             (nota ? '<p class="pp-nota-presenca">' + nota + '</p>' : '') +
+            (sit === 'antes' && i.liberado
+                ? '<p class="pp-nota-presenca">' + esc(textoMudou(i)) + '</p>'
+                : '') +
             '</div>' +
             acoes(i) +
             '</li>'
@@ -384,7 +392,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     function linhaCel(i) {
         const sit = situacao(i);
         let sub;
-        if (sit === 'antes') sub = D.hora(i.inicio) + ' · ' + esc(i.monitor);
+        if (sit === 'antes')
+            sub =
+                (i.liberado ? '<span class="lc-presenca">Vaga alterada</span> · ' : '') +
+                D.hora(i.inicio) +
+                ' · ' +
+                esc(i.monitor);
         else if (sit === 'confirmar')
             sub =
                 '<span class="lc-presenca">Prazo: ' +
@@ -633,7 +646,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 '<div class="pp-det-acoes">' + botaoConfirmar(i, 'pp-btn pp-btn-pri') + '</div>';
         else if (sit === 'antes')
             acoesDet = D.podeCancelarInscricao(i, S.agora)
-                ? '<div class="pp-det-acoes">' + botaoCancelar(i) + '</div>'
+                ? (i.liberado
+                      ? '<p class="nota-24h nota-bloco">' +
+                        icone('relogio', 14) +
+                        '<span>' +
+                        esc(textoMudou(i)) +
+                        ' Você pode cancelar até o início.</span></p>'
+                      : '') +
+                  '<div class="pp-det-acoes">' +
+                  botaoCancelar(i) +
+                  '</div>'
                 : '<p class="nota-24h nota-bloco">' +
                   icone('relogio', 14) +
                   AVISO_24H +

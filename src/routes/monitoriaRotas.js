@@ -4,7 +4,11 @@ const router = express.Router();
 const monitoriaController = require('../controllers/monitoriaController');
 const { autenticar, isMonitor } = require('../middlewares/autenticacaoMiddleware');
 const validarCorpo = require('../middlewares/validarCorpo');
-const { criarMonitoriaSchema, finalizarMonitoriaSchema } = require('../schemas/monitoriaSchemas');
+const {
+    criarMonitoriaSchema,
+    finalizarMonitoriaSchema,
+    atualizarMonitoriaSchema
+} = require('../schemas/monitoriaSchemas');
 
 // app.js registra: app.use('/monitorias', monitoriaRotas)
 router.post(
@@ -31,6 +35,15 @@ router.patch(
     isMonitor,
     validarCorpo(finalizarMonitoriaSchema),
     monitoriaController.finalizar
+);
+
+// Editar vaga (RF-009): dia, horário, local, lugares e assunto, pelo monitor dono da vaga
+router.patch(
+    '/:id',
+    autenticar,
+    isMonitor,
+    validarCorpo(atualizarMonitoriaSchema),
+    monitoriaController.atualizar
 );
 
 module.exports = router;

@@ -66,7 +66,15 @@ class AgendamentoService {
         if (agendamento.id_aluno !== idAluno) {
             throw new ErroNaoAutorizado('Você não tem permissão para cancelar este agendamento.');
         }
-        validarAntecedenciaCancelamento(agendamento.data_hora);
+        // RN-001 com o ajuste do editar vaga: se a vaga mudou de dia, horário ou local depois da
+        // inscrição, o aluno pode cancelar sem as 24h, desde que a sessão ainda não tenha começado
+        if (agendamento.liberado_cancelar_em) {
+            if (new Date(agendamento.data_hora) <= new Date()) {
+                throw new ErroRegraNegocio('Cancelamento não permitido: a monitoria já começou.');
+            }
+        } else {
+            validarAntecedenciaCancelamento(agendamento.data_hora);
+        }
         return await agendamentoRepository.deletar(id);
     }
 
