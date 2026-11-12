@@ -299,7 +299,11 @@
         <div class="pp-dois">
           <div class="pp-campo">
             <label class="pp-rotulo" for="ed-data">Dia</label>
-            <input class="pp-input" type="date" id="ed-data" name="ed-data">
+            <!-- Calendário próprio: o do navegador muda de cara em cada um e nem sempre abre -->
+            <button type="button" class="pp-input pp-hora-btn" id="ed-data" aria-haspopup="true" aria-expanded="false" aria-controls="ed-cal">
+              <span class="valor"></span>
+              <svg class="seta" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
           </div>
           <div class="pp-campo">
             <label class="pp-rotulo" for="ed-hora">Horário</label>
@@ -312,6 +316,7 @@
               <ul class="pp-hora-lista" id="ed-hora-lista" role="listbox" aria-label="Horários" tabindex="-1" hidden></ul>
             </div>
           </div>
+          <div class="pp-cal" id="ed-cal" role="group" aria-label="Escolher o dia" hidden></div>
         </div>
         <p class="pp-dica-campo" id="ed-nota-24h" hidden>Faltam menos de 24h: dia e horário não mudam mais. Local, lugares e assunto ainda podem mudar.</p>
         <div class="pp-campo">

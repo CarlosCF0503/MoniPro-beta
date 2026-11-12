@@ -1190,7 +1190,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0')
             );
         if (atual && !lista.includes(atual)) lista.push(atual);
-        return lista.sort();
+        return lista.sort((a, b) => a.localeCompare(b));
     }
     function definirHora(valor) {
         horaBtn.dataset.valor = valor;
@@ -1211,7 +1211,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             .join('');
     }
     // Marca o item ativo e rola só dentro da lista, sem mexer no diálogo
-    function marcarAtivo(item) {
+    function marcarHoraAtiva(item) {
         horaItens().forEach((x) => x.classList.toggle('ativo', x === item));
         if (!item) return;
         horaLista.setAttribute('aria-activedescendant', item.id);
@@ -1231,7 +1231,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             inicial.offsetTop - horaLista.clientHeight / 2 + inicial.offsetHeight / 2,
             0
         );
-        marcarAtivo(inicial);
+        marcarHoraAtiva(inicial);
         horaLista.focus({ preventScroll: true });
     }
     function fecharHora(devolverFoco) {
@@ -1262,12 +1262,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const mover = { ArrowDown: 1, ArrowUp: -1, PageDown: 4, PageUp: -4 }[ev.key];
         if (mover) {
             ev.preventDefault();
-            marcarAtivo(
+            marcarHoraAtiva(
                 itens[Math.min(Math.max(itens.indexOf(atual) + mover, 0), itens.length - 1)]
             );
         } else if (ev.key === 'Home' || ev.key === 'End') {
             ev.preventDefault();
-            marcarAtivo(itens[ev.key === 'Home' ? 0 : itens.length - 1]);
+            marcarHoraAtiva(itens[ev.key === 'Home' ? 0 : itens.length - 1]);
         } else if (ev.key === 'Enter' || ev.key === ' ') {
             ev.preventDefault();
             escolherHora(atual);
@@ -1286,17 +1286,138 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     dlgEd.addEventListener('close', () => fecharHora(false));
 
-    // Dia: o campo inteiro abre o calendário, e não só o ícone
-    ed('data').addEventListener('click', () => {
-        try {
-            ed('data').showPicker();
-        } catch {
-            // Navegador sem showPicker ou campo bloqueado: fica o comportamento nativo
+    // --- Dia: calendário do mês dentro do diálogo ---
+    // Dias que já passaram ficam bloqueados. Setas andam de um dia (←/→) ou de uma semana (↑/↓),
+    // Page Up/Down trocam de mês, Enter escolhe e Esc fecha só o calendário.
+    const diaBtn = ed('data');
+    const cal = document.getElementById('ed-cal');
+    const meiaNoite = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const CAL = { mes: null, foco: null };
+    function definirDia(data) {
+        const d = meiaNoite(data);
+        diaBtn.dataset.valor = isoDia(d);
+        diaBtn.querySelector('.valor').textContent = D.diaCurto(d);
+    }
+    function diaEscolhido() {
+        const [a, m, d] = diaBtn.dataset.valor.split('-').map(Number);
+        return new Date(a, m - 1, d);
+    }
+    function desenharCal() {
+        const hoje = meiaNoite(new Date());
+        const escolhido = diaBtn.dataset.valor;
+        const ano = CAL.mes.getFullYear();
+        const mes = CAL.mes.getMonth();
+        const vazios = new Date(ano, mes, 1).getDay();
+        const ultimo = new Date(ano, mes + 1, 0).getDate();
+        let grade = D.DIAS_SEMANA.map(
+            (n) => '<span class="cal-dw" aria-hidden="true">' + n + '</span>'
+        ).join('');
+        grade += '<span></span>'.repeat(vazios);
+        for (let n = 1; n <= ultimo; n++) {
+            const data = new Date(ano, mes, n);
+            const k = isoDia(data);
+            const passado = data < hoje;
+            grade +=
+                '<button type="button" class="cal-dia' +
+                (k === isoDia(hoje) ? ' hoje' : '') +
+                '" data-dia="' +
+                k +
+                '" tabindex="' +
+                (k === isoDia(CAL.foco) ? 0 : -1) +
+                '" aria-pressed="' +
+                (k === escolhido) +
+                '" aria-label="' +
+                n +
+                ' de ' +
+                D.MESES[mes] +
+                (k === isoDia(hoje) ? ', hoje' : '') +
+                '"' +
+                (passado ? ' disabled' : '') +
+                '>' +
+                n +
+                '</button>';
+        }
+        const voltarBloqueado = ano === hoje.getFullYear() && mes === hoje.getMonth();
+        cal.innerHTML =
+            '<div class="cal-topo"><button type="button" class="cal-nav" data-mes="-1" aria-label="Mês anterior"' +
+            (voltarBloqueado ? ' disabled' : '') +
+            '><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>' +
+            '<strong aria-live="polite">' +
+            D.MESES[mes] +
+            ' ' +
+            ano +
+            '</strong><button type="button" class="cal-nav" data-mes="1" aria-label="Próximo mês"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button></div>' +
+            '<div class="cal-grade">' +
+            grade +
+            '</div>';
+    }
+    function focarDia(data, focar) {
+        const hoje = meiaNoite(new Date());
+        CAL.foco = data < hoje ? hoje : data;
+        CAL.mes = new Date(CAL.foco.getFullYear(), CAL.foco.getMonth(), 1);
+        desenharCal();
+        if (focar) cal.querySelector('[data-dia="' + isoDia(CAL.foco) + '"]').focus();
+    }
+    function abrirCal() {
+        if (diaBtn.disabled) return;
+        fecharHora(false);
+        cal.hidden = false;
+        diaBtn.setAttribute('aria-expanded', 'true');
+        focarDia(diaEscolhido(), true);
+    }
+    function fecharCal(devolverFoco) {
+        if (cal.hidden) return;
+        cal.hidden = true;
+        diaBtn.setAttribute('aria-expanded', 'false');
+        if (devolverFoco) diaBtn.focus();
+    }
+    diaBtn.addEventListener('click', () => (cal.hidden ? abrirCal() : fecharCal(true)));
+    horaBtn.addEventListener('click', () => fecharCal(false));
+    cal.addEventListener('click', (ev) => {
+        const nav = ev.target.closest('[data-mes]');
+        if (nav) {
+            const passo = Number(nav.dataset.mes);
+            const alvo = new Date(CAL.mes.getFullYear(), CAL.mes.getMonth() + passo, 1);
+            focarDia(alvo, false);
+            return;
+        }
+        const dia = ev.target.closest('[data-dia]');
+        if (!dia || dia.disabled) return;
+        const [a, m, d] = dia.dataset.dia.split('-').map(Number);
+        definirDia(new Date(a, m - 1, d));
+        diaBtn.removeAttribute('aria-invalid');
+        fecharCal(true);
+        edAtualizarAviso();
+    });
+    cal.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Escape') {
+            // Esc fecha só o calendário, não o diálogo
+            ev.preventDefault();
+            ev.stopPropagation();
+            fecharCal(true);
+            return;
+        }
+        if (!ev.target.closest('[data-dia]')) return;
+        const passo = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }[ev.key];
+        if (passo) {
+            ev.preventDefault();
+            const alvo = new Date(CAL.foco);
+            alvo.setDate(alvo.getDate() + passo);
+            focarDia(alvo, true);
+        } else if (ev.key === 'PageUp' || ev.key === 'PageDown') {
+            ev.preventDefault();
+            const alvo = new Date(CAL.foco);
+            alvo.setMonth(alvo.getMonth() + (ev.key === 'PageUp' ? -1 : 1));
+            focarDia(alvo, true);
         }
     });
+    dlgEd.addEventListener('pointerdown', (ev) => {
+        if (!ev.target.closest('#ed-cal, #ed-data')) fecharCal(false);
+    });
+    dlgEd.addEventListener('close', () => fecharCal(false));
 
     function edMudancas(v) {
-        const novo = new Date(ed('data').value + 'T' + horaBtn.dataset.valor);
+        const novo = new Date(diaBtn.dataset.valor + 'T' + horaBtn.dataset.valor);
         return {
             novo,
             // Por minuto: os segundos do horário gravado não contam como mudança
@@ -1322,10 +1443,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const perto = v.inicio - S.agora < D.HORAS_CANCELAMENTO * 3600e3;
         ed('sub').textContent =
             v.disciplina + ' · ' + D.diaCurto(v.inicio) + ' às ' + D.hora(v.inicio);
-        ed('data').value = isoDia(v.inicio);
-        ed('data').min = isoDia(new Date());
+        definirDia(v.inicio);
         definirHora(D.hora(v.inicio));
-        ed('data').disabled = horaBtn.disabled = perto;
+        diaBtn.disabled = perto;
+        horaBtn.disabled = perto;
         ed('nota-24h').hidden = !perto;
         ed('local').value = v.local;
         ed('cap').value = v.capacidade;

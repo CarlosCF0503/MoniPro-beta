@@ -1443,10 +1443,10 @@
 .pp-dlg .pp-info { background: var(--soft); color: var(--navy-2); border-radius: 10px; padding: 10px 12px; font-size: 13px; }
 .pp-dlg .pp-info[hidden] { display: none; }
 
-/* Editar vaga: dia e horário clicáveis no campo inteiro. O horário usa a mesma lista curta de
+/* Editar vaga: dia e horário abrem pelo campo inteiro. O dia abre um calendário do mês; o horário usa a mesma lista curta de
    "Abrir nova vaga" (marcar_monitoria.css), com rolagem própria em ~7 itens. */
-.pp-dlg input[type='date'].pp-input:not(:disabled) {
-    cursor: pointer;
+.pp-dlg .pp-dois {
+    position: relative;
 }
 .pp-dlg .pp-hora {
     position: relative;
@@ -1517,4 +1517,95 @@
     background: var(--navy);
     color: var(--white);
     font-weight: 700;
+}
+
+/* Calendário do dia: ocupa a largura dos dois campos, logo abaixo deles */
+.pp-dlg .pp-cal {
+    position: absolute;
+    z-index: 16;
+    left: 0;
+    top: calc(100% + 4px);
+    width: min(100%, 320px);
+    padding: 10px;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: var(--sombra-flutuante);
+}
+.pp-dlg .pp-cal[hidden] {
+    display: none;
+}
+.pp-dlg .cal-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+.pp-dlg .cal-topo strong {
+    font-size: 15px;
+}
+.pp-dlg .cal-nav {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--navy);
+    cursor: pointer;
+}
+.pp-dlg .cal-nav:hover:not(:disabled) {
+    background: var(--soft);
+}
+.pp-dlg .cal-nav:disabled {
+    color: var(--line-2);
+    cursor: default;
+}
+.pp-dlg .cal-grade {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 2px;
+    text-align: center;
+}
+.pp-dlg .cal-dw {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--slate);
+    padding: 4px 0;
+}
+.pp-dlg .cal-dia {
+    min-height: 36px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--navy);
+    font: inherit;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+.pp-dlg .cal-dia:hover:not(:disabled) {
+    background: var(--soft);
+}
+.pp-dlg .cal-dia.hoje {
+    box-shadow: inset 0 0 0 1.5px var(--navy-2);
+}
+.pp-dlg .cal-dia[aria-pressed='true'] {
+    background: var(--navy);
+    color: var(--white);
+    font-weight: 700;
+}
+.pp-dlg .cal-dia:disabled {
+    color: var(--line-2);
+    cursor: default;
+}
+.pp-dlg .cal-dia:focus-visible,
+.pp-dlg .cal-nav:focus-visible {
+    outline: 3px solid var(--navy-2);
+    outline-offset: 1px;
 }
