@@ -303,7 +303,14 @@
           </div>
           <div class="pp-campo">
             <label class="pp-rotulo" for="ed-hora">Horário</label>
-            <input class="pp-input" type="time" id="ed-hora" name="ed-hora" step="1800">
+            <!-- Lista curta de horários, como em "Abrir nova vaga": o campo de hora nativo só abria pelo ícone do relógio -->
+            <div class="pp-hora">
+              <button type="button" class="pp-input pp-hora-btn" id="ed-hora" aria-haspopup="listbox" aria-expanded="false" aria-controls="ed-hora-lista">
+                <span class="valor"></span>
+                <svg class="seta" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <ul class="pp-hora-lista" id="ed-hora-lista" role="listbox" aria-label="Horários" tabindex="-1" hidden></ul>
+            </div>
           </div>
         </div>
         <p class="pp-dica-campo" id="ed-nota-24h" hidden>Faltam menos de 24h: dia e horário não mudam mais. Local, lugares e assunto ainda podem mudar.</p>

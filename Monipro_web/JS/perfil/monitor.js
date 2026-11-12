@@ -1174,8 +1174,129 @@ document.addEventListener('DOMContentLoaded', async () => {
             '">Editar</button>'
         );
     }
+    // --- Horário: lista curta (combobox/listbox do WAI-ARIA), como em "Abrir nova vaga" ---
+    // Mesmos horários da criação (MarcarDatas.horarios): das 07:00 às 22:00, de 15 em 15 min.
+    // O horário atual da vaga entra na lista mesmo fora desse passo.
+    const HORA_INICIO = 7 * 60;
+    const HORA_FIM = 22 * 60;
+    const HORA_PASSO = 15;
+    const horaBtn = ed('hora');
+    const horaLista = document.getElementById('ed-hora-lista');
+    const horaItens = () => Array.from(horaLista.querySelectorAll('li'));
+    function horariosDaLista(atual) {
+        const lista = [];
+        for (let m = HORA_INICIO; m <= HORA_FIM; m += HORA_PASSO)
+            lista.push(
+                String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0')
+            );
+        if (atual && !lista.includes(atual)) lista.push(atual);
+        return lista.sort();
+    }
+    function definirHora(valor) {
+        horaBtn.dataset.valor = valor;
+        horaBtn.querySelector('.valor').textContent = valor;
+        horaLista.innerHTML = horariosDaLista(valor)
+            .map(
+                (h) =>
+                    '<li role="option" id="ed-h-' +
+                    h.replace(':', '') +
+                    '" data-hora="' +
+                    h +
+                    '" aria-selected="' +
+                    (h === valor) +
+                    '">' +
+                    h +
+                    '</li>'
+            )
+            .join('');
+    }
+    // Marca o item ativo e rola só dentro da lista, sem mexer no diálogo
+    function marcarAtivo(item) {
+        horaItens().forEach((x) => x.classList.toggle('ativo', x === item));
+        if (!item) return;
+        horaLista.setAttribute('aria-activedescendant', item.id);
+        const topo = item.offsetTop;
+        const fim = topo + item.offsetHeight;
+        if (topo < horaLista.scrollTop) horaLista.scrollTop = topo - 4;
+        else if (fim > horaLista.scrollTop + horaLista.clientHeight)
+            horaLista.scrollTop = fim - horaLista.clientHeight + 4;
+    }
+    function abrirHora() {
+        if (horaBtn.disabled) return;
+        horaLista.hidden = false;
+        horaBtn.setAttribute('aria-expanded', 'true');
+        const itens = horaItens();
+        const inicial = itens.find((x) => x.getAttribute('aria-selected') === 'true') || itens[0];
+        horaLista.scrollTop = Math.max(
+            inicial.offsetTop - horaLista.clientHeight / 2 + inicial.offsetHeight / 2,
+            0
+        );
+        marcarAtivo(inicial);
+        horaLista.focus({ preventScroll: true });
+    }
+    function fecharHora(devolverFoco) {
+        if (horaLista.hidden) return;
+        horaLista.hidden = true;
+        horaBtn.setAttribute('aria-expanded', 'false');
+        horaLista.removeAttribute('aria-activedescendant');
+        if (devolverFoco) horaBtn.focus();
+    }
+    function escolherHora(item) {
+        if (!item) return;
+        definirHora(item.dataset.hora);
+        horaBtn.removeAttribute('aria-invalid');
+        fecharHora(true);
+        edAtualizarAviso();
+    }
+    horaBtn.addEventListener('click', () => (horaLista.hidden ? abrirHora() : fecharHora(true)));
+    horaBtn.addEventListener('keydown', (ev) => {
+        if (['ArrowDown', 'ArrowUp'].includes(ev.key)) {
+            ev.preventDefault();
+            abrirHora();
+        }
+    });
+    horaLista.addEventListener('click', (ev) => escolherHora(ev.target.closest('li')));
+    horaLista.addEventListener('keydown', (ev) => {
+        const itens = horaItens();
+        const atual = horaLista.querySelector('li.ativo');
+        const mover = { ArrowDown: 1, ArrowUp: -1, PageDown: 4, PageUp: -4 }[ev.key];
+        if (mover) {
+            ev.preventDefault();
+            marcarAtivo(
+                itens[Math.min(Math.max(itens.indexOf(atual) + mover, 0), itens.length - 1)]
+            );
+        } else if (ev.key === 'Home' || ev.key === 'End') {
+            ev.preventDefault();
+            marcarAtivo(itens[ev.key === 'Home' ? 0 : itens.length - 1]);
+        } else if (ev.key === 'Enter' || ev.key === ' ') {
+            ev.preventDefault();
+            escolherHora(atual);
+        } else if (ev.key === 'Escape') {
+            // Esc fecha só a lista, não o diálogo
+            ev.preventDefault();
+            ev.stopPropagation();
+            fecharHora(true);
+        } else if (ev.key === 'Tab') {
+            fecharHora(false);
+        }
+    });
+    // Clicar fora da lista (dentro do diálogo) fecha a lista
+    dlgEd.addEventListener('pointerdown', (ev) => {
+        if (!ev.target.closest('.pp-hora')) fecharHora(false);
+    });
+    dlgEd.addEventListener('close', () => fecharHora(false));
+
+    // Dia: o campo inteiro abre o calendário, e não só o ícone
+    ed('data').addEventListener('click', () => {
+        try {
+            ed('data').showPicker();
+        } catch {
+            // Navegador sem showPicker ou campo bloqueado: fica o comportamento nativo
+        }
+    });
+
     function edMudancas(v) {
-        const novo = new Date(ed('data').value + 'T' + ed('hora').value);
+        const novo = new Date(ed('data').value + 'T' + horaBtn.dataset.valor);
         return {
             novo,
             // Por minuto: os segundos do horário gravado não contam como mudança
@@ -1203,8 +1324,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             v.disciplina + ' · ' + D.diaCurto(v.inicio) + ' às ' + D.hora(v.inicio);
         ed('data').value = isoDia(v.inicio);
         ed('data').min = isoDia(new Date());
-        ed('hora').value = D.hora(v.inicio);
-        ed('data').disabled = ed('hora').disabled = perto;
+        definirHora(D.hora(v.inicio));
+        ed('data').disabled = horaBtn.disabled = perto;
         ed('nota-24h').hidden = !perto;
         ed('local').value = v.local;
         ed('cap').value = v.capacidade;
