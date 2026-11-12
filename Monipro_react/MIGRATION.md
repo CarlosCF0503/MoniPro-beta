@@ -2,9 +2,18 @@
 
 Acompanhamento da migração do front estático (`Monipro_web/`, HTML/CSS/JS) para React.
 
-**Legenda:** ✅ feito · 🔄 em andamento · ⏳ pendente · ➖ não migrar
+**Legenda:** ✅ feito · ⏸️ pausado · ⏳ pendente · ➖ não migrar
 
-Uma tela só conta como **feita** quando passou em lint, build e comparação visual com a tela original.
+Uma tela só conta como **feita** quando passou em lint, build, comparação visual com a tela original e revisão de código.
+
+> **Migração pausada em 12/11/2026.** Retomada prevista a partir de 19/11/2026.
+> Situação: 8 de 10 telas feitas e commitadas em `feat/migracao-react`; o perfil do aluno está verificado mas falta a revisão de código; o perfil do monitor parou no meio.
+
+## Para retomar
+
+1. **Perfil do aluno:** fazer a revisão de código e commitar. Lint, build, comparação visual (98 de 102 capturas idênticas) e revisão de segurança já passaram.
+2. **Perfil do monitor:** renomear `perfil_monitor.html.pausado` de volta para `perfil_monitor.html` (foi renomeado para não quebrar o build) e terminar a tela. Já existem `src/entradas/perfil_monitor.jsx` e os diálogos em `src/telas/monitor/` (`DialogoEditar.jsx` ainda com 1 erro de lint); falta `src/telas/PerfilMonitor.jsx`.
+3. Atualizar a prévia navegável e abrir o PR de `feat/migracao-react` para a `develop`.
 
 ## Como a migração está organizada
 
@@ -23,10 +32,10 @@ Uma tela só conta como **feita** quando passou em lint, build e comparação vi
 | Privacidade | `privacidade.html` | `src/telas/Privacidade.jsx` | ✅ feito | Contato do encarregado ainda "[contato a definir]", igual ao original |
 | Início (dashboard) | `base.html` | `src/telas/Base.jsx` | ✅ feito | |
 | Minhas disciplinas | `escolha_disciplina.html` | `src/telas/EscolhaDisciplina.jsx` | ✅ feito | Busca continua sem filtrar, igual ao original |
-| Nova disciplina | `cadastro_disciplina.html` | `src/telas/CadastroDisciplina.jsx` | ✅ feito | Regras em `src/disciplinaRegras.js`. Ajuste pendente: travar envio duplo com `useRef` (o original trava de forma síncrona) |
+| Nova disciplina | `cadastro_disciplina.html` | `src/telas/CadastroDisciplina.jsx` | ✅ feito | Regras em `src/disciplinaRegras.js`. Ajuste pendente: travar envio duplo com `useRef` (o original trava de forma síncrona), como já foi feito nas outras telas |
 | Marcar monitoria | `marcar_monitoria.html` | `src/telas/MarcarMonitoria.jsx` | ✅ feito | Componentes e datas em `src/telas/marcar/`. O foco continua no card de vaga após o clique (o original perde o foco ao redesenhar); melhor para teclado, sem diferença visual |
-| Perfil do aluno | `perfil_aluno.html` | `src/telas/PerfilAluno.jsx` | 🔄 em andamento | |
-| Perfil do monitor | `perfil_monitor.html` | `src/telas/PerfilMonitor.jsx` | ⏳ pendente | Depende de `src/perfil/` |
+| Perfil do aluno | `perfil_aluno.html` | `src/telas/PerfilAluno.jsx` | ⏸️ pausado | Verificado e com revisão de segurança sem achados; falta a revisão de código e o commit. Inclui a edição de vaga (PR #71). Diferenças a confirmar: excluir conta no celular abre sempre como painel (o original abre como modal só no primeiro clique); após erro ao confirmar presença o botão volta para "Confirmar" |
+| Perfil do monitor | `perfil_monitor.html` | `src/telas/PerfilMonitor.jsx` | ⏸️ pausado | Parcial: entrada e diálogos de editar/finalizar vaga em `src/telas/monitor/`; falta a tela. Reaproveita `src/perfil/` |
 | Perfil (antigo) | `perfil.html` | — | ➖ não migrar | Legado: substituído por `perfil_aluno` e `perfil_monitor`, nenhuma tela aponta para ele. Continua em `Monipro_web` como está; remoção (e a linha do README) fica para um PR à parte |
 
 ## Componentes e módulos compartilhados
@@ -36,7 +45,7 @@ Uma tela só conta como **feita** quando passou em lint, build e comparação vi
 | `src/api.js` | `chamadaApi`, `mensagemDaApi`, `obterSessao`, `encerrarSessao` | ✅ feito |
 | `src/toast.jsx` | `useToast` / `Toast` | ✅ feito |
 | `src/Casca.jsx` | Cabeçalho, menu lateral e modal de sair (lógica de `JS/base.js`) | ✅ feito |
-| `src/perfil/` | Dados do perfil e exclusão de conta, compartilhados entre aluno e monitor | 🔄 em andamento |
+| `src/perfil/` | Dados do perfil e exclusão de conta, compartilhados entre aluno e monitor | ✅ feito |
 
 ## Integração (fora das telas)
 
@@ -47,3 +56,12 @@ Uma tela só conta como **feita** quando passou em lint, build e comparação vi
 | Deploy (Dockerfile / Nginx) | ⏳ pendente | Precisa de um estágio de build do React |
 | CI (lint e build de `Monipro_react`) | ⏳ pendente | O CI atual não cobre o front novo |
 | API local em dev | ⏳ pendente | Em dev a API padrão é a de produção; backend local exige `API_BASE_URL` e a origem `http://localhost:5173` em `ALLOWED_ORIGINS` |
+
+## Defeitos encontrados no original
+
+A migração mantém o comportamento do `Monipro_web`. Estes defeitos apareceram na comparação e ficam para um PR à parte no front original:
+
+- **Marcar monitoria:** se a rede falhar ao criar uma vaga, a tela de revisão não mostra nenhum aviso.
+- **Marcar monitoria:** o campo "local" aceita 140 caracteres, mas a validação para em 120.
+- **Perfis:** no celular, o primeiro "Excluir conta" abre como modal em vez de painel (`excluir_conta.js` cria o diálogo sem `pp-painel`).
+- **Perfis:** depois de um erro ao confirmar presença, o botão fica com o texto "Confirmar presença" até a tela ser redesenhada.
