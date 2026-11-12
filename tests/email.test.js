@@ -41,6 +41,18 @@ describe('urlDoApp', () => {
         ).toBe('https://moni-pro.app.br');
         expect(urlDoApp({})).toBe('https://moni-pro.app.br');
     });
+
+    it('pula origens locais: o link do e-mail precisa abrir fora do servidor', () => {
+        expect(
+            urlDoApp({
+                ALLOWED_ORIGINS:
+                    'http://localhost:8080,http://127.0.0.1:5500, https://dev.moni-pro.app.br'
+            })
+        ).toBe('https://dev.moni-pro.app.br');
+        expect(urlDoApp({ ALLOWED_ORIGINS: 'http://localhost:8080' })).toBe(
+            'http://localhost:8080'
+        );
+    });
 });
 
 describe('modelo redefinir-senha', () => {

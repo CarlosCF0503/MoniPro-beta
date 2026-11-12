@@ -27,12 +27,19 @@ function configSmtp(env = process.env) {
     };
 }
 
-// Endereço público do frontend, usado nos links dos e-mails. Sem APP_URL, vale a primeira
-// origem de ALLOWED_ORIGINS (a do próprio ambiente: hml ou produção).
+// Endereço público do frontend, usado nos links e na logo dos e-mails. O certo é definir APP_URL
+// no .env de cada servidor. Sem ela, vale a primeira origem de ALLOWED_ORIGINS que não seja local
+// (localhost/127.0.0.1 só serve para quem está na própria máquina); se só houver locais, a primeira.
+const ORIGEM_LOCAL = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?(\/|$)/i;
+
 function urlDoApp(env = process.env) {
     const explicita = (env.APP_URL || '').trim();
-    const primeiraOrigem = (env.ALLOWED_ORIGINS || '').split(',')[0].trim();
-    return (explicita || primeiraOrigem || 'https://moni-pro.app.br').replace(/\/+$/, '');
+    const origens = (env.ALLOWED_ORIGINS || '')
+        .split(',')
+        .map((o) => o.trim())
+        .filter(Boolean);
+    const publica = origens.find((o) => !ORIGEM_LOCAL.test(o));
+    return (explicita || publica || origens[0] || 'https://moni-pro.app.br').replace(/\/+$/, '');
 }
 
 function remetente(env = process.env) {
