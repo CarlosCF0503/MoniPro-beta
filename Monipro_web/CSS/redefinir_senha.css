@@ -1,0 +1,24 @@
+/* Recuperar senha: mesma base visual do login (login.css) */
+/* As etapas usam o atributo hidden; display:grid abaixo venceria o padrão do navegador */
+[hidden] { display: none !important; }
+.esqueci { display: block; text-align: right; margin: -6px 0 12px; font-size: 14px; font-weight: 600; color: #1F4287; text-decoration: none; }
+.esqueci:hover { text-decoration: underline; }
+.rs-botao { width: 100%; height: 55px; background-color: #071E3D; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 20px; transition: background-color 0.3s; }
+.rs-botao:hover { background-color: #1F4287; }
+.rs-botao:disabled { opacity: 0.7; cursor: default; }
+.rs-erro { color: #D8000C; font-weight: 600; font-size: 14px; min-height: 20px; margin-bottom: 10px; text-align: center; }
+.rs-regras { list-style: none; margin: -6px 0 14px; display: grid; gap: 4px; font-size: 13px; color: #64748b; }
+.rs-regras li::before { content: '○'; display: inline-block; width: 18px; color: #94a3b8; }
+.rs-regras li.ok { color: #1e7b34; }
+.rs-regras li.ok::before { content: '✓'; color: #1e7b34; font-weight: 700; }
+.rs-caixa { text-align: center; display: grid; gap: 14px; justify-items: center; outline: none; }
+.rs-caixa p { color: #334155; font-size: 15px; line-height: 1.55; }
+.rs-caixa .rs-dica { font-size: 13px; color: #64748b; }
+.rs-ico { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: #e0eaff; color: #1F4287; }
+.rs-ico.ok { background: #e5f4e8; color: #1e7b34; }
+.rs-ico.perigo { background: #fff3dc; color: #8a5300; }
+.rs-pri, .rs-sec { width: 100%; height: 50px; border-radius: 8px; font: 700 16px Inter, Arial, sans-serif; display: grid; place-items: center; cursor: pointer; text-decoration: none; }
+.rs-pri { background: #071E3D; color: #fff; border: none; }
+.rs-pri:hover { background: #1F4287; }
+.rs-sec { background: #fff; color: #071E3D; border: 2px solid #071E3D; }
+.rs-sec:hover { background: #e0eaff; }

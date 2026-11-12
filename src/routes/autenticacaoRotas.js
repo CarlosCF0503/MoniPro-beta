@@ -5,8 +5,17 @@ const router = express.Router();
 const autenticacaoController = require('../controllers/autenticacaoController');
 const validarCorpo = require('../middlewares/validarCorpo');
 const { autenticar } = require('../middlewares/autenticacaoMiddleware');
-const { cadastroSchema, loginSchema } = require('../schemas/autenticacaoSchemas');
-const { limiteTentativasAuth } = require('../config/limites');
+const {
+    cadastroSchema,
+    loginSchema,
+    esqueciSenhaSchema,
+    redefinirSenhaSchema
+} = require('../schemas/autenticacaoSchemas');
+const {
+    limiteTentativasAuth,
+    limitePedidosSenhaPorEmail,
+    limitePedidosSenhaPorIp
+} = require('../config/limites');
 
 // Limita tentativas de login/cadastro por IP para dificultar força bruta (padrão: 10; ver
 // src/config/limites.js)
@@ -25,6 +34,42 @@ router.post(
     autenticacaoController.cadastrar
 );
 router.post('/login', authLimiter, validarCorpo(loginSchema), autenticacaoController.login);
+
+// RF-008 (recuperar senha). O pedido de link tem limites próprios, por hora: por IP (antes da
+// validação) e por conta (e-mail + tipo, depois dela). A resposta do limite é a mesma exista a
+// conta ou não. A troca da senha usa o mesmo limite de login/cadastro.
+const UMA_HORA = 60 * 60 * 1000;
+const MENSAGEM_LIMITE_SENHA = {
+    erro: 'Muitos pedidos de redefinição. Espere um pouco e tente de novo.'
+};
+const limiteSenhaPorIp = rateLimit({
+    windowMs: UMA_HORA,
+    max: limitePedidosSenhaPorIp(),
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: MENSAGEM_LIMITE_SENHA
+});
+const limiteSenhaPorEmail = rateLimit({
+    windowMs: UMA_HORA,
+    max: limitePedidosSenhaPorEmail(),
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => `${req.body.tipo_usuario}:${req.body.email.toLowerCase()}`,
+    message: MENSAGEM_LIMITE_SENHA
+});
+router.post(
+    '/senha/esqueci',
+    limiteSenhaPorIp,
+    validarCorpo(esqueciSenhaSchema),
+    limiteSenhaPorEmail,
+    autenticacaoController.esqueciSenha
+);
+router.post(
+    '/senha/redefinir',
+    authLimiter,
+    validarCorpo(redefinirSenhaSchema),
+    autenticacaoController.redefinirSenha
+);
 
 // P3 (R7): sessão em cookie httpOnly
 router.get('/sessao', autenticar, autenticacaoController.sessao);

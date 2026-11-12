@@ -40,6 +40,8 @@ class PrivacidadeRepository {
             where: { id_monitor: id, status: 'ativa', horario: { gt: agora } },
             data: { status: 'cancelada' }
         });
+        // Links de redefinição de senha (RF-008) deixam de existir junto com o e-mail
+        await db.tokenRedefinicao.deleteMany({ where: { id_usuario: id } });
         return await db.usuario.update({
             where: { id },
             data: {
@@ -61,6 +63,18 @@ class PrivacidadeRepository {
             where: { anonimizado_em: null, ultimo_acesso: { lt: limite } },
             select: { id: true }
         });
+    }
+
+    // Tokens de redefinição de senha (RF-008) com mais de 24h: já venceram (valem 30 min)
+    async contarTokensAntigos(limite) {
+        return await prisma.tokenRedefinicao.count({ where: { criado_em: { lt: limite } } });
+    }
+
+    async apagarTokensAntigos(limite, db = prisma) {
+        const { count } = await db.tokenRedefinicao.deleteMany({
+            where: { criado_em: { lt: limite } }
+        });
+        return count;
     }
 
     async contarHistoricoAntigo(limite) {

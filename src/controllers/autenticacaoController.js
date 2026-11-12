@@ -2,6 +2,7 @@
 // Tarefa 8: erros sobem para o middleware central (src/middlewares/tratadorDeErros.js).
 // Tarefa 9: os corpos já chegam validados por schemas/autenticacaoSchemas.js.
 const autenticacaoService = require('../services/autenticacaoService');
+const redefinicaoSenhaService = require('../services/redefinicaoSenhaService');
 const { ErroCredenciaisInvalidas } = require('../utils/erros');
 const logger = require('../utils/logger');
 const { mascararIdentificador } = require('../utils/mascararIdentificador');
@@ -46,6 +47,24 @@ class AutenticacaoController {
             }
             throw error;
         }
+    }
+
+    // POST /auth/senha/esqueci (RF-008): a resposta é sempre a mesma, exista a conta ou não
+    async esqueciSenha(req, res) {
+        await redefinicaoSenhaService.pedir(req.body.email, req.body.tipo_usuario);
+        res.json({
+            success: true,
+            mensagem:
+                'Se existir uma conta com esse e-mail, enviamos um link para criar uma senha nova.'
+        });
+    }
+
+    // POST /auth/senha/redefinir (RF-008, RN-009): grava a senha nova e encerra as sessões
+    async redefinirSenha(req, res) {
+        await redefinicaoSenhaService.redefinir(req.body.token, req.body.senha);
+        // Quem redefiniu neste navegador também sai: entra de novo com a senha nova
+        res.clearCookie(NOME_COOKIE_SESSAO, opcoesCookieSessao);
+        res.json({ success: true, mensagem: 'Senha alterada. Entre com a senha nova.' });
     }
 
     // GET /auth/sessao: quem está logado (o JavaScript da página não lê mais o token)

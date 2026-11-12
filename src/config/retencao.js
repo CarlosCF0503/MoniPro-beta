@@ -9,8 +9,17 @@ const MESES_CONTA_PARADA = 12;
 // Inscrições e vagas mais antigas que isso são apagadas. Os pontos ficam na conta do usuário.
 const ANOS_HISTORICO = 2;
 
+// Tokens de redefinição de senha (RF-008) valem 30 minutos; os registros são apagados depois disto
+const HORAS_TOKEN_REDEFINICAO = 24;
+
 // Dados que substituem os pessoais numa conta anonimizada
 const NOME_ANONIMO = 'Usuário removido';
 const DOMINIO_ANONIMO = '@anonimo.invalid';
 
-module.exports = { MESES_CONTA_PARADA, ANOS_HISTORICO, NOME_ANONIMO, DOMINIO_ANONIMO };
+module.exports = {
+    MESES_CONTA_PARADA,
+    ANOS_HISTORICO,
+    HORAS_TOKEN_REDEFINICAO,
+    NOME_ANONIMO,
+    DOMINIO_ANONIMO
+};

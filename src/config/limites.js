@@ -5,6 +5,9 @@
 
 const PADRAO_TENTATIVAS_AUTH = 10; // login + cadastro, a cada 15 minutos
 const PADRAO_REQUISICOES_MINUTO = 120; // todas as rotas
+// Recuperar senha (RF-008): pedidos de link por hora, por e-mail e por IP
+const PADRAO_PEDIDOS_SENHA_EMAIL = 3;
+const PADRAO_PEDIDOS_SENHA_IP = 10;
 
 function inteiroPositivoOu(valor, padrao) {
     const numero = Number(valor);
@@ -19,4 +22,17 @@ function limiteRequisicoesPorMinuto(env = process.env) {
     return inteiroPositivoOu(env.LIMITE_REQUISICOES_MINUTO, PADRAO_REQUISICOES_MINUTO);
 }
 
-module.exports = { limiteTentativasAuth, limiteRequisicoesPorMinuto };
+function limitePedidosSenhaPorEmail(env = process.env) {
+    return inteiroPositivoOu(env.LIMITE_PEDIDOS_SENHA_EMAIL, PADRAO_PEDIDOS_SENHA_EMAIL);
+}
+
+function limitePedidosSenhaPorIp(env = process.env) {
+    return inteiroPositivoOu(env.LIMITE_PEDIDOS_SENHA_IP, PADRAO_PEDIDOS_SENHA_IP);
+}
+
+module.exports = {
+    limiteTentativasAuth,
+    limiteRequisicoesPorMinuto,
+    limitePedidosSenhaPorEmail,
+    limitePedidosSenhaPorIp
+};
