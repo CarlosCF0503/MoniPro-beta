@@ -13,7 +13,8 @@ jest.mock('../src/config/bancoDeDados', () => {
             update: jest.fn()
         },
         agendamento: { updateMany: jest.fn(), count: jest.fn(), deleteMany: jest.fn() },
-        monitoria: { updateMany: jest.fn(), count: jest.fn(), deleteMany: jest.fn() }
+        monitoria: { updateMany: jest.fn(), count: jest.fn(), deleteMany: jest.fn() },
+        tokenRedefinicao: { count: jest.fn(), deleteMany: jest.fn() }
     };
     prisma.$transaction = jest.fn((fn) => fn(prisma));
     return prisma;
@@ -36,6 +37,7 @@ beforeEach(() => {
     prisma.agendamento.updateMany.mockResolvedValue({ count: 0 });
     prisma.monitoria.updateMany.mockResolvedValue({ count: 0 });
     prisma.usuario.update.mockResolvedValue({ id: 7 });
+    prisma.tokenRedefinicao.deleteMany.mockResolvedValue({ count: 0 });
 });
 
 describe('DELETE /perfil — excluir a minha conta', () => {
@@ -104,6 +106,10 @@ describe('DELETE /perfil — excluir a minha conta', () => {
             versao_token: { increment: 1 }
         });
         expect(data.anonimizado_em).toBeInstanceOf(Date);
+        // Links de redefinição de senha somem junto (RF-008)
+        expect(prisma.tokenRedefinicao.deleteMany).toHaveBeenCalledWith({
+            where: { id_usuario: 7 }
+        });
         // A senha antiga deixa de valer
         expect(await bcrypt.compare('senhaCerta1', data.senha)).toBe(false);
         expect(prisma.$transaction).toHaveBeenCalledTimes(1);
@@ -188,13 +194,22 @@ describe('Rotina de retenção', () => {
         prisma.monitoria.count.mockResolvedValue(2);
         prisma.agendamento.deleteMany.mockResolvedValue({ count: 4 });
         prisma.monitoria.deleteMany.mockResolvedValue({ count: 2 });
+        prisma.tokenRedefinicao.count.mockResolvedValue(5);
+        prisma.tokenRedefinicao.deleteMany.mockResolvedValue({ count: 5 });
     });
 
     it('sem --aplicar só conta: nada é alterado', async () => {
         const r = await privacidadeService.aplicarRetencao({ agora: AGORA });
 
-        expect(r).toEqual({ contasParadas: 2, agendamentos: 4, vagas: 2, aplicado: false });
+        expect(r).toEqual({
+            contasParadas: 2,
+            agendamentos: 4,
+            vagas: 2,
+            tokens: 5,
+            aplicado: false
+        });
         expect(prisma.usuario.update).not.toHaveBeenCalled();
+        expect(prisma.tokenRedefinicao.deleteMany).not.toHaveBeenCalled();
         expect(prisma.agendamento.deleteMany).not.toHaveBeenCalled();
         expect(prisma.monitoria.deleteMany).not.toHaveBeenCalled();
     });
@@ -212,12 +227,22 @@ describe('Rotina de retenção', () => {
         expect(prisma.agendamento.count).toHaveBeenCalledWith({
             where: { data_hora: { lt: new Date('2024-11-09T12:00:00.000Z') } }
         });
+        // Links de redefinição de senha: 24 horas
+        expect(prisma.tokenRedefinicao.count).toHaveBeenCalledWith({
+            where: { criado_em: { lt: new Date('2026-11-08T12:00:00.000Z') } }
+        });
     });
 
     it('com --aplicar anonimiza cada conta parada e apaga o histórico antigo', async () => {
         const r = await privacidadeService.aplicarRetencao({ aplicar: true, agora: AGORA });
 
-        expect(r).toEqual({ contasParadas: 2, agendamentos: 4, vagas: 2, aplicado: true });
+        expect(r).toEqual({
+            contasParadas: 2,
+            agendamentos: 4,
+            vagas: 2,
+            tokens: 5,
+            aplicado: true
+        });
         const anonimizadas = prisma.usuario.update.mock.calls.map(([arg]) => arg.where.id);
         expect(anonimizadas).toEqual([11, 12]);
         // Inscrições antes das vagas (chave estrangeira), e só vagas sem inscrição restante

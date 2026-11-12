@@ -5,7 +5,11 @@
 const crypto = require('node:crypto');
 const bcrypt = require('bcryptjs');
 const privacidadeRepository = require('../repositories/privacidadeRepository');
-const { MESES_CONTA_PARADA, ANOS_HISTORICO } = require('../config/retencao');
+const {
+    MESES_CONTA_PARADA,
+    ANOS_HISTORICO,
+    HORAS_TOKEN_REDEFINICAO
+} = require('../config/retencao');
 const { ErroValidacao, ErroNaoEncontrado } = require('../utils/erros');
 
 // Hash de uma senha aleatória que ninguém conhece: a conta anonimizada não entra mais
@@ -40,16 +44,18 @@ class PrivacidadeService {
 
     /**
      * Aplica os prazos de retenção. Sem `aplicar`, só conta o que seria feito.
-     * @returns {Promise<{contasParadas:number, agendamentos:number, vagas:number, aplicado:boolean}>}
+     * @returns {Promise<{contasParadas:number, agendamentos:number, vagas:number, tokens:number, aplicado:boolean}>}
      */
     async aplicarRetencao({ aplicar = false, agora = new Date() } = {}) {
         const limiteConta = mesesAtras(agora, MESES_CONTA_PARADA);
         const limiteHistorico = mesesAtras(agora, ANOS_HISTORICO * 12);
+        const limiteTokens = new Date(agora.getTime() - HORAS_TOKEN_REDEFINICAO * 60 * 60 * 1000);
 
         const contas = await privacidadeRepository.buscarContasParadas(limiteConta);
         if (!aplicar) {
             const antigo = await privacidadeRepository.contarHistoricoAntigo(limiteHistorico);
-            return { contasParadas: contas.length, ...antigo, aplicado: false };
+            const tokens = await privacidadeRepository.contarTokensAntigos(limiteTokens);
+            return { contasParadas: contas.length, ...antigo, tokens, aplicado: false };
         }
 
         for (const { id } of contas) {
@@ -61,7 +67,8 @@ class PrivacidadeService {
         const apagado = await privacidadeRepository.emTransacao((tx) =>
             privacidadeRepository.apagarHistoricoAntigo(limiteHistorico, tx)
         );
-        return { contasParadas: contas.length, ...apagado, aplicado: true };
+        const tokens = await privacidadeRepository.apagarTokensAntigos(limiteTokens);
+        return { contasParadas: contas.length, ...apagado, tokens, aplicado: true };
     }
 }
 

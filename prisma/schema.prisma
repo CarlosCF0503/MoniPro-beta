@@ -42,6 +42,7 @@ model Usuario {
 
   monitorias_criadas Monitoria[]   @relation("MonitorParaMonitoria")
   meus_agendamentos  Agendamento[] @relation("AlunoParaAgendamento")
+  tokens_redefinicao TokenRedefinicao[]
 
   @@unique([email, tipo_usuario])
   @@unique([matricula, tipo_usuario])
@@ -101,4 +102,19 @@ model Agendamento {
   @@index([id_monitoria])
   @@index([id_aluno])
   @@map("agendamentos")
+}
+
+// RF-008 / RN-009 (recuperar senha): o link de redefinição vale 30 minutos e uma única vez.
+// Só o hash SHA-256 do token fica no banco; o token puro existe apenas no e-mail enviado.
+model TokenRedefinicao {
+  id         Int       @id @default(autoincrement())
+  id_usuario Int
+  usuario    Usuario   @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
+  hash       String    @unique
+  expira_em  DateTime
+  usado_em   DateTime?
+  criado_em  DateTime  @default(now())
+
+  @@index([id_usuario])
+  @@map("tokens_redefinicao")
 }
