@@ -2,6 +2,7 @@
 require('./config/env');
 const app = require('./app');
 const prisma = require('./config/bancoDeDados');
+const { avisosEmail } = require('./config/email');
 
 const PORTA = process.env.PORT || 3000;
 
@@ -12,6 +13,7 @@ async function iniciarServidor() {
 
         const servidor = app.listen(PORTA, () => {
             console.log(`🚀 Servidor MoniPro rodando na porta ${PORTA}`);
+            avisosEmail().forEach((aviso) => console.warn(`⚠️  E-mail: ${aviso}`));
         });
 
         // Graceful Shutdown

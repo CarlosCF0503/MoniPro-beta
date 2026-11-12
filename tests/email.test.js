@@ -1,5 +1,5 @@
 // Base de e-mail (planos 1 e 3): escolha do transporte, endereço do app e modelos
-const { transporteEmail, configSmtp, urlDoApp } = require('../src/config/email');
+const { transporteEmail, configSmtp, urlDoApp, avisosEmail } = require('../src/config/email');
 const { montar, escapar } = require('../src/services/email/modelos');
 
 describe('transporteEmail', () => {
@@ -87,5 +87,28 @@ describe('modelo redefinir-senha', () => {
         expect(escapar(`<a href="x" title='y'>&</a>`)).toBe(
             '&lt;a href=&quot;x&quot; title=&#39;y&#39;&gt;&amp;&lt;/a&gt;'
         );
+    });
+});
+
+describe('avisosEmail', () => {
+    it('avisa quando o envio real está ligado e falta APP_URL', () => {
+        const avisos = avisosEmail({
+            SMTP_HOST: 'smtp-relay.brevo.com',
+            ALLOWED_ORIGINS: 'https://moni-pro.app.br,https://dev.moni-pro.app.br'
+        });
+        expect(avisos).toHaveLength(1);
+        expect(avisos[0]).toMatch(/APP_URL/);
+        expect(avisos[0]).toMatch(/https:\/\/moni-pro\.app\.br/);
+    });
+
+    it('não avisa com APP_URL definida nem sem envio real', () => {
+        expect(
+            avisosEmail({
+                SMTP_HOST: 'smtp-relay.brevo.com',
+                APP_URL: 'https://dev.moni-pro.app.br'
+            })
+        ).toEqual([]);
+        expect(avisosEmail({ EMAIL_TRANSPORTE: 'console' })).toEqual([]);
+        expect(avisosEmail({ NODE_ENV: 'test' })).toEqual([]);
     });
 });
