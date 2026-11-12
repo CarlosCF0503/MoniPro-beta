@@ -206,6 +206,41 @@ describe('DELETE /agendamentos/:id', () => {
         expect(resposta.body.erro).toMatch(/24h/);
         expect(prisma.agendamento.delete).not.toHaveBeenCalled();
     });
+
+    it('cancela com menos de 24h quando a vaga mudou de dia, horário ou local (RN-010)', async () => {
+        const em2h = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+        prisma.agendamento.findUnique.mockResolvedValue({
+            id: 1,
+            id_aluno: 20,
+            data_hora: em2h,
+            liberado_cancelar_em: new Date()
+        });
+        prisma.agendamento.delete.mockResolvedValue({ id: 1 });
+
+        const resposta = await request(app)
+            .delete('/agendamentos/1')
+            .set('Cookie', `monipro_sessao=${tokenAluno}`);
+
+        expect(resposta.status).toBe(200);
+        expect(prisma.agendamento.delete).toHaveBeenCalledTimes(1);
+    });
+
+    it('mesmo liberado, não cancela depois que a monitoria começou', async () => {
+        prisma.agendamento.findUnique.mockResolvedValue({
+            id: 1,
+            id_aluno: 20,
+            data_hora: new Date(Date.now() - 60 * 1000).toISOString(),
+            liberado_cancelar_em: new Date()
+        });
+
+        const resposta = await request(app)
+            .delete('/agendamentos/1')
+            .set('Cookie', `monipro_sessao=${tokenAluno}`);
+
+        expect(resposta.status).toBe(400);
+        expect(resposta.body.erro).toMatch(/começou/);
+        expect(prisma.agendamento.delete).not.toHaveBeenCalled();
+    });
 });
 
 describe('Presença confirmada pelos dois lados (P2: aluno e monitor)', () => {

@@ -103,7 +103,8 @@
             fim: m.data_fim ? new Date(m.data_fim) : null,
             status: String(m.status || '').toLowerCase(),
             capacidade: Number(m.capacidade) || 1,
-            inscritos: Number.isInteger(m.inscritos) ? m.inscritos : null
+            inscritos: Number.isInteger(m.inscritos) ? m.inscritos : null,
+            descricao: m.descricao || ''
         };
     }
 
@@ -252,7 +253,11 @@
             status: String(a.status || '').toLowerCase(),
             statusVaga: String(m.status || '').toLowerCase(),
             alunoConfirmou: Boolean(a.presenca_aluno_em),
-            monitorConfirmou: Boolean(a.presenca_monitor_em)
+            monitorConfirmou: Boolean(a.presenca_monitor_em),
+            // A vaga mudou de dia, horário ou local depois da inscrição (editar vaga)
+            liberado: Boolean(a.liberado_cancelar_em),
+            horarioAnterior: a.horario_anterior ? new Date(a.horario_anterior) : null,
+            localAnterior: a.local_anterior || null
         };
     }
 
@@ -286,9 +291,13 @@
         return { confirmar, proximas, historico };
     }
 
-    /** RN-001: o aluno só cancela a inscrição com 24h ou mais até o início. */
+    /**
+     * RN-001: o aluno só cancela a inscrição com 24h ou mais até o início. Se a vaga mudou de
+     * dia, horário ou local depois da inscrição, pode cancelar até o início.
+     */
     function podeCancelarInscricao(inscricao, agora) {
         if (inscricao.status === 'cancelado' || inscricao.statusVaga === 'cancelada') return false;
+        if (inscricao.liberado) return inscricao.inicio > agora;
         return inscricao.inicio - agora >= HORAS_CANCELAMENTO * 60 * 60 * 1000;
     }
 
@@ -301,6 +310,20 @@
         return Array.from(mapa, ([disciplina, n]) => ({ disciplina, n })).sort(
             (a, b) => b.n - a.n || a.disciplina.localeCompare(b.disciplina, 'pt-BR')
         );
+    }
+
+    /**
+     * O que mudou na vaga desde a inscrição, em frases para o aluno. Fica vazio se a vaga voltou
+     * a ser como era (o horário é comparado por minuto).
+     */
+    function mudancasDaVaga(inscricao) {
+        const lista = [];
+        const antes = inscricao.horarioAnterior;
+        if (antes && Math.floor(antes / 60000) !== Math.floor(inscricao.inicio / 60000))
+            lista.push('Horário alterado: era ' + diaCurto(antes) + ' às ' + hora(antes) + '.');
+        if (inscricao.localAnterior && inscricao.localAnterior !== inscricao.local)
+            lista.push('Local alterado: era ' + inscricao.localAnterior + '.');
+        return lista;
     }
 
     function plural(n, um, varios) {
@@ -338,6 +361,7 @@
         situacaoDoAluno,
         separarInscricoes,
         podeCancelarInscricao,
+        mudancasDaVaga,
         presencasPorDisciplina,
         plural
     };

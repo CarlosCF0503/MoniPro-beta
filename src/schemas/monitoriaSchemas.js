@@ -40,4 +40,23 @@ const finalizarMonitoriaSchema = z.object({
     })
 });
 
-module.exports = { criarMonitoriaSchema, finalizarMonitoriaSchema };
+// Editar vaga (RF-009): atualização parcial. Todos os campos são opcionais, mas pelo menos um
+// precisa vir. As regras que dependem da vaga no banco (dono, status, janela de 24h, lugares
+// >= inscritos) ficam em monitoriaService.atualizar. A disciplina não muda: mudar a disciplina
+// é outra vaga.
+const atualizarMonitoriaSchema = z
+    .object({
+        horario: dataHoraIso({
+            obrigatorio: 'O horário é obrigatório.',
+            invalido: 'O horário deve ser uma data/hora ISO 8601 (ex.: 2026-09-10T14:00:00.000Z).'
+        }).optional(),
+        local: textoObrigatorio('O local é obrigatório.', 120).optional(),
+        descricao: criarMonitoriaSchema.shape.descricao,
+        capacidade: criarMonitoriaSchema.shape.capacidade
+    })
+    .refine((dados) => Object.values(dados).some((valor) => valor !== undefined), {
+        message: 'Informe pelo menos um campo para alterar.',
+        path: ['corpo']
+    });
+
+module.exports = { criarMonitoriaSchema, finalizarMonitoriaSchema, atualizarMonitoriaSchema };
