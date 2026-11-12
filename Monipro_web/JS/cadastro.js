@@ -26,6 +26,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!formCadastro) return;
 
+    // Troca o formulário pela etapa "Confira seu e-mail". A matrícula identifica a conta nos
+    // pedidos seguintes (continua a mesma se o e-mail for corrigido); a senha fica só na memória
+    // da página, para corrigir o e-mail sem pedir de novo.
+    function mostrarConfiraEmail({ email, matricula, senha, tipo_usuario }) {
+        const etapa = document.getElementById('etapa-confira');
+        document.getElementById('emailCadastrado').textContent = email;
+        montarAcoesConfirmacao(document.getElementById('acoesConfirmacao'), {
+            identificador: String(matricula),
+            senha,
+            tipo_usuario,
+            aoCorrigir: (novo) => {
+                document.getElementById('emailCadastrado').textContent = novo;
+            }
+        });
+        formCadastro.reset();
+        formCadastro.hidden = true;
+        etapa.hidden = false;
+        etapa.focus();
+    }
+
     formCadastro.addEventListener('submit', async (event) => {
         event.preventDefault();
 
@@ -65,11 +85,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (data.success) {
-                if (typeof showToast === 'function')
-                    showToast(mensagemDaApi(data, 'Conta criada com sucesso!'), 'success');
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 2000);
+                // Plano 14 (RF-018): a conta só entra depois de abrir o link do e-mail
+                mostrarConfiraEmail({ email, matricula, senha, tipo_usuario });
             } else if (typeof showToast === 'function') {
                 showToast(mensagemDaApi(data, 'Erro ao realizar o cadastro.'), 'error', data);
             }
