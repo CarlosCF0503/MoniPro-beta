@@ -6,12 +6,12 @@ Acompanhamento da migração do front estático (`Monipro_web/`, HTML/CSS/JS) pa
 
 Uma tela só conta como **feita** quando passou em lint, build, comparação visual com a tela original e revisão de código.
 
-> **Migração em andamento.** 10 de 12 telas commitadas em `feat/migracao-react`, que já recebeu a develop com a recuperação de senha (PR #72), a confirmação de e-mail (PR #76) e as notificações (PR #78).
+> **Todas as telas migradas.** 12 telas em React, commitadas em `feat/migracao-react`, que já inclui a develop com a recuperação de senha (PR #72), a confirmação de e-mail (PR #76) e as notificações (PR #78).
 
 ## Próximos passos
 
-1. **Telas de autenticação** (Login, Cadastro, Privacidade, Redefinir senha, Confirmar e-mail) e a trava de envio duplo em Nova disciplina: escritas e verificadas (191 capturas em 4 tamanhos, chamadas de API iguais); em revisão de código e de segurança.
-2. Commitar, atualizar a prévia navegável e abrir o PR de `feat/migracao-react` para a `develop`.
+1. Atualizar a prévia navegável com todas as telas e abrir o PR de `feat/migracao-react` para a `develop`.
+2. Integração (abaixo): deploy e CI ainda não constroem o React.
 
 ## Como a migração está organizada
 
@@ -24,15 +24,15 @@ Uma tela só conta como **feita** quando passou em lint, build, comparação vis
 
 | Página | Arquivo original | Componente | Status | Observações |
 |---|---|---|---|---|
-| Login | `index.html` | `src/telas/Login.jsx` | 🔄 em andamento | Versão commitada é anterior aos PRs #72 e #76; recebendo "Esqueci minha senha" e a confirmação de e-mail |
-| Redefinir senha | `redefinir_senha.html` | `src/telas/RedefinirSenha.jsx` | 🔄 em andamento | Tela nova do PR #72; escrita, em verificação |
-| Confirmar e-mail | `confirmar_email.html` | `src/telas/ConfirmarEmail.jsx` | 🔄 em andamento | Tela nova do PR #76 |
+| Login | `index.html` | `src/telas/Login.jsx` | ✅ feito | Com "Esqueci minha senha" (PR #72) e o aviso de e-mail não confirmado (PR #76) |
+| Redefinir senha | `redefinir_senha.html` | `src/telas/RedefinirSenha.jsx` | ✅ feito | Tela do PR #72. O código do link sai da barra de endereço e não vai para o console nem para o armazenamento, como no original |
+| Confirmar e-mail | `confirmar_email.html` | `src/telas/ConfirmarEmail.jsx` | ✅ feito | Tela do PR #76. Mesmo cuidado com o código do link; ele é enviado uma única vez |
 | Escolha de cadastro | `escolha_cadastro.html` | `src/telas/EscolhaCadastro.jsx` | ✅ feito | |
-| Cadastro | `cadastro.html` | `src/telas/Cadastro.jsx` | 🔄 em andamento | Recebendo a confirmação de e-mail do PR #76 |
-| Privacidade | `privacidade.html` | `src/telas/Privacidade.jsx` | 🔄 em andamento | Versão commitada é anterior aos PRs #72 e #76; o texto do Brevo e o prazo do link de senha estão escritos, falta conferir com o original. Contato do encarregado ainda "[contato a definir]", igual ao original |
+| Cadastro | `cadastro.html` | `src/telas/Cadastro.jsx` | ✅ feito | Com a etapa "Confira seu e-mail" do PR #76 |
+| Privacidade | `privacidade.html` | `src/telas/Privacidade.jsx` | ✅ feito | Texto idêntico ao original, já com o Brevo e os prazos dos links de senha e de confirmação. Contato do encarregado ainda "[contato a definir]", igual ao original |
 | Início (dashboard) | `base.html` | `src/telas/Base.jsx` | ✅ feito | |
 | Minhas disciplinas | `escolha_disciplina.html` | `src/telas/EscolhaDisciplina.jsx` | ✅ feito | Busca continua sem filtrar, igual ao original |
-| Nova disciplina | `cadastro_disciplina.html` | `src/telas/CadastroDisciplina.jsx` | ✅ feito | Regras em `src/disciplinaRegras.js`. Trava síncrona contra envio duplo escrita (sem commit), falta conferir |
+| Nova disciplina | `cadastro_disciplina.html` | `src/telas/CadastroDisciplina.jsx` | ✅ feito | Regras em `src/disciplinaRegras.js`. Trava síncrona contra envio duplo (um único POST no duplo clique) |
 | Marcar monitoria | `marcar_monitoria.html` | `src/telas/MarcarMonitoria.jsx` | ✅ feito | Componentes e datas em `src/telas/marcar/`. O foco continua no card de vaga após o clique (o original perde o foco ao redesenhar); melhor para teclado, sem diferença visual |
 | Perfil do aluno | `perfil_aluno.html` | `src/telas/PerfilAluno.jsx` | ✅ feito | Revisão de código e de segurança sem pendências. Inclui a edição de vaga (PR #71). Diferenças a confirmar: excluir conta no celular abre sempre como painel (o original abre como modal só no primeiro clique); após erro ao confirmar presença o botão volta para "Confirmar" |
 | Perfil do monitor | `perfil_monitor.html` | `src/telas/PerfilMonitor.jsx` | ✅ feito | Diálogos de editar e finalizar vaga em `src/telas/monitor/`; reaproveita `src/perfil/`. Revisão de código e de segurança sem pendências. O foco fica onde o usuário estava depois de trocar o mês, salvar a edição e fechar o detalhe (o original perde o foco ao redesenhar) |
@@ -46,6 +46,7 @@ Uma tela só conta como **feita** quando passou em lint, build, comparação vis
 | `src/toast.jsx` | `useToast` / `Toast` | ✅ feito |
 | `src/Casca.jsx` | Cabeçalho, menu lateral e modal de sair (lógica de `JS/base.js`) | ✅ feito |
 | `src/perfil/` | Dados do perfil e exclusão de conta, compartilhados entre aluno e monitor | ✅ feito |
+| `src/AcoesConfirmacao.jsx` | Reenviar o link de confirmação e corrigir o e-mail (porte de `JS/confirmacao_email.js`), usado no Login e no Cadastro | ✅ feito |
 
 ## Integração (fora das telas)
 
@@ -65,4 +66,5 @@ A migração mantém o comportamento do `Monipro_web`. Estes defeitos apareceram
 - **Marcar monitoria:** o campo "local" aceita 140 caracteres, mas a validação para em 120.
 - **Perfis:** no celular, o primeiro "Excluir conta" abre como modal em vez de painel (`excluir_conta.js` cria o diálogo sem `pp-painel`).
 - **Perfis:** depois de um erro ao confirmar presença, o botão fica com o texto "Confirmar presença" até a tela ser redesenhada.
+- **Confirmação de e-mail:** apertar Enter várias vezes no campo de e-mail novo dispara vários pedidos de correção (o Enter não respeita o botão desativado).
 - **Perfil do monitor:** editar vaga não trata erro de rede (o botão fica em "Salvando…", mesmo ao reabrir) nem sessão expirada; "Carregar vagas mais antigas" também não trata sessão expirada.

@@ -116,9 +116,12 @@ export default function Privacidade() {
                 <p>
                     Não vendemos nem cedemos os seus dados. Eles ficam num servidor contratado na{' '}
                     <strong>Oracle Cloud</strong>, que atua como operadora: guarda e processa os
-                    dados só para manter o sistema no ar. Outros usuários veem apenas o necessário
-                    para o agendamento: o aluno vê o nome do monitor da vaga; o monitor vê o nome
-                    de quem se inscreveu.
+                    dados só para manter o sistema no ar. Os e-mails do sistema, como o link para
+                    confirmar o e-mail do cadastro, o link para criar uma senha nova e os avisos
+                    sobre as suas monitorias (inscrição, mudança, cancelamento e lembrete), saem
+                    pelo <strong>Brevo</strong>, que também atua como operador: recebe só o seu nome, o seu e-mail e o conteúdo da mensagem, para
+                    entregá-la. Outros usuários veem apenas o necessário para o agendamento: o
+                    aluno vê o nome do monitor da vaga; o monitor vê o nome de quem se inscreveu.
                 </p>
             </section>
 
@@ -146,6 +149,40 @@ export default function Privacidade() {
                                 <td>Inscrições e vagas</td>
                                 <td>2 anos</td>
                                 <td>São apagadas. Os pontos já ganhos continuam na conta.</td>
+                            </tr>
+                            <tr>
+                                <td>Conta que não confirmou o e-mail</td>
+                                <td>7 dias</td>
+                                <td>
+                                    A conta é apagada, e o e-mail e a matrícula ficam livres para um
+                                    cadastro novo. Isso evita guardar o e-mail de quem não se
+                                    cadastrou (por exemplo, um endereço digitado errado).
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Link para confirmar o e-mail</td>
+                                <td>48 horas (registro apagado em 7 dias)</td>
+                                <td>
+                                    O link só funciona uma vez. Guardamos apenas um código derivado
+                                    dele, que não permite refazer o link.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Link para criar uma senha nova</td>
+                                <td>30 minutos (registro apagado em 24 horas)</td>
+                                <td>
+                                    O link só funciona uma vez. Guardamos apenas um código derivado
+                                    dele, que não permite refazer o link.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Avisos por e-mail sobre monitorias</td>
+                                <td>90 dias depois do envio</td>
+                                <td>
+                                    O registro do aviso (disciplina, horário e local da monitoria) é
+                                    apagado. Esses avisos fazem parte do serviço e não podem ser
+                                    desligados; o MoniPro não manda e-mail de divulgação.
+                                </td>
                             </tr>
                             <tr>
                                 <td>Registros técnicos</td>

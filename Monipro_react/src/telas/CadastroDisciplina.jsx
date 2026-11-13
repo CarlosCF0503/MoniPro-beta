@@ -33,6 +33,9 @@ function Formulario() {
     const [existentes, setExistentes] = useState([]);
     const [falhaLista, setFalhaLista] = useState(false);
     const [enviando, setEnviando] = useState(false);
+    // Trava síncrona do envio: o estado só muda no próximo desenho, e um duplo clique rápido
+    // passaria pela checagem dele
+    const travaEnvio = useRef(false);
     const input = useRef(null);
 
     const sessaoExpirada = useCallback(() => {
@@ -102,7 +105,7 @@ function Formulario() {
 
     async function aoEnviar(evento) {
         evento.preventDefault();
-        if (enviando) return;
+        if (travaEnvio.current) return;
 
         const limpo = limpar(nome);
         const invalido = validarNome(limpo);
@@ -113,6 +116,7 @@ function Formulario() {
         }
 
         setErro('');
+        travaEnvio.current = true;
         setEnviando(true);
         let r;
         try {
@@ -121,6 +125,7 @@ function Formulario() {
                 body: JSON.stringify({ nome: limpo })
             });
         } catch (e) {
+            travaEnvio.current = false;
             setEnviando(false);
             showToast('Não foi possível conectar ao servidor.', 'error', e);
             return;
@@ -140,6 +145,7 @@ function Formulario() {
             return;
         }
 
+        travaEnvio.current = false;
         setEnviando(false);
         if (r.statusHttp === 401) {
             sessaoExpirada();

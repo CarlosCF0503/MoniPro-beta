@@ -1,12 +1,14 @@
 // Tela de cadastro: porte de Monipro_web/cadastro.html + JS/cadastro.js.
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 // Mesmos arquivos e mesma ordem dos <link> do cadastro.html original
 import '../../../Monipro_web/CSS/fontes.css';
 import '../../../Monipro_web/CSS/legal.css';
 import '../../../Monipro_web/CSS/cadastro.css';
+import '../../../Monipro_web/CSS/redefinir_senha.css';
 import logo from '../../../Monipro_web/IMG/MoniPro-Logo.png';
 import { chamadaApi, mensagemDaApi } from '../api.js';
 import { Toast, useToast } from '../toast.jsx';
+import AcoesConfirmacao from '../AcoesConfirmacao.jsx';
 
 const propsIcone = {
     xmlns: 'http://www.w3.org/2000/svg',
@@ -72,13 +74,25 @@ function CampoSenha({ id, rotulo, descritoPor }) {
 export default function Cadastro() {
     const [enviando, setEnviando] = useState(false);
     const [toast, showToast] = useToast();
+    // Plano 14 (RF-018): etapa "Confira seu e-mail". A matrícula identifica a conta nos pedidos
+    // seguintes (continua a mesma se o e-mail for corrigido); a senha fica só na memória da
+    // página, para corrigir o e-mail sem pedir de novo.
+    const [confira, setConfira] = useState(null);
+    const refConfira = useRef(null);
+    // Foco só quando a etapa aparece (corrigir o e-mail troca o texto, não o foco)
+    const mostrandoConfira = confira !== null;
+
+    useEffect(() => {
+        if (mostrandoConfira) refConfira.current.focus();
+    }, [mostrandoConfira]);
 
     async function aoEnviar(e) {
         e.preventDefault();
+        const form = e.currentTarget;
 
         // Lido do formulário na hora do envio, como no original (cobre preenchimento
         // automático). Os campos não têm "name" no original: form.elements acha pelo id.
-        const campos = e.currentTarget.elements;
+        const campos = form.elements;
         const nome = campos.inputNome.value.trim();
         const email = campos.inputEmail.value.trim();
         const matricula = campos.inputMatricula.value.trim();
@@ -113,18 +127,19 @@ export default function Cadastro() {
             });
 
             if (dados.success) {
-                showToast(mensagemDaApi(dados, 'Conta criada com sucesso!'), 'success');
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 2000);
+                // Plano 14 (RF-018): a conta só entra depois de abrir o link do e-mail
+                form.reset();
+                setConfira({
+                    email,
+                    conta: { identificador: String(matricula), senha, tipo_usuario }
+                });
             } else {
                 showToast(mensagemDaApi(dados, 'Erro ao realizar o cadastro.'), 'error', dados);
             }
         } catch (error) {
             showToast('Sem conexão com o servidor.', 'error', error);
         } finally {
-            // Como no cadastro.js original: o botão volta a "Cadastrar" mesmo no sucesso,
-            // durante os 2 s antes do redirecionamento
+            // Como no cadastro.js original: o botão volta a "Cadastrar" mesmo no sucesso
             setEnviando(false);
         }
     }
@@ -136,7 +151,7 @@ export default function Cadastro() {
                     <div className="form-container">
                         <img src={logo} alt="Logo da MoniPro" className="logo" />
 
-                        <form id="formCadastro" onSubmit={aoEnviar}>
+                        <form id="formCadastro" onSubmit={aoEnviar} hidden={Boolean(confira)}>
                             <div className="header-text">
                                 <h1 className="text1">Criar Conta</h1>
                                 <p>Preencha os dados abaixo para se cadastrar.</p>
@@ -224,6 +239,42 @@ export default function Cadastro() {
                                 <a href="index.html">Faça login</a>
                             </div>
                         </form>
+
+                        {/* Plano 14 (RF-018): depois do cadastro, a conta espera a confirmação do e-mail */}
+                        <div
+                            id="etapa-confira"
+                            className="rs-caixa"
+                            hidden={!confira}
+                            tabIndex={-1}
+                            ref={refConfira}
+                        >
+                            <div className="rs-ico">
+                                <svg {...propsIcone} xmlns={undefined} width={30} height={30}>
+                                    <rect x="2" y="4" width="20" height="16" rx="2" />
+                                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                                </svg>
+                            </div>
+                            <h1 className="text1">Confira seu e-mail</h1>
+                            <p>
+                                {'Enviamos um link de confirmação para '}
+                                <strong id="emailCadastrado">{confira?.email}</strong>. Abra o link
+                                para liberar o acesso. Ele vale por 48 horas.
+                            </p>
+                            <p className="rs-dica">Não chegou? Veja a caixa de spam ou peça outro link.</p>
+                            <div id="acoesConfirmacao" className="cf-acoes">
+                                {confira && (
+                                    <AcoesConfirmacao
+                                        conta={confira.conta}
+                                        aoCorrigir={(novo) =>
+                                            setConfira((atual) => ({ ...atual, email: novo }))
+                                        }
+                                    />
+                                )}
+                            </div>
+                            <a className="rs-sec" href="index.html">
+                                Ir para o login
+                            </a>
+                        </div>
                     </div>
                 </section>
 

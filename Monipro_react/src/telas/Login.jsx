@@ -1,12 +1,14 @@
 // Tela de login: porte de Monipro_web/index.html + JS/login.js.
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 // Mesmos arquivos e mesma ordem dos <link> do index.html original
 import '../../../Monipro_web/CSS/fontes.css';
 import '../../../Monipro_web/CSS/legal.css';
 import '../../../Monipro_web/CSS/login.css';
+import '../../../Monipro_web/CSS/redefinir_senha.css';
 import logo from '../../../Monipro_web/IMG/MoniPro-Logo.png';
 import { chamadaApi, mensagemDaApi } from '../api.js';
 import { Toast, useToast } from '../toast.jsx';
+import AcoesConfirmacao from '../AcoesConfirmacao.jsx';
 
 const propsIcone = {
     xmlns: 'http://www.w3.org/2000/svg',
@@ -25,12 +27,21 @@ export default function Login() {
     const [senhaVisivel, setSenhaVisivel] = useState(false);
     const [botao, setBotao] = useState({ rotulo: 'Acessar Sistema', desativado: false });
     const [toast, showToast] = useToast();
+    // Plano 14 (RF-018): aviso "Confirme seu e-mail". conta.n muda a cada aviso e remonta as
+    // ações, como o montarAcoesConfirmacao do original
+    const [aviso, setAviso] = useState({ visivel: false, conta: null });
+    const refAviso = useRef(null);
+
+    useEffect(() => {
+        if (aviso.visivel) refAviso.current.focus();
+    }, [aviso]);
 
     async function aoEnviar(e) {
         e.preventDefault();
+        const form = e.currentTarget;
 
         // Lido do formulário na hora do envio, como no original (cobre preenchimento automático)
-        const campos = new FormData(e.currentTarget);
+        const campos = new FormData(form);
         const identificador = campos.get('identificador').trim();
         const senha = campos.get('password');
         const tipoUsuario = campos.get('tipo_usuario');
@@ -40,6 +51,7 @@ export default function Login() {
             return;
         }
 
+        setAviso((atual) => ({ ...atual, visivel: false }));
         setBotao({ rotulo: 'Aguarde...', desativado: true });
 
         try {
@@ -56,6 +68,19 @@ export default function Login() {
                 setTimeout(() => {
                     window.location.href = 'base.html';
                 }, 1000);
+            } else if (dados.codigo === 'email_nao_confirmado') {
+                // Plano 14 (RF-018): só chega aqui com a senha certa. Como no original, os
+                // campos são lidos de novo depois da resposta
+                const conta = {
+                    identificador: form.elements.inputIdentificador.value.trim(),
+                    senha: form.elements.inputSenha.value,
+                    // O original guarda o rádio marcado no início do envio (login.js)
+                    tipo_usuario: tipoUsuario
+                };
+                setAviso((atual) => ({
+                    visivel: true,
+                    conta: { ...conta, n: (atual.conta?.n ?? 0) + 1 }
+                }));
             } else {
                 showToast(mensagemDaApi(dados, 'Credenciais inválidas.'), 'error', dados);
             }
@@ -146,6 +171,7 @@ export default function Login() {
                                     type="button"
                                     className="olho"
                                     aria-label={senhaVisivel ? 'Esconder senha' : 'Mostrar senha'}
+                                    data-target="inputSenha"
                                     onClick={() => setSenhaVisivel((visivel) => !visivel)}
                                 >
                                     <svg {...propsIcone}>
@@ -164,8 +190,32 @@ export default function Login() {
                                 </button>
                             </div>
 
+                            <a className="esqueci" href="redefinir_senha.html">
+                                Esqueci minha senha
+                            </a>
+
                             {/* Vazio como no original: nenhum script escreve nele, mas ocupa espaço */}
                             <p id="erro"></p>
+
+                            {/* Plano 14 (RF-018): senha certa, mas o e-mail ainda não foi confirmado */}
+                            <div
+                                id="avisoConfirmar"
+                                className="cf-aviso"
+                                hidden={!aviso.visivel}
+                                tabIndex={-1}
+                                ref={refAviso}
+                            >
+                                <p className="cf-titulo">Confirme seu e-mail para entrar</p>
+                                <p className="cf-texto">
+                                    Abra o link que enviamos quando você criou a conta. Se ele
+                                    venceu ou não chegou, peça outro.
+                                </p>
+                                <div id="acoesConfirmacao" className="cf-acoes">
+                                    {aviso.conta && (
+                                        <AcoesConfirmacao key={aviso.conta.n} conta={aviso.conta} />
+                                    )}
+                                </div>
+                            </div>
 
                             <input
                                 type="submit"
