@@ -1,6 +1,8 @@
 const request = require('supertest');
 const { gerarToken } = require('./helpers/token');
 
+// Plano 3: os avisos por e-mail têm testes próprios (tests/notificacoes.test.js)
+jest.mock('../src/services/notificacaoService');
 jest.mock('../src/config/bancoDeDados', () => ({
     usuario: { update: jest.fn() },
     monitoria: {},

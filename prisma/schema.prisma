@@ -48,6 +48,7 @@ model Usuario {
   meus_agendamentos  Agendamento[] @relation("AlunoParaAgendamento")
   tokens_redefinicao TokenRedefinicao[]
   tokens_confirmacao TokenConfirmacaoEmail[]
+  notificacoes       Notificacao[]
 
   @@unique([email, tipo_usuario])
   @@unique([matricula, tipo_usuario])
@@ -136,4 +137,31 @@ model TokenConfirmacaoEmail {
 
   @@index([id_usuario])
   @@map("tokens_confirmacao_email")
+}
+
+// Plano 3 (RF-010, RN-011): fila de e-mails de aviso. A ação (inscrição, edição, cancelamento)
+// grava a notificação na mesma transação; o backend envia depois, com novas tentativas.
+enum StatusNotificacao {
+  pendente
+  enviada
+  falhou
+}
+
+model Notificacao {
+  id          Int               @id @default(autoincrement())
+  id_usuario  Int
+  usuario     Usuario           @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
+  modelo      String            // inscricao | lembrete | vaga-alterada | vaga-cancelada
+  dados       Json              // só o que o modelo precisa (disciplina, horário, local...)
+  chave       String            @unique // evita o mesmo aviso duas vezes (ex.: lembrete:agendamento:108:<horário>)
+  status      StatusNotificacao @default(pendente)
+  tentativas  Int               @default(0)
+  ultimo_erro String?
+  enviar_apos DateTime          @default(now())
+  enviada_em  DateTime?
+  criado_em   DateTime          @default(now())
+
+  @@index([status, enviar_apos])
+  @@index([id_usuario])
+  @@map("notificacoes")
 }

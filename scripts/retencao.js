@@ -4,7 +4,8 @@
 //   - inscrições e vagas com mais de 2 anos: apagadas (os pontos ficam na conta);
 //   - links de redefinição de senha com mais de 24h: apagados (valem só 30 minutos);
 //   - contas que não confirmaram o e-mail em 7 dias: apagadas (libera e-mail e matrícula), e os
-//     links de confirmação com mais de 7 dias também (valem 48h).
+//     links de confirmação com mais de 7 dias também (valem 48h);
+//   - avisos por e-mail já enviados ou desistidos com mais de 90 dias: apagados.
 //
 // Por padrão só MOSTRA quantos registros seriam afetados. Para aplicar, use --aplicar.
 // No servidor, dentro do container do backend (usa o DATABASE_URL e o DB_CA_CERT dele):
@@ -22,7 +23,8 @@ const {
     MESES_CONTA_PARADA,
     ANOS_HISTORICO,
     HORAS_TOKEN_REDEFINICAO,
-    DIAS_CONTA_PENDENTE
+    DIAS_CONTA_PENDENTE,
+    DIAS_NOTIFICACOES
 } = require('../src/config/retencao');
 
 async function main() {
@@ -42,6 +44,7 @@ async function main() {
     console.log(
         `  links de confirmação de e-mail com mais de ${DIAS_CONTA_PENDENTE} dias: ${r.tokensConfirmacao}`
     );
+    console.log(`  avisos por e-mail com mais de ${DIAS_NOTIFICACOES} dias: ${r.notificacoes}`);
     if (!r.aplicado) console.log('Rode de novo com --aplicar para aplicar.');
 }
 
