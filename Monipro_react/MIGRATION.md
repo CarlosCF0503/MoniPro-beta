@@ -6,13 +6,12 @@ Acompanhamento da migração do front estático (`Monipro_web/`, HTML/CSS/JS) pa
 
 Uma tela só conta como **feita** quando passou em lint, build, comparação visual com a tela original e revisão de código.
 
-> **Migração retomada.** A branch `feat/migracao-react` recebeu a develop com a recuperação de senha (PR #72): entrou a tela nova `redefinir_senha`, e o Login e a Privacidade, já migrados, precisam acompanhar as mudanças do original.
+> **Migração em andamento.** 10 de 12 telas commitadas em `feat/migracao-react`, que já recebeu a develop com a recuperação de senha (PR #72), a confirmação de e-mail (PR #76) e as notificações (PR #78).
 
 ## Próximos passos
 
-1. Perfil do monitor e Redefinir senha: terminar, verificar, revisar (código e segurança) e commitar.
-2. Login e Privacidade: aplicar as mudanças da recuperação de senha.
-3. Atualizar a prévia navegável e abrir o PR de `feat/migracao-react` para a `develop`.
+1. **Telas de autenticação** (Login, Cadastro, Privacidade, Redefinir senha, Confirmar e-mail) e a trava de envio duplo em Nova disciplina: escritas e verificadas (191 capturas em 4 tamanhos, chamadas de API iguais); em revisão de código e de segurança.
+2. Commitar, atualizar a prévia navegável e abrir o PR de `feat/migracao-react` para a `develop`.
 
 ## Como a migração está organizada
 
@@ -25,17 +24,18 @@ Uma tela só conta como **feita** quando passou em lint, build, comparação vis
 
 | Página | Arquivo original | Componente | Status | Observações |
 |---|---|---|---|---|
-| Login | `index.html` | `src/telas/Login.jsx` | 🔄 em andamento | Feito; recebendo o link "Esqueci minha senha" do PR #72 |
-| Redefinir senha | `redefinir_senha.html` | `src/telas/RedefinirSenha.jsx` | 🔄 em andamento | Tela nova do PR #72 |
+| Login | `index.html` | `src/telas/Login.jsx` | 🔄 em andamento | Versão commitada é anterior aos PRs #72 e #76; recebendo "Esqueci minha senha" e a confirmação de e-mail |
+| Redefinir senha | `redefinir_senha.html` | `src/telas/RedefinirSenha.jsx` | 🔄 em andamento | Tela nova do PR #72; escrita, em verificação |
+| Confirmar e-mail | `confirmar_email.html` | `src/telas/ConfirmarEmail.jsx` | 🔄 em andamento | Tela nova do PR #76 |
 | Escolha de cadastro | `escolha_cadastro.html` | `src/telas/EscolhaCadastro.jsx` | ✅ feito | |
-| Cadastro | `cadastro.html` | `src/telas/Cadastro.jsx` | ✅ feito | |
-| Privacidade | `privacidade.html` | `src/telas/Privacidade.jsx` | 🔄 em andamento | Feito; recebendo o texto sobre o envio de e-mails (Brevo) e o prazo do link de senha, do PR #72. Contato do encarregado ainda "[contato a definir]", igual ao original |
+| Cadastro | `cadastro.html` | `src/telas/Cadastro.jsx` | 🔄 em andamento | Recebendo a confirmação de e-mail do PR #76 |
+| Privacidade | `privacidade.html` | `src/telas/Privacidade.jsx` | 🔄 em andamento | Versão commitada é anterior aos PRs #72 e #76; o texto do Brevo e o prazo do link de senha estão escritos, falta conferir com o original. Contato do encarregado ainda "[contato a definir]", igual ao original |
 | Início (dashboard) | `base.html` | `src/telas/Base.jsx` | ✅ feito | |
 | Minhas disciplinas | `escolha_disciplina.html` | `src/telas/EscolhaDisciplina.jsx` | ✅ feito | Busca continua sem filtrar, igual ao original |
-| Nova disciplina | `cadastro_disciplina.html` | `src/telas/CadastroDisciplina.jsx` | ✅ feito | Regras em `src/disciplinaRegras.js`. Ajuste pendente: travar envio duplo com `useRef` (o original trava de forma síncrona), como já foi feito nas outras telas |
+| Nova disciplina | `cadastro_disciplina.html` | `src/telas/CadastroDisciplina.jsx` | ✅ feito | Regras em `src/disciplinaRegras.js`. Trava síncrona contra envio duplo escrita (sem commit), falta conferir |
 | Marcar monitoria | `marcar_monitoria.html` | `src/telas/MarcarMonitoria.jsx` | ✅ feito | Componentes e datas em `src/telas/marcar/`. O foco continua no card de vaga após o clique (o original perde o foco ao redesenhar); melhor para teclado, sem diferença visual |
 | Perfil do aluno | `perfil_aluno.html` | `src/telas/PerfilAluno.jsx` | ✅ feito | Revisão de código e de segurança sem pendências. Inclui a edição de vaga (PR #71). Diferenças a confirmar: excluir conta no celular abre sempre como painel (o original abre como modal só no primeiro clique); após erro ao confirmar presença o botão volta para "Confirmar" |
-| Perfil do monitor | `perfil_monitor.html` | `src/telas/PerfilMonitor.jsx` | 🔄 em andamento | Diálogos de editar/finalizar vaga em `src/telas/monitor/`. Reaproveita `src/perfil/` |
+| Perfil do monitor | `perfil_monitor.html` | `src/telas/PerfilMonitor.jsx` | ✅ feito | Diálogos de editar e finalizar vaga em `src/telas/monitor/`; reaproveita `src/perfil/`. Revisão de código e de segurança sem pendências. O foco fica onde o usuário estava depois de trocar o mês, salvar a edição e fechar o detalhe (o original perde o foco ao redesenhar) |
 | Perfil (antigo) | `perfil.html` | — | ➖ não migrar | Legado: substituído por `perfil_aluno` e `perfil_monitor`, nenhuma tela aponta para ele. Continua em `Monipro_web` como está; remoção (e a linha do README) fica para um PR à parte |
 
 ## Componentes e módulos compartilhados
@@ -65,3 +65,4 @@ A migração mantém o comportamento do `Monipro_web`. Estes defeitos apareceram
 - **Marcar monitoria:** o campo "local" aceita 140 caracteres, mas a validação para em 120.
 - **Perfis:** no celular, o primeiro "Excluir conta" abre como modal em vez de painel (`excluir_conta.js` cria o diálogo sem `pp-painel`).
 - **Perfis:** depois de um erro ao confirmar presença, o botão fica com o texto "Confirmar presença" até a tela ser redesenhada.
+- **Perfil do monitor:** editar vaga não trata erro de rede (o botão fica em "Salvando…", mesmo ao reabrir) nem sessão expirada; "Carregar vagas mais antigas" também não trata sessão expirada.
