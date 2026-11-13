@@ -91,8 +91,8 @@ class MonitoriaRepository {
         });
     }
 
-    async cancelar(id) {
-        return await prisma.monitoria.update({
+    async cancelar(id, db = prisma) {
+        return await db.monitoria.update({
             where: { id: parseInt(id) },
             data: { status: 'cancelada' }
         });

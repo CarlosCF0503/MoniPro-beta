@@ -1,4 +1,5 @@
 const agendamentoRepository = require('../repositories/agendamentoRepository');
+const notificacaoService = require('./notificacaoService');
 const { validarAntecedenciaCancelamento } = require('../utils/validarAntecedencia');
 const { validarJanelaConfirmacao } = require('../utils/regrasConclusao');
 const {
@@ -47,10 +48,20 @@ class AgendamentoService {
 
             // Tarefa 31: a data/hora do agendamento é sempre a da vaga gravada no banco,
             // nunca a enviada pelo cliente
-            return await agendamentoRepository.criar(
+            const agendamento = await agendamentoRepository.criar(
                 { ...dados, data_hora: monitoria.horario },
                 tx
             );
+            // Plano 3: e-mail "inscrição confirmada", gravado na fila dentro da mesma transação
+            await notificacaoService.avisarInscricao(
+                {
+                    idAgendamento: agendamento.id,
+                    idAluno: dados.id_aluno,
+                    idMonitoria: dados.id_monitoria
+                },
+                tx
+            );
+            return agendamento;
         });
     }
 

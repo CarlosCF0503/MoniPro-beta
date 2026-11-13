@@ -1,6 +1,8 @@
 const request = require('supertest');
 const { gerarToken } = require('./helpers/token');
 
+// Plano 3: os avisos por e-mail têm testes próprios (tests/notificacoes.test.js)
+jest.mock('../src/services/notificacaoService');
 jest.mock('../src/config/bancoDeDados', () => ({
     usuario: {},
     monitoria: {
@@ -195,6 +197,8 @@ describe('PUT /monitorias/:id/cancelar', () => {
             id_monitor: 10,
             status: 'cancelada'
         });
+        // Plano 3: o cancelamento e o aviso aos inscritos vão na mesma transação
+        prisma.$transaction.mockImplementation((fn) => fn(prisma));
 
         const resposta = await request(app)
             .put('/monitorias/1/cancelar')

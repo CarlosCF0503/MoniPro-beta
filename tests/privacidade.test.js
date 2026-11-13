@@ -17,7 +17,8 @@ jest.mock('../src/config/bancoDeDados', () => {
         agendamento: { updateMany: jest.fn(), count: jest.fn(), deleteMany: jest.fn() },
         monitoria: { updateMany: jest.fn(), count: jest.fn(), deleteMany: jest.fn() },
         tokenRedefinicao: { count: jest.fn(), deleteMany: jest.fn() },
-        tokenConfirmacaoEmail: { count: jest.fn(), deleteMany: jest.fn() }
+        tokenConfirmacaoEmail: { count: jest.fn(), deleteMany: jest.fn() },
+        notificacao: { count: jest.fn(), deleteMany: jest.fn() }
     };
     prisma.$transaction = jest.fn((fn) => fn(prisma));
     return prisma;
@@ -43,6 +44,8 @@ beforeEach(() => {
     prisma.tokenRedefinicao.deleteMany.mockResolvedValue({ count: 0 });
     prisma.tokenConfirmacaoEmail.deleteMany.mockResolvedValue({ count: 0 });
     prisma.tokenConfirmacaoEmail.count.mockResolvedValue(0);
+    prisma.notificacao.count.mockResolvedValue(0);
+    prisma.notificacao.deleteMany.mockResolvedValue({ count: 0 });
     prisma.usuario.count.mockResolvedValue(0);
     prisma.usuario.deleteMany.mockResolvedValue({ count: 0 });
 });
@@ -212,6 +215,8 @@ describe('Rotina de retenção', () => {
         prisma.usuario.deleteMany.mockResolvedValue({ count: 3 });
         prisma.tokenConfirmacaoEmail.count.mockResolvedValue(6);
         prisma.tokenConfirmacaoEmail.deleteMany.mockResolvedValue({ count: 6 });
+        prisma.notificacao.count.mockResolvedValue(4);
+        prisma.notificacao.deleteMany.mockResolvedValue({ count: 4 });
     });
 
     it('sem --aplicar só conta: nada é alterado', async () => {
@@ -224,6 +229,7 @@ describe('Rotina de retenção', () => {
             tokens: 5,
             contasPendentes: 3,
             tokensConfirmacao: 6,
+            notificacoes: 4,
             aplicado: false
         });
         expect(prisma.usuario.update).not.toHaveBeenCalled();
@@ -265,6 +271,13 @@ describe('Rotina de retenção', () => {
         expect(prisma.tokenConfirmacaoEmail.count).toHaveBeenCalledWith({
             where: { criado_em: { lt: seteDias } }
         });
+        // Plano 3: avisos por e-mail resolvidos há mais de 90 dias
+        expect(prisma.notificacao.count).toHaveBeenCalledWith({
+            where: {
+                status: { in: ['enviada', 'falhou'] },
+                criado_em: { lt: new Date('2026-08-11T12:00:00.000Z') }
+            }
+        });
     });
 
     it('com --aplicar anonimiza cada conta parada e apaga o histórico antigo', async () => {
@@ -277,6 +290,7 @@ describe('Rotina de retenção', () => {
             tokens: 5,
             contasPendentes: 3,
             tokensConfirmacao: 6,
+            notificacoes: 4,
             aplicado: true
         });
         const anonimizadas = prisma.usuario.update.mock.calls.map(([arg]) => arg.where.id);
