@@ -1,5 +1,5 @@
 // CT-01 (RF-001): cadastrar um aluno e um monitor preenchendo os 5 campos.
-// Esperado: conta criada, aviso de sucesso e volta ao login; senha fraca recusada.
+// Esperado: conta criada, tela "Confira seu e-mail" e volta ao login; senha fraca recusada.
 const { test, expect } = require('@playwright/test');
 const { sufixo, matriculaUnica, SENHA } = require('./apoio/api');
 
@@ -36,7 +36,12 @@ for (const perfil of ['Aluno', 'Monitor']) {
 
         await preencherCadastro(page, { ...dados, senha: SENHA });
         await page.getByRole('button', { name: 'Cadastrar' }).click();
-        await expect(aviso(page)).toHaveText(/conta criada com sucesso/i);
+        // Plano 14: a tela pede para confirmar o e-mail informado. Na pilha E2E a confirmação
+        // não é exigida (EXIGIR_CONFIRMACAO_EMAIL=false); o fluxo do link é coberto pela
+        // integração com Postgres real.
+        await expect(page.getByRole('heading', { name: 'Confira seu e-mail' })).toBeVisible();
+        await expect(page.locator('#emailCadastrado')).toHaveText(dados.email);
+        await page.getByRole('link', { name: 'Ir para o login' }).click();
         await expect(page).toHaveURL(/index\.html$/, { timeout: 10000 });
 
         // A conta nova entra pelo login, no perfil em que foi criada

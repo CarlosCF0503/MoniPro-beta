@@ -22,3 +22,20 @@
 .rs-pri:hover { background: #1F4287; }
 .rs-sec { background: #fff; color: #071E3D; border: 2px solid #071E3D; }
 .rs-sec:hover { background: #e0eaff; }
+
+/* Plano 14: confirmar o e-mail (etapa do cadastro, aviso do login e confirmar_email.html) */
+.cf-acoes { width: 100%; display: grid; gap: 10px; text-align: left; }
+.cf-status { min-height: 20px; font-size: 14px; font-weight: 600; text-align: center; color: #1e7b34; }
+.cf-status[data-tipo="erro"] { color: #D8000C; }
+.cf-link { background: none; border: none; padding: 4px; font: 600 14px Inter, Arial, sans-serif; color: #1F4287; text-decoration: underline; cursor: pointer; justify-self: center; }
+.cf-link:hover { color: #071E3D; }
+.cf-corrigir { display: grid; gap: 8px; }
+.cf-rotulo { font-size: 14px; font-weight: 600; color: #071E3D; }
+.cf-corrigir .input-group { margin-bottom: 4px; }
+.cf-aviso { border: 2px solid #f0c36d; background: #fff8e6; border-radius: 10px; padding: 16px; margin-bottom: 18px; display: grid; gap: 10px; outline: none; }
+.cf-aviso:focus-visible { box-shadow: 0 0 0 3px #4a90e2; }
+.cf-titulo { font-weight: 700; color: #6b4200; font-size: 15px; margin: 0; }
+.cf-texto { color: #334155; font-size: 14px; line-height: 1.5; margin: 0; }
+.cf-carregando { width: 34px; height: 34px; border-radius: 50%; border: 4px solid #e0eaff; border-top-color: #1F4287; animation: cf-gira 0.9s linear infinite; }
+@keyframes cf-gira { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .cf-carregando { animation: none; } }

@@ -9,7 +9,10 @@ const {
     cadastroSchema,
     loginSchema,
     esqueciSenhaSchema,
-    redefinirSenhaSchema
+    redefinirSenhaSchema,
+    confirmarEmailSchema,
+    reenviarConfirmacaoSchema,
+    corrigirEmailSchema
 } = require('../schemas/autenticacaoSchemas');
 const {
     limiteTentativasAuth,
@@ -69,6 +72,48 @@ router.post(
     authLimiter,
     validarCorpo(redefinirSenhaSchema),
     autenticacaoController.redefinirSenha
+);
+
+// Plano 14 (RF-018): confirmar o e-mail. Pedir outro link tem os mesmos limites por hora do
+// "esqueci a senha" (por IP e por conta), com contadores próprios.
+const MENSAGEM_LIMITE_CONFIRMACAO = {
+    erro: 'Muitos pedidos de link de confirmação. Espere um pouco e tente de novo.'
+};
+const limiteConfirmacaoPorIp = rateLimit({
+    windowMs: UMA_HORA,
+    max: limitePedidosSenhaPorIp(),
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: MENSAGEM_LIMITE_CONFIRMACAO
+});
+const limiteConfirmacaoPorConta = rateLimit({
+    windowMs: UMA_HORA,
+    max: limitePedidosSenhaPorEmail(),
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) =>
+        `${req.body.tipo_usuario}:${String(req.body.identificador).trim().toLowerCase()}`,
+    message: MENSAGEM_LIMITE_CONFIRMACAO
+});
+router.post(
+    '/email/confirmar',
+    authLimiter,
+    validarCorpo(confirmarEmailSchema),
+    autenticacaoController.confirmarEmail
+);
+router.post(
+    '/email/reenviar',
+    limiteConfirmacaoPorIp,
+    validarCorpo(reenviarConfirmacaoSchema),
+    limiteConfirmacaoPorConta,
+    autenticacaoController.reenviarConfirmacao
+);
+// Corrigir o e-mail de uma conta pendente confere a senha: mesmo limite do login
+router.post(
+    '/email/corrigir',
+    authLimiter,
+    validarCorpo(corrigirEmailSchema),
+    autenticacaoController.corrigirEmail
 );
 
 // P3 (R7): sessão em cookie httpOnly

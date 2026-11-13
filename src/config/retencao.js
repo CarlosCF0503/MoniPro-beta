@@ -12,6 +12,10 @@ const ANOS_HISTORICO = 2;
 // Tokens de redefinição de senha (RF-008) valem 30 minutos; os registros são apagados depois disto
 const HORAS_TOKEN_REDEFINICAO = 24;
 
+// Plano 14 (RN-017): conta que não confirmou o e-mail é apagada depois disto, o que libera o
+// e-mail e a matrícula. Os tokens de confirmação (valem 48h) são apagados no mesmo prazo.
+const DIAS_CONTA_PENDENTE = 7;
+
 // Dados que substituem os pessoais numa conta anonimizada
 const NOME_ANONIMO = 'Usuário removido';
 const DOMINIO_ANONIMO = '@anonimo.invalid';
@@ -20,6 +24,7 @@ module.exports = {
     MESES_CONTA_PARADA,
     ANOS_HISTORICO,
     HORAS_TOKEN_REDEFINICAO,
+    DIAS_CONTA_PENDENTE,
     NOME_ANONIMO,
     DOMINIO_ANONIMO
 };

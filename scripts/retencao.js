@@ -2,7 +2,9 @@
 // R3 (LGPD): aplica os prazos de retenção do Aviso de Privacidade (src/config/retencao.js):
 //   - conta sem login há mais de 12 meses: anonimizada (nome, e-mail, matrícula e senha somem);
 //   - inscrições e vagas com mais de 2 anos: apagadas (os pontos ficam na conta);
-//   - links de redefinição de senha com mais de 24h: apagados (valem só 30 minutos).
+//   - links de redefinição de senha com mais de 24h: apagados (valem só 30 minutos);
+//   - contas que não confirmaram o e-mail em 7 dias: apagadas (libera e-mail e matrícula), e os
+//     links de confirmação com mais de 7 dias também (valem 48h).
 //
 // Por padrão só MOSTRA quantos registros seriam afetados. Para aplicar, use --aplicar.
 // No servidor, dentro do container do backend (usa o DATABASE_URL e o DB_CA_CERT dele):
@@ -19,7 +21,8 @@ const privacidadeService = require('../src/services/privacidadeService');
 const {
     MESES_CONTA_PARADA,
     ANOS_HISTORICO,
-    HORAS_TOKEN_REDEFINICAO
+    HORAS_TOKEN_REDEFINICAO,
+    DIAS_CONTA_PENDENTE
 } = require('../src/config/retencao');
 
 async function main() {
@@ -32,6 +35,12 @@ async function main() {
     console.log(`  vagas com mais de ${ANOS_HISTORICO} anos: ${r.vagas}`);
     console.log(
         `  links de redefinição de senha com mais de ${HORAS_TOKEN_REDEFINICAO}h: ${r.tokens}`
+    );
+    console.log(
+        `  contas sem confirmar o e-mail há mais de ${DIAS_CONTA_PENDENTE} dias: ${r.contasPendentes}`
+    );
+    console.log(
+        `  links de confirmação de e-mail com mais de ${DIAS_CONTA_PENDENTE} dias: ${r.tokensConfirmacao}`
     );
     if (!r.aplicado) console.log('Rode de novo com --aplicar para aplicar.');
 }

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- O link traz o token na URL: não repassar o endereço para outros sites -->
+    <meta name="referrer" content="no-referrer">
+    <link rel="icon" href="IMG/MoniPro-mini.png">
+    <link rel="stylesheet" href="CSS/fontes.css">
+    <link rel="stylesheet" href="CSS/legal.css">
+    <link rel="stylesheet" href="CSS/login.css">
+    <link rel="stylesheet" href="CSS/redefinir_senha.css">
+    <title>Confirmar e-mail - MoniPro</title>
+</head>
+<body>
+<main class="split-layout">
+    <section class="form-side">
+        <div class="form-container">
+            <img src="IMG/MoniPro-Logo.png" alt="Logo MoniPro" class="logo">
+
+            <!-- Plano 14 (RF-018): o link do e-mail abre esta página com ?token=... -->
+            <div id="etapa-confirmando" class="rs-caixa" tabindex="-1">
+                <div class="cf-carregando" aria-hidden="true"></div>
+                <h1 class="text1">Confirmando seu e-mail…</h1>
+                <p>Só um instante.</p>
+            </div>
+
+            <div id="etapa-confirmado" class="rs-caixa" hidden tabindex="-1">
+                <div class="rs-ico ok"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <h1 class="text1">E-mail confirmado</h1>
+                <p>Sua conta está liberada. Entre com o e-mail ou a matrícula e a senha que você criou.</p>
+                <a class="rs-pri" href="index.html">Entrar</a>
+            </div>
+
+            <!-- Link vencido, já usado, trocado por um mais novo ou adulterado -->
+            <div id="etapa-invalido" class="rs-caixa" hidden tabindex="-1">
+                <div class="rs-ico perigo"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg></div>
+                <h1 class="text1">Este link não vale mais</h1>
+                <p>O link de confirmação dura 48 horas e só funciona uma vez. Se você já confirmou, é só entrar. Se não, tente entrar: a tela de login oferece um link novo.</p>
+                <a class="rs-pri" href="index.html">Ir para o login</a>
+            </div>
+
+            <!-- Falha de rede ou do servidor: o link pode continuar valendo -->
+            <div id="etapa-erro" class="rs-caixa" hidden tabindex="-1">
+                <div class="rs-ico perigo"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4"/><path d="M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg></div>
+                <h1 class="text1">Não foi possível confirmar agora</h1>
+                <p id="mensagemErro">Não conseguimos falar com o servidor. Seu link continua valendo: tente de novo em instantes.</p>
+                <button type="button" class="rs-pri" id="tentarDeNovo">Tentar de novo</button>
+            </div>
+
+            <p class="rodape-legal"><a href="privacidade.html">Aviso de Privacidade</a></p>
+        </div>
+    </section>
+    <section class="visual-side"><div class="visual-content"><h2>Sua jornada acadêmica, mais organizada.</h2></div></section>
+</main>
+<div id="toast-container"></div>
+<script src="JS/toast.js" defer></script>
+<script src="JS/config.js"></script>
+<script src="JS/api.js" defer></script>
+<script src="JS/confirmar_email.js" defer></script>
+</body>
+</html>
