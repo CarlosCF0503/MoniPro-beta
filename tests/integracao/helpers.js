@@ -34,6 +34,8 @@ async function criarUsuario(tipo, extra = {}) {
             senha: hashPadrao,
             tipo_usuario: tipo,
             matricula: 900000 + sequencia,
+            // Plano 14: as contas de teste já nascem com o e-mail confirmado
+            email_confirmado_em: new Date(),
             ...extra
         }
     });

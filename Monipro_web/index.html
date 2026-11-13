@@ -68,6 +68,13 @@
                 <!-- MENSAGEM DE ERRO (Com sua lógica de opacidade) -->
                 <p id="erro"></p>
 
+                <!-- Plano 14 (RF-018): senha certa, mas o e-mail ainda não foi confirmado -->
+                <div id="avisoConfirmar" class="cf-aviso" hidden tabindex="-1">
+                    <p class="cf-titulo">Confirme seu e-mail para entrar</p>
+                    <p class="cf-texto">Abra o link que enviamos quando você criou a conta. Se ele venceu ou não chegou, peça outro.</p>
+                    <div id="acoesConfirmacao" class="cf-acoes"></div>
+                </div>
+
                 <!-- BOTÃO ENTRAR E LINK DE CADASTRO -->
                 <input type="submit" id="entrar" value="Acessar Sistema">
 
@@ -95,6 +102,7 @@
 <script src="JS/toast.js" defer></script>
 <script src="JS/config.js"></script>
 <script src="JS/api.js" defer></script>
+<script src="JS/confirmacao_email.js" defer></script>
 <script src="JS/login.js" defer></script>
 </body>
 </html>

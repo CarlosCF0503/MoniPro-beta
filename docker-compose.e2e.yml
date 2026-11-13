@@ -57,6 +57,9 @@ services:
       ALLOWED_ORIGINS: http://localhost:${E2E_PORTA:-8088}
       LIMITE_TENTATIVAS_AUTH: '1000'
       LIMITE_REQUISICOES_MINUTO: '10000'
+      # Plano 14: aqui não há caixa de entrada para abrir o link; o fluxo de confirmação é
+      # coberto pelos testes de integração com Postgres real
+      EXIGIR_CONFIRMACAO_EMAIL: 'false'
       SEED_AMBIENTE: local
       SEED_SENHA: senhaFicticiaE2e1 # pragma: allowlist secret
       SEED_IGNORAR_USUARIOS_REAIS: sim

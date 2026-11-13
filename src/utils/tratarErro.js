@@ -32,14 +32,19 @@ function campoDuplicado(meta) {
 
 /**
  * Mapeia erros de aplicação, do Prisma (P2xxx) e do body-parser para
- * { statusCode, mensagem, campos? }. Erros desconhecidos viram 500 com
+ * { statusCode, mensagem, campos?, codigo? }. Erros desconhecidos viram 500 com
  * mensagem genérica — nunca expõe stack trace ou mensagem técnica crua.
  * @param {Error} error
- * @returns {{ statusCode: number, mensagem: string, campos?: Object }}
+ * @returns {{ statusCode: number, mensagem: string, campos?: Object, codigo?: string }}
  */
 function tratarErro(error) {
     if (error instanceof ErroAplicacao) {
-        return { statusCode: error.statusCode, mensagem: error.message, campos: error.campos };
+        return {
+            statusCode: error.statusCode,
+            mensagem: error.message,
+            campos: error.campos,
+            codigo: error.codigo
+        };
     }
 
     // JSON malformado no corpo (express.json)

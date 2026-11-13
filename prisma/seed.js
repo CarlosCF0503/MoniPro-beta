@@ -99,7 +99,9 @@ async function main() {
             const dados = {
                 nome_completo: `${PREFIXO} ${pessoa.nome}`,
                 senha: hash,
-                matricula: pessoa.matricula
+                matricula: pessoa.matricula,
+                // Plano 14: as contas fictícias entram sem precisar abrir o link de confirmação
+                email_confirmado_em: new Date()
             };
             return prisma.usuario.upsert({
                 where: { email_tipo_usuario: { email, tipo_usuario: tipo } },

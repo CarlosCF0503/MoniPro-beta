@@ -71,7 +71,9 @@ module.exports = [
                 // Perfil do monitor (JS/perfil/): dados.js
                 PerfilDados: 'readonly',
                 // R3 (LGPD): excluir a conta (JS/perfil/excluir_conta.js)
-                PerfilExcluirConta: 'readonly'
+                PerfilExcluirConta: 'readonly',
+                // Plano 14: confirmar o e-mail (JS/confirmacao_email.js)
+                montarAcoesConfirmacao: 'readonly'
             }
         },
         rules: {

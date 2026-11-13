@@ -42,6 +42,11 @@ class PrivacidadeRepository {
         });
         // Links de redefinição de senha (RF-008) deixam de existir junto com o e-mail
         await db.tokenRedefinicao.deleteMany({ where: { id_usuario: id } });
+        // Links de confirmação de e-mail (plano 14) também
+        await db.tokenConfirmacaoEmail.deleteMany({ where: { id_usuario: id } });
+        // Avisos por e-mail (plano 3): os pendentes não saem mais, e os enviados guardam dados
+        // da conta (nome da disciplina, horário)
+        await db.notificacao.deleteMany({ where: { id_usuario: id } });
         return await db.usuario.update({
             where: { id },
             data: {
@@ -72,6 +77,43 @@ class PrivacidadeRepository {
 
     async apagarTokensAntigos(limite, db = prisma) {
         const { count } = await db.tokenRedefinicao.deleteMany({
+            where: { criado_em: { lt: limite } }
+        });
+        return count;
+    }
+
+    // Plano 14 (RN-017): conta que nunca confirmou o e-mail e foi criada antes do limite. Sem
+    // confirmação a conta não entra, então não tem inscrições nem vagas; a condição fica por
+    // garantia (a contas de antes do plano, já confirmadas na migração, nada acontece).
+    filtroContasPendentes(limite) {
+        return {
+            email_confirmado_em: null,
+            anonimizado_em: null,
+            criado_em: { lt: limite },
+            meus_agendamentos: { none: {} },
+            monitorias_criadas: { none: {} }
+        };
+    }
+
+    async contarContasPendentes(limite) {
+        return await prisma.usuario.count({ where: this.filtroContasPendentes(limite) });
+    }
+
+    // Apagar a linha libera o e-mail e a matrícula; os tokens dela saem em cascata
+    async apagarContasPendentes(limite, db = prisma) {
+        const { count } = await db.usuario.deleteMany({
+            where: this.filtroContasPendentes(limite)
+        });
+        return count;
+    }
+
+    // Tokens de confirmação de e-mail (valem 48h) mais antigos que o limite
+    async contarTokensConfirmacaoAntigos(limite) {
+        return await prisma.tokenConfirmacaoEmail.count({ where: { criado_em: { lt: limite } } });
+    }
+
+    async apagarTokensConfirmacaoAntigos(limite, db = prisma) {
+        const { count } = await db.tokenConfirmacaoEmail.deleteMany({
             where: { criado_em: { lt: limite } }
         });
         return count;
