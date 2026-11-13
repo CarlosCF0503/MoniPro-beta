@@ -81,6 +81,35 @@ const MODELOS = {
     }
 };
 
+MODELOS['confirmar-email'] = ({ nome, tipo, link, horas }) => {
+    // Plano 14 (RF-018, RN-017)
+    const ola = `Olá, ${primeiroNome(nome)}.`;
+    const pedido = `Falta só confirmar este e-mail para usar sua conta de ${nomeDoTipo(tipo)} no MoniPro.`;
+    const aviso = `O link vale por ${horas} horas e só funciona uma vez. Se não foi você quem se cadastrou, ignore este e-mail: a conta é apagada sozinha em 7 dias.`;
+    return {
+        assunto: 'Confirme seu e-mail no MoniPro',
+        texto: `${ola} ${pedido}
+
+Confirmar e-mail: ${link}
+
+${aviso}
+
+MoniPro`,
+        html: casca({
+            titulo: 'Confirme seu e-mail',
+            corpo:
+                paragrafo(`${escapar(ola)} ${escapar(pedido)}`) +
+                botao('Confirmar e-mail', link) +
+                paragrafo(escapar(aviso), `font-size:13px;color:${COR.suave}`) +
+                paragrafo(
+                    `Se o botão não funcionar, copie este endereço no navegador:<br><span style="word-break:break-all">${escapar(link)}</span>`,
+                    `font-size:12px;color:${COR.suave}`
+                ),
+            rodape: 'Este e-mail foi enviado porque alguém criou uma conta no MoniPro com este endereço.'
+        })
+    };
+};
+
 function montar(modelo, dados) {
     const gerar = MODELOS[modelo];
     if (!gerar) throw new Error(`Modelo de e-mail desconhecido: ${modelo}`);

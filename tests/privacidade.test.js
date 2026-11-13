@@ -10,11 +10,14 @@ jest.mock('../src/config/bancoDeDados', () => {
             findUnique: jest.fn(),
             findFirst: jest.fn(),
             findMany: jest.fn(),
-            update: jest.fn()
+            update: jest.fn(),
+            count: jest.fn(),
+            deleteMany: jest.fn()
         },
         agendamento: { updateMany: jest.fn(), count: jest.fn(), deleteMany: jest.fn() },
         monitoria: { updateMany: jest.fn(), count: jest.fn(), deleteMany: jest.fn() },
-        tokenRedefinicao: { count: jest.fn(), deleteMany: jest.fn() }
+        tokenRedefinicao: { count: jest.fn(), deleteMany: jest.fn() },
+        tokenConfirmacaoEmail: { count: jest.fn(), deleteMany: jest.fn() }
     };
     prisma.$transaction = jest.fn((fn) => fn(prisma));
     return prisma;
@@ -38,6 +41,10 @@ beforeEach(() => {
     prisma.monitoria.updateMany.mockResolvedValue({ count: 0 });
     prisma.usuario.update.mockResolvedValue({ id: 7 });
     prisma.tokenRedefinicao.deleteMany.mockResolvedValue({ count: 0 });
+    prisma.tokenConfirmacaoEmail.deleteMany.mockResolvedValue({ count: 0 });
+    prisma.tokenConfirmacaoEmail.count.mockResolvedValue(0);
+    prisma.usuario.count.mockResolvedValue(0);
+    prisma.usuario.deleteMany.mockResolvedValue({ count: 0 });
 });
 
 describe('DELETE /perfil — excluir a minha conta', () => {
@@ -59,6 +66,7 @@ describe('DELETE /perfil — excluir a minha conta', () => {
         prisma.usuario.findUnique.mockResolvedValue({
             id: 7,
             senha: hashSenha,
+            email_confirmado_em: new Date(),
             anonimizado_em: null
         });
 
@@ -73,6 +81,7 @@ describe('DELETE /perfil — excluir a minha conta', () => {
         prisma.usuario.findUnique.mockResolvedValue({
             id: 7,
             senha: hashSenha,
+            email_confirmado_em: new Date(),
             anonimizado_em: null
         });
 
@@ -119,6 +128,7 @@ describe('DELETE /perfil — excluir a minha conta', () => {
         prisma.usuario.findUnique.mockResolvedValue({
             id: 7,
             senha: hashSenha,
+            email_confirmado_em: new Date(),
             anonimizado_em: AGORA
         });
         const resposta = await excluir({ senha: 'senhaCerta1' });
@@ -143,6 +153,7 @@ describe('Login registra o último acesso', () => {
             nome_completo: 'Ana',
             email: 'ana@exemplo.com',
             senha: hashSenha,
+            email_confirmado_em: new Date(),
             tipo_usuario: 'aluno',
             versao_token: 0
         });
@@ -169,6 +180,7 @@ describe('Login registra o último acesso', () => {
             nome_completo: 'Ana',
             email: 'ana@exemplo.com',
             senha: hashSenha,
+            email_confirmado_em: new Date(),
             tipo_usuario: 'aluno',
             versao_token: 0
         });
@@ -196,6 +208,10 @@ describe('Rotina de retenção', () => {
         prisma.monitoria.deleteMany.mockResolvedValue({ count: 2 });
         prisma.tokenRedefinicao.count.mockResolvedValue(5);
         prisma.tokenRedefinicao.deleteMany.mockResolvedValue({ count: 5 });
+        prisma.usuario.count.mockResolvedValue(3);
+        prisma.usuario.deleteMany.mockResolvedValue({ count: 3 });
+        prisma.tokenConfirmacaoEmail.count.mockResolvedValue(6);
+        prisma.tokenConfirmacaoEmail.deleteMany.mockResolvedValue({ count: 6 });
     });
 
     it('sem --aplicar só conta: nada é alterado', async () => {
@@ -206,10 +222,14 @@ describe('Rotina de retenção', () => {
             agendamentos: 4,
             vagas: 2,
             tokens: 5,
+            contasPendentes: 3,
+            tokensConfirmacao: 6,
             aplicado: false
         });
         expect(prisma.usuario.update).not.toHaveBeenCalled();
         expect(prisma.tokenRedefinicao.deleteMany).not.toHaveBeenCalled();
+        expect(prisma.usuario.deleteMany).not.toHaveBeenCalled();
+        expect(prisma.tokenConfirmacaoEmail.deleteMany).not.toHaveBeenCalled();
         expect(prisma.agendamento.deleteMany).not.toHaveBeenCalled();
         expect(prisma.monitoria.deleteMany).not.toHaveBeenCalled();
     });
@@ -231,6 +251,20 @@ describe('Rotina de retenção', () => {
         expect(prisma.tokenRedefinicao.count).toHaveBeenCalledWith({
             where: { criado_em: { lt: new Date('2026-11-08T12:00:00.000Z') } }
         });
+        // Plano 14: conta sem confirmar o e-mail e links de confirmação, 7 dias
+        const seteDias = new Date('2026-11-02T12:00:00.000Z');
+        expect(prisma.usuario.count).toHaveBeenCalledWith({
+            where: {
+                email_confirmado_em: null,
+                anonimizado_em: null,
+                criado_em: { lt: seteDias },
+                meus_agendamentos: { none: {} },
+                monitorias_criadas: { none: {} }
+            }
+        });
+        expect(prisma.tokenConfirmacaoEmail.count).toHaveBeenCalledWith({
+            where: { criado_em: { lt: seteDias } }
+        });
     });
 
     it('com --aplicar anonimiza cada conta parada e apaga o histórico antigo', async () => {
@@ -241,6 +275,8 @@ describe('Rotina de retenção', () => {
             agendamentos: 4,
             vagas: 2,
             tokens: 5,
+            contasPendentes: 3,
+            tokensConfirmacao: 6,
             aplicado: true
         });
         const anonimizadas = prisma.usuario.update.mock.calls.map(([arg]) => arg.where.id);

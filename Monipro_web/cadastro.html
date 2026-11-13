@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="CSS/fontes.css">
     <link rel="stylesheet" href="CSS/legal.css">
     <link rel="stylesheet" href="CSS/cadastro.css">
+    <link rel="stylesheet" href="CSS/redefinir_senha.css">
 
     <title>Cadastro - MoniPro</title>
 </head>
@@ -87,6 +88,16 @@
                     <a href="index.html">Faça login</a>
                 </div>
             </form>
+
+            <!-- Plano 14 (RF-018): depois do cadastro, a conta espera a confirmação do e-mail -->
+            <div id="etapa-confira" class="rs-caixa" hidden tabindex="-1">
+                <div class="rs-ico"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></div>
+                <h1 class="text1">Confira seu e-mail</h1>
+                <p>Enviamos um link de confirmação para <strong id="emailCadastrado"></strong>. Abra o link para liberar o acesso. Ele vale por 48 horas.</p>
+                <p class="rs-dica">Não chegou? Veja a caixa de spam ou peça outro link.</p>
+                <div id="acoesConfirmacao" class="cf-acoes"></div>
+                <a class="rs-sec" href="index.html">Ir para o login</a>
+            </div>
         </div>
     </section>
 
@@ -104,6 +115,7 @@
 <script src="JS/toast.js"></script>
 <script src="JS/config.js"></script>
 <script src="JS/api.js"></script>
+<script src="JS/confirmacao_email.js"></script>
 <script src="JS/cadastro.js"></script>
 </body>
 </html>

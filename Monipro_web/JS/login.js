@@ -40,6 +40,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const aviso = document.getElementById('avisoConfirmar');
+        if (aviso) aviso.hidden = true;
+
         const btnSubmit = document.getElementById('entrar');
         btnSubmit.value = 'Aguarde...';
         btnSubmit.disabled = true;
@@ -62,6 +65,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => {
                     window.location.href = 'base.html';
                 }, 1000);
+            } else if (dados.codigo === 'email_nao_confirmado' && aviso) {
+                // Plano 14 (RF-018): só chega aqui com a senha certa
+                montarAcoesConfirmacao(document.getElementById('acoesConfirmacao'), {
+                    identificador: identificadorInput.value.trim(),
+                    senha: senhaInput.value,
+                    tipo_usuario: tipoUsuarioInput.value
+                });
+                aviso.hidden = false;
+                aviso.focus();
             } else if (typeof showToast === 'function') {
                 showToast(mensagemDaApi(dados, 'Credenciais inválidas.'), 'error', dados);
             }

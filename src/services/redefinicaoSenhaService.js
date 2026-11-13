@@ -4,15 +4,16 @@
 //   por ele: nem a mensagem nem o tempo revelam quais e-mails estão cadastrados.
 // - O token tem 32 bytes aleatórios; o banco guarda só o SHA-256. Vale 30 minutos e uma vez, e
 //   um pedido novo invalida os anteriores.
-// - Trocar a senha encerra todas as sessões abertas (versao_token).
+// - Trocar a senha encerra todas as sessões abertas (versao_token) e confirma o e-mail (plano 14).
 
-const crypto = require('node:crypto');
 const bcrypt = require('bcryptjs');
 const usuarioRepository = require('../repositories/usuarioRepository');
 const tokenRepository = require('../repositories/tokenRedefinicaoRepository');
+const tokenConfirmacaoRepository = require('../repositories/tokenConfirmacaoRepository');
 const email = require('./email');
 const { urlDoApp } = require('../config/email');
 const { ErroAplicacao } = require('../utils/erros');
+const { gerarToken, hashDoToken } = require('../utils/tokenDeUso');
 const logger = require('../utils/logger');
 
 const MINUTOS_VALIDADE = 30;
@@ -24,15 +25,13 @@ class ErroLinkInvalido extends ErroAplicacao {
     }
 }
 
-const hashDoToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
-
 class RedefinicaoSenhaService {
     async pedir(emailInformado, tipoUsuario, agora = new Date()) {
         const usuario = await usuarioRepository.buscarPorEmail(emailInformado, tipoUsuario);
         // Conta anonimizada (R3) não recebe link: o e-mail dela não existe mais
         if (!usuario || usuario.anonimizado_em) return;
 
-        const token = crypto.randomBytes(32).toString('base64url');
+        const token = gerarToken();
         const expiraEm = new Date(agora.getTime() + MINUTOS_VALIDADE * 60 * 1000);
         await tokenRepository.emTransacao(async (tx) => {
             await tokenRepository.invalidarAbertos(usuario.id, agora, tx);
@@ -62,6 +61,9 @@ class RedefinicaoSenhaService {
             const id = await tokenRepository.consumir(hashDoToken(token), agora, tx);
             if (!id) throw new ErroLinkInvalido();
             await tokenRepository.trocarSenha(id, hashSenha, tx);
+            // Plano 14 (RN-009 ajustada): abrir o link do e-mail prova que a pessoa tem acesso a
+            // ele, então também confirma o e-mail de uma conta pendente
+            await tokenConfirmacaoRepository.marcarConfirmado(id, agora, tx);
             return id;
         });
         logger.info({ id: idUsuario }, 'Senha redefinida pelo link');

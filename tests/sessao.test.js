@@ -40,6 +40,7 @@ describe('POST /auth/login — cookie de sessão', () => {
             nome_completo: 'Ana Aluna',
             email: 'ana@exemplo.com',
             senha: hash,
+            email_confirmado_em: new Date(),
             tipo_usuario: 'aluno',
             versao_token: 3
         });

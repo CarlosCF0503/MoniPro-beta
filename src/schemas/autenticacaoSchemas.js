@@ -58,4 +58,36 @@ const redefinirSenhaSchema = z.object({
     senha: senhaForte
 });
 
-module.exports = { cadastroSchema, loginSchema, esqueciSenhaSchema, redefinirSenhaSchema };
+// Plano 14 (RF-018): token do link de confirmação, no mesmo formato do de redefinição
+const confirmarEmailSchema = z.object({
+    token: z
+        .string({ error: 'O link de confirmação está incompleto.' })
+        .trim()
+        .min(20, 'O link de confirmação está incompleto.')
+        .max(200, 'O link de confirmação está incompleto.')
+});
+
+// Plano 14 (RF-018): pedir outro link de confirmação, pelo e-mail ou pela matrícula (a tela
+// de login aceita os dois). A resposta é a mesma exista a conta ou não.
+const reenviarConfirmacaoSchema = z.object({
+    identificador: loginSchema.shape.identificador,
+    tipo_usuario: tipoUsuario
+});
+
+// Plano 14: corrigir o e-mail digitado errado no cadastro. Exige a senha da conta.
+const corrigirEmailSchema = z.object({
+    identificador: loginSchema.shape.identificador,
+    senha: loginSchema.shape.senha,
+    tipo_usuario: tipoUsuario,
+    email_novo: cadastroSchema.shape.email
+});
+
+module.exports = {
+    cadastroSchema,
+    loginSchema,
+    esqueciSenhaSchema,
+    redefinirSenhaSchema,
+    confirmarEmailSchema,
+    reenviarConfirmacaoSchema,
+    corrigirEmailSchema
+};

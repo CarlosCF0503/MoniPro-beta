@@ -9,7 +9,7 @@ process.env.LIMITE_PEDIDOS_SENHA_IP = '1000';
 process.env.LIMITE_TENTATIVAS_AUTH = '1000';
 
 jest.mock('../src/config/bancoDeDados', () => ({
-    usuario: { findFirst: jest.fn(), update: jest.fn() },
+    usuario: { findFirst: jest.fn(), update: jest.fn(), updateMany: jest.fn() },
     tokenRedefinicao: { updateMany: jest.fn(), create: jest.fn(), findUnique: jest.fn() },
     monitoria: {},
     agendamento: {},

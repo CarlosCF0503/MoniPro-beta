@@ -63,6 +63,7 @@ describe('POST /auth/login', () => {
             nome_completo: 'Ana Aluna',
             email: 'ana@exemplo.com',
             senha: hash,
+            email_confirmado_em: new Date(),
             tipo_usuario: 'aluno'
         });
 
@@ -83,6 +84,7 @@ describe('POST /auth/login', () => {
             nome_completo: 'Ana Aluna',
             email: 'ana@exemplo.com',
             senha: hash,
+            email_confirmado_em: new Date(),
             tipo_usuario: 'aluno'
         });
 
@@ -123,6 +125,7 @@ describe('POST /auth/login — sem enumeração de usuários e sem dado pessoal 
         prisma.usuario.findFirst.mockResolvedValueOnce({
             id: 1,
             senha: hash,
+            email_confirmado_em: new Date(),
             tipo_usuario: 'aluno'
         });
         const senhaErrada = await login('ana@exemplo.com');
@@ -130,6 +133,7 @@ describe('POST /auth/login — sem enumeração de usuários e sem dado pessoal 
         prisma.usuario.findFirst.mockResolvedValueOnce({
             id: 1,
             senha: hash,
+            email_confirmado_em: new Date(),
             tipo_usuario: 'monitor'
         });
         const perfilErrado = await login('ana@exemplo.com', 'senhaCorreta');
@@ -220,7 +224,11 @@ describe('POST /auth/cadastro — RN-006 (perfis separados)', () => {
     });
 
     it('retorna 409 para e-mail repetido no mesmo perfil', async () => {
-        prisma.usuario.findFirst.mockResolvedValueOnce({ id: 1, tipo_usuario: 'monitor' });
+        prisma.usuario.findFirst.mockResolvedValueOnce({
+            id: 1,
+            tipo_usuario: 'monitor',
+            email_confirmado_em: new Date()
+        });
 
         const resposta = await request(app).post('/auth/cadastro').send(dados());
 
@@ -230,9 +238,11 @@ describe('POST /auth/cadastro — RN-006 (perfis separados)', () => {
     });
 
     it('retorna 409 para matrícula repetida no mesmo perfil', async () => {
-        prisma.usuario.findFirst
-            .mockResolvedValueOnce(null)
-            .mockResolvedValueOnce({ id: 1, tipo_usuario: 'aluno' });
+        prisma.usuario.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({
+            id: 1,
+            tipo_usuario: 'aluno',
+            email_confirmado_em: new Date()
+        });
 
         const resposta = await request(app)
             .post('/auth/cadastro')
