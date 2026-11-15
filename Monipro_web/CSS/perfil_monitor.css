@@ -1609,3 +1609,43 @@
     outline: 3px solid var(--navy-2);
     outline-offset: 1px;
 }
+
+/* Plano 5: extrato de pontos no perfil do aluno */
+.pagina-perfil .ext { display: flex; flex-direction: column; gap: 10px; }
+.pagina-perfil .ext-pos { background: var(--soft); border-radius: 12px; padding: 10px 12px; font-size: 13px; color: var(--slate-ink); }
+.pagina-perfil .ext-pos b { color: var(--navy); }
+.pagina-perfil .ext-lista { list-style: none; display: flex; flex-direction: column; }
+.pagina-perfil .ext-lista li { display: grid; grid-template-columns: 1fr auto; gap: 0 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.pagina-perfil .ext-lista li:last-child { border-bottom: 0; }
+.pagina-perfil .ext-lista .t { font-size: 14px; font-weight: 600; }
+.pagina-perfil .ext-lista small { grid-column: 1; font-size: 12px; color: var(--slate); }
+.pagina-perfil .ext-lista .p { grid-row: 1 / span 2; grid-column: 2; align-self: center; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--ok); }
+.pagina-perfil .ext-lista .p.zero { color: var(--slate); }
+.pagina-perfil .ext-lista .p.neg { color: var(--bad); }
+.pagina-perfil .ext-link { display: inline-block; font-size: 13px; font-weight: 700; color: var(--navy-2); margin-top: 6px; }
+.pagina-perfil .ext-como { font-size: 12px; color: var(--slate); }
+
+/* Plano 5: ranking de monitores (ranking.html) */
+.rk .rk-desk { max-width: 860px; }
+.rk .pp-voltar::before { content: '‹'; font-size: 18px; margin-right: 4px; }
+.rk .rk-filtro { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.rk .rk-filtro label { font-weight: 700; font-size: 14px; }
+.rk .rk-filtro select { min-height: 44px; padding: 0 12px; border: 1.5px solid var(--line-2); border-radius: 10px; font: inherit; color: var(--navy); background: var(--white); min-width: 220px; max-width: 100%; }
+.rk .rk-filtro select:focus-visible { outline: 3px solid var(--navy-2); outline-offset: 1px; }
+.rk .rk-cartao { padding: 18px 20px 8px; }
+.rk .rk-cartao h2 { font-size: 17px; margin-bottom: 12px; }
+.rk .rk-lista { list-style: none; display: flex; flex-direction: column; }
+.rk .rk-item { display: grid; grid-template-columns: 44px 40px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.rk .rk-item:last-child { border-bottom: 0; }
+.rk .rk-pos { font-size: 18px; font-weight: 800; color: var(--slate); text-align: center; font-variant-numeric: tabular-nums; }
+.rk .rk-item.top .rk-pos { color: var(--navy); }
+.rk .rk-item.top .rk-pos span { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--warn-soft); color: var(--warn-ink); }
+.rk .rk-av { width: 40px; height: 40px; font-size: 14px; }
+.rk .rk-nome b { display: block; font-size: 15px; }
+.rk .rk-nome small { font-size: 12px; color: var(--slate); }
+.rk .rk-pts { font-weight: 800; font-size: 16px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rk .rk-pts small { font-weight: 600; font-size: 12px; color: var(--slate); }
+.rk .rk-voce { background: var(--soft); border-radius: 10px; padding: 12px 8px; }
+.rk .rk-nota { font-size: 13px; color: var(--slate); margin-top: 14px; max-width: 70ch; }
+.rk .rk-vazio { color: var(--slate); font-size: 14px; padding: 8px 0; }
+@media (max-width: 699px) { .rk .rk-desk { padding-top: 16px; } .rk .rk-item { grid-template-columns: 32px 36px minmax(0, 1fr) auto; gap: 8px; } }
