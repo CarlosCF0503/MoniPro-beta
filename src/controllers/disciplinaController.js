@@ -23,6 +23,7 @@ exports.obterRanking = async (req, res) => {
         throw new ErroValidacao('ID de disciplina inválido.', { id: 'ID de disciplina inválido.' });
     }
 
-    const ranking = await disciplinaService.obterRanking(idDisciplina);
-    return res.status(200).json({ success: true, ranking });
+    // Plano 5: só monitores, pontos da disciplina no semestre atual
+    const { periodo, ranking } = await disciplinaService.obterRanking(idDisciplina, req.usuario.id);
+    return res.status(200).json({ success: true, periodo, ranking });
 };

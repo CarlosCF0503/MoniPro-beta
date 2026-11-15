@@ -13,6 +13,7 @@ jest.mock('../src/config/bancoDeDados', () => ({
 
 const prisma = require('../src/config/bancoDeDados');
 const app = require('../src/app');
+const pontuacaoService = require('../src/services/pontuacaoService');
 
 const tokenAluno = gerarToken({ id: 20, tipo: 'aluno' });
 const tokenMonitor = gerarToken({ id: 30, tipo: 'monitor' });
@@ -196,50 +197,41 @@ describe('GET /disciplinas/:id/ranking', () => {
         expect(prisma.usuario.findMany).not.toHaveBeenCalled();
     });
 
-    it('devolve lista vazia quando ninguém concluiu monitoria na disciplina', async () => {
-        const resposta = await ranking();
+    // Plano 5: as regras do ranking (só monitores, por disciplina e semestre) estão em
+    // tests/pontos.test.js e na integração; aqui, a rota passa o pedido e devolve o resultado
+    it('devolve o ranking do semestre e marca quem está vendo', async () => {
+        const espiao = jest.spyOn(pontuacaoService, 'ranking').mockResolvedValue({
+            periodo: '2026.2',
+            ranking: [
+                {
+                    posicao: 1,
+                    nome: 'Ana Ribeiro',
+                    pontos: 20,
+                    sessoes: 2,
+                    minutos: 120,
+                    voce: false
+                }
+            ]
+        });
+
+        const resposta = await ranking(1);
 
         expect(resposta.status).toBe(200);
-        expect(resposta.body).toEqual({ success: true, ranking: [] });
-    });
-
-    it('devolve os alunos na ordem que o banco retorna', async () => {
-        const alunos = [
-            { id: 3, nome_completo: 'Carla', pontos: 30 },
-            { id: 1, nome_completo: 'Ana', pontos: 10 },
-            { id: 2, nome_completo: 'Bruno', pontos: 10 }
-        ];
-        prisma.usuario.findMany.mockResolvedValue(alunos);
-
-        const resposta = await ranking();
-
-        expect(resposta.body.ranking).toEqual(alunos);
-    });
-
-    it('considera só alunos com monitoria concluída na disciplina pedida', async () => {
-        await ranking(7);
-
-        const { where } = prisma.usuario.findMany.mock.calls[0][0];
-        expect(where).toEqual({
-            tipo_usuario: 'aluno',
-            meus_agendamentos: {
-                some: { status: 'concluido', monitoria: { id_disciplina: 7 } }
-            }
+        expect(resposta.body).toEqual({
+            success: true,
+            periodo: '2026.2',
+            ranking: [
+                {
+                    posicao: 1,
+                    nome: 'Ana Ribeiro',
+                    pontos: 20,
+                    sessoes: 2,
+                    minutos: 120,
+                    voce: false
+                }
+            ]
         });
-    });
-
-    it('ordena por pontos e desempata pelo nome, limitado aos 10 primeiros', async () => {
-        await ranking();
-
-        const consulta = prisma.usuario.findMany.mock.calls[0][0];
-        expect(consulta.orderBy).toEqual([{ pontos: 'desc' }, { nome_completo: 'asc' }]);
-        expect(consulta.take).toBe(10);
-    });
-
-    it('não expõe e-mail, matrícula nem senha', async () => {
-        await ranking();
-
-        const { select } = prisma.usuario.findMany.mock.calls[0][0];
-        expect(select).toEqual({ id: true, nome_completo: true, pontos: true });
+        expect(espiao).toHaveBeenCalledWith(1, expect.any(Number));
+        espiao.mockRestore();
     });
 });
