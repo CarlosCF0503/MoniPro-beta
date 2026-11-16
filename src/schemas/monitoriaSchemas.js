@@ -2,6 +2,7 @@
 // Tarefa 9: validação da criação de vaga de monitoria.
 const { z } = require('zod');
 const { textoObrigatorio, inteiroPositivo, dataHoraIso, INT_MAXIMO } = require('./comuns');
+const { MINUTOS_TOLERANCIA_RELOGIO } = require('../utils/regrasConclusao');
 
 const MENSAGEM_CAPACIDADE = 'A capacidade da vaga deve ser um número inteiro maior ou igual a 1.';
 
@@ -10,10 +11,15 @@ const criarMonitoriaSchema = z.object({
         obrigatorio: 'A disciplina é obrigatória.',
         invalido: 'A disciplina informada é inválida.'
     }),
+    // R14: vaga só no futuro. Sem isso, duas contas combinadas criariam uma sessão já
+    // "realizada" e forjariam pontos e horas de certificado. A conta é feita a cada pedido.
     horario: dataHoraIso({
         obrigatorio: 'O horário é obrigatório.',
         invalido: 'O horário deve ser uma data/hora ISO 8601 (ex.: 2026-09-10T14:00:00.000Z).'
-    }),
+    }).refine(
+        (valor) => new Date(valor).getTime() > Date.now() - MINUTOS_TOLERANCIA_RELOGIO * 60000,
+        'Escolha um dia e horário que ainda não passaram.'
+    ),
     local: textoObrigatorio('O local é obrigatório.', 120),
     descricao: z
         .string('A descrição deve ser um texto.')

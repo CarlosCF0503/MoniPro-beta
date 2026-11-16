@@ -27,7 +27,8 @@ const tokenAluno = gerarToken({ id: 20, tipo: 'aluno' });
 
 const dadosVaga = {
     id_disciplina: 1,
-    horario: '2026-09-10T14:00:00.000Z',
+    // R14: a vaga precisa estar no futuro; data relativa para o teste não vencer
+    horario: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
     local: 'Sala 12'
 };
 
