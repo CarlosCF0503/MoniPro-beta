@@ -16,7 +16,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const iniciais = (n) =>
         n
             .split(/\s+/)
-            .filter(Boolean)
+            // Só palavras que começam com letra: "[TESTE] Ana" vira "AN", não "[A"
+            .filter((p) => /^\p{L}/u.test(p))
             .slice(0, 2)
             .map((p) => p[0])
             .join('')
