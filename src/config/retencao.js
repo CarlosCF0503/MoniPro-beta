@@ -16,6 +16,9 @@ const HORAS_TOKEN_REDEFINICAO = 24;
 // e-mail e a matrícula. Os tokens de confirmação (valem 48h) são apagados no mesmo prazo.
 const DIAS_CONTA_PENDENTE = 7;
 
+// Plano 3: avisos por e-mail já enviados (ou desistidos) são apagados depois disto
+const DIAS_NOTIFICACOES = 90;
+
 // Dados que substituem os pessoais numa conta anonimizada
 const NOME_ANONIMO = 'Usuário removido';
 const DOMINIO_ANONIMO = '@anonimo.invalid';
@@ -25,6 +28,7 @@ module.exports = {
     ANOS_HISTORICO,
     HORAS_TOKEN_REDEFINICAO,
     DIAS_CONTA_PENDENTE,
+    DIAS_NOTIFICACOES,
     NOME_ANONIMO,
     DOMINIO_ANONIMO
 };

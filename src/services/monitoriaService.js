@@ -1,5 +1,6 @@
 // src/services/monitoriaService.js
 const monitoriaRepository = require('../repositories/monitoriaRepository');
+const notificacaoService = require('./notificacaoService');
 const {
     validarAntecedenciaCancelamento,
     HORAS_MINIMAS_CANCELAMENTO
@@ -97,7 +98,13 @@ class MonitoriaService {
             throw new ErroNaoAutorizado('Você não tem permissão para cancelar esta vaga.');
         }
         validarAntecedenciaCancelamento(monitoria.horario);
-        return await monitoriaRepository.cancelar(id);
+        // Plano 3: cada inscrito recebe o e-mail "vaga cancelada"; o aviso entra na fila junto
+        // com o cancelamento
+        return await monitoriaRepository.emTransacao(async (tx) => {
+            const cancelada = await monitoriaRepository.cancelar(id, tx);
+            await notificacaoService.avisarCancelamento(id, tx);
+            return cancelada;
+        });
     }
 
     // Finalização pelo monitor: marca a vaga como realizada e registra a data/hora de término.
@@ -194,6 +201,13 @@ class MonitoriaService {
                     },
                     tx
                 );
+                // Plano 3: e-mail "vaga alterada" para cada inscrito, com o antes e o depois
+                await notificacaoService.avisarAlteracao(
+                    id,
+                    { horario: new Date(vaga.horario), local: vaga.local },
+                    agora,
+                    tx
+                );
             }
             return { monitoria, alterouQuandoOuOnde, inscritos };
         });
@@ -208,7 +222,6 @@ class MonitoriaService {
             },
             'Vaga de monitoria editada'
         );
-        // O e-mail "vaga alterada" para os inscritos entra com o plano 3 (notificações)
         return resultado;
     }
 

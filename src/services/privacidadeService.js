@@ -5,11 +5,13 @@
 const crypto = require('node:crypto');
 const bcrypt = require('bcryptjs');
 const privacidadeRepository = require('../repositories/privacidadeRepository');
+const notificacaoRepository = require('../repositories/notificacaoRepository');
 const {
     MESES_CONTA_PARADA,
     ANOS_HISTORICO,
     HORAS_TOKEN_REDEFINICAO,
-    DIAS_CONTA_PENDENTE
+    DIAS_CONTA_PENDENTE,
+    DIAS_NOTIFICACOES
 } = require('../config/retencao');
 const { ErroValidacao, ErroNaoEncontrado } = require('../utils/erros');
 
@@ -46,7 +48,7 @@ class PrivacidadeService {
     /**
      * Aplica os prazos de retenção. Sem `aplicar`, só conta o que seria feito.
      * @returns {Promise<{contasParadas:number, agendamentos:number, vagas:number, tokens:number,
-     *   contasPendentes:number, tokensConfirmacao:number, aplicado:boolean}>}
+     *   contasPendentes:number, tokensConfirmacao:number, notificacoes:number, aplicado:boolean}>}
      */
     async aplicarRetencao({ aplicar = false, agora = new Date() } = {}) {
         const limiteConta = mesesAtras(agora, MESES_CONTA_PARADA);
@@ -54,6 +56,9 @@ class PrivacidadeService {
         const limiteTokens = new Date(agora.getTime() - HORAS_TOKEN_REDEFINICAO * 60 * 60 * 1000);
         const limitePendente = new Date(
             agora.getTime() - DIAS_CONTA_PENDENTE * 24 * 60 * 60 * 1000
+        );
+        const limiteNotificacoes = new Date(
+            agora.getTime() - DIAS_NOTIFICACOES * 24 * 60 * 60 * 1000
         );
 
         const contas = await privacidadeRepository.buscarContasParadas(limiteConta);
@@ -64,12 +69,14 @@ class PrivacidadeService {
                 await privacidadeRepository.contarContasPendentes(limitePendente);
             const tokensConfirmacao =
                 await privacidadeRepository.contarTokensConfirmacaoAntigos(limitePendente);
+            const notificacoes = await notificacaoRepository.contarAntigas(limiteNotificacoes);
             return {
                 contasParadas: contas.length,
                 ...antigo,
                 tokens,
                 contasPendentes,
                 tokensConfirmacao,
+                notificacoes,
                 aplicado: false
             };
         }
@@ -89,12 +96,14 @@ class PrivacidadeService {
         const contasPendentes = await privacidadeRepository.apagarContasPendentes(limitePendente);
         const tokensConfirmacao =
             await privacidadeRepository.apagarTokensConfirmacaoAntigos(limitePendente);
+        const notificacoes = await notificacaoRepository.apagarAntigas(limiteNotificacoes);
         return {
             contasParadas: contas.length,
             ...apagado,
             tokens,
             contasPendentes,
             tokensConfirmacao,
+            notificacoes,
             aplicado: true
         };
     }

@@ -44,6 +44,9 @@ class PrivacidadeRepository {
         await db.tokenRedefinicao.deleteMany({ where: { id_usuario: id } });
         // Links de confirmação de e-mail (plano 14) também
         await db.tokenConfirmacaoEmail.deleteMany({ where: { id_usuario: id } });
+        // Avisos por e-mail (plano 3): os pendentes não saem mais, e os enviados guardam dados
+        // da conta (nome da disciplina, horário)
+        await db.notificacao.deleteMany({ where: { id_usuario: id } });
         return await db.usuario.update({
             where: { id },
             data: {
