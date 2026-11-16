@@ -1,7 +1,6 @@
 // src/repositories/agendamentoRepository.js
 
 const prisma = require('../config/bancoDeDados');
-const { PONTOS_MONITOR, PONTOS_ALUNO } = require('../utils/regrasConclusao');
 
 class AgendamentoRepository {
     // Executa `fn` dentro de uma transação interativa. `fn` recebe o cliente da transação (tx),
@@ -96,7 +95,7 @@ class AgendamentoRepository {
         const linhas = await db.$queryRaw`
             SELECT a."id", a."id_aluno", a."status"::text AS "status",
                    a."presenca_aluno_em", a."presenca_monitor_em",
-                   m."id_monitor", m."horario", m."status"::text AS "status_vaga"
+                   m."id_monitor", m."id_disciplina", m."horario", m."status"::text AS "status_vaga"
             FROM "agendamentos" a
             JOIN "monitorias" m ON m."id" = a."id_monitoria"
             WHERE a."id" = ${parseInt(id)}
@@ -110,18 +109,6 @@ class AgendamentoRepository {
         return await db.agendamento.update({
             where: { id: parseInt(id) },
             data: { [campo]: quando, ...(concluir ? { status: 'concluido' } : {}) }
-        });
-    }
-
-    // D1: +10 para o monitor e +2 para o aluno quando a presença é confirmada pelos dois
-    async creditarPontos(idMonitor, idAluno, db = prisma) {
-        await db.usuario.update({
-            where: { id: idMonitor },
-            data: { pontos: { increment: PONTOS_MONITOR } }
-        });
-        await db.usuario.update({
-            where: { id: idAluno },
-            data: { pontos: { increment: PONTOS_ALUNO } }
         });
     }
 }

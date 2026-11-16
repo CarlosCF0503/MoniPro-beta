@@ -22,29 +22,6 @@ class DisciplinaRepository {
             select: { id: true, nome: true }
         });
     }
-
-    // Só id, nome e pontos: o ranking é visto por qualquer usuário logado e não pode
-    // expor e-mail nem matrícula. Empate em pontos é desfeito pelo nome.
-    async buscarRankingPorDisciplina(idDisciplina) {
-        return await prisma.usuario.findMany({
-            where: {
-                tipo_usuario: 'aluno',
-                meus_agendamentos: {
-                    some: {
-                        status: 'concluido',
-                        monitoria: { id_disciplina: idDisciplina }
-                    }
-                }
-            },
-            select: {
-                id: true,
-                nome_completo: true,
-                pontos: true
-            },
-            orderBy: [{ pontos: 'desc' }, { nome_completo: 'asc' }],
-            take: 10
-        });
-    }
 }
 
 module.exports = new DisciplinaRepository();

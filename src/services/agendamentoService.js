@@ -1,5 +1,6 @@
 const agendamentoRepository = require('../repositories/agendamentoRepository');
 const notificacaoService = require('./notificacaoService');
+const pontuacaoService = require('./pontuacaoService');
 const { validarAntecedenciaCancelamento } = require('../utils/validarAntecedencia');
 const { validarJanelaConfirmacao } = require('../utils/regrasConclusao');
 const {
@@ -138,8 +139,17 @@ class AgendamentoService {
                 concluiu,
                 tx
             );
+            // Plano 5: os pontos entram como eventos (extrato e ranking por disciplina)
             if (concluiu)
-                await agendamentoRepository.creditarPontos(ag.id_monitor, ag.id_aluno, tx);
+                await pontuacaoService.creditarPresenca(
+                    {
+                        idAgendamento: ag.id,
+                        idMonitor: ag.id_monitor,
+                        idAluno: ag.id_aluno,
+                        idDisciplina: ag.id_disciplina
+                    },
+                    tx
+                );
             return { agendamento, concluiu };
         });
     }

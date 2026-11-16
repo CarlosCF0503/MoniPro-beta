@@ -49,6 +49,7 @@ model Usuario {
   tokens_redefinicao TokenRedefinicao[]
   tokens_confirmacao TokenConfirmacaoEmail[]
   notificacoes       Notificacao[]
+  eventos_pontuacao  EventoPontuacao[]
 
   @@unique([email, tipo_usuario])
   @@unique([matricula, tipo_usuario])
@@ -59,6 +60,7 @@ model Disciplina {
   id         Int         @id @default(autoincrement())
   nome       String      @unique
   monitorias Monitoria[]
+  eventos_pontuacao EventoPontuacao[]
 
   @@map("disciplinas")
 }
@@ -164,4 +166,31 @@ model Notificacao {
   @@index([status, enviar_apos])
   @@index([id_usuario])
   @@map("notificacoes")
+}
+
+// Plano 5 (RN-008 revisada, RF-011): cada ganho de pontos vira um evento com disciplina, motivo e
+// semestre. Usuario.pontos continua como saldo pronto (cache), atualizado na mesma transação.
+enum TipoEventoPontuacao {
+  presenca_aluno
+  sessao_monitor
+  saldo_inicial
+  estorno
+}
+
+model EventoPontuacao {
+  id             Int                 @id @default(autoincrement())
+  id_usuario     Int
+  usuario        Usuario             @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
+  tipo           TipoEventoPontuacao
+  pontos         Int
+  id_disciplina  Int?
+  disciplina     Disciplina?         @relation(fields: [id_disciplina], references: [id], onDelete: SetNull)
+  id_agendamento Int?                // origem do ponto; sem chave estrangeira, porque a retenção apaga inscrições antigas
+  periodo        String              // semestre: "2026.1" (jan–jun) ou "2026.2" (jul–dez)
+  chave          String              @unique // ex.: "presenca_aluno:agendamento:42" (o mesmo ponto nunca entra duas vezes)
+  criado_em      DateTime            @default(now())
+
+  @@index([id_usuario])
+  @@index([id_disciplina, periodo])
+  @@map("eventos_pontuacao")
 }
