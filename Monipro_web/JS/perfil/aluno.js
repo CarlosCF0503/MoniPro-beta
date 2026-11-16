@@ -181,16 +181,81 @@ document.addEventListener('DOMContentLoaded', async () => {
             ' pontos</span>'
         );
     }
+    // Plano 5 (RF-011): extrato dos pontos (GET /pontos/extrato). Cada linha é um evento; a
+    // posição na disciplina em que mais pontuou só aparece para o próprio aluno.
+    const dataCurta = (iso) =>
+        new Date(iso).toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            timeZone: 'America/Sao_Paulo'
+        });
     function comoGanharHTML() {
-        return (
-            '<div class="cert-vazio">' +
-            icone('moeda', 22) +
-            '<p><strong>Como ganhar pontos</strong>Depois de cada monitoria, confirme a sua presença aqui. Quando o monitor também confirmar, você ganha +' +
+        const como =
+            '<p class="ext-como">Você ganha +' +
             D.PONTOS_ALUNO +
-            ' pontos. O prazo é de ' +
+            ' por presença confirmada pelos dois lados, até ' +
             D.DIAS_CONFIRMACAO +
-            ' dias.</p></div>'
+            ' dias depois da monitoria.</p>';
+        const ex = S.extrato;
+        if (!ex) return '<div class="pp-esqueleto" aria-hidden="true"><span></span></div>';
+        if (ex.erro || !ex.eventos.length)
+            return (
+                '<div class="cert-vazio">' +
+                icone('moeda', 22) +
+                '<p><strong>Como ganhar pontos</strong>Depois de cada monitoria, confirme a sua presença aqui. Quando o monitor também confirmar, você ganha +' +
+                D.PONTOS_ALUNO +
+                ' pontos. O prazo é de ' +
+                D.DIAS_CONFIRMACAO +
+                ' dias.</p></div>' +
+                '<a class="ext-link" href="ranking.html">Ver ranking de monitores</a>'
+            );
+        const linhas = ex.eventos
+            .map((e) => {
+                let classe = ' zero';
+                if (e.pontos > 0) classe = '';
+                else if (e.pontos < 0) classe = ' neg';
+                return (
+                    '<li><span class="t">' +
+                    esc(e.texto) +
+                    '</span><span class="p' +
+                    classe +
+                    '">' +
+                    (e.pontos > 0 ? '+' : '') +
+                    esc(e.pontos) +
+                    '</span><small>' +
+                    esc(e.disciplina ? e.disciplina + ' · ' : '') +
+                    esc(dataCurta(e.data)) +
+                    '</small></li>'
+                );
+            })
+            .join('');
+        return (
+            '<div class="ext">' +
+            (ex.posicao
+                ? '<p class="ext-pos">Em <b>' +
+                  esc(ex.posicao.disciplina) +
+                  '</b>, você está em <b>' +
+                  esc(ex.posicao.lugar) +
+                  'º</b> de ' +
+                  esc(ex.posicao.total) +
+                  (ex.posicao.total === 1 ? ' aluno' : ' alunos') +
+                  ' neste semestre. Só você vê a sua posição.</p>'
+                : '') +
+            '<ul class="ext-lista" aria-label="Extrato de pontos">' +
+            linhas +
+            '</ul>' +
+            como +
+            '<a class="ext-link" href="ranking.html">Ver ranking de monitores</a></div>'
         );
+    }
+    async function carregarExtrato() {
+        try {
+            const r = await chamadaApi('/pontos/extrato');
+            S.extrato = r.success ? r : { erro: true, eventos: [] };
+        } catch {
+            S.extrato = { erro: true, eventos: [] };
+        }
+        render();
     }
     function estadoHTML() {
         if (S.carregando)
@@ -524,7 +589,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return (
             '<div class="cel-topo"><h1>Pontos</h1></div><div class="cel-corpo">' +
             topo +
-            '<h2 class="lc-secao">Como ganhar pontos</h2>' +
+            '<h2 class="lc-secao">Extrato de pontos</h2>' +
             comoGanharHTML() +
             '</div>'
         );
@@ -630,6 +695,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         S.carregando = false;
         render();
+        // O extrato vem à parte: se falhar, o resto do perfil continua funcionando
+        carregarExtrato();
     }
 
     // --- 9. Diálogos ---
@@ -714,6 +781,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (dados.concluido) {
                 i.status = 'concluido';
                 if (S.usuario) S.usuario.pontos = (Number(S.usuario.pontos) || 0) + D.PONTOS_ALUNO;
+                carregarExtrato();
             }
             render();
             if (noDialogo) {

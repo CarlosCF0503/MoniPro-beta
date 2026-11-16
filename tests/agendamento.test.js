@@ -5,6 +5,7 @@ const { gerarToken } = require('./helpers/token');
 jest.mock('../src/services/notificacaoService');
 jest.mock('../src/config/bancoDeDados', () => ({
     usuario: { update: jest.fn() },
+    eventoPontuacao: { createMany: jest.fn() },
     monitoria: {},
     $transaction: jest.fn(),
     $queryRaw: jest.fn(),
@@ -273,6 +274,7 @@ describe('Presença confirmada pelos dois lados (P2: aluno e monitor)', () => {
         jest.clearAllMocks();
         prisma.$transaction.mockImplementation((fn) => fn(prisma));
         prisma.agendamento.update.mockImplementation(async ({ data }) => ({ id: 1, ...data }));
+        prisma.eventoPontuacao.createMany.mockResolvedValue({ count: 1 });
     });
 
     describe('autorização', () => {
@@ -408,6 +410,23 @@ describe('Presença confirmada pelos dois lados (P2: aluno e monitor)', () => {
                 where: { id: 20 },
                 data: { pontos: { increment: 2 } }
             });
+            // Plano 5: cada crédito vira um evento com chave única por inscrição
+            const chaves = prisma.eventoPontuacao.createMany.mock.calls.map(
+                ([arg]) => arg.data[0].chave
+            );
+            expect(chaves).toEqual([
+                'sessao_monitor:agendamento:1',
+                'presenca_aluno:agendamento:1'
+            ]);
+        });
+
+        it('evento repetido (mesma chave) não soma pontos de novo', async () => {
+            prisma.$queryRaw.mockResolvedValue([linha({ presenca_aluno_em: new Date() })]);
+            prisma.eventoPontuacao.createMany.mockResolvedValue({ count: 0 });
+
+            await peloMonitor();
+
+            expect(prisma.usuario.update).not.toHaveBeenCalled();
         });
 
         it('o aluno confirmando depois do monitor também conclui e credita', async () => {

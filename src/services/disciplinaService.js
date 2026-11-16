@@ -1,5 +1,6 @@
 // src/services/disciplinaService.js
 const disciplinaRepository = require('../repositories/disciplinaRepository');
+const pontuacaoService = require('./pontuacaoService');
 const { ErroConflito, ErroNaoEncontrado } = require('../utils/erros');
 
 class DisciplinaService {
@@ -17,12 +18,12 @@ class DisciplinaService {
         return await disciplinaRepository.buscarTodas();
     }
 
-    async obterRanking(idDisciplina) {
+    async obterRanking(idDisciplina, idQuemVe) {
         const disciplina = await disciplinaRepository.buscarPorId(idDisciplina);
         if (!disciplina) {
             throw new ErroNaoEncontrado('Disciplina não encontrada.');
         }
-        return await disciplinaRepository.buscarRankingPorDisciplina(idDisciplina);
+        return await pontuacaoService.ranking(idDisciplina, idQuemVe);
     }
 }
 
