@@ -906,7 +906,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             v.disciplina + ' · ' + D.diaCurto(v.inicio);
         document.getElementById('fin-inicio').textContent =
             v.inicio.toLocaleDateString('pt-BR') + ' às ' + D.hora(v.inicio);
-        fimLista.innerHTML = D.opcoesTermino(v.inicio)
+        const opcoes = D.opcoesTermino(v.inicio);
+        fimLista.innerHTML = opcoes
             .map(
                 (o) =>
                     '<li role="option" id="fim-' +
@@ -927,6 +928,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         mostrarTermino();
         finConfirmar.disabled = false;
         finConfirmar.textContent = 'Finalizar monitoria';
+        // Atalhos de duração: só os que cabem nos términos permitidos (já passaram, até 4h)
+        const maximo = opcoes.length ? opcoes[opcoes.length - 1].minutos : 0;
+        dlgFin.querySelectorAll('.pp-atalhos button').forEach((b) => {
+            b.hidden = Number(b.dataset.minutos) > maximo;
+        });
+        // Monitoria com menos de 15 min desde o início: ainda não há término para escolher
+        if (!opcoes.length) {
+            finErro.textContent =
+                'A monitoria começou há pouco. Finalize depois de pelo menos 15 minutos.';
+            fimBtn.disabled = true;
+            finConfirmar.disabled = true;
+        } else {
+            fimBtn.disabled = false;
+        }
         dlgFin.showModal();
         fimBtn.focus();
     }

@@ -6,6 +6,7 @@ const {
     HORAS_MINIMAS_CANCELAMENTO
 } = require('../utils/validarAntecedencia');
 const logger = require('../utils/logger');
+const { MINUTOS_MAX_SESSAO, MINUTOS_TOLERANCIA_RELOGIO } = require('../utils/regrasConclusao');
 const {
     ErroValidacao,
     ErroRegraNegocio,
@@ -129,8 +130,20 @@ class MonitoriaService {
         }
 
         const fim = new Date(dataFim);
-        if (fim.getTime() < new Date(monitoria.horario).getTime()) {
+        const inicio = new Date(monitoria.horario);
+        if (fim.getTime() < inicio.getTime()) {
             const mensagem = 'A data de término não pode ser anterior ao início da monitoria.';
+            throw new ErroValidacao(mensagem, { data_fim: mensagem });
+        }
+        // Certificados (PR 1): o término é registrado depois que acontece, e uma sessão vale
+        // no máximo 4h. Sem esses limites, um término dias depois do início inflaria as horas.
+        if (fim.getTime() > Date.now() + MINUTOS_TOLERANCIA_RELOGIO * 60000) {
+            const mensagem =
+                'O término não pode estar no futuro. Finalize depois que a monitoria acabar.';
+            throw new ErroValidacao(mensagem, { data_fim: mensagem });
+        }
+        if (fim.getTime() - inicio.getTime() > MINUTOS_MAX_SESSAO * 60000) {
+            const mensagem = `Uma monitoria pode durar no máximo ${MINUTOS_MAX_SESSAO / 60}h. Escolha um término até ${MINUTOS_MAX_SESSAO / 60}h depois do início.`;
             throw new ErroValidacao(mensagem, { data_fim: mensagem });
         }
 

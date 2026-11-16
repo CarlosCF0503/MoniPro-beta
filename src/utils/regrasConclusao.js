@@ -7,6 +7,10 @@ const { ErroRegraNegocio } = require('./erros');
 const PONTOS_MONITOR = 10;
 const PONTOS_ALUNO = 2;
 const DIAS_PRAZO_CONFIRMACAO = 7;
+// Certificados (PR 1, R14): uma sessão vale no máximo 4h, e o término não pode estar no futuro.
+// A tolerância cobre a diferença de relógio entre o aparelho e o servidor.
+const MINUTOS_MAX_SESSAO = 240;
+const MINUTOS_TOLERANCIA_RELOGIO = 5;
 
 const MS_POR_DIA = 24 * 60 * 60 * 1000;
 
@@ -46,5 +50,7 @@ module.exports = {
     PONTOS_MONITOR,
     PONTOS_ALUNO,
     DIAS_PRAZO_CONFIRMACAO,
-    validarJanelaConfirmacao
+    validarJanelaConfirmacao,
+    MINUTOS_MAX_SESSAO,
+    MINUTOS_TOLERANCIA_RELOGIO
 };

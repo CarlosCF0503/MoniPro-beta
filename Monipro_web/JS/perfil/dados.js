@@ -163,11 +163,17 @@
         return vaga.inicio - agora >= HORAS_CANCELAMENTO * 60 * 60 * 1000;
     }
 
-    /** Opções de término: [{ minutos, hora: "HH:MM" }] a partir do início. */
-    function opcoesTermino(inicio) {
+    /**
+     * Opções de término: [{ minutos, hora: "HH:MM" }] a partir do início, até 4h e só horários
+     * que já passaram (o servidor recusa término no futuro; 5 min de folga para o relógio).
+     */
+    function opcoesTermino(inicio, agora = new Date()) {
+        const limite = agora.getTime() + 5 * 60000;
         const lista = [];
         for (let m = TERMINO_PASSO; m <= TERMINO_MAXIMO; m += TERMINO_PASSO) {
-            lista.push({ minutos: m, hora: hora(new Date(inicio.getTime() + m * 60000)) });
+            const fim = new Date(inicio.getTime() + m * 60000);
+            if (fim.getTime() > limite) break;
+            lista.push({ minutos: m, hora: hora(fim) });
         }
         return lista;
     }
