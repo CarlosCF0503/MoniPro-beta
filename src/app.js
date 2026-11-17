@@ -79,10 +79,6 @@ app.use('/monitorias', monitoriaRotas);
 app.use('/perfil', perfilRotas);
 app.use('/pontos', pontosRotas);
 app.use('/certificados', certificadoRotas);
-// Rota de teste
-app.get('/teste', (req, res) => {
-    res.json({ mensagem: 'O servidor atualizado está respondendo!' });
-});
 
 // Tarefa 8: middleware central de erro — sempre o último registrado
 app.use(tratadorDeErros);
