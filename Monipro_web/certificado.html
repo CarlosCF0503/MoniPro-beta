@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="IMG/MoniPro-mini.png" />
+    <link rel="stylesheet" href="CSS/fontes.css" />
+    <link rel="stylesheet" href="CSS/certificado.css" />
+    <title>Declaração de horas - MoniPro</title>
+  </head>
+  <body>
+    <!-- Certificados (PR 3): a declaração do monitor, em A4. Só o dono abre (login); a
+         verificação pública por código entra no próximo PR. -->
+    <div class="cert-barra-topo">
+      <a href="perfil_monitor.html" class="cert-voltar">‹ Meu perfil</a>
+      <button type="button" id="imprimir" class="cert-imprimir" hidden>Imprimir ou salvar em PDF</button>
+    </div>
+    <p id="cert-aviso" class="cert-aviso" role="status" hidden></p>
+    <main id="cert-folha" class="cert-folha" aria-busy="true">
+      <p class="cert-carregando">Carregando a declaração…</p>
+    </main>
+    <div id="toast-container"></div>
+    <script src="JS/config.js"></script>
+    <script src="JS/api.js" defer></script>
+    <script src="JS/toast.js" defer></script>
+    <script src="JS/certificado.js" defer></script>
+  </body>
+</html>

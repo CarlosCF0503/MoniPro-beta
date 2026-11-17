@@ -63,4 +63,15 @@ function resumirCargaHoraria(vagas, agora = new Date()) {
     };
 }
 
-module.exports = { minutosDaSessao, resumirCargaHoraria };
+/** As sessões que contam, com data, disciplina e minutos (para o snapshot da declaração). */
+function sessoesQueContam(vagas) {
+    return vagas
+        .filter((v) => FINALIZADAS.includes(v.status) && v.data_fim && v.confirmadas)
+        .map((v) => ({
+            data: new Date(v.horario).toISOString(),
+            disciplina: v.disciplina,
+            minutos: minutosDaSessao(v.horario, v.data_fim)
+        }));
+}
+
+module.exports = { minutosDaSessao, resumirCargaHoraria, sessoesQueContam };

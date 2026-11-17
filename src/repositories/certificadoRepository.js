@@ -8,8 +8,8 @@ class CertificadoRepository {
      * Vagas do monitor que começaram no período (e até agora), menos as canceladas, com quantas
      * inscrições tiveram a presença confirmada pelos dois lados.
      */
-    async buscarVagasDoPeriodo(idMonitor, { inicio, fim }, agora) {
-        const vagas = await prisma.monitoria.findMany({
+    async buscarVagasDoPeriodo(idMonitor, { inicio, fim }, agora, db = prisma) {
+        const vagas = await db.monitoria.findMany({
             where: {
                 id_monitor: idMonitor,
                 status: { not: 'cancelada' },
@@ -31,6 +31,43 @@ class CertificadoRepository {
             disciplina: v.disciplina.nome,
             confirmadas: v._count.inscricoes
         }));
+    }
+    async emTransacao(fn) {
+        return await prisma.$transaction(fn);
+    }
+    // Trava a linha do usuário: duas emissões ao mesmo tempo para a mesma pessoa viram uma fila
+    async bloquearUsuario(idUsuario, db) {
+        const linhas = await db.$queryRaw`
+            SELECT "id", "nome_completo" FROM "usuarios" WHERE "id" = ${idUsuario} FOR UPDATE
+        `;
+        return linhas[0] || null;
+    }
+    // A válida anterior do mesmo período vira "substituida" (D-C4)
+    async substituirValidos(idUsuario, periodo, db) {
+        const { count } = await db.certificado.updateMany({
+            where: { id_usuario: idUsuario, periodo, situacao: 'valido' },
+            data: { situacao: 'substituido' }
+        });
+        return count;
+    }
+    async criar(dados, db) {
+        return await db.certificado.create({ data: dados });
+    }
+    async listarDoUsuario(idUsuario) {
+        return await prisma.certificado.findMany({
+            where: { id_usuario: idUsuario },
+            orderBy: [{ emitido_em: 'desc' }, { id: 'desc' }],
+            select: {
+                codigo: true,
+                periodo: true,
+                carga_minutos: true,
+                situacao: true,
+                emitido_em: true
+            }
+        });
+    }
+    async buscarPorCodigo(codigo) {
+        return await prisma.certificado.findUnique({ where: { codigo } });
     }
 }
 

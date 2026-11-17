@@ -87,3 +87,69 @@ describe('Horas comprovadas do semestre', () => {
         expect(r.body).toMatchObject({ periodo: '2026.1', minutos: 0 });
     });
 });
+
+describe('Emissão da declaração', () => {
+    const emitir = async (monitor) =>
+        request(app)
+            .post('/certificados')
+            .set('Cookie', await h.cookieDe(monitor))
+            .set('Origin', 'https://moni-pro.app.br')
+            .send({});
+
+    it('duas emissões ao mesmo tempo deixam uma única declaração válida', async () => {
+        const monitor = await h.criarUsuario('monitor');
+        await sessao({ monitor, disciplina: await h.criarDisciplina() });
+
+        const respostas = await Promise.all([emitir(monitor), emitir(monitor)]);
+
+        expect(respostas.map((r) => r.status)).toEqual([201, 201]);
+        const todas = await h.prisma.certificado.findMany({ where: { id_usuario: monitor.id } });
+        expect(todas.filter((c) => c.situacao === 'valido')).toHaveLength(1);
+        expect(todas.filter((c) => c.situacao === 'substituido')).toHaveLength(1);
+    });
+
+    it('emitir de novo substitui a anterior, que continua listada', async () => {
+        const monitor = await h.criarUsuario('monitor');
+        await sessao({ monitor, disciplina: await h.criarDisciplina() });
+        const primeira = (await emitir(monitor)).body.certificado;
+        const segunda = (await emitir(monitor)).body.certificado;
+
+        const lista = await request(app)
+            .get('/certificados')
+            .set('Cookie', await h.cookieDe(monitor));
+
+        expect(lista.body.certificados.map((c) => [c.codigo, c.situacao])).toEqual([
+            [segunda.codigo, 'valido'],
+            [primeira.codigo, 'substituido']
+        ]);
+    });
+
+    it('mudar o nome depois não altera a declaração já emitida', async () => {
+        const monitor = await h.criarUsuario('monitor', { nome_completo: 'Ana Ribeiro' });
+        await sessao({ monitor, disciplina: await h.criarDisciplina('Cálculo I') });
+        const { codigo } = (await emitir(monitor)).body.certificado;
+        await h.prisma.usuario.update({
+            where: { id: monitor.id },
+            data: { nome_completo: 'Ana Ribeiro Souza' }
+        });
+
+        const r = await request(app)
+            .get('/certificados/' + codigo)
+            .set('Cookie', await h.cookieDe(monitor));
+
+        expect(r.status).toBe(200);
+        expect(r.body.certificado.snapshot).toMatchObject({
+            nome: 'Ana Ribeiro',
+            carga_minutos: 90,
+            por_disciplina: [{ disciplina: 'Cálculo I', minutos: 90, sessoes: 1 }]
+        });
+    });
+
+    it('sem horas suficientes: 422', async () => {
+        const monitor = await h.criarUsuario('monitor');
+        await sessao({ monitor, disciplina: await h.criarDisciplina(), minutos: 30 });
+
+        expect((await emitir(monitor)).status).toBe(422);
+        expect(await h.prisma.certificado.count()).toBe(0);
+    });
+});

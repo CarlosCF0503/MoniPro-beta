@@ -152,3 +152,105 @@ describe('GET /certificados/elegibilidade', () => {
         expect(r.status).toBe(400);
     });
 });
+
+describe('Código de verificação', () => {
+    const { gerarCodigo, normalizarCodigo } = require('../src/utils/codigoCertificado');
+
+    it('26 caracteres sem símbolos ambíguos, diferente a cada vez', () => {
+        const codigos = new Set(Array.from({ length: 200 }, gerarCodigo));
+        expect(codigos.size).toBe(200);
+        for (const c of codigos) expect(c).toMatch(/^[23456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$/);
+    });
+
+    it('aceita hífens, espaços e minúsculas; recusa formato errado', () => {
+        const c = gerarCodigo();
+        const comHifens = c
+            .toLowerCase()
+            .match(/.{1,4}/g)
+            .join('-');
+        expect(normalizarCodigo(comHifens)).toBe(c);
+        expect(normalizarCodigo('abc')).toBeNull();
+        expect(normalizarCodigo(c.replace(/^./, '0'))).toBeNull();
+    });
+});
+
+describe('Emitir, listar e abrir', () => {
+    const monitor = gerarToken({ id: 10, tipo: 'monitor' });
+    const aluno = gerarToken({ id: 20, tipo: 'aluno' });
+    const comCookie = (req, token) => req.set('Cookie', `monipro_sessao=${token}`);
+
+    beforeEach(() => {
+        repo.emTransacao.mockImplementation((fn) => fn('tx'));
+        repo.bloquearUsuario.mockResolvedValue({ id: 10, nome_completo: 'Ana Ribeiro' });
+        repo.substituirValidos.mockResolvedValue(0);
+        repo.criar.mockImplementation(async (dados) => ({
+            ...dados,
+            situacao: 'valido',
+            emitido_em: AGORA
+        }));
+    });
+
+    it('aluno não emite (403)', async () => {
+        const r = await comCookie(request(app).post('/certificados'), aluno).send({});
+        expect(r.status).toBe(403);
+    });
+
+    it('abaixo do mínimo: 422 e nada é gravado', async () => {
+        repo.buscarVagasDoPeriodo.mockResolvedValue([
+            vaga({ data_fim: new Date('2026-11-02T18:30:00.000Z') })
+        ]);
+
+        const r = await comCookie(request(app).post('/certificados'), monitor).send({});
+
+        expect(r.status).toBe(422);
+        expect(repo.criar).not.toHaveBeenCalled();
+    });
+
+    it('semestre que ainda não começou: 422', async () => {
+        const r = await comCookie(request(app).post('/certificados'), monitor).send({
+            periodo: '2099.1'
+        });
+        expect(r.status).toBe(422);
+    });
+
+    it('emite com snapshot congelado (nome, horas, sessões) e substitui a válida anterior', async () => {
+        repo.buscarVagasDoPeriodo.mockResolvedValue([vaga(), vaga({ disciplina: 'Física I' })]);
+
+        const r = await comCookie(request(app).post('/certificados'), monitor).send({
+            periodo: '2026.2'
+        });
+
+        expect(r.status).toBe(201);
+        expect(r.body.certificado).toMatchObject({
+            periodo: '2026.2',
+            carga_minutos: 180,
+            situacao: 'valido'
+        });
+        expect(r.body.certificado).not.toHaveProperty('snapshot');
+        expect(repo.substituirValidos).toHaveBeenCalledWith(10, '2026.2', 'tx');
+        const dados = repo.criar.mock.calls[0][0];
+        expect(dados.codigo).toMatch(/^[23456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$/);
+        expect(dados.snapshot).toMatchObject({
+            nome: 'Ana Ribeiro',
+            carga_minutos: 180,
+            sessoes_total: 2,
+            sessoes: [
+                { disciplina: 'Cálculo I', minutos: 90, data: '2026-11-02T18:00:00.000Z' },
+                { disciplina: 'Física I', minutos: 90, data: '2026-11-02T18:00:00.000Z' }
+            ]
+        });
+    });
+
+    it('abrir a declaração de outra pessoa responde 404, igual a inexistente', async () => {
+        const codigo = 'ABCDEFGHJKMNPQRSTVWXYZ2345'; // pragma: allowlist secret
+        repo.buscarPorCodigo.mockResolvedValue({ codigo, id_usuario: 99, snapshot: {} });
+
+        const deOutro = await comCookie(request(app).get('/certificados/' + codigo), monitor);
+        repo.buscarPorCodigo.mockResolvedValue(null);
+        const inexistente = await comCookie(request(app).get('/certificados/' + codigo), monitor);
+        const malFormado = await comCookie(request(app).get('/certificados/abc'), monitor);
+
+        expect([deOutro.status, inexistente.status, malFormado.status]).toEqual([404, 404, 404]);
+        expect(deOutro.body.erro).toBe(inexistente.body.erro);
+    });
+});

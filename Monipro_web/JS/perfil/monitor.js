@@ -54,6 +54,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         // mesma regra da declaração (GET /certificados/elegibilidade). null = carregando
         horas: null,
         horasErro: false,
+        // Certificados (PR 3): declarações emitidas (GET /certificados) e emissão em andamento
+        certificados: [],
+        emitindo: false,
         filtroCel: 'aberto', // celular, aba Vagas: aberto | historico
         alvo: null,
         gatilho: null,
@@ -100,9 +103,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- 4. Pedaços comuns ---
     function listas() {
         return D.separar(S.vagas, S.agora);
-    }
-    function minutosComprovados() {
-        return S.horas ? S.horas.minutos : 0;
     }
     function textoHoras() {
         if (S.horasErro) return '–';
@@ -260,9 +260,86 @@ document.addEventListener('DOMContentLoaded', async () => {
             (pend.length
                 ? '<p class="cert-pend">' + icone('relogio', 12) + esc(pend.join(' · ')) + '</p>'
                 : '') +
-            '<p class="cert-como">Contam as monitorias finalizadas com pelo menos uma presença confirmada pelos dois lados, até 4h cada. A emissão da declaração chega na próxima versão.</p>' +
-            '</div>'
+            botaoEmitirHTML(h) +
+            '<p class="cert-como">Contam as monitorias finalizadas com pelo menos uma presença confirmada pelos dois lados, até 4h cada.</p>' +
+            '</div>' +
+            listaCertificadosHTML()
         );
+    }
+    const SITUACAO_CERT = { valido: 'Válida', substituido: 'Substituída', revogado: 'Revogada' };
+    function botaoEmitirHTML(h) {
+        if (!h.pode_emitir) return '';
+        const jaTem = S.certificados.some(
+            (c) => c.periodo === h.periodo && c.situacao === 'valido'
+        );
+        return (
+            '<button type="button" class="pp-btn pp-btn-pri pp-btn-p cert-emitir" data-acao="emitir-certificado"' +
+            (S.emitindo ? ' disabled' : '') +
+            '>' +
+            icone('medalha', 16) +
+            (S.emitindo
+                ? 'Emitindo…'
+                : jaTem
+                  ? 'Emitir de novo (substitui a anterior)'
+                  : 'Emitir declaração') +
+            '</button>'
+        );
+    }
+    function listaCertificadosHTML() {
+        if (!S.certificados.length) return '';
+        return (
+            '<ul class="cert-lista" aria-label="Declarações emitidas">' +
+            S.certificados
+                .map(
+                    (c) =>
+                        '<li><span class="cert-l"><b>' +
+                        esc(nomeDoPeriodo(c.periodo)) +
+                        '</b><small>' +
+                        esc(D.duracao(c.carga_minutos)) +
+                        ' · emitida em ' +
+                        esc(new Date(c.emitido_em).toLocaleDateString('pt-BR')) +
+                        '</small></span><span class="cert-sit ' +
+                        esc(c.situacao) +
+                        '">' +
+                        esc(SITUACAO_CERT[c.situacao] || c.situacao) +
+                        '</span><a class="cert-abrir" href="certificado.html?c=' +
+                        encodeURIComponent(c.codigo) +
+                        '">Abrir</a></li>'
+                )
+                .join('') +
+            '</ul>'
+        );
+    }
+    async function carregarCertificados() {
+        try {
+            const r = await chamadaApi('/certificados');
+            if (r.success) S.certificados = r.certificados || [];
+        } catch {
+            // A lista é um extra: sem ela o cartão continua mostrando as horas
+        }
+        render();
+    }
+    async function emitirCertificado() {
+        if (S.emitindo || !S.horas) return;
+        S.emitindo = true;
+        render();
+        try {
+            const r = await chamadaApi('/certificados', {
+                method: 'POST',
+                body: JSON.stringify({ periodo: S.horas.periodo })
+            });
+            if (r.statusHttp === 401) return sessaoExpirada();
+            if (r.success) {
+                showToast('Declaração emitida. Abra para imprimir ou salvar em PDF.', 'success');
+                await carregarCertificados();
+            } else {
+                showToast(mensagemDaApi(r, 'Não foi possível emitir a declaração.'), 'error', r);
+            }
+        } catch (erro) {
+            showToast('Erro de rede. Tente de novo.', 'error', erro);
+        }
+        S.emitindo = false;
+        render();
     }
     async function carregarHoras() {
         try {
@@ -751,8 +828,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             S.vagas = (lista.monitorias || []).map(D.normalizar);
             S.total = lista.paginacao ? lista.paginacao.total : S.vagas.length;
             S.pagina = 1;
-            // As horas vêm à parte: se falharem, as vagas continuam aparecendo
+            // As horas e as declarações vêm à parte: se falharem, as vagas continuam aparecendo
             carregarHoras();
+            carregarCertificados();
         } catch (erro) {
             S.erro = erro.message || 'Falha na comunicação com o servidor.';
             console.error('[MoniPro] Erro ao carregar o perfil do monitor.', erro);
@@ -1619,6 +1697,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (acao === 'recarregar') return carregar();
         if (acao === 'mais') return carregarMais();
         if (acao === 'presenca') return confirmarPresenca(b);
+        if (acao === 'emitir-certificado') return emitirCertificado();
         const vaga = vagaPorId(b.dataset.id);
         if (!vaga) return;
         const deDentro = b.closest('dialog');
