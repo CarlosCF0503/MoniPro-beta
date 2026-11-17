@@ -1,0 +1,6 @@
+# Revisores pedidos automaticamente em cada pull request. Para exigir a aprovação deles antes
+# do merge, ative "Require review from Code Owners" na proteção das branches develop e main.
+# A última regra que casar com o arquivo vale: dá para dividir por área (por exemplo, .github/ e
+# prisma/migrations/ só com quem cuida do deploy) conforme o time decidir.
+
+*                   @CarlosCF0503 @isaacfs15 @Lazulikk @DeivisonSC
