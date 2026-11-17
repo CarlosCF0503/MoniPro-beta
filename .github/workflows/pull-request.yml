@@ -26,23 +26,34 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Instalar dependências
         run: npm ci
 
-      - name: Rodar testes automatizados
-        run: npm test
+      # Testes com relatório de cobertura. O piso mínimo fica em jest.config.js
+      # (coverageThreshold): se a cobertura cair abaixo dele, o passo falha.
+      - name: Rodar testes automatizados com cobertura
+        run: npm run test:cobertura
+
+      - name: Publicar o relatório de cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura
+          path: coverage/
+          retention-days: 14
+          if-no-files-found: ignore
 
       - name: Lint e formatação (ESLint + Prettier)
         run: npm run lint
 
-      # Bloqueia apenas vulnerabilidades críticas: as altas restantes estão nas
-      # ferramentas de linha de comando do Prisma e dependem de atualização coordenada
-      # do Prisma (ver PR do R9).
+      # Bloqueia vulnerabilidades altas e críticas. Até o Prisma 7.10 as altas do CLI do
+      # Prisma obrigavam a barrar só as críticas (ver PR do R9); com a atualização, a
+      # auditoria das dependências de produção não acusa nenhuma.
       - name: Auditoria de dependências de produção
-        run: npm audit --omit=dev --audit-level=critical
+        run: npm audit --omit=dev --audit-level=high
 
   # R1 (Fase 03): testes de integração contra um PostgreSQL 17 real, criado vazio a cada
   # execução. Validam as migrações num banco do zero, a ausência de mudanças no schema.prisma
@@ -75,7 +86,7 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Instalar dependências
