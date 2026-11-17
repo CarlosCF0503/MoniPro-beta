@@ -48,3 +48,14 @@ exports.abrir = async (req, res) => {
     res.set('Cache-Control', 'no-store');
     return res.status(200).json({ success: true, certificado });
 };
+
+// GET /certificados/verificar/:codigo (público, com limite por IP): confere uma declaração
+exports.verificar = async (req, res) => {
+    // Código mal formado responde 404 antes de ir ao banco
+    const codigo = normalizarCodigo(req.params.codigo);
+    if (!codigo) throw new ErroNaoEncontrado('Nenhuma declaração com este código.');
+    const declaracao = await certificadoService.verificar(codigo);
+    // Sem cache: uma revogação aparece na hora
+    res.set('Cache-Control', 'no-store');
+    return res.status(200).json({ success: true, declaracao });
+};

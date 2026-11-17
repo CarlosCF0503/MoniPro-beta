@@ -93,6 +93,24 @@ class CertificadoService {
     async listar(idMonitor) {
         return await certificadoRepository.listarDoUsuario(idMonitor);
     }
+    /**
+     * Verificação pública (PR 4): só o necessário para conferir o documento. Nunca e-mail,
+     * matrícula, id nem a lista de sessões. O nome vem do snapshot: continua igual mesmo se a
+     * conta mudar de nome ou for excluída (D-C4).
+     */
+    async verificar(codigo) {
+        const c = await certificadoRepository.buscarPorCodigo(codigo);
+        if (!c) throw new ErroNaoEncontrado('Nenhuma declaração com este código.');
+        return {
+            nome: c.snapshot.nome,
+            periodo: c.periodo,
+            carga_minutos: c.carga_minutos,
+            emitido_em: c.emitido_em,
+            situacao: c.situacao,
+            ...(c.situacao === 'revogado' ? { revogado_em: c.revogado_em } : {})
+        };
+    }
+
     /** O documento completo, só para o dono. Código de outra pessoa = 404, igual a inexistente. */
     async abrir(codigo, idUsuario) {
         const c = await certificadoRepository.buscarPorCodigo(codigo);
