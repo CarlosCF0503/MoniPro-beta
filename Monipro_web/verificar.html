@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- O endereço traz o código: não repassar para outros sites -->
+    <meta name="referrer" content="no-referrer" />
+    <link rel="icon" href="IMG/MoniPro-mini.png" />
+    <link rel="stylesheet" href="CSS/fontes.css" />
+    <link rel="stylesheet" href="CSS/verificar.css" />
+    <title>Verificar declaração - MoniPro</title>
+  </head>
+  <body>
+    <!-- Certificados (PR 4): qualquer pessoa confere, sem login, se uma declaração de horas foi
+         emitida pelo MoniPro e se ainda vale. -->
+    <main class="vf">
+      <header class="vf-cab">
+        <img src="IMG/MoniPro-Logo.png" alt="MoniPro" class="vf-logo" />
+        <div>
+          <h1>Verificar declaração de horas</h1>
+          <p>Digite o código impresso na declaração para conferir se ela foi emitida pelo MoniPro.</p>
+        </div>
+      </header>
+      <form id="vf-form" class="vf-form" novalidate>
+        <label for="vf-codigo">Código de verificação</label>
+        <div class="vf-linha">
+          <input id="vf-codigo" name="codigo" autocomplete="off" spellcheck="false" autocapitalize="characters"
+            placeholder="XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XX" maxlength="40" />
+          <button type="submit" id="vf-conferir">Conferir</button>
+        </div>
+        <p class="vf-erro" id="vf-erro" role="alert"></p>
+      </form>
+      <section id="vf-resultado" class="vf-resultado" aria-live="polite" hidden></section>
+      <p class="vf-nota">A declaração vale quando a situação é <strong>Válida</strong>. Uma declaração substituída foi trocada por outra mais recente do mesmo semestre.</p>
+      <p class="vf-rodape"><a href="privacidade.html">Aviso de Privacidade</a> · <a href="index.html">Entrar no MoniPro</a></p>
+    </main>
+    <div id="toast-container"></div>
+    <script src="JS/config.js"></script>
+    <script src="JS/api.js" defer></script>
+    <script src="JS/toast.js" defer></script>
+    <script src="JS/verificar.js" defer></script>
+  </body>
+</html>

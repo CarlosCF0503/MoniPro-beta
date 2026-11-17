@@ -153,3 +153,48 @@ describe('Emissão da declaração', () => {
         expect(await h.prisma.certificado.count()).toBe(0);
     });
 });
+
+describe('Verificação pública', () => {
+    const emitir = async (monitor) =>
+        (
+            await request(app)
+                .post('/certificados')
+                .set('Cookie', await h.cookieDe(monitor))
+                .set('Origin', 'https://moni-pro.app.br')
+                .send({})
+        ).body.certificado;
+    const verificar = (codigo) => request(app).get('/certificados/verificar/' + codigo);
+
+    it('sem login confere a situação: a antiga aparece como substituída', async () => {
+        const monitor = await h.criarUsuario('monitor', { nome_completo: 'Ana Ribeiro' });
+        await sessao({ monitor, disciplina: await h.criarDisciplina() });
+        const primeira = await emitir(monitor);
+        const segunda = await emitir(monitor);
+
+        const antiga = await verificar(primeira.codigo);
+        const nova = await verificar(segunda.codigo);
+
+        expect(antiga.body.declaracao).toMatchObject({
+            situacao: 'substituido',
+            nome: 'Ana Ribeiro'
+        });
+        expect(nova.body.declaracao).toMatchObject({ situacao: 'valido', carga_minutos: 90 });
+    });
+
+    it('depois de o titular excluir a conta, a declaração continua verificável com o nome (D-C4)', async () => {
+        const monitor = await h.criarUsuario('monitor', { nome_completo: 'Ana Ribeiro' });
+        await sessao({ monitor, disciplina: await h.criarDisciplina() });
+        const { codigo } = await emitir(monitor);
+
+        const exclusao = await request(app)
+            .delete('/perfil')
+            .set('Cookie', await h.cookieDe(monitor))
+            .set('Origin', 'https://moni-pro.app.br')
+            .send({ senha: 'senhaIntegracao1' });
+
+        expect(exclusao.status).toBe(200);
+        const r = await verificar(codigo);
+        expect(r.status).toBe(200);
+        expect(r.body.declaracao).toMatchObject({ nome: 'Ana Ribeiro', situacao: 'valido' });
+    });
+});

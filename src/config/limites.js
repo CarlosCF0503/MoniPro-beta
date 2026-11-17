@@ -9,6 +9,8 @@ const PADRAO_REQUISICOES_MINUTO = 120; // todas as rotas
 // hora, por conta e por IP. Cada rota tem os próprios contadores.
 const PADRAO_PEDIDOS_SENHA_EMAIL = 3;
 const PADRAO_PEDIDOS_SENHA_IP = 10;
+// Certificados (PR 4): consultas à verificação pública por minuto, por IP (dificulta varrer códigos)
+const PADRAO_VERIFICACOES_MINUTO = 20;
 
 function inteiroPositivoOu(valor, padrao) {
     const numero = Number(valor);
@@ -31,9 +33,14 @@ function limitePedidosSenhaPorIp(env = process.env) {
     return inteiroPositivoOu(env.LIMITE_PEDIDOS_SENHA_IP, PADRAO_PEDIDOS_SENHA_IP);
 }
 
+function limiteVerificacoesPorMinuto(env = process.env) {
+    return inteiroPositivoOu(env.LIMITE_VERIFICACOES_MINUTO, PADRAO_VERIFICACOES_MINUTO);
+}
+
 module.exports = {
     limiteTentativasAuth,
     limiteRequisicoesPorMinuto,
     limitePedidosSenhaPorEmail,
-    limitePedidosSenhaPorIp
+    limitePedidosSenhaPorIp,
+    limiteVerificacoesPorMinuto
 };
