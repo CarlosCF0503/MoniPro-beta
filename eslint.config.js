@@ -13,7 +13,9 @@ module.exports = [
             'docs/evidencias/**',
             // Saídas do Playwright (R1)
             'e2e-resultados/**',
-            'e2e-relatorio/**'
+            'e2e-relatorio/**',
+            // Relatório de cobertura (npm run test:cobertura)
+            'coverage/**'
         ]
     },
     js.configs.recommended,

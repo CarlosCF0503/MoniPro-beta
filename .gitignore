@@ -6,3 +6,9 @@ prisma/.prisma/
 # Saídas dos testes de ponta a ponta (Playwright, R1)
 e2e-resultados/
 e2e-relatorio/
+# Relatório de cobertura dos testes (npm run test:cobertura)
+coverage/
+# Configurações de IDE (JetBrains, VS Code): ficam na máquina de cada um
+.idea/
+*.iml
+.vscode/

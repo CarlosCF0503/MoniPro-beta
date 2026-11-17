@@ -1,3 +1,6 @@
+# O servidor ainda roda o docker-compose 1.25.0 (binário legado, de 2019), que só reconhece o
+# formato atual do arquivo quando há a chave "version". O Compose v2 ignora esta linha (e avisa
+# que ela é obsoleta). Ela sai quando o servidor passar a usar "docker compose" (v2).
 version: '3.3'
 
 services:
