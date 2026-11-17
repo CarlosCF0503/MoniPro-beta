@@ -1659,3 +1659,16 @@
 .pagina-perfil .cert-num b { color: var(--navy); }
 .pagina-perfil .cert-pend { display: flex; gap: 6px; align-items: center; font-size: 12px; font-weight: 600; color: var(--warn-ink); }
 .pagina-perfil .cert-como { font-size: 12px; color: var(--slate); }
+
+/* Certificados (PR 3): emitir e listar as declarações */
+.pagina-perfil .cert-emitir { width: 100%; display: inline-flex; gap: 6px; align-items: center; justify-content: center; white-space: normal; text-align: center; height: auto; min-height: 40px; padding-block: 8px; }
+.pagina-perfil .cert-lista { list-style: none; display: flex; flex-direction: column; margin-top: 10px; }
+.pagina-perfil .cert-lista li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.pagina-perfil .cert-lista li:last-child { border-bottom: 0; }
+.pagina-perfil .cert-l b { display: block; font-size: 14px; color: var(--navy); }
+.pagina-perfil .cert-l small { font-size: 12px; color: var(--slate); }
+.pagina-perfil .cert-sit { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+.pagina-perfil .cert-sit.valido { background: var(--ok-soft, #e5f4e8); color: var(--ok); }
+.pagina-perfil .cert-sit.substituido { background: var(--soft-2); color: var(--slate-ink); }
+.pagina-perfil .cert-sit.revogado { background: #fde8e8; color: var(--bad); }
+.pagina-perfil .cert-abrir { font-size: 13px; font-weight: 700; color: var(--navy-2); }
