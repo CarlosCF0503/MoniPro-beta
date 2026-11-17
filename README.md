@@ -1,78 +1,202 @@
-- Demonstração e Acesso ao Sistema
-  URL de Produção: https://moni-pro.app.br (Login - MoniPro)
+# MoniPro
 
-- Visão Geral da Arquitetura e Decisões de Projeto
-  Domínio de Aplicação: Sistema web para agendamento, gestão e acompanhamento de monitorias acadêmicas.
+Sistema web para agendar, acompanhar e comprovar monitorias acadêmicas. O monitor publica
+vagas por disciplina, o aluno se inscreve pelo calendário, os dois confirmam a sessão depois
+do horário e a plataforma registra pontos e horas de monitoria.
 
-Módulos Próximos (Roadmap):
+- Produção: https://moni-pro.app.br (branch `main`)
+- Homologação: https://dev.moni-pro.app.br (branch `develop`)
 
-Módulo de Gamificação (Moedas/Pontos): Planejado para finalização e integração total na Tarefa 15.
+## Sumário
 
-Perfil "Coordenações (Módulo Premium)": Movido para o Roadmap de extensões futuras da plataforma.
+- [Funcionalidades](#funcionalidades)
+- [Arquitetura](#arquitetura)
+- [Como executar localmente](#como-executar-localmente)
+- [Testes](#testes)
+- [Sessão e segurança](#sessão-e-segurança)
+- [Endpoints da API](#endpoints-da-api)
+- [Fluxo de trabalho e deploy](#fluxo-de-trabalho-e-deploy)
+- [Documentação e evidências](#documentação-e-evidências)
 
-Documentação de Fluxo e Utilidade das Telas
-Fluxo de Autenticação e Entrada
-index.html (Landing Page): Apresenta o sistema e redireciona os usuários para login ou cadastro.
+## Funcionalidades
 
-login.html: Interface de autenticação via e-mail e senha com validação JWT.
+| Código          | Funcionalidade                                                                                      | Situação     |
+| :-------------- | :-------------------------------------------------------------------------------------------------- | :----------- |
+| RF-001          | Cadastro e login de aluno e monitor, sessão por cookie                                              | Concluído    |
+| RF-002          | Vagas por disciplina e inscrição pelo calendário, com limite de capacidade                          | Concluído    |
+| RF-003          | Perfil do aluno e do monitor, com as inscrições, as vagas e a exclusão da conta (LGPD)              | Concluído    |
+| RF-004          | Gamificação: pontos depois da confirmação dos dois lados (monitor +10, aluno +2), extrato e ranking | Concluído    |
+| RF-005          | Declaração de horas do monitor, por semestre, com código de verificação                             | Em andamento |
+| RF-008 / RN-009 | Recuperar a senha por e-mail                                                                        | Concluído    |
+| RF-009 / RN-010 | Editar uma vaga ativa                                                                               | Concluído    |
+| RF-010 / RN-011 | Avisos por e-mail ao aluno (vaga alterada ou cancelada, lembretes)                                  | Concluído    |
+| RF-011 / RN-008 | Extrato de pontos e ranking por disciplina e semestre                                               | Concluído    |
+| RF-018 / RN-017 | Confirmação do e-mail no cadastro                                                                   | Concluído    |
+| RN-001          | Cancelamento com pelo menos 24 h de antecedência                                                    | Concluído    |
 
-escolha_cadastro.html: Tela de decisão onde o usuário escolhe se criará uma conta de Aluno ou de Monitor.
+No RF-005, a regra das horas, a emissão e a declaração para imprimir já estão prontas. Ainda
+faltam a verificação pública pelo código e a revogação. Os códigos a partir do RF-008 vêm dos
+planos de novas funcionalidades e entram no Documento de Especificação na versão seguinte à
+v7.2.
 
-cadastro.html: Formulário de registro com validações de dados (Nome, E-mail acadêmico, Senha, Matrícula).
+### Páginas (`Monipro_web/`)
 
-Fluxo Principal de Navegação e Agendamento
-base.html: Painel principal (Dashboard) após o login, fornecendo atalhos para as funcionalidades essenciais.
+| Página                                                           | Uso                                                                        |
+| :--------------------------------------------------------------- | :------------------------------------------------------------------------- |
+| `index.html`                                                     | Login                                                                      |
+| `escolha_cadastro.html`, `cadastro.html`, `confirmar_email.html` | Cadastro de aluno ou monitor e confirmação do e-mail                       |
+| `redefinir_senha.html`                                           | Nova senha a partir do link enviado por e-mail                             |
+| `base.html`                                                      | Página inicial depois do login                                             |
+| `escolha_disciplina.html`, `cadastro_disciplina.html`            | Lista de disciplinas e cadastro de uma nova (monitor)                      |
+| `marcar_monitoria.html`                                          | Calendário e lista de vagas: inscrição (aluno) e criação de vaga (monitor) |
+| `perfil.html`, `perfil_aluno.html`, `perfil_monitor.html`        | Perfil de cada papel: inscrições, vagas, confirmação, pontos e horas       |
+| `ranking.html`                                                   | Ranking de pontos por disciplina e semestre                                |
+| `certificado.html`                                               | Declaração de horas para imprimir                                          |
+| `privacidade.html`                                               | Aviso de privacidade (LGPD)                                                |
 
-escolha_disciplina.html: Catálogo de disciplinas ativas no sistema para seleção de monitoria ou consulta de ranking.
+## Arquitetura
 
-marcar_monitoria.html: Interface interativa com calendário para seleção de datas, horários e criação/confirmação de agendamentos.
+- **Backend:** Node.js 22, Express 5 e Prisma 7 (adaptador `pg`) sobre PostgreSQL 17. O código
+  fica em `src/`, dividido em `routes` → `controllers` → `services` → `repositories`. Os
+  esquemas de entrada ficam em `schemas` (Zod, que descarta os campos não declarados), e o
+  tratador de erros é central (`middlewares/tratadorDeErros.js`). Os logs são estruturados,
+  com pino.
+- **Frontend:** HTML, CSS e JavaScript sem framework, servidos por Nginx sem root
+  (`Monipro_web/Dockerfile`). As chamadas passam por `chamadaApi()` em `Monipro_web/JS/api.js`.
+- **Banco:** migrações versionadas em `prisma/migrations/`. As regras que dependem de
+  concorrência (capacidade da vaga, inscrição duplicada, confirmação de presença) rodam em
+  `$transaction` com trava de linha.
+- **Infraestrutura:** Docker Compose com os serviços `db`, `backend` e `frontend` numa VM da
+  Oracle Cloud, atrás de um Nginx com TLS (Let's Encrypt), CSP e HSTS. Produção e
+  homologação têm bancos separados.
 
-Fluxo de Perfil e Painéis de Gestão
-perfil.html: Roteador central que identifica o papel do usuário no token JWT e o redireciona para a visão adequada.
+## Como executar localmente
 
-perfil_aluno.html: Painel exclusivo do aluno. Exibe informações da conta, saldo de pontos/moedas e a lista de monitorias inscritas (permitindo cancelamento via modal de confirmação).
+Pré-requisitos: Node.js 22 (o mesmo do CI e da imagem Docker) e Docker.
 
-perfil_monitor.html: Painel exclusivo do monitor. Exibe as vagas criadas, agendamentos sob sua responsabilidade, opções de cancelamento de horários e modal de certificados.
+1. Copie `.env.example` para `.env` e preencha ao menos `DATABASE_URL` e `JWT_SECRET`. O
+   próprio `.env.example` explica cada variável. Use um banco **local**, nunca o de
+   homologação nem o de produção.
+2. Instale as dependências com `npm ci`. O `postinstall` gera o Prisma Client.
+3. Aplique as migrações com `npx prisma migrate dev`. Se quiser dados fictícios, rode
+   `npm run seed` com `SEED_AMBIENTE=local` e `SEED_SENHA` definidos.
+4. Suba a API com `npm run dev` (recarrega ao salvar) ou `npm start`. Ela responde na porta
+   3000, e `GET /saude` confere se o banco está acessível.
 
-# Como executar localmente
+Com Docker, `docker compose up --build` sobe o banco, o backend (porta 3000) e o frontend
+(porta 8080) a partir do `.env`. A imagem do backend roda sem root (usuário `node`), só com as
+dependências de produção, e tem `HEALTHCHECK` em `/saude`.
 
-Pré-requisitos: Node.js 22 e um banco PostgreSQL acessível.
+Sem `SMTP_HOST` no `.env`, nenhum e-mail sai: o backend só registra no log o e-mail que seria
+enviado, com o link.
 
-1. Copie `.env.example` para `.env` e preencha ao menos `DATABASE_URL` e `JWT_SECRET`.
-2. Instale as dependências com `npm install`. O `postinstall` já gera o Prisma Client.
-3. Se alterar `prisma/schema.prisma`, gere o client de novo com `npm run generate`. O client gerado não é versionado no repositório.
-4. Aplique as migrations no banco **local** com `npx prisma migrate dev`.
-5. Suba a API com `npm run dev` (com reload) ou `npm start`.
-6. Rode os testes e o lint com `npm test` e `npm run lint`.
+## Testes
 
-Com Docker, `docker compose up --build` sobe o backend (porta 3000) e o frontend (porta 8080) usando o `.env`.
+| Comando                  | O que roda                                                                                                               |
+| :----------------------- | :----------------------------------------------------------------------------------------------------------------------- |
+| `npm test`               | Testes unitários e de API (Jest + Supertest), com o banco simulado                                                       |
+| `npm run test:cobertura` | Os mesmos testes com relatório de cobertura em `coverage/`. Falha se a cobertura cair abaixo do piso de `jest.config.js` |
+| `npm run test:int`       | Integração com um PostgreSQL real: migrações do zero, concorrência, restrições únicas e sessão                           |
+| `npm run test:e2e`       | Casos CT-01 a CT-11 no navegador (Playwright), no computador e no celular                                                |
+| `npm run lint`           | ESLint e Prettier                                                                                                        |
 
-# Especificação Acadêmica
+O `test:int` exige `DATABASE_URL_INTEGRACAO` apontando para um banco local cujo nome termine
+em `_integracao`, e recusa qualquer outro. Exemplo com Docker:
 
-## Tabela de Status de RF e RN (Código Real)
+```bash
+docker run -d --name monipro-int -p 5434:5432 -e POSTGRES_USER=monipro \
+  -e POSTGRES_PASSWORD=integracao -e POSTGRES_DB=monipro_integracao postgres:17
+DATABASE_URL_INTEGRACAO=postgres://monipro:integracao@localhost:5434/monipro_integracao npm run test:int # pragma: allowlist secret
+```
 
-| Código     | Descrição                                   | Tipo                | Status Atual  | Observações / Mapeamento                                                            |
-| :--------- | :------------------------------------------ | :------------------ | :------------ | :---------------------------------------------------------------------------------- |
-| **RF-001** | Autenticação JWT e Controle de Acesso       | Requisito Funcional | **Concluído** | Rotas `/autenticacao` e middlewares ativos no Express.                              |
-| **RF-002** | Agendamento de Monitorias via Calendário    | Requisito Funcional | **Concluído** | Interface interativa em `marcar_monitoria.html`.                                    |
-| **RF-003** | Gestão de Perfil (Aluno / Monitor)          | Requisito Funcional | **Concluído** | Integrado às rotas `/perfil`, `/agendamentos` e `/monitorias`.                      |
-| **RF-004** | Sistema de Gamificação (Ranking/Pontos)     | Requisito Funcional | **Planejado** | Estruturado para ser finalizado nas Tarefas 14 e 15.                                |
-| **RN-001** | Cancelamento Prévio com 24h de Antecedência | Regra de Negócio    | **Concluído** | Validado em `agendamentoService.deletar` e `monitoriaService.cancelar` (Tarefa 14). |
-| **RN-002** | Isolamento de Perfis e Permissões           | Regra de Negócio    | **Concluído** | Controle de acesso via middleware de autenticação JWT.                              |
+O `test:e2e` roda contra uma pilha descartável (Postgres com SSL, backend, frontend e um
+gateway Nginx, como no servidor):
 
-Seções Acadêmicas (24 a 27)
-Seção 24: Qualidade de Código
-O projeto adota uma arquitetura RESTful modular no backend (Node.js/Express) com separação em rotas, controladores e middlewares de segurança. No frontend, utiliza-se a centralização de requisições através do helper chamadaApi(), garantindo padronização na comunicação, tratamento único de headers JWT e suporte uniforme a respostas de erro.
+```bash
+docker compose -f docker-compose.e2e.yml up -d --build --wait
+npx playwright install chromium   # só na primeira vez
+npm run test:e2e
+docker compose -f docker-compose.e2e.yml down -v
+```
 
-Seção 25: Segurança e Infraestrutura
-Criptografia: Senhas armazenadas com hashing forte (bcrypt).
+## Sessão e segurança
 
-Comunicação Segura: SSL/TLS ativo em ambiente de produção via Certbot para o domínio moni-pro.app.br.
+- **Sessão:** o login grava um cookie `httpOnly`, `Secure` e `SameSite=Strict` com validade de
+  2 horas. O token não fica acessível ao JavaScript da página. Sair (`POST /auth/sair`)
+  incrementa `versao_token` do usuário, o que invalida todas as sessões abertas, inclusive
+  uma cópia roubada do cookie. Trocar a senha tem o mesmo efeito.
+- **Senhas:** bcrypt, com política de tamanho mínimo e limite de 72 caracteres. O login leva
+  o mesmo tempo para e-mail existente ou não.
+- **Defesas:** Helmet, CORS restrito às origens de `ALLOWED_ORIGINS`, limite global de
+  requisições e limite extra em `/auth`. Os identificadores aparecem mascarados nos logs. O
+  frontend escapa todo dado vindo da API antes de inserir no HTML (`escaparHtml`).
+- **Banco:** conexão com SSL e validação da CA (`DB_CA_CERT`).
+- **LGPD:** a exclusão da conta anonimiza os dados pessoais, e `scripts/retencao.js` aplica
+  os prazos de retenção (só simula, a não ser que receba `--aplicar`).
+- **Segredos:** ficam só no `.env` de cada servidor, que não é versionado.
 
-Proteção de Rede: Proteção contra solicitações abusivas via express-rate-limit e restrição de origens via middleware CORS.
+## Endpoints da API
 
-Seção 26: Extensões e Decisões de Design (Curso / Avaliação / Certificado)
-A emissão automática de certificados com base em avaliações de curso foi simplificada para a versão atual. As tabelas complexas de Avaliação e Curso foram temporariamente removidas do escopo ativo e movidas para o roadmap. A exibição de certificados no painel do monitor permanece como um componente visual direto.
+Todas as rotas exigem sessão, exceto as marcadas como públicas. "Monitor" indica rota
+restrita a esse papel.
 
-Seção 27: Avaliação Geral e Conclusão
-A plataforma atende aos critérios fundamentais de usabilidade e integridade para agendamento de monitorias acadêmicas. O módulo pendente (Gamificação completa) possui infraestrutura preparada e cronograma definido para finalização imediata na etapa subsequente.
+| Método | Caminho                            | Descrição                                                      |
+| :----- | :--------------------------------- | :------------------------------------------------------------- |
+| GET    | `/saude`                           | Situação da API e do banco (pública)                           |
+| POST   | `/auth/cadastro`                   | Cria a conta e envia o link de confirmação do e-mail (pública) |
+| POST   | `/auth/login`                      | Entra e grava o cookie de sessão (pública)                     |
+| GET    | `/auth/sessao`                     | Dados da sessão atual                                          |
+| POST   | `/auth/sair`                       | Encerra todas as sessões do usuário                            |
+| POST   | `/auth/senha/esqueci`              | Envia o link para redefinir a senha (pública)                  |
+| POST   | `/auth/senha/redefinir`            | Grava a senha nova a partir do link (pública)                  |
+| POST   | `/auth/email/confirmar`            | Confirma o e-mail a partir do link (pública)                   |
+| POST   | `/auth/email/reenviar`             | Reenvia o link de confirmação (pública)                        |
+| POST   | `/auth/email/corrigir`             | Corrige o e-mail de uma conta ainda não confirmada (pública)   |
+| GET    | `/disciplinas`                     | Lista as disciplinas                                           |
+| POST   | `/disciplinas`                     | Cadastra uma disciplina (monitor)                              |
+| GET    | `/disciplinas/:id/ranking`         | Ranking de pontos da disciplina                                |
+| POST   | `/monitorias`                      | Cria uma vaga (monitor)                                        |
+| GET    | `/monitorias/:idDisciplina`        | Vagas de uma disciplina                                        |
+| GET    | `/monitorias/monitor/agendamentos` | Inscrições nas vagas do monitor                                |
+| PATCH  | `/monitorias/:id`                  | Edita uma vaga ativa (monitor)                                 |
+| PUT    | `/monitorias/:id/cancelar`         | Cancela uma vaga (monitor)                                     |
+| PATCH  | `/monitorias/:id/finalizar`        | Registra o término da sessão (monitor)                         |
+| POST   | `/agendamentos`                    | Inscreve o aluno numa vaga                                     |
+| GET    | `/agendamentos`                    | Inscrições do usuário                                          |
+| DELETE | `/agendamentos/:id`                | Cancela uma inscrição (RN-001)                                 |
+| PATCH  | `/agendamentos/:id/presenca`       | O aluno confirma que a sessão aconteceu                        |
+| PATCH  | `/agendamentos/:id/concluir`       | O monitor confirma a presença do aluno (monitor)               |
+| GET    | `/perfil`                          | Dados do perfil                                                |
+| GET    | `/perfil/agendamentos`             | Inscrições exibidas no perfil                                  |
+| GET    | `/perfil/monitorias`               | Vagas exibidas no perfil do monitor                            |
+| DELETE | `/perfil`                          | Exclui (anonimiza) a conta, com confirmação da senha           |
+| GET    | `/pontos/extrato`                  | Extrato de pontos do usuário                                   |
+| GET    | `/certificados/elegibilidade`      | Horas do semestre e se a declaração pode ser emitida (monitor) |
+| GET    | `/certificados`                    | Declarações emitidas (monitor)                                 |
+| POST   | `/certificados`                    | Emite a declaração do semestre (monitor)                       |
+| GET    | `/certificados/:codigo`            | Abre uma declaração                                            |
+
+Um prefixo novo na API também precisa entrar no Nginx do servidor (homologação e produção) e
+em `e2e/pilha/gateway.conf`. Sem isso, o caminho cai no frontend.
+
+## Fluxo de trabalho e deploy
+
+1. Cada mudança sai de uma branch criada a partir da `develop` e volta por pull request.
+2. Em todo PR para `develop` ou `main`, o CI roda os testes com cobertura, o lint, a
+   auditoria de dependências de produção (barra vulnerabilidades altas e críticas), a
+   integração com PostgreSQL real e os testes E2E (`.github/workflows/`).
+3. O merge na `develop` publica a homologação (`deploy-develop.yml`). O merge da `develop` na
+   `main` publica a produção (`deploy.yml`).
+4. Os dois deploys repetem os testes e o lint, reconstroem as imagens e aplicam as migrações
+   (`prisma migrate deploy`) antes de trocar os containers. Se uma migração falhar, os
+   containers em uso não são trocados.
+
+Mescle um PR de cada vez. Dois merges seguidos na `develop` disparam deploys simultâneos, e o
+segundo falha ao recriar os containers.
+
+## Documentação e evidências
+
+- `docs/evidencias/`: registro de cada fase, com testes, DAST, LGPD, deploy e o incidente do
+  deploy #64.
+- Documento de Especificação do Projeto Integrador: requisitos, regras de negócio, casos de
+  teste e decisões. É entregue à parte, fora do repositório.
