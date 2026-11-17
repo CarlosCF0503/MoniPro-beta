@@ -50,6 +50,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         aba: null, // computador: finalizar | proximas | historico
         abaEscolhida: false, // true depois que o monitor troca de aba
         abaCel: 'vagas', // celular: vagas | horas | perfil
+        // Certificados (PR 2): horas comprovadas do semestre, calculadas pelo backend com a
+        // mesma regra da declaração (GET /certificados/elegibilidade). null = carregando
+        horas: null,
+        horasErro: false,
         filtroCel: 'aberto', // celular, aba Vagas: aberto | historico
         alvo: null,
         gatilho: null,
@@ -98,8 +102,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         return D.separar(S.vagas, S.agora);
     }
     function minutosComprovados() {
-        return D.minutosComprovados(S.vagas);
+        return S.horas ? S.horas.minutos : 0;
     }
+    function textoHoras() {
+        if (S.horasErro) return '–';
+        return S.horas ? D.duracao(S.horas.minutos) : '…';
+    }
+    const nomeDoPeriodo = (p) => {
+        const [ano, semestre] = String(p || '').split('.');
+        return semestre + 'º semestre de ' + ano;
+    };
     // curto: na linha do celular, vaga cheia vira só "Lotada" (no computador a etiqueta já diz isso)
     function textoInscritos(v, curto) {
         if (v.inscritos === null) return 'Até ' + D.plural(v.capacidade, 'aluno', 'alunos');
@@ -206,12 +218,62 @@ document.addEventListener('DOMContentLoaded', async () => {
             );
         return '';
     }
+    // Certificados (PR 2): progresso até o mínimo da declaração e o que falta para cada sessão
+    // contar. A emissão entra no próximo PR do plano.
     function certificadosHTML() {
+        if (S.horasErro)
+            return '<p class="pp-dica">Não foi possível carregar as horas do semestre agora.</p>';
+        const h = S.horas;
+        if (!h) return '<div class="pp-esqueleto" aria-hidden="true"><span></span></div>';
+        const pct = Math.min(100, Math.round((h.minutos / h.minimo_minutos) * 100));
+        const falta = Math.max(0, h.minimo_minutos - h.minutos);
+        const pend = [];
+        if (h.pendentes.a_finalizar)
+            pend.push(
+                D.plural(h.pendentes.a_finalizar, 'vaga para finalizar', 'vagas para finalizar')
+            );
+        if (h.pendentes.sem_presenca)
+            pend.push(
+                D.plural(
+                    h.pendentes.sem_presenca,
+                    'finalizada sem presença confirmada',
+                    'finalizadas sem presença confirmada'
+                ) + ' (não conta)'
+            );
         return (
-            '<div class="cert-vazio">' +
-            icone('medalha', 22) +
-            '<p><strong>Nenhum certificado ainda</strong>Cada monitoria finalizada soma horas comprovadas. A emissão da declaração de horas chega numa próxima versão.</p></div>'
+            '<div class="cert-prog">' +
+            '<p class="cert-titulo">Declaração do ' +
+            esc(nomeDoPeriodo(h.periodo)) +
+            '</p>' +
+            '<div class="cert-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' +
+            pct +
+            '" aria-label="Horas para a declaração"><i style="width:' +
+            pct +
+            '%"></i></div>' +
+            '<p class="cert-num"><b>' +
+            esc(D.duracao(h.minutos)) +
+            '</b> de ' +
+            esc(D.duracao(h.minimo_minutos)) +
+            ' para emitir' +
+            (h.pode_emitir ? ' · pronta para emitir' : ' · faltam ' + esc(D.duracao(falta))) +
+            '</p>' +
+            (pend.length
+                ? '<p class="cert-pend">' + icone('relogio', 12) + esc(pend.join(' · ')) + '</p>'
+                : '') +
+            '<p class="cert-como">Contam as monitorias finalizadas com pelo menos uma presença confirmada pelos dois lados, até 4h cada. A emissão da declaração chega na próxima versão.</p>' +
+            '</div>'
         );
+    }
+    async function carregarHoras() {
+        try {
+            const r = await chamadaApi('/certificados/elegibilidade');
+            S.horas = r.success ? r : null;
+            S.horasErro = !r.success;
+        } catch {
+            S.horas = null;
+            S.horasErro = true;
+        }
+        render();
     }
     function pontosHTML() {
         const pts = S.usuario ? Number(S.usuario.pontos) || 0 : 0;
@@ -346,13 +408,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const numeros = temDados()
-            ? [L.finalizar.length, L.proximas.length, D.duracao(minutosComprovados())]
+            ? [L.finalizar.length, L.proximas.length, textoHoras()]
             : S.carregando
               ? ['…', '…', '…']
               : S.erro
                 ? ['–', '–', '–']
                 : [0, 0, '0h'];
-        const rotulos = ['Para finalizar', 'Próximas vagas', 'Horas comprovadas'];
+        const rotulos = ['Para finalizar', 'Próximas vagas', 'Horas no semestre'];
 
         return (
             '<div class="pp-desk">' +
@@ -480,7 +542,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const resumo = [
             D.plural(real, 'realizada', 'realizadas'),
             canc ? D.plural(canc, 'cancelada', 'canceladas') : '',
-            D.duracao(minutosComprovados()) + ' comprovadas'
+            textoHoras() + ' comprovadas no semestre'
         ]
             .filter(Boolean)
             .join(' · ');
@@ -548,16 +610,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (S.carregando) topo = '<div class="pp-esqueleto" aria-hidden="true"><span></span></div>';
         else if (S.erro) topo = estadoHTML();
         else {
-            const porDisc = D.horasPorDisciplina(S.vagas);
+            const porDisc = S.horas ? S.horas.por_disciplina : [];
             const max = porDisc.length ? porDisc[0].minutos : 1;
-            const n = S.vagas.filter(D.realizada).length;
+            const n = S.horas ? S.horas.sessoes : 0;
             topo =
                 '<div class="horas-total"><span class="n">' +
-                D.duracao(minutosComprovados()) +
+                textoHoras() +
                 '</span><span class="l">' +
                 (n
-                    ? 'comprovadas em ' + D.plural(n, 'monitoria', 'monitorias')
-                    : 'Finalize monitorias para somar horas.') +
+                    ? 'comprovadas em ' + D.plural(n, 'monitoria', 'monitorias') + ' neste semestre'
+                    : 'Finalize monitorias com presença confirmada para somar horas.') +
                 '</span></div>' +
                 (porDisc.length
                     ? '<ul class="horas-barras">' +
@@ -689,6 +751,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             S.vagas = (lista.monitorias || []).map(D.normalizar);
             S.total = lista.paginacao ? lista.paginacao.total : S.vagas.length;
             S.pagina = 1;
+            // As horas vêm à parte: se falharem, as vagas continuam aparecendo
+            carregarHoras();
         } catch (erro) {
             S.erro = erro.message || 'Falha na comunicação com o servidor.';
             console.error('[MoniPro] Erro ao carregar o perfil do monitor.', erro);
@@ -870,6 +934,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 inscricao.status = 'concluido';
                 if (S.usuario)
                     S.usuario.pontos = (Number(S.usuario.pontos) || 0) + D.PONTOS_MONITOR;
+                carregarHoras();
             }
             render();
             preencherDetalhes(vaga);
@@ -1087,6 +1152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             vaga.fim = fim;
             dlgFin.close();
             render();
+            carregarHoras();
             showToast(
                 'Monitoria finalizada · ' + D.duracao(fimMinutos) + ' registradas.',
                 'success'

@@ -1649,3 +1649,13 @@
 .rk .rk-nota { font-size: 13px; color: var(--slate); margin-top: 14px; max-width: 70ch; }
 .rk .rk-vazio { color: var(--slate); font-size: 14px; padding: 8px 0; }
 @media (max-width: 699px) { .rk .rk-desk { padding-top: 16px; } .rk .rk-item { grid-template-columns: 32px 36px minmax(0, 1fr) auto; gap: 8px; } }
+
+/* Certificados (PR 2): progresso até o mínimo da declaração de horas */
+.pagina-perfil .cert-prog { display: flex; flex-direction: column; gap: 8px; background: var(--soft); border-radius: 12px; padding: 12px; }
+.pagina-perfil .cert-titulo { font-weight: 700; color: var(--navy); font-size: 14px; }
+.pagina-perfil .cert-barra { height: 8px; border-radius: 99px; background: var(--white); overflow: hidden; }
+.pagina-perfil .cert-barra i { display: block; height: 100%; background: var(--navy-2); border-radius: 99px; }
+.pagina-perfil .cert-num { font-size: 13px; color: var(--slate-ink); }
+.pagina-perfil .cert-num b { color: var(--navy); }
+.pagina-perfil .cert-pend { display: flex; gap: 6px; align-items: center; font-size: 12px; font-weight: 600; color: var(--warn-ink); }
+.pagina-perfil .cert-como { font-size: 12px; color: var(--slate); }

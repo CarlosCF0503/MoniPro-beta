@@ -18,6 +18,7 @@ const disciplinaRotas = require('./routes/disciplinaRotas');
 const monitoriaRotas = require('./routes/monitoriaRotas');
 const perfilRotas = require('./routes/perfilRotas');
 const pontosRotas = require('./routes/pontosRotas');
+const certificadoRotas = require('./routes/certificadoRotas');
 const saudeController = require('./controllers/saudeController');
 const tratadorDeErros = require('./middlewares/tratadorDeErros');
 const { ErroNaoAutorizado } = require('./utils/erros');
@@ -77,6 +78,7 @@ app.use('/disciplinas', disciplinaRotas);
 app.use('/monitorias', monitoriaRotas);
 app.use('/perfil', perfilRotas);
 app.use('/pontos', pontosRotas);
+app.use('/certificados', certificadoRotas);
 // Rota de teste
 app.get('/teste', (req, res) => {
     res.json({ mensagem: 'O servidor atualizado está respondendo!' });
