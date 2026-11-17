@@ -36,7 +36,7 @@ class AutenticacaoService {
             throw new ErroConflito(`Este e-mail já está cadastrado como ${dados.tipo_usuario}.`);
         }
 
-        // 2. A matrícula também não pode se repetir dentro do mesmo cargo
+        // A matrícula também não pode se repetir dentro do mesmo cargo
         const matriculaExistente = await usuarioRepository.buscarPorMatricula(
             dados.matricula,
             dados.tipo_usuario
