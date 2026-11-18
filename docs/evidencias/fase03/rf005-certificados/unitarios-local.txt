@@ -1,0 +1,54 @@
+# tests/certificados.test.js
+ok  Quanto vale uma sessão › 90 minutos valem 90
+ok  Quanto vale uma sessão › 240 minutos valem 240
+ok  Quanto vale uma sessão › 300 minutos valem 240
+ok  Quanto vale uma sessão › -30 minutos valem 0
+ok  Quais sessões contam › finalizada com pelo menos uma presença dos dois lados conta inteira
+ok  Quais sessões contam › 3 inscritos e só 1 confirmado: conta a sessão inteira, uma vez
+ok  Quais sessões contam › finalizada sem nenhuma presença dupla não conta e vira pendência
+ok  Quais sessões contam › horário passou e não foi finalizada: pendência "a finalizar"
+ok  Quais sessões contam › soma por disciplina, da que tem mais horas para a que tem menos
+ok  Elegibilidade › semestre atual por padrão, com o mínimo de 1h
+ok  Elegibilidade › abaixo do mínimo não pode emitir
+ok  Elegibilidade › CERT_MINIMO_MINUTOS muda o mínimo; valor inválido volta para 60
+ok  GET /certificados/elegibilidade › sem login: 401; aluno: 403
+ok  GET /certificados/elegibilidade › monitor: 200 com o resumo, usando o id da sessão
+ok  GET /certificados/elegibilidade › período mal formado "2026": 400
+ok  GET /certificados/elegibilidade › período mal formado "2026.3": 400
+ok  GET /certificados/elegibilidade › período mal formado "26.1": 400
+ok  GET /certificados/elegibilidade › período mal formado "abc": 400
+ok  Código de verificação › 26 caracteres sem símbolos ambíguos, diferente a cada vez
+ok  Código de verificação › aceita hífens, espaços e minúsculas; recusa formato errado
+ok  Emitir, listar e abrir › aluno não emite (403)
+ok  Emitir, listar e abrir › abaixo do mínimo: 422 e nada é gravado
+ok  Emitir, listar e abrir › semestre que ainda não começou: 422
+ok  Emitir, listar e abrir › emite com snapshot congelado (nome, horas, sessões) e substitui a válida anterior
+ok  Emitir, listar e abrir › abrir a declaração de outra pessoa responde 404, igual a inexistente
+
+# tests/r14.test.js
+ok  Criar vaga (R14) › horário no passado: 400 e nada é gravado
+ok  Criar vaga (R14) › até 5 minutos atrás ainda passa (diferença de relógio do aparelho)
+ok  Criar vaga (R14) › horário no futuro: 201
+ok  Inscrever-se (R14) › vaga que já começou: 422, mesmo ativa e com lugar livre
+ok  Inscrever-se (R14) › vaga no futuro continua aceitando inscrição
+ok  Finalizar (teto de 4h e término que já aconteceu) › término no futuro: 400
+ok  Finalizar (teto de 4h e término que já aconteceu) › mais de 4h depois do início: 400
+ok  Finalizar (teto de 4h e término que já aconteceu) › exatamente 4h: aceita
+
+# tests/revogacao.test.js
+ok  certificadoService.revogar › sem aplicar: mostra a declaração e não grava nada
+ok  certificadoService.revogar › aplicando: grava pelo id, com o motivo sem espaços, e deixa uma linha no log sem o código
+ok  certificadoService.revogar › recusa código mal formado e motivo curto ou longo demais antes de ir ao banco
+ok  certificadoService.revogar › código inexistente: 404; já revogada: 409 com a data
+ok  certificadoService.revogar › se outra revogação gravou antes (0 linhas alteradas): 409 e sem log
+ok  scripts/certificados.js: argumentos › lê o código, o motivo e o --aplicar em qualquer ordem
+ok  scripts/certificados.js: argumentos › sem código ou sem motivo: null (o script mostra o uso)
+
+# tests/verificacao.test.js
+ok  GET /certificados/verificar/:codigo › sem login: devolve só nome, semestre, horas, emissão e situação
+ok  GET /certificados/verificar/:codigo › aceita o código com hífens e minúsculas
+ok  GET /certificados/verificar/:codigo › revogada mostra a data da revogação; substituída aparece como tal
+ok  GET /certificados/verificar/:codigo › código inexistente: 404; mal formado: 404 sem ir ao banco
+ok  GET /certificados/verificar/:codigo › limite por IP: a partir do limite configurado, 429
+
+45 de 45 passaram

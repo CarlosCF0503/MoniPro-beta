@@ -20,24 +20,23 @@ do horário e a plataforma registra pontos e horas de monitoria.
 
 ## Funcionalidades
 
-| Código          | Funcionalidade                                                                                      | Situação     |
-| :-------------- | :-------------------------------------------------------------------------------------------------- | :----------- |
-| RF-001          | Cadastro e login de aluno e monitor, sessão por cookie                                              | Concluído    |
-| RF-002          | Vagas por disciplina e inscrição pelo calendário, com limite de capacidade                          | Concluído    |
-| RF-003          | Perfil do aluno e do monitor, com as inscrições, as vagas e a exclusão da conta (LGPD)              | Concluído    |
-| RF-004          | Gamificação: pontos depois da confirmação dos dois lados (monitor +10, aluno +2), extrato e ranking | Concluído    |
-| RF-005          | Declaração de horas do monitor, por semestre, com código de verificação                             | Em andamento |
-| RF-008 / RN-009 | Recuperar a senha por e-mail                                                                        | Concluído    |
-| RF-009 / RN-010 | Editar uma vaga ativa                                                                               | Concluído    |
-| RF-010 / RN-011 | Avisos por e-mail ao aluno (vaga alterada ou cancelada, lembretes)                                  | Concluído    |
-| RF-011 / RN-008 | Extrato de pontos e ranking por disciplina e semestre                                               | Concluído    |
-| RF-018 / RN-017 | Confirmação do e-mail no cadastro                                                                   | Concluído    |
-| RN-001          | Cancelamento com pelo menos 24 h de antecedência                                                    | Concluído    |
+| Código          | Funcionalidade                                                                                      | Situação  |
+| :-------------- | :-------------------------------------------------------------------------------------------------- | :-------- |
+| RF-001          | Cadastro e login de aluno e monitor, sessão por cookie                                              | Concluído |
+| RF-002          | Vagas por disciplina e inscrição pelo calendário, com limite de capacidade                          | Concluído |
+| RF-003          | Perfil do aluno e do monitor, com as inscrições, as vagas e a exclusão da conta (LGPD)              | Concluído |
+| RF-004          | Gamificação: pontos depois da confirmação dos dois lados (monitor +10, aluno +2), extrato e ranking | Concluído |
+| RF-005          | Declaração de horas do monitor, por semestre, com código de verificação                             | Concluído |
+| RF-008 / RN-009 | Recuperar a senha por e-mail                                                                        | Concluído |
+| RF-009 / RN-010 | Editar uma vaga ativa                                                                               | Concluído |
+| RF-010 / RN-011 | Avisos por e-mail ao aluno (vaga alterada ou cancelada, lembretes)                                  | Concluído |
+| RF-011 / RN-008 | Extrato de pontos e ranking por disciplina e semestre                                               | Concluído |
+| RF-018 / RN-017 | Confirmação do e-mail no cadastro                                                                   | Concluído |
+| RN-001          | Cancelamento com pelo menos 24 h de antecedência                                                    | Concluído |
 
-No RF-005, a regra das horas, a emissão e a declaração para imprimir já estão prontas. Ainda
-faltam a verificação pública pelo código e a revogação. Os códigos a partir do RF-008 vêm dos
-planos de novas funcionalidades e entram no Documento de Especificação na versão seguinte à
-v7.2.
+No RF-005, a revogação da declaração é feita pelo script `scripts/certificados.js` até existir
+o perfil Administrador. Os códigos a partir do RF-008 vêm dos planos de novas funcionalidades e
+entram no Documento de Especificação na versão seguinte à v7.2.
 
 ### Páginas (`Monipro_web/`)
 
@@ -97,7 +96,7 @@ enviado, com o link.
 | `npm test`               | Testes unitários e de API (Jest + Supertest), com o banco simulado                                                       |
 | `npm run test:cobertura` | Os mesmos testes com relatório de cobertura em `coverage/`. Falha se a cobertura cair abaixo do piso de `jest.config.js` |
 | `npm run test:int`       | Integração com um PostgreSQL real: migrações do zero, concorrência, restrições únicas e sessão                           |
-| `npm run test:e2e`       | Casos CT-01 a CT-11 no navegador (Playwright), no computador e no celular                                                |
+| `npm run test:e2e`       | Casos CT-01 a CT-13 no navegador (Playwright), no computador e no celular                                                |
 | `npm run lint`           | ESLint e Prettier                                                                                                        |
 
 O `test:int` exige `DATABASE_URL_INTEGRACAO` apontando para um banco local cujo nome termine
@@ -133,6 +132,8 @@ docker compose -f docker-compose.e2e.yml down -v
 - **Banco:** conexão com SSL e validação da CA (`DB_CA_CERT`).
 - **LGPD:** a exclusão da conta anonimiza os dados pessoais, e `scripts/retencao.js` aplica
   os prazos de retenção (só simula, a não ser que receba `--aplicar`).
+- **Declarações de horas:** `scripts/certificados.js --revogar CODIGO --motivo "..."` revoga uma
+  declaração (só simula sem `--aplicar`), grava a data e o motivo e registra no log.
 - **Segredos:** ficam só no `.env` de cada servidor, que não é versionado.
 
 ## Endpoints da API
@@ -175,6 +176,7 @@ restrita a esse papel.
 | GET    | `/certificados`                    | Declarações emitidas (monitor)                                 |
 | POST   | `/certificados`                    | Emite a declaração do semestre (monitor)                       |
 | GET    | `/certificados/:codigo`            | Abre uma declaração                                            |
+| GET    | `/certificados/verificar/:codigo`  | Confere a situação de uma declaração (pública)                 |
 
 Um prefixo novo na API também precisa entrar no Nginx do servidor (homologação e produção) e
 em `e2e/pilha/gateway.conf`. Sem isso, o caminho cai no frontend.

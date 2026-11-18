@@ -1,0 +1,14 @@
+ok  Horas comprovadas do semestre › conta só as finalizadas com presença dupla, limita a 4h e separa por disciplina
+ok  Horas comprovadas do semestre › vagas de outro monitor, canceladas ou futuras não entram
+ok  Horas comprovadas do semestre › um semestre não soma as sessões do outro
+ok  Emissão da declaração › duas emissões ao mesmo tempo deixam uma única declaração válida
+ok  Emissão da declaração › emitir de novo substitui a anterior, que continua listada
+ok  Emissão da declaração › mudar o nome depois não altera a declaração já emitida
+ok  Emissão da declaração › sem horas suficientes: 422
+ok  Verificação pública › sem login confere a situação: a antiga aparece como substituída
+ok  Verificação pública › depois de o titular excluir a conta, a declaração continua verificável com o nome (D-C4)
+ok  Revogação pelo script (PR 5) › simular não muda nada; aplicar grava data e motivo e a verificação mostra na hora
+ok  Revogação pelo script (PR 5) › revogar de novo, ao mesmo tempo ou depois, grava uma vez só
+ok  Revogação pelo script (PR 5) › a substituída também pode ser revogada, sem mexer na válida
+
+12 de 12 passaram

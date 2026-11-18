@@ -1,0 +1,53 @@
+$ node scripts/certificados.js
+uso: node scripts/certificados.js --revogar CODIGO --motivo "por que" [--aplicar]
+(código de saída: 2)
+
+$ node scripts/certificados.js --revogar ABC --motivo Teste de evidência
+certificados: falhou — O código tem 26 letras e números.
+(código de saída: 1)
+
+$ node scripts/certificados.js --revogar 22222222222222222222222222 --motivo Teste de evidência
+certificados: falhou — Nenhuma declaração com este código.
+(código de saída: 1)
+
+$ node scripts/certificados.js --revogar <código impresso> --motivo oi
+certificados: falhou — Informe o motivo da revogação (de 5 a 500 caracteres).
+(código de saída: 1)
+
+$ node scripts/certificados.js --revogar <código impresso> --motivo Sessões lançadas por engano
+revogação (simulação, nada foi alterado):
+  titular: E2E monitor mwldi79x101481
+  semestre: 2º semestre de 2026
+  carga horária: 1h30
+  emitida em: 17/11/2026, 21:18:40 (Brasília)
+  situação: valido
+  motivo: Sessões lançadas por engano
+Rode de novo com --aplicar para revogar.
+(código de saída: 0)
+
+$ curl http://localhost:8088/certificados/verificar/<código>
+{"success":true,"declaracao":{"nome":"E2E monitor mwldi79x101481","periodo":"2026.2","carga_minutos":90,"emitido_em":"2026-11-18T00:18:40.698Z","situacao":"valido"}}
+
+$ node scripts/certificados.js --revogar <código impresso> --motivo Sessões lançadas por engano --aplicar
+{"level":30,"time":1794961343047,"pid":171,"hostname":"7c3c229e34d2","id_certificado":4,"id_usuario":11,"periodo":"2026.2","situacao_anterior":"valido","motivo":"Sessões lançadas por engano","msg":"Declaração de horas revogada"}
+declaração revogada:
+  titular: E2E monitor mwldi79x101481
+  semestre: 2º semestre de 2026
+  carga horária: 1h30
+  emitida em: 17/11/2026, 21:18:40 (Brasília)
+  situação: revogado
+  motivo: Sessões lançadas por engano
+(código de saída: 0)
+
+$ curl http://localhost:8088/certificados/verificar/<código>
+{"success":true,"declaracao":{"nome":"E2E monitor mwldi79x101481","periodo":"2026.2","carga_minutos":90,"emitido_em":"2026-11-18T00:18:40.698Z","situacao":"revogado","revogado_em":"2026-11-18T00:22:22.918Z"}}
+
+$ node scripts/certificados.js --revogar <código impresso> --motivo Sessões lançadas por engano --aplicar
+certificados: falhou — Esta declaração já foi revogada em 2026-11-18T00:22:22.918Z.
+(código de saída: 1)
+
+$ psql: select situacao, revogado_em, motivo_revogacao from certificados where codigo = '<código>'
+ situacao |       revogado_em       |      motivo_revogacao
+----------+-------------------------+-----------------------------
+ revogado | 2026-11-18 00:22:22.918 | Sessões lançadas por engano
+(1 row)
