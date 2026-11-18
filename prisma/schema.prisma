@@ -50,6 +50,7 @@ model Usuario {
   tokens_confirmacao TokenConfirmacaoEmail[]
   notificacoes       Notificacao[]
   eventos_pontuacao  EventoPontuacao[]
+  certificados       Certificado[]
 
   @@unique([email, tipo_usuario])
   @@unique([matricula, tipo_usuario])
@@ -193,4 +194,29 @@ model EventoPontuacao {
   @@index([id_usuario])
   @@index([id_disciplina, periodo])
   @@map("eventos_pontuacao")
+}
+
+// Certificados (RF-005): declaração de horas do monitor, uma válida por semestre. O snapshot
+// congela nome, horas e sessões na emissão: o documento não muda depois.
+enum SituacaoCertificado {
+  valido
+  substituido
+  revogado
+}
+
+model Certificado {
+  id               Int                 @id @default(autoincrement())
+  codigo           String              @unique // 128 bits aleatórios em base32; nunca o id
+  id_usuario       Int
+  usuario          Usuario             @relation(fields: [id_usuario], references: [id])
+  periodo          String              // "2026.2"
+  carga_minutos    Int
+  snapshot         Json
+  situacao         SituacaoCertificado @default(valido)
+  emitido_em       DateTime            @default(now())
+  revogado_em      DateTime?
+  motivo_revogacao String?
+
+  @@index([id_usuario, periodo])
+  @@map("certificados")
 }

@@ -57,27 +57,16 @@ describe('perfil do monitor — dados', () => {
         expect(l.finalizar).toEqual([]);
     });
 
-    test('horas comprovadas somam só as finalizadas com término', () => {
-        const vagas = [
-            vaga({
-                status: 'realizada',
-                horario: new Date(2026, 9, 29, 14).toISOString(),
-                data_fim: new Date(2026, 9, 29, 15, 30).toISOString()
-            }),
-            vaga({
-                status: 'concluida',
-                disciplina: { nome: 'Física I' },
-                horario: new Date(2026, 9, 22, 19).toISOString(),
-                data_fim: new Date(2026, 9, 22, 20).toISOString()
-            }),
-            vaga({ status: 'cancelada', data_fim: new Date(2026, 10, 10, 18).toISOString() }),
-            vaga({ status: 'realizada' }) // sem data_fim: não conta
-        ];
-        expect(D.minutosComprovados(vagas)).toBe(150);
-        expect(D.horasPorDisciplina(vagas)).toEqual([
-            { disciplina: 'Cálculo I', minutos: 90 },
-            { disciplina: 'Física I', minutos: 60 }
-        ]);
+    // As horas comprovadas saíram da tela: vêm de GET /certificados/elegibilidade, com a regra
+    // da declaração (tests/certificados.test.js). Aqui fica a escolha do término.
+    test('términos oferecidos: de 15 em 15 min, só os que já passaram e no máximo 4h', () => {
+        const inicio = new Date(2026, 10, 7, 14);
+        const minutos = (agora) => D.opcoesTermino(inicio, agora).map((o) => o.minutos);
+
+        expect(minutos(new Date(2026, 10, 7, 14, 10))).toEqual([15]); // 5 min de folga
+        expect(minutos(new Date(2026, 10, 7, 14, 40))).toEqual([15, 30, 45]);
+        expect(minutos(new Date(2026, 10, 7, 14, 5))).toEqual([]);
+        expect(minutos(new Date(2026, 10, 8, 9)).at(-1)).toBe(240);
     });
 
     test('cancelar só com 24h ou mais até o início (RN-001)', () => {

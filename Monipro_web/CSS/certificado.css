@@ -1,0 +1,43 @@
+/* Certificados (PR 3): declaração de horas em A4. A mesma folha serve à tela e ao papel. */
+:root { --navy: #071e3d; --navy-2: #1f4287; --slate: #5b6b82; --ink: #334155; --line: #d5dce8; --soft: #f0f4ff; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #e9edf5; color: var(--ink); font-family: Inter, 'Segoe UI', Arial, sans-serif; font-size: 15px; line-height: 1.6; padding: 16px; }
+[hidden] { display: none !important; }
+.cert-barra-topo { max-width: 210mm; margin: 0 auto 12px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.cert-voltar { color: var(--navy-2); font-weight: 700; text-decoration: none; }
+.cert-imprimir { background: var(--navy); color: #fff; border: 0; border-radius: 10px; padding: 11px 18px; font: 700 15px Inter, Arial, sans-serif; cursor: pointer; }
+.cert-imprimir:hover { background: var(--navy-2); }
+.cert-imprimir:focus-visible, .cert-voltar:focus-visible { outline: 3px solid var(--navy-2); outline-offset: 2px; }
+.cert-aviso { max-width: 210mm; margin: 0 auto 12px; background: #fff3dc; color: #6b4200; border: 2px solid #f0c36d; border-radius: 10px; padding: 10px 14px; font-weight: 600; }
+.cert-folha { max-width: 210mm; min-height: 297mm; margin: 0 auto; background: #fff; border-radius: 6px; box-shadow: 0 10px 30px rgba(7, 30, 61, 0.15); padding: 22mm 20mm; display: flex; flex-direction: column; gap: 16px; }
+.cert-cab { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 2px solid var(--navy); padding-bottom: 12px; }
+.cert-logo { height: 52px; width: auto; }
+.cert-plataforma { margin: 0; color: var(--slate); font-weight: 600; font-size: 13px; }
+.cert-folha h1 { margin: 18px 0 4px; color: var(--navy); font-size: 26px; line-height: 1.2; text-align: center; }
+.cert-texto { font-size: 16px; text-align: justify; margin: 8px 0; }
+.cert-texto strong { color: var(--navy); }
+.cert-tabela { width: 100%; border-collapse: collapse; font-size: 14px; }
+.cert-tabela th, .cert-tabela td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+.cert-tabela th { background: var(--soft); color: var(--navy); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+.cert-tabela .n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cert-tabela tfoot td { font-weight: 800; color: var(--navy); border-bottom: 0; border-top: 2px solid var(--navy); }
+.cert-regra { font-size: 12px; color: var(--slate); margin: 0; }
+.cert-rodape { margin-top: auto; border-top: 1px solid var(--line); padding-top: 12px; font-size: 13px; color: var(--slate); }
+.cert-rodape p { margin: 2px 0; }
+.cert-codigo { color: var(--navy); font-family: Consolas, 'Cascadia Mono', monospace; letter-spacing: 0.04em; }
+.cert-url { word-break: break-all; color: var(--navy-2); }
+.cert-carregando, .cert-erro { text-align: center; color: var(--slate); margin: auto; }
+.cert-erro { color: #b3261e; font-weight: 600; }
+@media (max-width: 700px) {
+  body { padding: 12px; }
+  .cert-folha { min-height: auto; padding: 22px 18px; }
+  .cert-folha h1 { font-size: 21px; }
+  .cert-texto { text-align: left; }
+}
+@page { size: A4; margin: 0; }
+@media print {
+  body { background: #fff; padding: 0; }
+  .cert-barra-topo, .cert-aviso, #toast-container { display: none !important; }
+  .cert-folha { box-shadow: none; border-radius: 0; margin: 0; max-width: none; min-height: 297mm; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

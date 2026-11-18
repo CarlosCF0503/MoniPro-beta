@@ -135,39 +135,23 @@
         return REALIZADAS.includes(vaga.status);
     }
 
-    function minutosDaVaga(vaga) {
-        if (!realizada(vaga) || !vaga.fim) return 0;
-        return Math.max(0, (vaga.fim - vaga.inicio) / 60000);
-    }
-
-    /** Minutos de monitorias finalizadas (data_fim - horario). */
-    function minutosComprovados(vagas) {
-        return vagas.reduce((soma, v) => soma + minutosDaVaga(v), 0);
-    }
-
-    /** [{ disciplina, minutos }] das finalizadas, da que tem mais horas para a que tem menos. */
-    function horasPorDisciplina(vagas) {
-        const mapa = new Map();
-        vagas.forEach((v) => {
-            const min = minutosDaVaga(v);
-            if (min > 0) mapa.set(v.disciplina, (mapa.get(v.disciplina) || 0) + min);
-        });
-        return Array.from(mapa, ([disciplina, minutos]) => ({ disciplina, minutos })).sort(
-            (a, b) => b.minutos - a.minutos
-        );
-    }
-
     /** RN-001: só vagas futuras com 24h ou mais até o início podem ser canceladas. */
     function podeCancelar(vaga, agora) {
         if (grupo(vaga, agora) !== 'proximas') return false;
         return vaga.inicio - agora >= HORAS_CANCELAMENTO * 60 * 60 * 1000;
     }
 
-    /** Opções de término: [{ minutos, hora: "HH:MM" }] a partir do início. */
-    function opcoesTermino(inicio) {
+    /**
+     * Opções de término: [{ minutos, hora: "HH:MM" }] a partir do início, até 4h e só horários
+     * que já passaram (o servidor recusa término no futuro; 5 min de folga para o relógio).
+     */
+    function opcoesTermino(inicio, agora = new Date()) {
+        const limite = agora.getTime() + 5 * 60000;
         const lista = [];
         for (let m = TERMINO_PASSO; m <= TERMINO_MAXIMO; m += TERMINO_PASSO) {
-            lista.push({ minutos: m, hora: hora(new Date(inicio.getTime() + m * 60000)) });
+            const fim = new Date(inicio.getTime() + m * 60000);
+            if (fim.getTime() > limite) break;
+            lista.push({ minutos: m, hora: hora(fim) });
         }
         return lista;
     }
@@ -347,8 +331,6 @@
         grupo,
         separar,
         realizada,
-        minutosComprovados,
-        horasPorDisciplina,
         podeCancelar,
         opcoesTermino,
         agruparPorMes,

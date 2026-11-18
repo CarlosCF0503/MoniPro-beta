@@ -4,6 +4,7 @@ const pontuacaoService = require('./pontuacaoService');
 const { validarAntecedenciaCancelamento } = require('../utils/validarAntecedencia');
 const { validarJanelaConfirmacao } = require('../utils/regrasConclusao');
 const {
+    ErroAplicacao,
     ErroValidacao,
     ErroRegraNegocio,
     ErroNaoAutorizado,
@@ -28,6 +29,15 @@ class AgendamentoService {
             if (monitoria.status !== 'ativa') {
                 throw new ErroRegraNegocio(
                     'Esta vaga de monitoria não está aberta para inscrições.'
+                );
+            }
+
+            // R14: não dá para se inscrever numa vaga que já começou (usa o horário do banco,
+            // nunca o enviado pelo cliente)
+            if (new Date(monitoria.horario) <= new Date()) {
+                throw new ErroAplicacao(
+                    'Esta monitoria já começou. Escolha um horário que ainda não aconteceu.',
+                    422
                 );
             }
 

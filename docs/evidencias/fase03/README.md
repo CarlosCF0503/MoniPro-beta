@@ -8,6 +8,7 @@ Registros das execuções que comprovam os itens do plano da Fase 03, a resposta
 | [`p2-p3-hml/`](p2-p3-hml/) | P2: presença confirmada pelo aluno e pelo monitor (R4). P3: sessão em cookie com revogação (R7) | hml | 09/11/2026 |
 | [`r1-testes/`](r1-testes/) | R1: CT-01 a CT-11 no navegador (Playwright) e testes de integração com PostgreSQL real | CI (GitHub Actions) e local | 09/11/2026 |
 | [`r3-lgpd/`](r3-lgpd/) | R3: Aviso de Privacidade, exclusão da conta e retenção (LGPD) | hml, local e navegador | 09/11/2026 |
+| [`rf005-certificados/`](rf005-certificados/) | RF-005: declaração de horas, verificação pública e revogação; CT-12 e CT-13 no navegador | local (pilha E2E e Postgres real) | 17/11/2026 |
 | [`deploy-producao/`](deploy-producao/) | Falha do deploy de produção do #64 e a correção do #68 | GitHub Actions e local | 08 e 09/11/2026 |
 
 As evidências do P4 (publicação do arquivo da Fase 02) estão em [`../fase02/`](../fase02/).

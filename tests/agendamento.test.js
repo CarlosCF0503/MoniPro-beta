@@ -28,7 +28,8 @@ const tokenAluno = gerarToken({ id: 20, tipo: 'aluno' });
 const tokenOutroAluno = gerarToken({ id: 21, tipo: 'aluno' });
 const tokenMonitor = gerarToken({ id: 30, tipo: 'monitor' });
 
-const HORARIO_VAGA = new Date('2026-12-01T13:00:00.000Z');
+// R14: a vaga precisa estar no futuro; data relativa para o teste não vencer
+const HORARIO_VAGA = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
 
 describe('POST /agendamentos', () => {
     const corpo = { id_monitoria: 5, data_hora: '2026-09-10T14:00:00.000Z' };
