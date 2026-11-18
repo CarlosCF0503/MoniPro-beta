@@ -232,7 +232,7 @@ MODELOS['vaga-alterada'] = (d) => {
     return aviso({
         assunto: `Mudou ${oQue} da monitoria de ${d.disciplina}`,
         titulo: 'A monitoria mudou',
-        abertura: `Olá, ${primeiroNome(d.nome)}. ${d.monitor}, responsável pela vaga, alterou ${oQue} da monitoria em que você está inscrito.`,
+        abertura: `Olá, ${primeiroNome(d.nome)}. ${d.monitor}, responsável pela vaga, alterou ${oQue} da monitoria em que você está ${d.na_fila ? 'na lista de espera' : 'inscrito'}.`,
         linhas: [
             ['Disciplina', d.disciplina],
             [
@@ -246,7 +246,9 @@ MODELOS['vaga-alterada'] = (d) => {
                 mudou(d.local_anterior, d.local)
             ]
         ],
-        depois: 'Se a mudança não serve para você, pode cancelar a inscrição a qualquer momento antes do início, sem a regra das 24h.',
+        depois: d.na_fila
+            ? 'Se a mudança não serve para você, saia da lista de espera pelo seu perfil.'
+            : 'Se a mudança não serve para você, pode cancelar a inscrição a qualquer momento antes do início, sem a regra das 24h.',
         acao: PERFIL
     });
 };
@@ -255,7 +257,7 @@ MODELOS['vaga-cancelada'] = (d) =>
     aviso({
         assunto: `Cancelada: monitoria de ${d.disciplina}, ${diaCurto(d.horario)}`,
         titulo: 'A monitoria foi cancelada',
-        abertura: `Olá, ${primeiroNome(d.nome)}. ${d.monitor}, responsável pela vaga, cancelou a monitoria em que você estava inscrito.`,
+        abertura: `Olá, ${primeiroNome(d.nome)}. ${d.monitor}, responsável pela vaga, cancelou a monitoria em que você estava ${d.na_fila ? 'na lista de espera' : 'inscrito'}.`,
         linhas: [
             ['Disciplina', d.disciplina],
             ['Era em', quandoPorExtenso(d.horario)],
@@ -264,6 +266,27 @@ MODELOS['vaga-cancelada'] = (d) =>
         depois: `Veja se há outros horários de ${d.disciplina} para marcar.`,
         acao: { texto: 'Ver outros horários', pagina: 'marcar_monitoria.html' }
     });
+
+// Plano 8: o texto aprovado na prévia do plano 3 ("Abriu um lugar para você")
+MODELOS.espera = (d) => {
+    const prazo = new Date(new Date(d.horario).getTime() - 24 * 60 * 60 * 1000).toISOString();
+    return aviso({
+        assunto: `Abriu um lugar: ${d.disciplina}, ${quandoCurto(d.horario)}`,
+        titulo: 'Abriu um lugar para você',
+        abertura: `Olá, ${primeiroNome(d.nome)}. Abriu um lugar, e você era o próximo da lista de espera. Sua inscrição já foi feita.`,
+        linhas: [
+            ['Disciplina', d.disciplina],
+            ['Monitor', d.monitor],
+            ['Quando', quandoPorExtenso(d.horario)],
+            ['Local', d.local],
+            ...(d.assunto ? [['Assunto', d.assunto]] : [])
+        ],
+        depois: d.cancelar_ate_inicio
+            ? 'Se não puder ir, cancele pelo perfil até o início para liberar o lugar para o próximo da fila.'
+            : `Se não puder ir, cancele pelo perfil até ${quandoPorExtenso(prazo)} (24h antes) para liberar o lugar para o próximo da fila.`,
+        acao: PERFIL
+    });
+};
 
 function montar(modelo, dados) {
     const gerar = MODELOS[modelo];

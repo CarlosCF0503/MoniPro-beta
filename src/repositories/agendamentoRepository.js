@@ -1,6 +1,7 @@
 // src/repositories/agendamentoRepository.js
 
 const prisma = require('../config/bancoDeDados');
+const { OCUPA_LUGAR, NA_FILA } = require('../utils/statusInscricao');
 
 class AgendamentoRepository {
     // Executa `fn` dentro de uma transação interativa. `fn` recebe o cliente da transação (tx),
@@ -14,7 +15,7 @@ class AgendamentoRepository {
     // contar a mesma ocupação e ultrapassar a capacidade.
     async bloquearMonitoria(idMonitoria, db = prisma) {
         const linhas = await db.$queryRaw`
-            SELECT "capacidade", "status"::text AS "status", "horario"
+            SELECT "id", "capacidade", "status"::text AS "status", "horario"
             FROM "monitorias"
             WHERE "id" = ${parseInt(idMonitoria)}
             FOR UPDATE
@@ -22,14 +23,59 @@ class AgendamentoRepository {
         return linhas[0] || null;
     }
 
-    // Inscrições que ocupam vaga: tudo que não foi cancelado.
+    // Inscrições que ocupam vaga: nem canceladas nem na lista de espera (plano 8)
     async contarOcupadas(idMonitoria, db = prisma) {
         return await db.agendamento.count({
-            where: {
-                id_monitoria: parseInt(idMonitoria),
-                status: { not: 'cancelado' }
+            where: { id_monitoria: parseInt(idMonitoria), ...OCUPA_LUGAR }
+        });
+    }
+
+    // --- Lista de espera (plano 8) ---
+
+    async contarFila(idMonitoria, db = prisma) {
+        return await db.agendamento.count({
+            where: { id_monitoria: parseInt(idMonitoria), ...NA_FILA }
+        });
+    }
+
+    // Os `quantos` primeiros da fila, na ordem de entrada
+    async primeirosDaFila(idMonitoria, quantos, db = prisma) {
+        return await db.agendamento.findMany({
+            where: { id_monitoria: parseInt(idMonitoria), ...NA_FILA },
+            orderBy: { id: 'asc' },
+            take: quantos,
+            select: { id: true, id_aluno: true }
+        });
+    }
+
+    // Sai da fila e vira inscrição. Com `liberarCancelamento`, pode cancelar até o início
+    // (promovido com menos de 24h, decisão de 18/11), como na vaga editada.
+    async promover(id, quando, liberarCancelamento, db = prisma) {
+        return await db.agendamento.update({
+            where: { id },
+            data: {
+                status: 'pendente',
+                promovido_em: quando,
+                ...(liberarCancelamento ? { liberado_cancelar_em: quando } : {})
             }
         });
+    }
+
+    // Posição na fila (1 = o próximo): quantos da mesma vaga entraram antes, mais um
+    async posicaoNaFila(id, idMonitoria, db = prisma) {
+        const antes = await db.agendamento.count({
+            where: { id_monitoria: parseInt(idMonitoria), ...NA_FILA, id: { lt: parseInt(id) } }
+        });
+        return antes + 1;
+    }
+
+    // Posições de várias inscrições em espera de uma vez (perfil do aluno): { id: posição }
+    async posicoesNaFila(inscricoes, db = prisma) {
+        const posicoes = {};
+        for (const { id, id_monitoria } of inscricoes) {
+            posicoes[id] = await this.posicaoNaFila(id, id_monitoria, db);
+        }
+        return posicoes;
     }
 
     async criar(dados, db = prisma) {
@@ -82,10 +128,19 @@ class AgendamentoRepository {
         });
     }
 
-    async deletar(id) {
-        return await prisma.agendamento.delete({
+    async deletar(id, db = prisma) {
+        return await db.agendamento.delete({
             where: { id: parseInt(id) }
         });
+    }
+
+    // Plano 8: quem estava na fila de uma vaga que deixou de acontecer sai dela
+    async encerrarFila(idMonitoria, db = prisma) {
+        const { count } = await db.agendamento.updateMany({
+            where: { id_monitoria: parseInt(idMonitoria), ...NA_FILA },
+            data: { status: 'cancelado' }
+        });
+        return count;
     }
 
     // P2 (R4): trava a inscrição (SELECT ... FOR UPDATE) até o fim da transação e traz os dados

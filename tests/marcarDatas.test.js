@@ -154,3 +154,32 @@ describe('marcar monitoria — validação da nova vaga', () => {
         expect(datas.validarVaga({ ...valido, hora: '15:00' }, agora, minhas)).toEqual({});
     });
 });
+
+describe('marcar monitoria — lista de espera (plano 8)', () => {
+    const base = {
+        id: 7,
+        horario: new Date(2026, 10, 9, 14, 0).toISOString(),
+        capacidade: 2,
+        monitor: { nome_completo: 'Ana Ribeiro' }
+    };
+
+    test('normalizarVaga traz o tamanho da fila e se ela está cheia', () => {
+        const v = datas.normalizarVaga({ ...base, vagas_disponiveis: 0, na_fila: 1 });
+        expect(v).toMatchObject({ livres: 0, naFila: 1, filaCheia: false });
+        expect(datas.normalizarVaga(base)).toMatchObject({ naFila: 0, filaCheia: false });
+    });
+
+    test('aceitaFila: só vaga lotada com fila que ainda tem espaço', () => {
+        const lotada = datas.normalizarVaga({ ...base, vagas_disponiveis: 0, na_fila: 1 });
+        const cheia = datas.normalizarVaga({
+            ...base,
+            vagas_disponiveis: 0,
+            na_fila: 2,
+            fila_cheia: true
+        });
+        const livre = datas.normalizarVaga({ ...base, vagas_disponiveis: 1 });
+        expect(datas.aceitaFila(lotada)).toBe(true);
+        expect(datas.aceitaFila(cheia)).toBe(false);
+        expect(datas.aceitaFila(livre)).toBe(false);
+    });
+});

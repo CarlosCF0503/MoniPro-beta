@@ -1,5 +1,6 @@
 // src/repositories/monitoriaRepository.js
 const prisma = require('../config/bancoDeDados');
+const { OCUPA_LUGAR, NA_FILA } = require('../utils/statusInscricao');
 
 class MonitoriaRepository {
     async criar(dados) {
@@ -40,10 +41,8 @@ class MonitoriaRepository {
                 where,
                 include: {
                     monitor: { select: { nome_completo: true } },
-                    // Inscrições que ocupam vaga (tudo que não foi cancelado)
-                    _count: {
-                        select: { inscricoes: { where: { status: { not: 'cancelado' } } } }
-                    }
+                    // Inscrições que ocupam lugar (nem canceladas nem na lista de espera)
+                    _count: { select: { inscricoes: { where: OCUPA_LUGAR } } }
                 },
                 orderBy: { horario: 'asc' },
                 skip,
@@ -56,8 +55,10 @@ class MonitoriaRepository {
     }
 
     async buscarAgendamentos(monitorId, { skip, take } = {}) {
+        // A fila (plano 8) não aparece aqui: o monitor só vê o tamanho dela, em cada vaga
         const where = {
-            monitoria: { id_monitor: monitorId }
+            monitoria: { id_monitor: monitorId },
+            status: { not: 'em_espera' }
         };
 
         const [dados, total] = await Promise.all([
@@ -133,11 +134,22 @@ class MonitoriaRepository {
         return linhas[0] || null;
     }
 
-    // Inscrições que ocupam vaga (tudo que não foi cancelado), como em buscarPorDisciplina
+    // Inscrições que ocupam lugar, como em buscarPorDisciplina
     async contarInscritos(idMonitoria, db = prisma) {
         return await db.agendamento.count({
-            where: { id_monitoria: parseInt(idMonitoria), status: { not: 'cancelado' } }
+            where: { id_monitoria: parseInt(idMonitoria), ...OCUPA_LUGAR }
         });
+    }
+
+    // Plano 8: tamanho da lista de espera de cada vaga, { id_monitoria: quantos }
+    async contarFilas(idsMonitorias, db = prisma) {
+        if (!idsMonitorias.length) return {};
+        const grupos = await db.agendamento.groupBy({
+            by: ['id_monitoria'],
+            where: { id_monitoria: { in: idsMonitorias }, ...NA_FILA },
+            _count: { _all: true }
+        });
+        return Object.fromEntries(grupos.map((g) => [g.id_monitoria, g._count._all]));
     }
 
     // Outra vaga ativa do mesmo monitor no horário exato (a própria vaga fica de fora)
@@ -163,6 +175,7 @@ class MonitoriaRepository {
     // ainda está vazio, para guardar como a vaga era quando o aluno se inscreveu, mesmo depois
     // de várias edições.
     async liberarInscricoes(idMonitoria, quando, { novoHorario, mudouLocal, antes }, db = prisma) {
+        // Inscritos e quem está na lista de espera (plano 8): a fila também segue o novo horário
         const ativas = { id_monitoria: parseInt(idMonitoria), status: { not: 'cancelado' } };
         const { count } = await db.agendamento.updateMany({
             where: ativas,
@@ -194,10 +207,8 @@ class MonitoriaRepository {
                 where,
                 include: {
                     disciplina: { select: { nome: true } },
-                    // Inscrições que ocupam vaga (tudo que não foi cancelado), como em buscarPorDisciplina
-                    _count: {
-                        select: { inscricoes: { where: { status: { not: 'cancelado' } } } }
-                    }
+                    // Inscrições que ocupam lugar, como em buscarPorDisciplina
+                    _count: { select: { inscricoes: { where: OCUPA_LUGAR } } }
                 },
                 orderBy: { horario: 'desc' },
                 skip,

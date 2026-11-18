@@ -99,7 +99,7 @@ describe('POST /agendamentos', () => {
         await postar();
 
         expect(prisma.agendamento.count).toHaveBeenCalledWith({
-            where: { id_monitoria: 5, status: { not: 'cancelado' } }
+            where: { id_monitoria: 5, status: { notIn: ['cancelado', 'em_espera'] } }
         });
     });
 
@@ -171,7 +171,13 @@ describe('POST /agendamentos', () => {
 });
 
 describe('DELETE /agendamentos/:id', () => {
-    beforeEach(() => jest.clearAllMocks());
+    beforeEach(() => {
+        jest.clearAllMocks();
+        // Plano 8: o cancelamento roda numa transação com a vaga travada (aqui, sem vaga = sem
+        // fila para andar)
+        prisma.$transaction.mockImplementation((fn) => fn(prisma));
+        prisma.$queryRaw.mockResolvedValue([]);
+    });
 
     const em48h = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
     const em10h = new Date(Date.now() + 10 * 60 * 60 * 1000).toISOString();

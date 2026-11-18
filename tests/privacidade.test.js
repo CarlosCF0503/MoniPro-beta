@@ -14,7 +14,12 @@ jest.mock('../src/config/bancoDeDados', () => {
             count: jest.fn(),
             deleteMany: jest.fn()
         },
-        agendamento: { updateMany: jest.fn(), count: jest.fn(), deleteMany: jest.fn() },
+        agendamento: {
+            updateMany: jest.fn(),
+            count: jest.fn(),
+            deleteMany: jest.fn(),
+            findMany: jest.fn().mockResolvedValue([])
+        },
         monitoria: { updateMany: jest.fn(), count: jest.fn(), deleteMany: jest.fn() },
         tokenRedefinicao: { count: jest.fn(), deleteMany: jest.fn() },
         tokenConfirmacaoEmail: { count: jest.fn(), deleteMany: jest.fn() },
@@ -99,7 +104,7 @@ describe('DELETE /perfil — excluir a minha conta', () => {
         expect(prisma.agendamento.updateMany).toHaveBeenCalledWith({
             where: {
                 id_aluno: 7,
-                status: { in: ['pendente', 'confirmado'] },
+                status: { in: ['pendente', 'confirmado', 'em_espera'] },
                 data_hora: { gt: expect.any(Date) }
             },
             data: { status: 'cancelado' }

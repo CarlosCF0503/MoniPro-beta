@@ -1,5 +1,6 @@
 const agendamentoRepository = require('../repositories/agendamentoRepository');
 const notificacaoService = require('./notificacaoService');
+const listaEsperaService = require('./listaEsperaService');
 const pontuacaoService = require('./pontuacaoService');
 const { validarAntecedenciaCancelamento } = require('../utils/validarAntecedencia');
 const { validarJanelaConfirmacao } = require('../utils/regrasConclusao');
@@ -47,14 +48,39 @@ class AgendamentoService {
                 dados.id_monitoria,
                 tx
             );
-            if (jaExiste) {
+            if (jaExiste && jaExiste.status !== 'em_espera') {
                 throw new ErroRegraNegocio('Você já está inscrito nesta monitoria.');
             }
 
             const ocupadas = await agendamentoRepository.contarOcupadas(dados.id_monitoria, tx);
             if (ocupadas >= monitoria.capacidade) {
-                // Vaga lotada: conflito de estado, não erro de validação da requisição
-                throw new ErroConflito('Esta vaga de monitoria está lotada.');
+                // Vaga lotada: conflito de estado, não erro de validação da requisição. A tela
+                // oferece a lista de espera (plano 8).
+                throw new ErroConflito(
+                    jaExiste
+                        ? 'Você já está na lista de espera desta vaga.'
+                        : 'Esta vaga de monitoria está lotada.'
+                );
+            }
+
+            // Plano 8: quem está na fila e encontra um lugar livre (aberto a menos de 2h do
+            // início, quando a fila não anda sozinha) se inscreve pela própria entrada da fila
+            if (jaExiste) {
+                const agendamento = await agendamentoRepository.promover(
+                    jaExiste.id,
+                    new Date(),
+                    false,
+                    tx
+                );
+                await notificacaoService.avisarInscricao(
+                    {
+                        idAgendamento: agendamento.id,
+                        idAluno: dados.id_aluno,
+                        idMonitoria: dados.id_monitoria
+                    },
+                    tx
+                );
+                return agendamento;
             }
 
             // Tarefa 31: a data/hora do agendamento é sempre a da vaga gravada no banco,
@@ -88,8 +114,14 @@ class AgendamentoService {
         if (agendamento.id_aluno !== idAluno) {
             throw new ErroNaoAutorizado('Você não tem permissão para cancelar este agendamento.');
         }
-        // RN-001 com o ajuste do editar vaga: se a vaga mudou de dia, horário ou local depois da
-        // inscrição, o aluno pode cancelar sem as 24h, desde que a sessão ainda não tenha começado
+        // Plano 8: sair da lista de espera vale a qualquer momento e não libera lugar
+        if (agendamento.status === 'em_espera') {
+            await agendamentoRepository.deletar(id);
+            return { saiuDaFila: true, promovidos: 0 };
+        }
+        // RN-001 com os ajustes do editar vaga e da lista de espera: se a vaga mudou de dia,
+        // horário ou local depois da inscrição, ou se o aluno saiu da fila a menos de 24h do
+        // início, ele pode cancelar sem as 24h, desde que a sessão ainda não tenha começado
         if (agendamento.liberado_cancelar_em) {
             if (new Date(agendamento.data_hora) <= new Date()) {
                 throw new ErroRegraNegocio('Cancelamento não permitido: a monitoria já começou.');
@@ -97,7 +129,13 @@ class AgendamentoService {
         } else {
             validarAntecedenciaCancelamento(agendamento.data_hora);
         }
-        return await agendamentoRepository.deletar(id);
+        // O lugar liberado vai para o primeiro da fila, na mesma transação e com a vaga travada
+        return await agendamentoRepository.emTransacao(async (tx) => {
+            await agendamentoRepository.bloquearMonitoria(agendamento.id_monitoria, tx);
+            await agendamentoRepository.deletar(id, tx);
+            const promovidos = await listaEsperaService.promover(agendamento.id_monitoria, tx);
+            return { saiuDaFila: false, promovidos: promovidos.length };
+        });
     }
 
     // P2 (R4): a presença vale quando o aluno e o monitor da vaga confirmam, cada um do seu
@@ -124,6 +162,11 @@ class AgendamentoService {
             }
             if (ag.status === 'cancelado') {
                 throw new ErroRegraNegocio('Não é possível confirmar um agendamento cancelado.');
+            }
+            if (ag.status === 'em_espera') {
+                throw new ErroRegraNegocio(
+                    'Quem está na lista de espera não participou da sessão: não há presença a confirmar.'
+                );
             }
             // Cancelar a vaga não muda o status das inscrições, então a checagem é feita aqui
             if (ag.status_vaga === 'cancelada') {

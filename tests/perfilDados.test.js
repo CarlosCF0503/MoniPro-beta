@@ -307,3 +307,60 @@ describe('perfil do aluno — inscrições (P2)', () => {
         ]);
     });
 });
+
+describe('lista de espera (plano 8)', () => {
+    const AGORA_FILA = new Date(2026, 10, 7, 12, 0);
+    const naFila = (campos = {}) =>
+        D.normalizarMinhaInscricao({
+            id: 9,
+            status: 'em_espera',
+            posicao_fila: 2,
+            ...campos,
+            monitoria: {
+                horario: new Date(2026, 10, 10, 14).toISOString(),
+                local: 'Sala 204',
+                status: 'ativa',
+                disciplina: { nome: 'Cálculo I' },
+                monitor: { nome_completo: 'Ana Ribeiro' },
+                ...(campos.monitoria || {})
+            }
+        });
+
+    test('a inscrição em espera traz a posição e fica em Próximas', () => {
+        const i = naFila();
+        expect(i).toMatchObject({ naFila: true, posicaoFila: 2, promovido: false });
+        expect(D.situacaoDoAluno(i, AGORA_FILA)).toBe('fila');
+        expect(D.separarInscricoes([i], AGORA_FILA).proximas).toEqual([i]);
+    });
+
+    test('depois do início ou com a vaga cancelada, a fila vira "não abriu lugar" no histórico', () => {
+        const depois = new Date(2026, 10, 10, 15);
+        expect(D.situacaoDoAluno(naFila(), depois)).toBe('semLugar');
+        const cancelada = naFila({ monitoria: { status: 'cancelada' } });
+        expect(D.situacaoDoAluno(cancelada, AGORA_FILA)).toBe('semLugar');
+        expect(D.separarInscricoes([cancelada], AGORA_FILA).historico).toEqual([cancelada]);
+    });
+
+    test('sair da fila vale até o início, mesmo com menos de 24h', () => {
+        const em2h = new Date(2026, 10, 10, 12);
+        expect(D.podeCancelarInscricao(naFila(), em2h)).toBe(true);
+        expect(D.podeCancelarInscricao(naFila(), new Date(2026, 10, 10, 14))).toBe(false);
+    });
+
+    test('promovido a menos de 24h pode cancelar até o início', () => {
+        const promovido = D.normalizarMinhaInscricao({
+            id: 9,
+            status: 'pendente',
+            promovido_em: '2026-11-10T10:00:00Z',
+            liberado_cancelar_em: '2026-11-10T10:00:00Z',
+            monitoria: { horario: new Date(2026, 10, 10, 14).toISOString(), status: 'ativa' }
+        });
+        expect(promovido).toMatchObject({ promovido: true, liberado: true, naFila: false });
+        expect(D.podeCancelarInscricao(promovido, new Date(2026, 10, 10, 12))).toBe(true);
+    });
+
+    test('o perfil do monitor recebe o tamanho da fila', () => {
+        expect(vaga({ inscritos: 3, na_fila: 2 }).naFila).toBe(2);
+        expect(vaga({ inscritos: 1 }).naFila).toBe(0);
+    });
+});
