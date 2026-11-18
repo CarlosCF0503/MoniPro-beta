@@ -4,11 +4,15 @@
 
 const certificadoRepository = require('../repositories/certificadoRepository');
 const { resumirCargaHoraria, sessoesQueContam } = require('../utils/cargaHoraria');
-const { gerarCodigo } = require('../utils/codigoCertificado');
+const { gerarCodigo, normalizarCodigo } = require('../utils/codigoCertificado');
 const { ErroAplicacao, ErroNaoEncontrado } = require('../utils/erros');
 const logger = require('../utils/logger');
 const { periodoDe, limitesDoPeriodo } = require('../utils/periodo');
 const { minimoMinutosCertificado } = require('../config/certificados');
+
+// Tamanho do motivo da revogação (fica gravado e no log)
+const MOTIVO_MIN = 5;
+const MOTIVO_MAX = 500;
 
 class CertificadoService {
     /**
@@ -117,6 +121,59 @@ class CertificadoService {
         if (!c || c.id_usuario !== idUsuario)
             throw new ErroNaoEncontrado('Declaração não encontrada.');
         return { ...publico(c), snapshot: c.snapshot };
+    }
+
+    /**
+     * Revogação (PR 5), só pelo script scripts/certificados.js até existir o perfil
+     * Administrador. Sem `aplicar`, só devolve o que faria. Vale para a válida e para a
+     * substituída; a verificação pública passa a mostrar "Revogada" na hora.
+     */
+    async revogar(codigoDigitado, motivoDigitado, { aplicar = false, agora = new Date() } = {}) {
+        const codigo = normalizarCodigo(codigoDigitado);
+        if (!codigo) throw new ErroAplicacao('O código tem 26 letras e números.', 400);
+        const motivo = String(motivoDigitado || '').trim();
+        if (motivo.length < MOTIVO_MIN || motivo.length > MOTIVO_MAX)
+            throw new ErroAplicacao(
+                `Informe o motivo da revogação (de ${MOTIVO_MIN} a ${MOTIVO_MAX} caracteres).`,
+                400
+            );
+
+        const c = await certificadoRepository.buscarPorCodigo(codigo);
+        if (!c) throw new ErroNaoEncontrado('Nenhuma declaração com este código.');
+        if (c.situacao === 'revogado')
+            throw new ErroAplicacao(
+                'Esta declaração já foi revogada em ' + c.revogado_em.toISOString() + '.',
+                409
+            );
+
+        const declaracao = {
+            nome: c.snapshot.nome,
+            periodo: c.periodo,
+            carga_minutos: c.carga_minutos,
+            emitido_em: c.emitido_em,
+            situacao: c.situacao
+        };
+        if (!aplicar) return { aplicado: false, declaracao, motivo };
+
+        const alteradas = await certificadoRepository.revogar(c.id, motivo, agora);
+        if (!alteradas) throw new ErroAplicacao('Esta declaração acabou de ser revogada.', 409);
+
+        // Rastro da revogação (sem o código, como na emissão): id, quem era o titular e o motivo
+        logger.info(
+            {
+                id_certificado: c.id,
+                id_usuario: c.id_usuario,
+                periodo: c.periodo,
+                situacao_anterior: c.situacao,
+                motivo
+            },
+            'Declaração de horas revogada'
+        );
+        return {
+            aplicado: true,
+            declaracao: { ...declaracao, situacao: 'revogado', revogado_em: agora },
+            motivo
+        };
     }
 }
 

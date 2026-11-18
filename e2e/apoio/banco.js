@@ -1,4 +1,4 @@
-// R1 (E2E): acesso direto ao banco da pilha E2E, usado só para "voltar no tempo" (CT-11):
+// R1 (E2E): acesso direto ao banco da pilha E2E, usado só para "voltar no tempo" (CT-11 a CT-13):
 // a confirmação de presença só vale depois do horário da sessão, e a API não cria vagas no
 // passado. O banco é o da pilha descartável (porta 5435 da máquina), nunca hml ou prod.
 const { Client } = require('pg');
@@ -31,4 +31,26 @@ async function moverVagaParaOPassado(idVaga, horasAtras = 2) {
     });
 }
 
-module.exports = { moverVagaParaOPassado };
+/**
+ * CT-12/CT-13: a vaga aconteceu há `horasAtras` horas, foi finalizada com `minutos` de duração e
+ * as inscrições tiveram a presença confirmada pelos dois lados (o que a CT-11 faz pela tela).
+ */
+async function concluirSessao(idVaga, { horasAtras = 3, minutos = 90 } = {}) {
+    await moverVagaParaOPassado(idVaga, horasAtras);
+    await comBanco(async (c) => {
+        await c.query(
+            `UPDATE monitorias SET status = 'realizada',
+                    data_fim = horario + make_interval(mins => $2)
+              WHERE id = $1`,
+            [idVaga, minutos]
+        );
+        await c.query(
+            `UPDATE agendamentos SET status = 'concluido',
+                    presenca_aluno_em = now(), presenca_monitor_em = now()
+              WHERE id_monitoria = $1`,
+            [idVaga]
+        );
+    });
+}
+
+module.exports = { moverVagaParaOPassado, concluirSessao };

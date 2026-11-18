@@ -198,3 +198,82 @@ describe('Verificação pública', () => {
         expect(r.body.declaracao).toMatchObject({ nome: 'Ana Ribeiro', situacao: 'valido' });
     });
 });
+
+describe('Revogação pelo script (PR 5)', () => {
+    const certificadoService = require('../../src/services/certificadoService');
+    const emitir = async (monitor) =>
+        (
+            await request(app)
+                .post('/certificados')
+                .set('Cookie', await h.cookieDe(monitor))
+                .set('Origin', 'https://moni-pro.app.br')
+                .send({})
+        ).body.certificado;
+    const verificar = (codigo) => request(app).get('/certificados/verificar/' + codigo);
+
+    it('simular não muda nada; aplicar grava data e motivo e a verificação mostra na hora', async () => {
+        const monitor = await h.criarUsuario('monitor');
+        await sessao({ monitor, disciplina: await h.criarDisciplina() });
+        const { codigo } = await emitir(monitor);
+        const impresso = codigo
+            .match(/.{1,4}/g)
+            .join('-')
+            .toLowerCase();
+
+        const simulacao = await certificadoService.revogar(impresso, 'Sessões lançadas por engano');
+        expect(simulacao.aplicado).toBe(false);
+        expect((await verificar(codigo)).body.declaracao.situacao).toBe('valido');
+
+        const agora = new Date('2026-11-20T12:00:00.000Z');
+        await certificadoService.revogar(impresso, '  Sessões lançadas por engano ', {
+            aplicar: true,
+            agora
+        });
+
+        const gravado = await h.prisma.certificado.findUnique({ where: { codigo } });
+        expect(gravado).toMatchObject({
+            situacao: 'revogado',
+            revogado_em: agora,
+            motivo_revogacao: 'Sessões lançadas por engano'
+        });
+        const r = await verificar(codigo);
+        expect(r.body.declaracao).toMatchObject({
+            situacao: 'revogado',
+            revogado_em: agora.toISOString()
+        });
+        // O motivo fica só no banco e no log: a verificação pública não mostra
+        expect(JSON.stringify(r.body)).not.toMatch(/engano/);
+    });
+
+    it('revogar de novo, ao mesmo tempo ou depois, grava uma vez só', async () => {
+        const monitor = await h.criarUsuario('monitor');
+        await sessao({ monitor, disciplina: await h.criarDisciplina() });
+        const { codigo } = await emitir(monitor);
+
+        const tentativas = await Promise.allSettled(
+            [1, 2].map(() =>
+                certificadoService.revogar(codigo, 'Revogação duplicada', { aplicar: true })
+            )
+        );
+        expect(tentativas.filter((t) => t.status === 'fulfilled')).toHaveLength(1);
+        expect(tentativas.find((t) => t.status === 'rejected').reason.statusCode).toBe(409);
+
+        await expect(
+            certificadoService.revogar(codigo, 'Mais uma vez', { aplicar: true })
+        ).rejects.toMatchObject({ statusCode: 409 });
+    });
+
+    it('a substituída também pode ser revogada, sem mexer na válida', async () => {
+        const monitor = await h.criarUsuario('monitor');
+        await sessao({ monitor, disciplina: await h.criarDisciplina() });
+        const antiga = await emitir(monitor);
+        const nova = await emitir(monitor);
+
+        await certificadoService.revogar(antiga.codigo, 'Cópia antiga circulando', {
+            aplicar: true
+        });
+
+        expect((await verificar(antiga.codigo)).body.declaracao.situacao).toBe('revogado');
+        expect((await verificar(nova.codigo)).body.declaracao.situacao).toBe('valido');
+    });
+});

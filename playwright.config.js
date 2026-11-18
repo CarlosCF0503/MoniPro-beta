@@ -1,4 +1,4 @@
-// R1 (Fase 03): testes de ponta a ponta no navegador, casos CT-01 a CT-11 da Tabela 24.3.
+// R1 (Fase 03): testes de ponta a ponta no navegador, casos CT-01 a CT-13 da Tabela 24.3.
 // Rodam contra a pilha descartável de docker-compose.e2e.yml (nunca contra hml ou prod).
 //
 //   docker compose -f docker-compose.e2e.yml up -d --build --wait
