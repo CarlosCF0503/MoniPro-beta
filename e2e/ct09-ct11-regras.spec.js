@@ -1,5 +1,6 @@
 // CT-09 (RF-003): inscrever alunos numa vaga até exceder a capacidade → vaga exibida como
-//        lotada; nova inscrição recusada.
+//        lotada; nova inscrição recusada. Desde o plano 8, a vaga lotada oferece a lista de
+//        espera (ct14-lista-espera.spec.js).
 // CT-10 (RNF-005): criar vaga com o local <b>teste</b> e abrir a listagem e o perfil → texto
 //        exibido literalmente, sem formatação nem execução de script.
 // CT-11 (RN-008): concluir um agendamento e consultar o perfil → a pontuação aumenta uma única
@@ -50,16 +51,17 @@ test('CT-09 a vaga lota: a tela mostra "Lotada" e a nova inscrição é recusada
     // ...e outro aluno ocupa o último lugar antes da confirmação
     await api.inscrever(await api.clienteDe(request, await api.criarConta(request, 'aluno')), vaga);
     await revisao.getByRole('button', { name: 'Confirmar agendamento' }).click();
-    await expect(page.getByText('Esta vaga de monitoria está lotada.')).toBeVisible();
+    await expect(page.getByText('A vaga lotou enquanto você decidia.')).toBeVisible();
+    // A revisão passa a oferecer a lista de espera no lugar da inscrição
+    await expect(page.getByRole('button', { name: 'Entrar na lista de espera' })).toBeVisible();
 
-    // Quem abre a tela depois já vê a vaga lotada e não consegue escolhê-la
+    // Quem abre a tela depois já vê a vaga lotada (só a lista de espera é oferecida)
     await abrirMarcar(page, disciplina);
     await escolherDia(page, horario);
     const cardLotado = page.getByRole('button', {
         name: new RegExp(`${monitor.nome} ${horaMinuto(horario)}`)
     });
-    await expect(cardLotado).toContainText('Lotada');
-    await expect(cardLotado).toBeDisabled();
+    await expect(cardLotado).toContainText('Lotada · lista de espera');
 
     // Nem pela API, com a sessão do navegador
     const resposta = await page.evaluate(async (id) => {
