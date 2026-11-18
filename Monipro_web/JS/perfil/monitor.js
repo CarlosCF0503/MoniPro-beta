@@ -113,10 +113,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         return semestre + 'º semestre de ' + ano;
     };
     // curto: na linha do celular, vaga cheia vira só "Lotada" (no computador a etiqueta já diz isso)
+    // Plano 8: a vaga lotada mostra também quantos estão na lista de espera
     function textoInscritos(v, curto) {
         if (v.inscritos === null) return 'Até ' + D.plural(v.capacidade, 'aluno', 'alunos');
-        if (curto && v.inscritos >= v.capacidade) return 'Lotada';
-        return v.inscritos + ' de ' + v.capacidade + ' inscritos';
+        const fila = v.naFila ? ' · ' + v.naFila + ' na fila' : '';
+        if (curto && v.inscritos >= v.capacidade) return 'Lotada' + fila;
+        return v.inscritos + ' de ' + v.capacidade + ' inscritos' + fila;
     }
     function barraInscritos(v) {
         if (v.inscritos === null) return '';
@@ -1248,14 +1250,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         S.alvo = v;
         document.getElementById('can-sub').textContent =
             v.disciplina + ' · ' + D.diaCurto(v.inicio) + ' às ' + D.hora(v.inicio);
-        let aviso = 'Esta ação não pode ser desfeita.';
+        const partes = [];
         if (v.inscritos)
-            aviso =
+            partes.push(
                 D.plural(v.inscritos, 'aluno inscrito perde', 'alunos inscritos perdem') +
-                ' a vaga. ' +
-                aviso;
-        else if (v.inscritos === 0) aviso = 'Ninguém se inscreveu ainda. ' + aviso;
-        document.getElementById('can-aviso').textContent = aviso;
+                    ' a vaga.'
+            );
+        else if (v.inscritos === 0) partes.push('Ninguém se inscreveu ainda.');
+        // Plano 8: quem está na lista de espera também recebe o aviso do cancelamento
+        if (v.naFila === 1) partes.push('Quem está na lista de espera também é avisado.');
+        else if (v.naFila > 1)
+            partes.push('Os ' + v.naFila + ' da lista de espera também são avisados.');
+        partes.push('Esta ação não pode ser desfeita.');
+        document.getElementById('can-aviso').textContent = partes.join(' ');
         dlgCan.showModal();
     }
     document.getElementById('can-form').addEventListener('submit', async (ev) => {
@@ -1610,13 +1617,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         ed('local').value = v.local;
         ed('cap').value = v.capacidade;
         ed('cap').min = Math.max(1, v.inscritos || 0);
-        ed('cap-dica').textContent = v.inscritos
-            ? 'Mínimo ' +
-              v.inscritos +
-              ': já há ' +
-              D.plural(v.inscritos, 'inscrito', 'inscritos') +
-              '.'
-            : 'Ninguém inscrito ainda.';
+        ed('cap-dica').textContent =
+            (v.inscritos
+                ? 'Mínimo ' +
+                  v.inscritos +
+                  ': já há ' +
+                  D.plural(v.inscritos, 'inscrito', 'inscritos') +
+                  '.'
+                : 'Ninguém inscrito ainda.') +
+            // Plano 8: lugares a mais vão na hora para quem está na fila
+            (v.naFila
+                ? ' Com mais lugares, ' +
+                  (v.naFila === 1
+                      ? 'quem está na lista de espera é inscrito na hora.'
+                      : 'os primeiros dos ' +
+                        v.naFila +
+                        ' da lista de espera são inscritos na hora.')
+                : '');
         ed('desc').value = v.descricao || '';
         ed('erro').textContent = '';
         edForm.querySelectorAll('[aria-invalid]').forEach((c) => c.removeAttribute('aria-invalid'));

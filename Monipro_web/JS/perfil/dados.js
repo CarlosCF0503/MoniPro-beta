@@ -45,6 +45,8 @@
     // da sessão e em até 7 dias. Com as duas confirmações, o monitor ganha +10 e o aluno +2
     // (as mesmas regras da API)
     const DIAS_CONFIRMACAO = 7;
+    // Plano 8: com menos que isso até o início, a lista de espera não anda (src/config/listaEspera.js)
+    const HORAS_FILA = 2;
     const PONTOS_MONITOR = 10;
     const PONTOS_ALUNO = 2;
     const MS_DIA = 24 * 60 * 60 * 1000;
@@ -104,6 +106,8 @@
             status: String(m.status || '').toLowerCase(),
             capacidade: Number(m.capacidade) || 1,
             inscritos: Number.isInteger(m.inscritos) ? m.inscritos : null,
+            // Plano 8: quantos esperam um lugar na lista de espera
+            naFila: Number(m.na_fila) || 0,
             descricao: m.descricao || ''
         };
     }
@@ -206,6 +210,10 @@
      * 'confirmar' (este lado ainda pode confirmar)
      */
     function situacaoPresenca(inscricao, vaga, agora, lado) {
+        // Plano 8: quem está na lista de espera não tem presença a confirmar. A fila vale até a
+        // vaga começar; depois disso (ou com a vaga cancelada), não abriu lugar
+        if (inscricao.status === 'em_espera')
+            return agora < vaga.inicio && vaga.status !== 'cancelada' ? 'fila' : 'semLugar';
         if (inscricao.status === 'concluido') return 'confirmada';
         if (inscricao.status === 'cancelado' || vaga.status === 'cancelada') return 'cancelada';
         if (agora < vaga.inicio) return 'antes';
@@ -238,8 +246,13 @@
             statusVaga: String(m.status || '').toLowerCase(),
             alunoConfirmou: Boolean(a.presenca_aluno_em),
             monitorConfirmou: Boolean(a.presenca_monitor_em),
-            // A vaga mudou de dia, horário ou local depois da inscrição (editar vaga)
+            // Pode cancelar até o início: a vaga mudou de dia, horário ou local depois da
+            // inscrição (editar vaga) ou o aluno saiu da lista de espera a menos de 24h (plano 8)
             liberado: Boolean(a.liberado_cancelar_em),
+            // Plano 8: na lista de espera (posição 1 = o próximo) ou já promovido dela
+            naFila: String(a.status || '').toLowerCase() === 'em_espera',
+            posicaoFila: Number(a.posicao_fila) || null,
+            promovido: Boolean(a.promovido_em),
             horarioAnterior: a.horario_anterior ? new Date(a.horario_anterior) : null,
             localAnterior: a.local_anterior || null
         };
@@ -266,7 +279,7 @@
         lista.forEach((i) => {
             const sit = situacaoDoAluno(i, agora);
             if (sit === 'confirmar') confirmar.push(i);
-            else if (sit === 'antes') proximas.push(i);
+            else if (sit === 'antes' || sit === 'fila') proximas.push(i);
             else historico.push(i);
         });
         confirmar.sort((a, b) => a.inicio - b.inicio);
@@ -281,6 +294,8 @@
      */
     function podeCancelarInscricao(inscricao, agora) {
         if (inscricao.status === 'cancelado' || inscricao.statusVaga === 'cancelada') return false;
+        // Plano 8: sair da lista de espera vale a qualquer momento antes do início
+        if (inscricao.status === 'em_espera') return inscricao.inicio > agora;
         if (inscricao.liberado) return inscricao.inicio > agora;
         return inscricao.inicio - agora >= HORAS_CANCELAMENTO * 60 * 60 * 1000;
     }
@@ -319,6 +334,7 @@
         MESES_CURTOS,
         DIAS_SEMANA,
         HORAS_CANCELAMENTO,
+        HORAS_FILA,
         DIAS_CONFIRMACAO,
         PONTOS_MONITOR,
         PONTOS_ALUNO,

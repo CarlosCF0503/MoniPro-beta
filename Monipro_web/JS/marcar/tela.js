@@ -8,6 +8,8 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const D = window.MarcarDatas;
     const C = window.MarcarComponentes;
+    // Plano 8: com menos que isso até o início, a lista de espera não anda (src/config/listaEspera.js)
+    const HORAS_FILA = 2;
     const esc = escaparHtml;
     const raiz = document.getElementById('app');
     const largura = window.matchMedia('(min-width: 700px)');
@@ -117,7 +119,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const r = await chamadaApi('/agendamentos?limit=100');
             (r.agendamentos || []).forEach((a) => {
-                situacoes[a.id_monitoria] = a.status === 'cancelado' ? 'cancelado' : 'inscrito';
+                situacoes[a.id_monitoria] =
+                    a.status === 'cancelado'
+                        ? 'cancelado'
+                        : a.status === 'em_espera'
+                          ? 'fila'
+                          : 'inscrito';
             });
         } catch {
             /* sem marcação */
@@ -156,9 +163,45 @@ document.addEventListener('DOMContentLoaded', async () => {
         render();
     }
 
+    // Plano 8: POST /monitorias/:id/espera numa vaga lotada
+    async function entrarNaFila(vaga) {
+        S.enviando = true;
+        S.erro = null;
+        render();
+        try {
+            const r = await chamadaApi('/monitorias/' + vaga.id + '/espera', { method: 'POST' });
+            if (r.success) {
+                vaga.situacao = 'fila';
+                vaga.naFila += 1;
+                S.posicao = r.posicao;
+                S.etapa = 'sucesso';
+                showToast('Você entrou na lista de espera.', 'success');
+            } else {
+                S.erro = mensagemDaApi(r, 'Não foi possível entrar na lista de espera.');
+                S.erroDefinitivo = r.statusHttp >= 400 && r.statusHttp < 500;
+                if (/cheia/i.test(S.erro)) vaga.filaCheia = true;
+                if (/lista de espera desta vaga\./i.test(S.erro)) vaga.situacao = 'fila';
+                // Abriu um lugar enquanto o aluno decidia: a inscrição normal volta a valer
+                if (r.statusHttp === 422 && /lugar livre/i.test(S.erro)) {
+                    vaga.livres = Math.max(vaga.livres, 1);
+                    S.erroDefinitivo = false;
+                }
+                console.warn('[MoniPro] Lista de espera recusada:', r);
+            }
+        } catch (erro) {
+            S.erro = 'Não foi possível conectar ao servidor. Verifique a conexão e tente de novo.';
+            S.erroDefinitivo = false;
+            console.error('[MoniPro]', erro);
+        }
+        S.enviando = false;
+        render();
+        focar(S.etapa === 'sucesso' ? 'sucesso' : 'revisao');
+    }
+
     async function agendar() {
         const vaga = S.vagas.find((v) => v.id === S.vagaId);
         if (!vaga || S.enviando) return;
+        if (D.aceitaFila(vaga)) return entrarNaFila(vaga);
         S.enviando = true;
         S.erro = null;
         render();
@@ -178,6 +221,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // 4xx: a vaga mudou (lotou, já inscrito, fechou); tentar de novo não resolve
                 S.erroDefinitivo = r.statusHttp >= 400 && r.statusHttp < 500;
                 if (r.statusHttp === 409) vaga.livres = 0;
+                // Plano 8: lotou enquanto o aluno decidia; a revisão passa a oferecer a fila
+                if (r.statusHttp === 409 && /lotada/i.test(S.erro) && !vaga.filaCheia) {
+                    S.erro =
+                        'A vaga lotou enquanto você decidia. Você pode entrar na lista de espera.';
+                    S.erroDefinitivo = false;
+                }
                 if (/inscrit/i.test(S.erro)) vaga.situacao = 'inscrito';
                 console.warn('[MoniPro] Agendamento recusado:', r);
             }
@@ -316,9 +365,52 @@ document.addEventListener('DOMContentLoaded', async () => {
         );
     }
 
+    // Plano 8: revisão da vaga lotada, para entrar na lista de espera
+    function revisaoFila(v) {
+        const botoes =
+            S.erro && S.erroDefinitivo
+                ? '<div class="linha acoes"><button type="button" class="btn" data-acao="voltar">Ver outros horários</button></div>'
+                : '<div class="linha acoes"><button type="button" class="btn sec" data-acao="voltar">Trocar horário</button>' +
+                  '<button type="button" class="btn" data-acao="confirmar"' +
+                  (S.enviando ? ' disabled aria-busy="true"' : '') +
+                  '>' +
+                  (S.enviando
+                      ? 'Entrando na fila…'
+                      : C.icone('pessoas', 20) + 'Entrar na lista de espera') +
+                  '</button></div>';
+        return (
+            '<section class="revisao" id="revisao" tabindex="-1" aria-labelledby="rev-titulo">' +
+            '<p class="rotulo" id="rev-titulo">Vaga lotada: entre na lista de espera</p>' +
+            (S.erro ? '<p class="erro" role="alert">' + esc(S.erro) + '</p>' : '') +
+            '<dl>' +
+            C.linhaResumo('Disciplina', 'livro', disciplinaNome) +
+            C.linhaResumo('Monitor', 'pessoa', v.monitor) +
+            C.linhaResumo('Dia', 'calendario', D.diaLongo(v.inicio)) +
+            C.linhaResumo('Horário', 'relogio', D.hora(v.inicio)) +
+            C.linhaResumo('Local', 'local', v.local || 'A definir') +
+            (v.descricao ? C.linhaResumo('Assunto', 'assunto', v.descricao) : '') +
+            C.linhaResumo(
+                'Lista de espera',
+                'pessoas',
+                v.naFila
+                    ? D.plural(v.naFila, 'pessoa', 'pessoas') + ' na sua frente'
+                    : 'Você será o primeiro'
+            ) +
+            '</dl>' +
+            (S.erro && S.erroDefinitivo
+                ? ''
+                : '<p class="aviso">Se alguém cancelar até ' +
+                  HORAS_FILA +
+                  'h antes do início, você é inscrito na hora e recebe um e-mail. Dá para sair da fila pelo seu perfil quando quiser.</p>') +
+            botoes +
+            '</section>'
+        );
+    }
+
     function revisao() {
         const v = S.vagas.find((x) => x.id === S.vagaId);
         if (!v) return '';
+        if (D.aceitaFila(v)) return revisaoFila(v);
         const prazo = D.prazoCancelamento(v.inicio);
         const prazoTexto =
             prazo.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) +
@@ -361,6 +453,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function sucessoAluno() {
         const v = S.vagas.find((x) => x.id === S.vagaId);
+        if (v.situacao === 'fila')
+            return (
+                '<section class="sucesso" id="sucesso" tabindex="-1"><span class="ok-icone">' +
+                C.icone('ok', 28, 3) +
+                '</span><h2>Você está na lista de espera</h2><p>' +
+                (S.posicao ? '<b>' + S.posicao + 'º da fila</b><br>' : '') +
+                esc(v.monitor) +
+                ' · ' +
+                esc(D.diaLongo(v.inicio)) +
+                ' às ' +
+                D.hora(v.inicio) +
+                '<br>Se abrir um lugar, você é inscrito na hora e recebe um e-mail.</p>' +
+                '<div class="linha"><button type="button" class="btn sec" data-acao="novo">Ver outros horários</button>' +
+                '<a class="btn" href="perfil_aluno.html">Ver no meu perfil</a></div></section>'
+            );
         return (
             '<section class="sucesso" id="sucesso" tabindex="-1"><span class="ok-icone">' +
             C.icone('ok', 28, 3) +
@@ -383,12 +490,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (S.etapa === 'sucesso') return sucessoAluno();
         if (!S.vagas.length)
             return '<p class="vazio">Ainda não há horários de monitoria para esta disciplina.</p>';
+        const selecionada = S.vagas.find((x) => x.id === S.vagaId);
+        const naFila = selecionada && D.aceitaFila(selecionada);
         const botaoAgendar =
             '<button type="button" class="btn" data-acao="revisar"' +
             (S.vagaId ? '' : ' disabled') +
             '>' +
-            C.icone('agendar', 20) +
-            'Agendar monitoria</button>';
+            (naFila
+                ? C.icone('pessoas', 20) + 'Entrar na lista de espera'
+                : C.icone('agendar', 20) + 'Agendar monitoria') +
+            '</button>';
         if (desktop()) {
             const direita =
                 S.etapa === 'revisao'

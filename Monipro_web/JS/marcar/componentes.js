@@ -143,7 +143,23 @@
             return (
                 '<span class="chip neutro">' + icone('inscrito', 12) + 'Inscrição cancelada</span>'
             );
-        if (v.livres <= 0) return '<span class="chip bad">' + icone('lotada', 12) + 'Lotada</span>';
+        if (v.situacao === 'fila')
+            return (
+                '<span class="chip info">' +
+                icone('pessoas', 12) +
+                'Você está na lista de espera</span>'
+            );
+        // Plano 8: lotada ainda aceita a lista de espera, até ela encher
+        if (v.livres <= 0 && v.filaCheia)
+            return '<span class="chip bad">' + icone('lotada', 12) + 'Lotada · fila cheia</span>';
+        if (v.livres <= 0)
+            return (
+                '<span class="chip bad">' +
+                icone('lotada', 12) +
+                'Lotada · ' +
+                (v.naFila ? v.naFila + ' na fila' : 'lista de espera') +
+                '</span>'
+            );
         if (v.livres === 1)
             return '<span class="chip warn">' + icone('alerta', 12) + 'Último lugar</span>';
         return (
@@ -159,7 +175,7 @@
     /** Card de vaga. Estático na prévia do monitor; botão selecionável na lista do aluno. */
     function cardVaga(v, opcoes) {
         const o = opcoes || {};
-        const bloqueada = Boolean(v.situacao) || v.livres <= 0;
+        const bloqueada = Boolean(v.situacao) || (v.livres <= 0 && v.filaCheia);
         const tag = o.estatico ? 'div' : 'button';
         const attrs = o.estatico
             ? ''
