@@ -14,7 +14,12 @@ jest.mock('../src/config/bancoDeDados', () => ({
         update: jest.fn(),
         updateMany: jest.fn()
     },
-    agendamento: { findMany: jest.fn(), count: jest.fn(), updateMany: jest.fn() },
+    agendamento: {
+        findMany: jest.fn(),
+        count: jest.fn(),
+        updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+        groupBy: jest.fn().mockResolvedValue([])
+    },
     $transaction: jest.fn(),
     $queryRaw: jest.fn()
 }));
@@ -174,8 +179,9 @@ describe('GET /monitorias/:idDisciplina (Tarefa 22 — exigir autenticação na 
         await request(app).get('/monitorias/1').set('Cookie', `monipro_sessao=${tokenAluno}`);
 
         const { include } = prisma.monitoria.findMany.mock.calls[0][0];
+        // Plano 8: quem está na lista de espera também não ocupa lugar
         expect(include._count.select.inscricoes.where).toEqual({
-            status: { not: 'cancelado' }
+            status: { notIn: ['cancelado', 'em_espera'] }
         });
     });
 });
@@ -468,6 +474,7 @@ describe('PATCH /monitorias/:id (editar vaga, RF-009 e RN-010)', () => {
     });
 
     it('mudar lugares e assunto não libera ninguém', async () => {
+        prisma.agendamento.count.mockResolvedValue(0); // sem inscritos e sem fila
         const resposta = await editar({ capacidade: 4, descricao: 'Lista 3' });
 
         expect(resposta.status).toBe(200);

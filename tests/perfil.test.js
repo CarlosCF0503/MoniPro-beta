@@ -4,7 +4,7 @@ const { gerarToken } = require('./helpers/token');
 jest.mock('../src/config/bancoDeDados', () => ({
     usuario: { findUnique: jest.fn() },
     monitoria: { findMany: jest.fn(), count: jest.fn() },
-    agendamento: { findMany: jest.fn(), count: jest.fn() }
+    agendamento: { findMany: jest.fn(), count: jest.fn(), groupBy: jest.fn().mockResolvedValue([]) }
 }));
 
 const prisma = require('../src/config/bancoDeDados');
@@ -104,8 +104,9 @@ describe('GET /perfil/monitorias', () => {
 
         const consulta = prisma.monitoria.findMany.mock.calls[0][0];
         expect(consulta.where).toEqual({ id_monitor: 30 });
+        // Plano 8: quem está na lista de espera também não ocupa lugar
         expect(consulta.include._count.select.inscricoes).toEqual({
-            where: { status: { not: 'cancelado' } }
+            where: { status: { notIn: ['cancelado', 'em_espera'] } }
         });
     });
 

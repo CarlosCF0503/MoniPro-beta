@@ -30,8 +30,16 @@ class AgendamentoController {
     }
 
     async deletar(req, res) {
-        await agendamentoService.deletar(parseInt(req.params.id), req.usuario.id);
-        res.json({ success: true, mensagem: 'Inscrição cancelada com sucesso.' });
+        const { saiuDaFila } = await agendamentoService.deletar(
+            parseInt(req.params.id),
+            req.usuario.id
+        );
+        res.json({
+            success: true,
+            mensagem: saiuDaFila
+                ? 'Você saiu da lista de espera.'
+                : 'Inscrição cancelada com sucesso.'
+        });
     }
 
     // P2 (R4): o monitor dono da vaga confirma a presença do aluno

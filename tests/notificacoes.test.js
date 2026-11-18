@@ -97,6 +97,41 @@ describe('Enfileirar avisos', () => {
         expect(dados).not.toHaveProperty('horario_anterior');
     });
 
+    it('plano 8: quem sai da fila recebe "espera", com chave única por inscrição', async () => {
+        await notificacaoService.avisarPromocao(
+            { idAgendamento: 11, idAluno: 31, idMonitoria: 5, podeCancelarAteOInicio: true },
+            'tx'
+        );
+
+        const [aviso] = repo.enfileirar.mock.calls[0][0];
+        expect(aviso).toMatchObject({
+            id_usuario: 31,
+            modelo: 'espera',
+            chave: 'espera:agendamento:11',
+            dados: { disciplina: 'Cálculo I', cancelar_ate_inicio: true }
+        });
+        expect(repo.enfileirar.mock.calls[0][1]).toBe('tx');
+    });
+
+    it('plano 8: quem está na fila recebe cancelamento e alteração com o texto da fila', async () => {
+        repo.buscarInscritosAtivos.mockResolvedValue([
+            { id: 1, id_aluno: 11, status: 'pendente' },
+            { id: 2, id_aluno: 12, status: 'em_espera' }
+        ]);
+
+        await notificacaoService.avisarCancelamento(5, 'tx');
+        await notificacaoService.avisarAlteracao(
+            5,
+            { horario: vaga.horario, local: 'Biblioteca' },
+            AGORA,
+            'tx'
+        );
+
+        const [cancelamento, alteracao] = repo.enfileirar.mock.calls.map((c) => c[0]);
+        expect(cancelamento.map((a) => a.dados.na_fila)).toEqual([undefined, true]);
+        expect(alteracao.map((a) => a.dados.na_fila)).toEqual([undefined, true]);
+    });
+
     it('lembrete: procura sessões entre 20h e 24h e a chave leva o horário', async () => {
         repo.buscarSessoesParaLembrete.mockResolvedValue([
             { id: 108, id_aluno: 4, id_monitoria: 5, data_hora: vaga.horario }
@@ -252,6 +287,32 @@ describe('Modelos dos avisos', () => {
         );
         expect(montar('vaga-cancelada', d).texto).toContain('/marcar_monitoria.html');
         expect(montar('lembrete', d).assunto).toBe('Amanhã às 15:00: monitoria de Cálculo I');
+    });
+
+    it('plano 8: "abriu um lugar" diz que a inscrição já foi feita e até quando cancelar', () => {
+        const m = montar('espera', d);
+        expect(m.assunto).toBe('Abriu um lugar: Cálculo I, sex 13/11 às 15:00');
+        expect(m.texto).toContain('você era o próximo da lista de espera');
+        expect(m.texto).toContain('Sua inscrição já foi feita');
+        expect(m.texto).toContain('até quinta, 12/11, às 15:00 (24h antes)');
+
+        const tarde = montar('espera', { ...d, cancelar_ate_inicio: true });
+        expect(tarde.texto).toContain('cancele pelo perfil até o início');
+        expect(tarde.texto).not.toContain('24h antes');
+    });
+
+    it('plano 8: cancelamento e alteração para quem está na fila', () => {
+        const cancelada = montar('vaga-cancelada', { ...d, na_fila: true });
+        expect(cancelada.texto).toContain('em que você estava na lista de espera');
+
+        const alterada = montar('vaga-alterada', {
+            ...d,
+            local_anterior: 'Biblioteca',
+            na_fila: true
+        });
+        expect(alterada.texto).toContain('em que você está na lista de espera');
+        expect(alterada.texto).toContain('saia da lista de espera pelo seu perfil');
+        expect(alterada.texto).not.toContain('regra das 24h');
     });
 
     it('texto digitado pelo monitor é escapado no HTML', () => {

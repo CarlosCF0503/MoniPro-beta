@@ -2,6 +2,8 @@
 // Plano 3 (RF-010, RN-011): avisos por e-mail ao aluno.
 // - inscrição confirmada, vaga alterada (dia, horário ou local), vaga cancelada pelo monitor e
 //   lembrete 24h antes. O monitor não recebe aviso por enquanto (decisão do time).
+// - Plano 8: "abriu um lugar" para quem sai da lista de espera; quem está na fila também recebe
+//   os avisos de vaga alterada e cancelada (com o texto da fila), mas não o lembrete.
 // - Quem faz a ação só grava o aviso na fila, na mesma transação: se a ação desfaz, o aviso
 //   some junto, e uma queda do provedor de e-mail não atrasa nem quebra nenhuma tela.
 // - O backend processa a fila a cada minuto (iniciar), com novas tentativas em caso de falha.
@@ -42,6 +44,25 @@ class NotificacaoService {
         );
     }
 
+    // Plano 8: saiu da lista de espera e já está inscrito
+    async avisarPromocao({ idAgendamento, idAluno, idMonitoria, podeCancelarAteOInicio }, db) {
+        const vaga = await notificacaoRepository.buscarVaga(idMonitoria, db);
+        await notificacaoRepository.enfileirar(
+            [
+                {
+                    id_usuario: idAluno,
+                    modelo: 'espera',
+                    dados: {
+                        ...dadosDaVaga(vaga),
+                        ...(podeCancelarAteOInicio ? { cancelar_ate_inicio: true } : {})
+                    },
+                    chave: `espera:agendamento:${idAgendamento}`
+                }
+            ],
+            db
+        );
+    }
+
     /**
      * Vaga mudou de dia, horário ou local: um aviso para cada inscrito, com o antes e o depois.
      * @param {{ horario: Date, local: string }} antes - como a vaga estava
@@ -59,7 +80,7 @@ class NotificacaoService {
             inscritos.map((i) => ({
                 id_usuario: i.id_aluno,
                 modelo: 'vaga-alterada',
-                dados,
+                dados: i.status === 'em_espera' ? { ...dados, na_fila: true } : dados,
                 chave: `vaga-alterada:agendamento:${i.id}:${agora.toISOString()}`
             })),
             db
@@ -75,7 +96,10 @@ class NotificacaoService {
             inscritos.map((i) => ({
                 id_usuario: i.id_aluno,
                 modelo: 'vaga-cancelada',
-                dados: dadosDaVaga(vaga),
+                dados: {
+                    ...dadosDaVaga(vaga),
+                    ...(i.status === 'em_espera' ? { na_fila: true } : {})
+                },
                 chave: `vaga-cancelada:agendamento:${i.id}`
             })),
             db

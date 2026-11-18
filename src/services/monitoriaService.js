@@ -1,6 +1,9 @@
 // src/services/monitoriaService.js
 const monitoriaRepository = require('../repositories/monitoriaRepository');
 const notificacaoService = require('./notificacaoService');
+const listaEsperaService = require('./listaEsperaService');
+const agendamentoRepository = require('../repositories/agendamentoRepository');
+const { tamanhoMaximoFila } = require('../config/listaEspera');
 const {
     validarAntecedenciaCancelamento,
     HORAS_MINIMAS_CANCELAMENTO
@@ -77,11 +80,18 @@ class MonitoriaService {
             paginacao
         );
 
-        // Expõe a ocupação sem vazar o _count interno do Prisma
-        const monitorias = dados.map(({ _count, ...monitoria }) => ({
-            ...monitoria,
-            vagas_disponiveis: Math.max(monitoria.capacidade - _count.inscricoes, 0)
-        }));
+        // Expõe a ocupação sem vazar o _count interno do Prisma. Plano 8: o tamanho da lista de
+        // espera e se ela ainda aceita gente, para a tela oferecer a fila nas vagas lotadas
+        const filas = await monitoriaRepository.contarFilas(dados.map((m) => m.id));
+        const monitorias = dados.map(({ _count, ...monitoria }) => {
+            const naFila = filas[monitoria.id] || 0;
+            return {
+                ...monitoria,
+                vagas_disponiveis: Math.max(monitoria.capacidade - _count.inscricoes, 0),
+                na_fila: naFila,
+                fila_cheia: naFila >= tamanhoMaximoFila(monitoria.capacidade)
+            };
+        });
 
         return { dados: monitorias, total };
     }
@@ -104,6 +114,8 @@ class MonitoriaService {
         return await monitoriaRepository.emTransacao(async (tx) => {
             const cancelada = await monitoriaRepository.cancelar(id, tx);
             await notificacaoService.avisarCancelamento(id, tx);
+            // Plano 8: quem estava na lista de espera também foi avisado e sai da fila
+            await agendamentoRepository.encerrarFila(id, tx);
             return cancelada;
         });
     }
@@ -203,7 +215,9 @@ class MonitoriaService {
 
             const monitoria = await monitoriaRepository.atualizar(id, alteracoes, tx);
             const alterouQuandoOuOnde = Boolean(novoHorario || alteracoes.local !== undefined);
-            if (alterouQuandoOuOnde && inscritos > 0) {
+            // Plano 8: quem está na fila também acompanha a mudança e recebe o aviso
+            const naFila = await agendamentoRepository.contarFila(id, tx);
+            if (alterouQuandoOuOnde && inscritos + naFila > 0) {
                 await monitoriaRepository.liberarInscricoes(
                     id,
                     agora,
@@ -222,7 +236,12 @@ class MonitoriaService {
                     tx
                 );
             }
-            return { monitoria, alterouQuandoOuOnde, inscritos };
+            // Plano 8: lugares a mais vão para os primeiros da fila, na mesma transação
+            const promovidos =
+                naFila > 0 && alteracoes.capacidade > inscritos
+                    ? await listaEsperaService.promover(id, tx, agora)
+                    : [];
+            return { monitoria, alterouQuandoOuOnde, inscritos, promovidos: promovidos.length };
         });
 
         // Sem dados dos alunos no log: só a vaga, o monitor e o que mudou
@@ -231,7 +250,8 @@ class MonitoriaService {
                 id_monitoria: id,
                 id_monitor: monitorId,
                 campos: Object.keys(dados),
-                liberados: resultado.alterouQuandoOuOnde ? resultado.inscritos : 0
+                liberados: resultado.alterouQuandoOuOnde ? resultado.inscritos : 0,
+                promovidos_da_fila: resultado.promovidos
             },
             'Vaga de monitoria editada'
         );
