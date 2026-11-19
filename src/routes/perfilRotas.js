@@ -11,6 +11,7 @@ const { excluirContaSchema } = require('../schemas/perfilSchemas');
 router.get('/', autenticar, perfilController.exibir);
 router.get('/agendamentos', autenticar, perfilController.listarAgendamentos);
 router.get('/monitorias', autenticar, perfilController.listarMonitorias);
+router.get('/restricao', autenticar, perfilController.restricao);
 // R3 (LGPD): o titular exclui a própria conta (anonimização), confirmando a senha
 router.delete('/', autenticar, validarCorpo(excluirContaSchema), perfilController.excluirConta);
 

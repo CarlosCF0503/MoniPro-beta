@@ -133,6 +133,18 @@ class PrivacidadeRepository {
         return count;
     }
 
+    // Plano 12: faltas marcadas antes do limite perdem a marcação (a inscrição continua)
+    async contarAusenciasAntigas(limite) {
+        return await prisma.agendamento.count({ where: { ausente_em: { lt: limite } } });
+    }
+    async apagarAusenciasAntigas(limite) {
+        const { count } = await prisma.agendamento.updateMany({
+            where: { ausente_em: { lt: limite } },
+            data: { ausente_em: null }
+        });
+        return count;
+    }
+
     async contarHistoricoAntigo(limite) {
         const [agendamentos, vagas] = await Promise.all([
             prisma.agendamento.count({ where: { data_hora: { lt: limite } } }),
