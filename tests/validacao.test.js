@@ -8,7 +8,12 @@ jest.mock('../src/config/bancoDeDados', () => {
     const prismaMock = {
         usuario: { create: jest.fn(), findFirst: jest.fn() },
         monitoria: { create: jest.fn(), findFirst: jest.fn(), findUnique: jest.fn() },
-        agendamento: { create: jest.fn(), findFirst: jest.fn(), count: jest.fn() },
+        agendamento: {
+            create: jest.fn(),
+            findFirst: jest.fn(),
+            count: jest.fn(),
+            findMany: jest.fn().mockResolvedValue([]) // plano 12: sem faltas
+        },
         $queryRaw: jest.fn()
     };
     prismaMock.$transaction = jest.fn((callback) => callback(prismaMock));

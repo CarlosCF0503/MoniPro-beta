@@ -11,7 +11,8 @@ jest.mock('../src/config/bancoDeDados', () => ({
     $queryRaw: jest.fn(),
     agendamento: {
         create: jest.fn(),
-        findMany: jest.fn(),
+        // Plano 12: sem faltas por padrão (ninguém bloqueado)
+        findMany: jest.fn().mockResolvedValue([]),
         count: jest.fn(),
         findUnique: jest.fn(),
         findFirst: jest.fn(),

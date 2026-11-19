@@ -1142,3 +1142,25 @@
 .pagina-marcar .revisao dd.link::first-letter {
     text-transform: none;
 }
+
+/* ---------- Plano 12: bloqueio por faltas ---------- */
+.pagina-marcar .aviso-bloqueio {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    border: 1px solid var(--bad);
+    border-radius: 12px;
+    background: var(--bad-soft);
+    color: var(--bad-ink);
+    font-size: 14px;
+    line-height: 1.45;
+}
+.pagina-marcar .aviso-bloqueio .ico {
+    flex: none;
+    margin-top: 2px;
+}
+.pagina-marcar .aviso-bloqueio p {
+    margin: 0;
+}

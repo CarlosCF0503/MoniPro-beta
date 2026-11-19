@@ -127,7 +127,8 @@ describe('presença confirmada pelo aluno e pelo monitor (P2, D1)', () => {
             aluno: 'Ana',
             status: 'pendente',
             alunoConfirmou: false,
-            monitorConfirmou: false
+            monitorConfirmou: false,
+            ausente: false
         });
         const marcada = D.normalizarInscricao({ id: 2, presenca_aluno_em: '2026-11-06T15:00:00Z' });
         expect(marcada.alunoConfirmou).toBe(true);
@@ -403,5 +404,26 @@ describe('monitoria on-line no perfil (plano 11)', () => {
         ).toMatchObject({ online: true, link: 'https://meet.jit.si/Sala' });
         expect(D.linkSalaValido('https://us02web.zoom.us/j/1')).toBe(true);
         expect(D.linkSalaValido('https://evilzoom.us/j/1')).toBe(false);
+    });
+});
+
+describe('faltas (plano 12)', () => {
+    test('falta marcada aparece como "ausente" para os dois lados e vai para o histórico', () => {
+        const i = D.normalizarMinhaInscricao({
+            id: 4,
+            status: 'pendente',
+            ausente_em: '2026-11-05T19:00:00Z',
+            presenca_aluno_em: '2026-11-05T18:30:00Z',
+            monitoria: { horario: new Date(2026, 10, 5, 14).toISOString(), status: 'realizada' }
+        });
+        const agora = new Date(2026, 10, 6, 10);
+        expect(i.ausente).toBe(true);
+        expect(D.situacaoDoAluno(i, agora)).toBe('ausente');
+        expect(D.separarInscricoes([i], agora).historico).toEqual([i]);
+
+        const doMonitor = D.normalizarInscricao({ id: 4, status: 'pendente', ausente_em: 'x' });
+        const vagaPassada = { inicio: new Date(2026, 10, 5, 14), status: 'realizada' };
+        expect(D.situacaoPresenca(doMonitor, vagaPassada, agora, 'monitor')).toBe('ausente');
+        expect(D.presencasAConfirmar([doMonitor], vagaPassada, agora)).toBe(0);
     });
 });

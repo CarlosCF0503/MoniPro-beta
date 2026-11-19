@@ -894,20 +894,49 @@ document.addEventListener('DOMContentLoaded', async () => {
                 D.PONTOS_MONITOR +
                 ' pontos e o aluno +' +
                 D.PONTOS_ALUNO +
-                '.';
+                '. Se o aluno não veio, marque a falta.';
         const itens = lista
             .map((i) => {
                 const sit = D.situacaoPresenca(i, v, S.agora, 'monitor');
+                const noPrazo = S.agora >= v.inicio && S.agora <= D.limiteConfirmacao(v);
+                // Plano 12: "Faltou" ao lado da presença enquanto não está concluída
+                const botaoFalta =
+                    '<button type="button" class="pp-btn pp-btn-texto-perigo pp-btn-p" data-acao="ausencia" data-id="' +
+                    esc(v.id) +
+                    '" data-ag="' +
+                    esc(i.id) +
+                    '" aria-label="Marcar falta de ' +
+                    esc(i.aluno) +
+                    '">Faltou</button>';
                 let lado = '';
                 if (sit === 'confirmar')
                     lado =
+                        '<span class="pp-insc-acoes">' +
+                        botaoFalta +
                         '<button type="button" class="pp-btn pp-btn-sec pp-btn-p" data-acao="presenca" data-id="' +
                         esc(v.id) +
                         '" data-ag="' +
                         esc(i.id) +
                         '" aria-label="Confirmar presença de ' +
                         esc(i.aluno) +
-                        '">Confirmar presença</button>';
+                        '">Confirmar presença</button></span>';
+                else if (sit === 'ausente')
+                    lado =
+                        '<span class="pp-insc-acoes"><span class="pill pill-perigo" tabindex="-1" id="pres-' +
+                        esc(i.id) +
+                        '">' +
+                        icone('x', 12) +
+                        'Faltou</span>' +
+                        (noPrazo
+                            ? '<button type="button" class="pp-btn pp-btn-sec pp-btn-p" data-acao="presenca" data-id="' +
+                              esc(v.id) +
+                              '" data-ag="' +
+                              esc(i.id) +
+                              '" aria-label="Corrigir: ' +
+                              esc(i.aluno) +
+                              ' estava presente">Estava presente</button>'
+                            : '') +
+                        '</span>';
                 else if (sit === 'confirmada')
                     lado =
                         '<span class="pill pill-ok" tabindex="-1" id="pres-' +
@@ -921,7 +950,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         esc(i.id) +
                         '">' +
                         icone('relogio', 12) +
-                        'Aguardando o aluno</span>';
+                        'Aguardando o aluno</span>' +
+                        (noPrazo ? botaoFalta : '');
                 else if (sit === 'expirada')
                     lado = '<span class="pp-insc-estado">Não confirmada</span>';
                 return (
@@ -1010,6 +1040,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
             inscricao.monitorConfirmou = true;
+            inscricao.ausente = false; // plano 12: confirmar a presença desfaz a falta
             if (dados.concluido) {
                 inscricao.status = 'concluido';
                 if (S.usuario)
@@ -1033,6 +1064,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     dlgDet.addEventListener('click', (ev) => {
         if (ev.target === dlgDet) dlgDet.close(); // toque fora do painel
     });
+
+    // Plano 12: PATCH /agendamentos/:id/ausencia. Desfazer = "Estava presente" (confirmar)
+    async function marcarAusencia(botao) {
+        const vaga = vagaPorId(botao.dataset.id);
+        const inscricao = vaga && inscricoesDa(vaga).find((i) => String(i.id) === botao.dataset.ag);
+        if (!inscricao) return;
+        botao.disabled = true;
+        botao.textContent = 'Marcando…';
+        try {
+            const dados = await chamadaApi('/agendamentos/' + inscricao.id + '/ausencia', {
+                method: 'PATCH'
+            });
+            if (dados.statusHttp === 401) return sessaoExpirada();
+            if (dados.erro || !dados.success) {
+                showToast(mensagemDaApi(dados, 'Não foi possível marcar a falta.'), 'error', dados);
+                botao.disabled = false;
+                botao.textContent = 'Faltou';
+                return;
+            }
+            inscricao.ausente = true;
+            inscricao.monitorConfirmou = false;
+            render();
+            preencherDetalhes(vaga);
+            const marca = document.getElementById('pres-' + inscricao.id);
+            if (marca) marca.focus();
+            showToast('Falta de ' + inscricao.aluno + ' registrada.', 'success');
+        } catch (erro) {
+            showToast('Erro de rede. Verifique a conexão e tente de novo.', 'error', erro);
+            botao.disabled = false;
+            botao.textContent = 'Faltou';
+        }
+    }
 
     // Término: caixa inteira clicável + lista curta (combobox/listbox), como em Marcar Monitoria
     const fimBtn = document.getElementById('fin-fim');
@@ -1741,6 +1804,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (acao === 'recarregar') return carregar();
         if (acao === 'mais') return carregarMais();
         if (acao === 'presenca') return confirmarPresenca(b);
+        if (acao === 'ausencia') return marcarAusencia(b);
         if (acao === 'emitir-certificado') return emitirCertificado();
         const vaga = vagaPorId(b.dataset.id);
         if (!vaga) return;

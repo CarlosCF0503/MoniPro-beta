@@ -2,6 +2,7 @@
 // Tarefa 8: erros sobem para o middleware central (src/middlewares/tratadorDeErros.js).
 const perfilService = require('../services/perfilService');
 const privacidadeService = require('../services/privacidadeService');
+const restricaoService = require('../services/restricaoService');
 const { NOME_COOKIE_SESSAO, opcoesCookieSessao } = require('../config/sessao');
 const logger = require('../utils/logger');
 const { obterParametrosPaginacao, montarPaginacao } = require('../utils/paginacao');
@@ -30,6 +31,12 @@ class PerfilController {
             monitorias: dados,
             paginacao: montarPaginacao(paginacao, total)
         });
+    }
+
+    // Plano 12: bloqueio por faltas do próprio usuário (null = pode se inscrever)
+    async restricao(req, res) {
+        const restricao = await restricaoService.restricaoDe(req.usuario.id);
+        res.json({ success: true, restricao });
     }
 
     // DELETE /perfil (R3): anonimiza a conta, revoga as sessões e apaga o cookie

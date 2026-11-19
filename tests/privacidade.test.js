@@ -222,6 +222,8 @@ describe('Rotina de retenção', () => {
         prisma.tokenConfirmacaoEmail.deleteMany.mockResolvedValue({ count: 6 });
         prisma.notificacao.count.mockResolvedValue(4);
         prisma.notificacao.deleteMany.mockResolvedValue({ count: 4 });
+        // Plano 12: marcações de falta antigas (a contagem usa o mesmo agendamento.count)
+        prisma.agendamento.updateMany.mockResolvedValue({ count: 1 });
     });
 
     it('sem --aplicar só conta: nada é alterado', async () => {
@@ -235,6 +237,7 @@ describe('Rotina de retenção', () => {
             contasPendentes: 3,
             tokensConfirmacao: 6,
             notificacoes: 4,
+            ausencias: 4,
             aplicado: false
         });
         expect(prisma.usuario.update).not.toHaveBeenCalled();
@@ -283,6 +286,10 @@ describe('Rotina de retenção', () => {
                 criado_em: { lt: new Date('2026-08-11T12:00:00.000Z') }
             }
         });
+        // Plano 12: marcações de falta com mais de 180 dias
+        expect(prisma.agendamento.count).toHaveBeenCalledWith({
+            where: { ausente_em: { lt: new Date('2026-05-13T12:00:00.000Z') } }
+        });
     });
 
     it('com --aplicar anonimiza cada conta parada e apaga o histórico antigo', async () => {
@@ -296,6 +303,7 @@ describe('Rotina de retenção', () => {
             contasPendentes: 3,
             tokensConfirmacao: 6,
             notificacoes: 4,
+            ausencias: 1,
             aplicado: true
         });
         const anonimizadas = prisma.usuario.update.mock.calls.map(([arg]) => arg.where.id);

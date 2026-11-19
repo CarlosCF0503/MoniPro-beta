@@ -156,7 +156,7 @@ class AgendamentoRepository {
     async bloquearParaPresenca(id, db = prisma) {
         const linhas = await db.$queryRaw`
             SELECT a."id", a."id_aluno", a."status"::text AS "status",
-                   a."presenca_aluno_em", a."presenca_monitor_em",
+                   a."presenca_aluno_em", a."presenca_monitor_em", a."ausente_em",
                    m."id_monitor", m."id_disciplina", m."horario", m."status"::text AS "status_vaga"
             FROM "agendamentos" a
             JOIN "monitorias" m ON m."id" = a."id_monitoria"
@@ -167,11 +167,35 @@ class AgendamentoRepository {
     }
 
     // Grava a confirmação de um dos lados; com `concluir`, marca o agendamento como concluído.
+    // Plano 12: a presença confirmada pelo monitor desfaz uma falta marcada antes.
     async registrarPresenca(id, campo, quando, concluir, db = prisma) {
         return await db.agendamento.update({
             where: { id: parseInt(id) },
-            data: { [campo]: quando, ...(concluir ? { status: 'concluido' } : {}) }
+            data: {
+                [campo]: quando,
+                ...(campo === 'presenca_monitor_em' ? { ausente_em: null } : {}),
+                ...(concluir ? { status: 'concluido' } : {})
+            }
         });
+    }
+
+    // --- Faltas (plano 12) ---
+
+    // O monitor marca a ausência; a presença que ele tinha confirmado deixa de valer
+    async marcarAusencia(id, quando, db = prisma) {
+        return await db.agendamento.update({
+            where: { id: parseInt(id) },
+            data: { ausente_em: quando, presenca_monitor_em: null }
+        });
+    }
+
+    // Datas das faltas do aluno desde `desde` (para o cálculo do bloqueio)
+    async datasDeAusencia(idAluno, desde, db = prisma) {
+        const linhas = await db.agendamento.findMany({
+            where: { id_aluno: parseInt(idAluno), ausente_em: { gte: desde } },
+            select: { ausente_em: true }
+        });
+        return linhas.map((l) => l.ausente_em);
     }
 }
 

@@ -9,7 +9,13 @@ jest.mock('../src/config/bancoDeDados', () => ({
         findUnique: jest.fn(),
         updateMany: jest.fn()
     },
-    agendamento: { create: jest.fn(), count: jest.fn(), findFirst: jest.fn() },
+    // Plano 12: sem faltas, ninguém está bloqueado
+    agendamento: {
+        create: jest.fn(),
+        count: jest.fn(),
+        findFirst: jest.fn(),
+        findMany: jest.fn().mockResolvedValue([])
+    },
     $transaction: jest.fn(),
     $queryRaw: jest.fn()
 }));

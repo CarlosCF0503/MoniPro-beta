@@ -146,10 +146,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         S.erroCarga = null;
         render();
         try {
-            const [vagas, situacoes] = await Promise.all([
+            const [vagas, situacoes, restricao] = await Promise.all([
                 buscarVagas(),
-                PERFIL === 'aluno' ? buscarSituacoes() : Promise.resolve({})
+                PERFIL === 'aluno' ? buscarSituacoes() : Promise.resolve({}),
+                // Plano 12: bloqueio por faltas; se a consulta falhar, o backend ainda barra
+                PERFIL === 'aluno'
+                    ? chamadaApi('/perfil/restricao').catch(() => null)
+                    : Promise.resolve(null)
             ]);
+            S.restricao = (restricao && restricao.success && restricao.restricao) || null;
             S.vagas = D.vagasFuturas(vagas, new Date());
             S.vagas.forEach((v) => {
                 if (situacoes[v.id]) v.situacao = situacoes[v.id];
@@ -172,6 +177,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         render();
     }
 
+    // Plano 12: busca de novo o bloqueio (depois de um 423) e redesenha a tela
+    async function carregarRestricao() {
+        try {
+            const r = await chamadaApi('/perfil/restricao');
+            S.restricao = (r && r.success && r.restricao) || null;
+        } catch {
+            /* o erro da inscrição já está na tela */
+        }
+        render();
+    }
+
     // Plano 8: POST /monitorias/:id/espera numa vaga lotada
     async function entrarNaFila(vaga) {
         S.enviando = true;
@@ -188,6 +204,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else {
                 S.erro = mensagemDaApi(r, 'Não foi possível entrar na lista de espera.');
                 S.erroDefinitivo = r.statusHttp >= 400 && r.statusHttp < 500;
+                if (r.statusHttp === 423) carregarRestricao();
                 if (/cheia/i.test(S.erro)) vaga.filaCheia = true;
                 if (/lista de espera desta vaga\./i.test(S.erro)) vaga.situacao = 'fila';
                 // Abriu um lugar enquanto o aluno decidia: a inscrição normal volta a valer
@@ -229,6 +246,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 S.erro = mensagemDaApi(r, 'Não foi possível agendar.');
                 // 4xx: a vaga mudou (lotou, já inscrito, fechou); tentar de novo não resolve
                 S.erroDefinitivo = r.statusHttp >= 400 && r.statusHttp < 500;
+                // Plano 12: bloqueado por faltas (423)
+                if (r.statusHttp === 423) carregarRestricao();
                 if (r.statusHttp === 409) vaga.livres = 0;
                 // Plano 8: lotou enquanto o aluno decidia; a revisão passa a oferecer a fila
                 if (r.statusHttp === 409 && /lotada/i.test(S.erro) && !vaga.filaCheia) {
@@ -497,9 +516,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         );
     }
 
+    // Plano 12: aviso de bloqueio por faltas, no topo da tela do aluno
+    function avisoBloqueio() {
+        const r = S.restricao;
+        if (!r) return '';
+        const ate = new Date(r.ate);
+        return (
+            '<div class="aviso-bloqueio" role="status">' +
+            C.icone('lotada', 18) +
+            '<p><b>Novas inscrições bloqueadas até ' +
+            ate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) +
+            ' às ' +
+            D.hora(ate) +
+            '.</b> Você faltou a ' +
+            r.faltas +
+            ' monitorias nos últimos 30 dias. Dá para ver os horários, mas não se inscrever nem entrar na lista de espera. As inscrições que você já tem continuam valendo.</p></div>'
+        );
+    }
+
     function telaAluno() {
         if (S.carregando) return C.carregando('Carregando horários…');
         if (S.erroCarga) return erroCarga();
+        if (S.restricao && S.etapa !== 'sucesso') return avisoBloqueio() + telaAlunoLivre();
+        return telaAlunoLivre();
+    }
+
+    function telaAlunoLivre() {
         if (S.etapa === 'sucesso') return sucessoAluno();
         if (!S.vagas.length)
             return '<p class="vazio">Ainda não há horários de monitoria para esta disciplina.</p>';
@@ -507,7 +549,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const naFila = selecionada && D.aceitaFila(selecionada);
         const botaoAgendar =
             '<button type="button" class="btn" data-acao="revisar"' +
-            (S.vagaId ? '' : ' disabled') +
+            (S.vagaId && !S.restricao ? '' : ' disabled') +
             '>' +
             (naFila
                 ? C.icone('pessoas', 20) + 'Entrar na lista de espera'
@@ -538,7 +580,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 lista(true) +
                 '<div class="linha acoes"><button type="button" class="btn sec" data-acao="passo" data-passo="1">Voltar</button>' +
                 '<button type="button" class="btn" data-acao="revisar"' +
-                (S.vagaId ? '' : ' disabled') +
+                (S.vagaId && !S.restricao ? '' : ' disabled') +
                 '>Continuar</button></div>';
         else h += revisao();
         return h + '</div>';

@@ -15,5 +15,7 @@ router.delete('/:id', autenticar, agendamentoController.deletar);
 // /concluir e o aluno inscrito confirma a própria presença em /presenca.
 router.patch('/:id/concluir', autenticar, isMonitor, agendamentoController.concluir);
 router.patch('/:id/presenca', autenticar, agendamentoController.confirmarPresenca);
+// Plano 12 (RN-016): o monitor dono da vaga marca a falta. Desfazer = confirmar a presença.
+router.patch('/:id/ausencia', autenticar, isMonitor, agendamentoController.marcarAusencia);
 
 module.exports = router;

@@ -25,6 +25,7 @@ beforeEach(() => {
     repo.emTransacao.mockImplementation((fn) => fn(tx));
     repo.buscarPorAlunoEMonitoria.mockResolvedValue(null);
     repo.criar.mockImplementation(async (dados) => ({ id: 99, ...dados }));
+    repo.datasDeAusencia.mockResolvedValue([]); // plano 12: sem faltas
 });
 
 describe('entrar na lista de espera', () => {
