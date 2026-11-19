@@ -12,6 +12,9 @@ class MonitoriaRepository {
                 descricao: dados.descricao,
                 status: dados.status || 'ativa',
                 horario: dados.horario,
+                // Plano 11: presencial ou on-line (com o link da sala)
+                modalidade: dados.modalidade || 'presencial',
+                link: dados.modalidade === 'online' ? dados.link : null,
                 // Omitido => o banco aplica o default (1)
                 ...(dados.capacidade !== undefined && { capacidade: dados.capacidade })
             }
@@ -39,6 +42,8 @@ class MonitoriaRepository {
         const [dados, total] = await Promise.all([
             prisma.monitoria.findMany({
                 where,
+                // Plano 11: o link da sala é só de quem se inscreveu, nunca da listagem
+                omit: { link: true },
                 include: {
                     monitor: { select: { nome_completo: true } },
                     // Inscrições que ocupam lugar (nem canceladas nem na lista de espera)
@@ -126,7 +131,8 @@ class MonitoriaRepository {
     // mesmo tempo acontecem um depois do outro, e a contagem de inscritos não fica velha.
     async bloquearParaEdicao(id, db = prisma) {
         const linhas = await db.$queryRaw`
-            SELECT "id", "id_monitor", "horario", "local", "status"::text AS "status"
+            SELECT "id", "id_monitor", "horario", "local", "status"::text AS "status",
+                   "modalidade"::text AS "modalidade", "link"
             FROM "monitorias"
             WHERE "id" = ${parseInt(id)}
             FOR UPDATE

@@ -318,10 +318,22 @@
           </div>
           <div class="pp-cal" id="ed-cal" role="group" aria-label="Escolher o dia" hidden></div>
         </div>
-        <p class="pp-dica-campo" id="ed-nota-24h" hidden>Faltam menos de 24h: dia e horário não mudam mais. Local, lugares e assunto ainda podem mudar.</p>
-        <div class="pp-campo">
+        <p class="pp-dica-campo" id="ed-nota-24h" hidden>Faltam menos de 24h: dia e horário não mudam mais. Local, sala, lugares e assunto ainda podem mudar.</p>
+        <fieldset class="pp-campo pp-modalidade">
+          <legend class="pp-rotulo">Modalidade</legend>
+          <div class="pp-mod-ops">
+            <label class="pp-mod-op"><input type="radio" name="ed-modalidade" id="ed-mod-presencial" value="presencial">Presencial</label>
+            <label class="pp-mod-op"><input type="radio" name="ed-modalidade" id="ed-mod-online" value="online">On-line</label>
+          </div>
+        </fieldset>
+        <div class="pp-campo" id="ed-campo-local">
           <label class="pp-rotulo" for="ed-local">Local</label>
           <input class="pp-input" type="text" id="ed-local" name="ed-local" maxlength="120" autocomplete="off">
+        </div>
+        <div class="pp-campo" id="ed-campo-link" hidden>
+          <label class="pp-rotulo" for="ed-link">Link da sala</label>
+          <input class="pp-input" type="url" id="ed-link" name="ed-link" maxlength="500" inputmode="url" autocomplete="off" placeholder="https://meet.google.com/abc-defg-hij" aria-describedby="ed-link-dica">
+          <span class="pp-dica-campo" id="ed-link-dica">Meet, Teams, Zoom ou Jitsi. Só quem se inscrever vê o link.</span>
         </div>
         <div class="pp-campo">
           <label class="pp-rotulo" for="ed-cap">Lugares</label>

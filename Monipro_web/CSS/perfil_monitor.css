@@ -1672,3 +1672,46 @@
 .pagina-perfil .cert-sit.substituido { background: var(--soft-2); color: var(--slate-ink); }
 .pagina-perfil .cert-sit.revogado { background: #fde8e8; color: var(--bad); }
 .pagina-perfil .cert-abrir { font-size: 13px; font-weight: 700; color: var(--navy-2); }
+
+/* ---------- Plano 11: monitoria on-line no editar vaga ---------- */
+.pp-dlg .pp-campo[hidden] {
+    display: none;
+}
+.pp-dlg .pp-modalidade {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+}
+.pp-dlg .pp-modalidade legend {
+    padding: 0;
+    margin-bottom: 6px;
+}
+.pp-dlg .pp-mod-ops {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+.pp-dlg .pp-mod-op {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 8px 10px;
+    border: 1.5px solid var(--line, #d6deef);
+    border-radius: 10px;
+    background: var(--white);
+    color: var(--navy);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.pp-dlg .pp-mod-op:has(input:checked) {
+    border-color: var(--navy);
+    background: var(--soft);
+}
+.pp-dlg .pp-mod-op input {
+    accent-color: var(--navy);
+    margin: 0;
+}

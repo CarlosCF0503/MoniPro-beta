@@ -69,6 +69,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const ICONES = {
         relogio: '<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>',
         local: '<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+        video: '<rect x="2" y="6" width="14" height="12" rx="2"/><path d="m22 8-6 4 6 4V8z"/>',
         pessoas:
             '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
         pessoa: '<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>',
@@ -426,8 +427,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             quando +
             '</span>' +
             '<span>' +
-            icone('local') +
-            esc(v.local) +
+            (v.online ? icone('video') + 'On-line' : icone('local') + esc(v.local)) +
             '</span>' +
             '<span class="cap' +
             (v.inscritos !== null && v.inscritos >= v.capacidade ? ' cap-cheia' : '') +
@@ -1582,13 +1582,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     dlgEd.addEventListener('close', () => fecharCal(false));
 
+    // Plano 11: presencial ou on-line no diálogo; troca o campo Local pelo Link da sala
+    const edOnline = () => ed('mod-online').checked;
+    function edMostrarModalidade() {
+        ed('campo-local').hidden = edOnline();
+        ed('campo-link').hidden = !edOnline();
+    }
     function edMudancas(v) {
         const novo = new Date(diaBtn.dataset.valor + 'T' + horaBtn.dataset.valor);
+        const online = edOnline();
         return {
             novo,
+            online,
             // Por minuto: os segundos do horário gravado não contam como mudança
             quando: !isNaN(novo) && Math.floor(novo / 60000) !== Math.floor(v.inicio / 60000),
-            local: ed('local').value.trim() !== v.local
+            // Trocar a modalidade ou o link conta como mudar o local (plano 11)
+            local:
+                online !== v.online ||
+                (online
+                    ? ed('link').value.trim() !== (v.link || '')
+                    : ed('local').value.trim() !== v.local)
         };
     }
     function edAtualizarAviso() {
@@ -1614,7 +1627,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         diaBtn.disabled = perto;
         horaBtn.disabled = perto;
         ed('nota-24h').hidden = !perto;
-        ed('local').value = v.local;
+        ed('local').value = v.online ? '' : v.local;
+        ed('link').value = v.link || '';
+        ed('mod-online').checked = v.online;
+        ed('mod-presencial').checked = !v.online;
+        edMostrarModalidade();
         ed('cap').value = v.capacidade;
         ed('cap').min = Math.max(1, v.inscritos || 0);
         ed('cap-dica').textContent =
@@ -1640,7 +1657,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         edAtualizarAviso();
         dlgEd.showModal();
     }
-    edForm.addEventListener('input', edAtualizarAviso);
+    edForm.addEventListener('input', (ev) => {
+        if (ev.target.name === 'ed-modalidade') edMostrarModalidade();
+        edAtualizarAviso();
+    });
     edForm.addEventListener('submit', async (ev) => {
         ev.preventDefault();
         const v = S.alvo;
@@ -1654,7 +1674,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         edForm.querySelectorAll('[aria-invalid]').forEach((c) => c.removeAttribute('aria-invalid'));
         if (m.quando && m.novo <= new Date())
             return erro('hora', 'Escolha um dia e horário que ainda não passaram.');
-        if (!ed('local').value.trim()) return erro('local', 'Informe onde a monitoria acontece.');
+        if (m.online && !D.linkSalaValido(ed('link').value))
+            return erro('link', 'Use um link https do Meet, Teams, Zoom ou Jitsi.');
+        if (!m.online && !ed('local').value.trim())
+            return erro('local', 'Informe onde a monitoria acontece.');
         if (!Number.isInteger(cap) || cap < Math.max(1, v.inscritos || 0))
             return erro(
                 'cap',
@@ -1666,11 +1689,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const r = await chamadaApi('/monitorias/' + v.id, {
             method: 'PATCH',
             body: JSON.stringify(
-                Object.assign(m.quando ? { horario: m.novo.toISOString() } : {}, {
-                    local: ed('local').value.trim(),
-                    capacidade: cap,
-                    descricao: ed('desc').value.trim()
-                })
+                Object.assign(
+                    m.quando ? { horario: m.novo.toISOString() } : {},
+                    m.online
+                        ? { modalidade: 'online', link: ed('link').value.trim() }
+                        : { modalidade: 'presencial', local: ed('local').value.trim() },
+                    { capacidade: cap, descricao: ed('desc').value.trim() }
+                )
             )
         });
         btn.disabled = false;
@@ -1678,7 +1703,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!r.success)
             return (ed('erro').textContent = mensagemDaApi(r, 'Não foi possível salvar a vaga.'));
         if (m.quando) v.inicio = m.novo;
-        v.local = ed('local').value.trim();
+        v.online = m.online;
+        v.link = m.online ? r.monitoria.link : null;
+        v.local = r.monitoria.local;
         v.capacidade = cap;
         v.descricao = ed('desc').value.trim();
         dlgEd.close();

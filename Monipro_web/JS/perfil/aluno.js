@@ -57,6 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const ICONES = {
         relogio: '<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>',
         local: '<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+        video: '<rect x="2" y="6" width="14" height="12" rx="2"/><path d="m22 8-6 4 6 4V8z"/>',
         pessoa: '<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>',
         pessoas:
             '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
@@ -178,6 +179,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             '</button>'
         );
     }
+    // Plano 11: link da sala on-line, aberto em outra aba. Em destaque perto do horário.
+    function botaoSala(i) {
+        if (!i.link) return '';
+        const aberta = D.salaAberta(i, S.agora);
+        return (
+            '<a class="pp-btn ' +
+            (aberta ? 'pp-btn-pri' : 'pp-btn-sec') +
+            ' pp-btn-sala" href="' +
+            esc(i.link) +
+            '" target="_blank" rel="noopener noreferrer">' +
+            icone('video', 16) +
+            'Entrar na sala</a>'
+        );
+    }
+    // Local na linha: "On-line" no lugar do endereço
+    function localHTML(i) {
+        return i.online ? icone('video') + 'On-line' : icone('local') + esc(i.local);
+    }
     function acoes(i) {
         const sit = situacao(i);
         if (sit === 'confirmar')
@@ -186,6 +205,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (sit === 'antes')
             return (
                 '<div class="vg-acoes">' +
+                botaoSala(i) +
                 (D.podeCancelarInscricao(i, S.agora)
                     ? notaMudou(i, 12) + botaoCancelar(i)
                     : '<span class="nota-24h">' + icone('relogio', 12) + AVISO_24H + '</span>') +
@@ -330,8 +350,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             ', </span>' +
             quando(i) +
             '</span><span>' +
-            icone('local') +
-            esc(i.local) +
+            localHTML(i) +
             '</span><span>' +
             icone('pessoa') +
             esc(i.monitor) +
@@ -748,23 +767,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         else if (sit === 'fila')
             acoesDet = '<div class="pp-det-acoes">' + botaoCancelar(i) + '</div>';
         else if (sit === 'antes')
-            acoesDet = D.podeCancelarInscricao(i, S.agora)
-                ? (i.liberado
-                      ? '<p class="nota-24h nota-bloco">' +
-                        icone('relogio', 14) +
-                        '<span>' +
-                        esc(textoMudou(i)) +
-                        ' Você pode cancelar até o início.</span></p>'
-                      : '') +
-                  '<div class="pp-det-acoes">' +
-                  botaoCancelar(i) +
-                  '</div>'
-                : '<p class="nota-24h nota-bloco">' +
-                  icone('relogio', 14) +
-                  AVISO_24H +
-                  '. Faltam menos de ' +
-                  D.HORAS_CANCELAMENTO +
-                  'h para o início.</p>';
+            acoesDet =
+                (i.link ? '<div class="pp-det-acoes">' + botaoSala(i) + '</div>' : '') +
+                (D.podeCancelarInscricao(i, S.agora)
+                    ? (i.liberado
+                          ? '<p class="nota-24h nota-bloco">' +
+                            icone('relogio', 14) +
+                            '<span>' +
+                            esc(textoMudou(i)) +
+                            ' Você pode cancelar até o início.</span></p>'
+                          : '') +
+                      '<div class="pp-det-acoes">' +
+                      botaoCancelar(i) +
+                      '</div>'
+                    : '<p class="nota-24h nota-bloco">' +
+                      icone('relogio', 14) +
+                      AVISO_24H +
+                      '. Faltam menos de ' +
+                      D.HORAS_CANCELAMENTO +
+                      'h para o início.</p>');
         const nota = notaPresenca(i);
         document.getElementById('det-corpo').innerHTML =
             '<span id="det-situacao" tabindex="-1">' +
@@ -775,7 +796,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             '</dd></div><div><dt>Horário</dt><dd>' +
             quando(i) +
             '</dd></div><div><dt>Local</dt><dd>' +
-            esc(i.local) +
+            (i.online ? 'On-line' : esc(i.local)) +
             '</dd></div><div><dt>Monitor</dt><dd>' +
             esc(i.monitor) +
             '</dd></div></dl>' +

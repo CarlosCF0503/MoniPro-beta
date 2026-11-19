@@ -364,3 +364,44 @@ describe('lista de espera (plano 8)', () => {
         expect(vaga({ inscritos: 1 }).naFila).toBe(0);
     });
 });
+
+describe('monitoria on-line no perfil (plano 11)', () => {
+    const insc = (campos = {}, vaga = {}) =>
+        D.normalizarMinhaInscricao({
+            id: 3,
+            status: 'pendente',
+            ...campos,
+            monitoria: {
+                horario: new Date(2026, 10, 10, 14).toISOString(),
+                local: 'On-line',
+                modalidade: 'online',
+                link: 'https://meet.google.com/abc-defg-hij',
+                status: 'ativa',
+                ...vaga
+            }
+        });
+
+    test('a inscrição on-line traz o link', () => {
+        expect(insc()).toMatchObject({
+            online: true,
+            link: 'https://meet.google.com/abc-defg-hij'
+        });
+        expect(insc({}, { link: null }).link).toBeNull();
+    });
+
+    test('a sala fica em destaque de 15 min antes até o fim (ou 4h sem término)', () => {
+        const i = insc();
+        expect(D.salaAberta(i, new Date(2026, 10, 10, 13, 44))).toBe(false);
+        expect(D.salaAberta(i, new Date(2026, 10, 10, 13, 45))).toBe(true);
+        expect(D.salaAberta(i, new Date(2026, 10, 10, 18, 0))).toBe(true);
+        expect(D.salaAberta(i, new Date(2026, 10, 10, 18, 1))).toBe(false);
+    });
+
+    test('o perfil do monitor recebe modalidade e link; o link é validado como na API', () => {
+        expect(
+            vaga({ modalidade: 'online', link: 'https://meet.jit.si/Sala', local: 'On-line' })
+        ).toMatchObject({ online: true, link: 'https://meet.jit.si/Sala' });
+        expect(D.linkSalaValido('https://us02web.zoom.us/j/1')).toBe(true);
+        expect(D.linkSalaValido('https://evilzoom.us/j/1')).toBe(false);
+    });
+});

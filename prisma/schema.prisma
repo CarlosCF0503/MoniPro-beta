@@ -19,6 +19,12 @@ enum StatusMonitoria {
   cancelada
 }
 
+// Plano 11 (RF-016): a vaga é presencial (com local) ou on-line (com link da sala)
+enum Modalidade {
+  presencial
+  online
+}
+
 enum StatusAgendamento {
   pendente
   confirmado
@@ -77,6 +83,9 @@ model Monitoria {
   local         String
   status        StatusMonitoria @default(ativa)
   capacidade    Int             @default(1) // nº máximo de alunos inscritos simultaneamente na vaga
+  // Plano 11: on-line tem link (só para inscritos, nunca na listagem) e local "On-line"
+  modalidade    Modalidade      @default(presencial)
+  link          String?
 
   id_monitor    Int
   monitor       Usuario         @relation("MonitorParaMonitoria", fields: [id_monitor], references: [id])
