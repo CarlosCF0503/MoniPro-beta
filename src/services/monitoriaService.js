@@ -4,6 +4,7 @@ const notificacaoService = require('./notificacaoService');
 const listaEsperaService = require('./listaEsperaService');
 const agendamentoRepository = require('../repositories/agendamentoRepository');
 const { tamanhoMaximoFila } = require('../config/listaEspera');
+const { LOCAL_ONLINE } = require('../schemas/monitoriaSchemas');
 const {
     validarAntecedenciaCancelamento,
     HORAS_MINIMAS_CANCELAMENTO
@@ -47,6 +48,39 @@ async function validarNovoHorario(vaga, horario, agora, tx) {
         throw new ErroConflito('Você já tem uma vaga ativa neste mesmo horário.');
     }
     return novo;
+}
+
+// Plano 11: presencial ↔ on-line e o link da sala. Na on-line o local é sempre "On-line" e o
+// link é obrigatório; na presencial não há link e o local precisa ser informado ao voltar dela.
+function definirModalidade(vaga, dados, alteracoes) {
+    const modalidade = dados.modalidade ?? vaga.modalidade;
+    if (modalidade === 'online') {
+        const link = dados.link ?? vaga.link;
+        if (!link) {
+            throw new ErroValidacao('Informe o link da sala.', {
+                link: 'Informe o link da sala.'
+            });
+        }
+        if (vaga.modalidade !== 'online') alteracoes.modalidade = 'online';
+        if (link !== vaga.link) alteracoes.link = link;
+        if (vaga.local !== LOCAL_ONLINE) alteracoes.local = LOCAL_ONLINE;
+        else delete alteracoes.local;
+        return;
+    }
+    if (dados.link !== undefined) {
+        throw new ErroValidacao('Vaga presencial não tem link de sala.', {
+            link: 'Vaga presencial não tem link de sala.'
+        });
+    }
+    if (vaga.modalidade === 'online') {
+        if (!dados.local || dados.local === LOCAL_ONLINE) {
+            throw new ErroValidacao('Informe o local da monitoria presencial.', {
+                local: 'Informe o local da monitoria presencial.'
+            });
+        }
+        alteracoes.modalidade = 'presencial';
+        alteracoes.link = null;
+    }
 }
 
 class MonitoriaService {
@@ -201,6 +235,7 @@ class MonitoriaService {
             if (dados.local !== undefined && dados.local !== vaga.local) {
                 alteracoes.local = dados.local;
             }
+            definirModalidade(vaga, dados, alteracoes);
             if (dados.descricao !== undefined) alteracoes.descricao = dados.descricao;
 
             const inscritos = await monitoriaRepository.contarInscritos(id, tx);
@@ -214,7 +249,13 @@ class MonitoriaService {
             }
 
             const monitoria = await monitoriaRepository.atualizar(id, alteracoes, tx);
-            const alterouQuandoOuOnde = Boolean(novoHorario || alteracoes.local !== undefined);
+            // Plano 11: trocar a modalidade ou o link da sala conta como mudar o local
+            const alterouQuandoOuOnde = Boolean(
+                novoHorario ||
+                alteracoes.local !== undefined ||
+                alteracoes.link !== undefined ||
+                alteracoes.modalidade !== undefined
+            );
             // Plano 8: quem está na fila também acompanha a mudança e recebe o aviso
             const naFila = await agendamentoRepository.contarFila(id, tx);
             if (alterouQuandoOuOnde && inscritos + naFila > 0) {
@@ -231,7 +272,7 @@ class MonitoriaService {
                 // Plano 3: e-mail "vaga alterada" para cada inscrito, com o antes e o depois
                 await notificacaoService.avisarAlteracao(
                     id,
-                    { horario: new Date(vaga.horario), local: vaga.local },
+                    { horario: new Date(vaga.horario), local: vaga.local, link: vaga.link },
                     agora,
                     tx
                 );

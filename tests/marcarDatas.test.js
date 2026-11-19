@@ -183,3 +183,48 @@ describe('marcar monitoria — lista de espera (plano 8)', () => {
         expect(datas.aceitaFila(livre)).toBe(false);
     });
 });
+
+describe('marcar monitoria — vaga on-line (plano 11)', () => {
+    const form = (extra) => ({
+        dia: '2026-11-30',
+        hora: '14:00',
+        capacidade: '2',
+        descricao: '',
+        local: '',
+        ...extra
+    });
+    const agora = new Date(2026, 10, 20, 12, 0);
+
+    test('on-line pede o link no lugar do local', () => {
+        expect(datas.validarVaga(form({ modalidade: 'online' }), agora)).toMatchObject({
+            link: 'Informe o link da sala.'
+        });
+        expect(
+            datas.validarVaga(form({ modalidade: 'online', link: 'https://bit.ly/x' }), agora)
+        ).toHaveProperty('link');
+        const ok = datas.validarVaga(
+            form({ modalidade: 'online', link: 'https://meet.google.com/abc-defg-hij' }),
+            agora
+        );
+        expect(ok).not.toHaveProperty('link');
+        expect(ok).not.toHaveProperty('local');
+    });
+
+    test('presencial continua exigindo o local', () => {
+        expect(datas.validarVaga(form({ modalidade: 'presencial' }), agora)).toHaveProperty(
+            'local'
+        );
+    });
+
+    test('a listagem traz a modalidade', () => {
+        const v = datas.normalizarVaga({
+            id: 1,
+            horario: new Date(2026, 10, 30, 14).toISOString(),
+            capacidade: 2,
+            modalidade: 'online',
+            local: 'On-line'
+        });
+        expect(v.modalidade).toBe('online');
+        expect(datas.linkSalaValido('http://meet.jit.si/x')).toBe(false);
+    });
+});

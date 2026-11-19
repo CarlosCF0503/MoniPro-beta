@@ -24,6 +24,29 @@
     const HORAS_CANCELAMENTO = 24;
     // Limites espelhados de src/schemas/monitoriaSchemas.js
     const LIMITE_LOCAL = 120;
+    // Plano 11: link da sala on-line, as mesmas ferramentas aceitas pela API (src/utils/linkSala.js)
+    const DOMINIOS_SALA = [
+        'meet.google.com',
+        'teams.microsoft.com',
+        'teams.live.com',
+        'zoom.us',
+        'meet.jit.si'
+    ];
+    const LOCAL_ONLINE = 'On-line';
+
+    function linkSalaValido(texto) {
+        const bruto = String(texto || '').trim();
+        if (!bruto || bruto.length > 500) return false;
+        let url;
+        try {
+            url = new URL(bruto);
+        } catch {
+            return false;
+        }
+        if (url.protocol !== 'https:' || url.username || url.password || url.port) return false;
+        const host = url.hostname.toLowerCase();
+        return DOMINIOS_SALA.some((d) => host === d || host.endsWith('.' + d));
+    }
     const LIMITE_DESCRICAO = 500;
     // Lista de horários do formulário do monitor (validada pelo time): 07:00 a 22:00, de 15 em 15
     const HORARIO_INICIO = 7 * 60;
@@ -121,6 +144,8 @@
             descricao: m.descricao || '',
             capacidade,
             livres,
+            // Plano 11: presencial ou on-line (o link nunca vem na listagem)
+            modalidade: m.modalidade === 'online' ? 'online' : 'presencial',
             // Plano 8: lista de espera da vaga lotada
             naFila: Number(m.na_fila) || 0,
             filaCheia: Boolean(m.fila_cheia)
@@ -194,10 +219,16 @@
         else if (data && (minhasNoDia || []).some((v) => hora(v.inicio) === form.hora))
             erros.hora = 'Você já tem uma vaga às ' + form.hora + ' neste dia.';
 
-        const local = String(form.local || '').trim();
-        if (!local) erros.local = 'O local é obrigatório.';
-        else if (local.length > LIMITE_LOCAL)
-            erros.local = 'Máximo de ' + LIMITE_LOCAL + ' caracteres.';
+        if (form.modalidade === 'online') {
+            if (!String(form.link || '').trim()) erros.link = 'Informe o link da sala.';
+            else if (!linkSalaValido(form.link))
+                erros.link = 'Use um link https do Meet, Teams, Zoom ou Jitsi.';
+        } else {
+            const local = String(form.local || '').trim();
+            if (!local) erros.local = 'O local é obrigatório.';
+            else if (local.length > LIMITE_LOCAL)
+                erros.local = 'Máximo de ' + LIMITE_LOCAL + ' caracteres.';
+        }
 
         if (String(form.descricao || '').length > LIMITE_DESCRICAO)
             erros.descricao = 'Máximo de ' + LIMITE_DESCRICAO + ' caracteres.';
@@ -216,6 +247,8 @@
         MESES,
         DIAS_SEMANA,
         LIMITE_DESCRICAO,
+        LOCAL_ONLINE,
+        linkSalaValido,
         chave,
         deChave,
         diaPassado,

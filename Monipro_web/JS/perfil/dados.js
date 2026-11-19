@@ -108,7 +108,10 @@
             inscritos: Number.isInteger(m.inscritos) ? m.inscritos : null,
             // Plano 8: quantos esperam um lugar na lista de espera
             naFila: Number(m.na_fila) || 0,
-            descricao: m.descricao || ''
+            descricao: m.descricao || '',
+            // Plano 11: o dono da vaga recebe o link da sala
+            online: m.modalidade === 'online',
+            link: m.link || null
         };
     }
 
@@ -253,6 +256,10 @@
             naFila: String(a.status || '').toLowerCase() === 'em_espera',
             posicaoFila: Number(a.posicao_fila) || null,
             promovido: Boolean(a.promovido_em),
+            // Plano 11: on-line, com o link da sala só para quem tem lugar (a API manda null
+            // para a fila e para a inscrição cancelada)
+            online: m.modalidade === 'online',
+            link: m.link || null,
             horarioAnterior: a.horario_anterior ? new Date(a.horario_anterior) : null,
             localAnterior: a.local_anterior || null
         };
@@ -325,6 +332,40 @@
         return lista;
     }
 
+    /**
+     * Plano 11: o botão "Entrar na sala" fica em destaque de 15 min antes do início até o fim
+     * (ou até 4h depois, se a vaga não tem término registrado).
+     */
+    // Plano 11: as mesmas ferramentas aceitas pela API (src/utils/linkSala.js)
+    const DOMINIOS_SALA = [
+        'meet.google.com',
+        'teams.microsoft.com',
+        'teams.live.com',
+        'zoom.us',
+        'meet.jit.si'
+    ];
+    function linkSalaValido(texto) {
+        const bruto = String(texto || '').trim();
+        if (!bruto || bruto.length > 500) return false;
+        let url;
+        try {
+            url = new URL(bruto);
+        } catch {
+            return false;
+        }
+        if (url.protocol !== 'https:' || url.username || url.password || url.port) return false;
+        const host = url.hostname.toLowerCase();
+        return DOMINIOS_SALA.some((d) => host === d || host.endsWith('.' + d));
+    }
+
+    function salaAberta(inscricao, agora) {
+        const abre = inscricao.inicio.getTime() - 15 * 60 * 1000;
+        const fecha = inscricao.fim
+            ? inscricao.fim.getTime()
+            : inscricao.inicio.getTime() + 4 * 60 * 60 * 1000;
+        return agora.getTime() >= abre && agora.getTime() <= fecha;
+    }
+
     function plural(n, um, varios) {
         return n + ' ' + (n === 1 ? um : varios);
     }
@@ -359,6 +400,8 @@
         situacaoDoAluno,
         separarInscricoes,
         podeCancelarInscricao,
+        salaAberta,
+        linkSalaValido,
         mudancasDaVaga,
         presencasPorDisciplina,
         plural
