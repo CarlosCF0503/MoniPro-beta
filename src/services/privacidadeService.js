@@ -12,7 +12,8 @@ const {
     ANOS_HISTORICO,
     HORAS_TOKEN_REDEFINICAO,
     DIAS_CONTA_PENDENTE,
-    DIAS_NOTIFICACOES
+    DIAS_NOTIFICACOES,
+    DIAS_AUSENCIAS
 } = require('../config/retencao');
 const { ErroValidacao, ErroNaoEncontrado } = require('../utils/erros');
 
@@ -69,6 +70,7 @@ class PrivacidadeService {
         const limiteNotificacoes = new Date(
             agora.getTime() - DIAS_NOTIFICACOES * 24 * 60 * 60 * 1000
         );
+        const limiteAusencias = new Date(agora.getTime() - DIAS_AUSENCIAS * 24 * 60 * 60 * 1000);
 
         const contas = await privacidadeRepository.buscarContasParadas(limiteConta);
         if (!aplicar) {
@@ -79,6 +81,7 @@ class PrivacidadeService {
             const tokensConfirmacao =
                 await privacidadeRepository.contarTokensConfirmacaoAntigos(limitePendente);
             const notificacoes = await notificacaoRepository.contarAntigas(limiteNotificacoes);
+            const ausencias = await privacidadeRepository.contarAusenciasAntigas(limiteAusencias);
             return {
                 contasParadas: contas.length,
                 ...antigo,
@@ -86,6 +89,7 @@ class PrivacidadeService {
                 contasPendentes,
                 tokensConfirmacao,
                 notificacoes,
+                ausencias,
                 aplicado: false
             };
         }
@@ -104,6 +108,7 @@ class PrivacidadeService {
         const tokensConfirmacao =
             await privacidadeRepository.apagarTokensConfirmacaoAntigos(limitePendente);
         const notificacoes = await notificacaoRepository.apagarAntigas(limiteNotificacoes);
+        const ausencias = await privacidadeRepository.apagarAusenciasAntigas(limiteAusencias);
         return {
             contasParadas: contas.length,
             ...apagado,
@@ -111,6 +116,7 @@ class PrivacidadeService {
             contasPendentes,
             tokensConfirmacao,
             notificacoes,
+            ausencias,
             aplicado: true
         };
     }

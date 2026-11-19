@@ -33,6 +33,7 @@ do horário e a plataforma registra pontos e horas de monitoria.
 | RF-011 / RN-008 | Extrato de pontos e ranking por disciplina e semestre                                               | Concluído |
 | RF-013 / RN-015 | Lista de espera nas vagas lotadas, com inscrição automática quando abre um lugar                    | Concluído |
 | RF-016          | Monitoria on-line, com o link da sala só para os inscritos                                          | Concluído |
+| RN-016          | Faltas marcadas pelo monitor; 3 em 30 dias bloqueiam novas inscrições por 7 dias                    | Concluído |
 | RF-018 / RN-017 | Confirmação do e-mail no cadastro                                                                   | Concluído |
 | RN-001          | Cancelamento com pelo menos 24 h de antecedência                                                    | Concluído |
 
@@ -98,7 +99,7 @@ enviado, com o link.
 | `npm test`               | Testes unitários e de API (Jest + Supertest), com o banco simulado                                                       |
 | `npm run test:cobertura` | Os mesmos testes com relatório de cobertura em `coverage/`. Falha se a cobertura cair abaixo do piso de `jest.config.js` |
 | `npm run test:int`       | Integração com um PostgreSQL real: migrações do zero, concorrência, restrições únicas e sessão                           |
-| `npm run test:e2e`       | Casos CT-01 a CT-15 no navegador (Playwright), no computador e no celular                                                |
+| `npm run test:e2e`       | Casos CT-01 a CT-16 no navegador (Playwright), no computador e no celular                                                |
 | `npm run lint`           | ESLint e Prettier                                                                                                        |
 
 O `test:int` exige `DATABASE_URL_INTEGRACAO` apontando para um banco local cujo nome termine
@@ -170,9 +171,11 @@ restrita a esse papel.
 | DELETE | `/agendamentos/:id`                | Cancela uma inscrição (RN-001) ou sai da lista de espera       |
 | PATCH  | `/agendamentos/:id/presenca`       | O aluno confirma que a sessão aconteceu                        |
 | PATCH  | `/agendamentos/:id/concluir`       | O monitor confirma a presença do aluno (monitor)               |
+| PATCH  | `/agendamentos/:id/ausencia`       | O monitor marca que o aluno faltou (monitor)                   |
 | GET    | `/perfil`                          | Dados do perfil                                                |
 | GET    | `/perfil/agendamentos`             | Inscrições exibidas no perfil                                  |
 | GET    | `/perfil/monitorias`               | Vagas exibidas no perfil do monitor                            |
+| GET    | `/perfil/restricao`                | Bloqueio de novas inscrições por faltas (ou `null`)            |
 | DELETE | `/perfil`                          | Exclui (anonimiza) a conta, com confirmação da senha           |
 | GET    | `/pontos/extrato`                  | Extrato de pontos do usuário                                   |
 | GET    | `/certificados/elegibilidade`      | Horas do semestre e se a declaração pode ser emitida (monitor) |

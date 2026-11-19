@@ -4,6 +4,7 @@ const listaEsperaService = require('./listaEsperaService');
 const pontuacaoService = require('./pontuacaoService');
 const { validarAntecedenciaCancelamento } = require('../utils/validarAntecedencia');
 const { validarJanelaConfirmacao } = require('../utils/regrasConclusao');
+const restricaoService = require('./restricaoService');
 const {
     ErroAplicacao,
     ErroValidacao,
@@ -25,6 +26,9 @@ class AgendamentoService {
                     id_monitoria: 'A monitoria selecionada não foi encontrada.'
                 });
             }
+
+            // Plano 12: quem faltou demais não faz novas inscrições por um tempo
+            await restricaoService.exigirSemRestricao(dados.id_aluno, tx);
 
             // Só vagas ativas aceitam inscrição (é o mesmo filtro da listagem de vagas)
             if (monitoria.status !== 'ativa') {
@@ -141,6 +145,41 @@ class AgendamentoService {
     // P2 (R4): a presença vale quando o aluno e o monitor da vaga confirmam, cada um do seu
     // lado, depois do início da sessão e em até 7 dias. Quem confirma por último conclui o
     // agendamento, e os pontos (D1) entram uma única vez. `lado` é 'aluno' ou 'monitor'.
+    /**
+     * Plano 12: o monitor dono da vaga marca que o aluno faltou, depois do início e no prazo da
+     * presença (7 dias). Depois que os dois confirmaram a presença, não dá mais (409). Desfazer
+     * é confirmar a presença pelo monitor.
+     */
+    async marcarAusencia(id, idMonitor) {
+        return await agendamentoRepository.emTransacao(async (tx) => {
+            const ag = await agendamentoRepository.bloquearParaPresenca(id, tx);
+            if (!ag) throw new ErroNaoEncontrado('Agendamento não encontrado.');
+            if (ag.id_monitor !== idMonitor) {
+                throw new ErroNaoAutorizado(
+                    'Só o monitor responsável pela vaga pode marcar a falta.'
+                );
+            }
+            if (ag.status === 'concluido') {
+                throw new ErroConflito(
+                    'A presença deste aluno já foi confirmada pelos dois: não dá para marcar falta.'
+                );
+            }
+            if (['cancelado', 'em_espera'].includes(ag.status) || ag.status_vaga === 'cancelada') {
+                throw new ErroRegraNegocio('Esta inscrição não está ativa: não há falta a marcar.');
+            }
+            if (ag.ausente_em) throw new ErroConflito('A falta deste aluno já foi marcada.');
+            const agora = new Date();
+            const inicio = new Date(ag.horario);
+            if (agora < inicio) {
+                throw new ErroRegraNegocio(
+                    'A falta só pode ser marcada depois do horário da sessão.'
+                );
+            }
+            validarJanelaConfirmacao(ag.horario, agora);
+            return await agendamentoRepository.marcarAusencia(id, agora, tx);
+        });
+    }
+
     async registrarPresenca(id, lado, idUsuario) {
         return await agendamentoRepository.emTransacao(async (tx) => {
             const ag = await agendamentoRepository.bloquearParaPresenca(id, tx);
@@ -184,6 +223,7 @@ class AgendamentoService {
             }
             validarJanelaConfirmacao(ag.horario);
 
+            // Plano 12: confirmar a presença pelo monitor desfaz a falta, se havia
             const concluiu = Boolean(ehMonitor ? ag.presenca_aluno_em : ag.presenca_monitor_em);
             const agendamento = await agendamentoRepository.registrarPresenca(
                 id,

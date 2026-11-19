@@ -12,6 +12,7 @@
 
 const agendamentoRepository = require('../repositories/agendamentoRepository');
 const notificacaoService = require('./notificacaoService');
+const restricaoService = require('./restricaoService');
 const logger = require('../utils/logger');
 const { HORAS_MIN_PROMOCAO, tamanhoMaximoFila } = require('../config/listaEspera');
 const { HORAS_MINIMAS_CANCELAMENTO } = require('../utils/validarAntecedencia');
@@ -35,6 +36,8 @@ class ListaEsperaService {
         return await agendamentoRepository.emTransacao(async (tx) => {
             const vaga = await agendamentoRepository.bloquearMonitoria(idMonitoria, tx);
             if (!vaga) throw new ErroNaoEncontrado('Vaga de monitoria não encontrada.');
+            // Plano 12: quem faltou demais também não entra na fila por um tempo
+            await restricaoService.exigirSemRestricao(idAluno, tx);
             if (vaga.status !== 'ativa') {
                 throw new ErroRegraNegocio(
                     'Esta vaga de monitoria não está aberta para inscrições.'

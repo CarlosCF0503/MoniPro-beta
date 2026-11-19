@@ -115,6 +115,9 @@ model Agendamento {
   local_anterior       String?
   // Plano 8: quando saiu da lista de espera e virou inscrição (RN-015)
   promovido_em         DateTime?
+  // Plano 12 (RN-016): o monitor marcou que o aluno faltou. Exclui a presença do monitor;
+  // apagado pela retenção depois de 180 dias (LGPD)
+  ausente_em           DateTime?
 
   id_monitoria Int
   monitoria    Monitoria         @relation(fields: [id_monitoria], references: [id])
@@ -125,6 +128,7 @@ model Agendamento {
   @@index([id_monitoria])
   @@index([id_aluno])
   @@index([id_monitoria, status, id])
+  @@index([id_aluno, ausente_em])
   @@map("agendamentos")
 }
 

@@ -186,7 +186,9 @@
             aluno: (a.aluno && a.aluno.nome_completo) || 'Aluno',
             status: String(a.status || '').toLowerCase(),
             alunoConfirmou: Boolean(a.presenca_aluno_em),
-            monitorConfirmou: Boolean(a.presenca_monitor_em)
+            monitorConfirmou: Boolean(a.presenca_monitor_em),
+            // Plano 12: o monitor marcou a falta
+            ausente: Boolean(a.ausente_em)
         };
     }
 
@@ -219,6 +221,8 @@
             return agora < vaga.inicio && vaga.status !== 'cancelada' ? 'fila' : 'semLugar';
         if (inscricao.status === 'concluido') return 'confirmada';
         if (inscricao.status === 'cancelado' || vaga.status === 'cancelada') return 'cancelada';
+        // Plano 12: falta marcada pelo monitor (ele pode corrigir no prazo da presença)
+        if (inscricao.ausente) return 'ausente';
         if (agora < vaga.inicio) return 'antes';
         if (agora > limiteConfirmacao(vaga)) return 'expirada';
         const jaConfirmou =
@@ -249,6 +253,8 @@
             statusVaga: String(m.status || '').toLowerCase(),
             alunoConfirmou: Boolean(a.presenca_aluno_em),
             monitorConfirmou: Boolean(a.presenca_monitor_em),
+            // Plano 12: o monitor marcou a falta
+            ausente: Boolean(a.ausente_em),
             // Pode cancelar até o início: a vaga mudou de dia, horário ou local depois da
             // inscrição (editar vaga) ou o aluno saiu da lista de espera a menos de 24h (plano 8)
             liberado: Boolean(a.liberado_cancelar_em),

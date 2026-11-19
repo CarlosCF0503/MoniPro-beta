@@ -42,6 +42,20 @@ class AgendamentoController {
         });
     }
 
+    // Plano 12: o monitor dono da vaga marca que o aluno faltou
+    async marcarAusencia(req, res) {
+        const agendamento = await agendamentoService.marcarAusencia(
+            parseInt(req.params.id, 10),
+            req.usuario.id
+        );
+        res.json({
+            success: true,
+            mensagem:
+                'Falta registrada. Se foi engano, confirme a presença em até 7 dias depois da sessão.',
+            agendamento
+        });
+    }
+
     // P2 (R4): o monitor dono da vaga confirma a presença do aluno
     async concluir(req, res) {
         const { agendamento, concluiu } = await agendamentoService.registrarPresenca(
