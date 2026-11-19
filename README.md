@@ -32,6 +32,7 @@ do horário e a plataforma registra pontos e horas de monitoria.
 | RF-010 / RN-011 | Avisos por e-mail ao aluno (vaga alterada ou cancelada, lembretes)                                  | Concluído |
 | RF-011 / RN-008 | Extrato de pontos e ranking por disciplina e semestre                                               | Concluído |
 | RF-013 / RN-015 | Lista de espera nas vagas lotadas, com inscrição automática quando abre um lugar                    | Concluído |
+| RF-016          | Monitoria on-line, com o link da sala só para os inscritos                                          | Concluído |
 | RF-018 / RN-017 | Confirmação do e-mail no cadastro                                                                   | Concluído |
 | RN-001          | Cancelamento com pelo menos 24 h de antecedência                                                    | Concluído |
 
@@ -97,7 +98,7 @@ enviado, com o link.
 | `npm test`               | Testes unitários e de API (Jest + Supertest), com o banco simulado                                                       |
 | `npm run test:cobertura` | Os mesmos testes com relatório de cobertura em `coverage/`. Falha se a cobertura cair abaixo do piso de `jest.config.js` |
 | `npm run test:int`       | Integração com um PostgreSQL real: migrações do zero, concorrência, restrições únicas e sessão                           |
-| `npm run test:e2e`       | Casos CT-01 a CT-14 no navegador (Playwright), no computador e no celular                                                |
+| `npm run test:e2e`       | Casos CT-01 a CT-15 no navegador (Playwright), no computador e no celular                                                |
 | `npm run lint`           | ESLint e Prettier                                                                                                        |
 
 O `test:int` exige `DATABASE_URL_INTEGRACAO` apontando para um banco local cujo nome termine
