@@ -68,7 +68,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         erro: null,
         erroDefinitivo: false,
         // monitor
-        form: { dia: null, hora: '', local: '', capacidade: '1', descricao: '' },
+        form: {
+            dia: null,
+            hora: '',
+            local: '',
+            capacidade: '1',
+            descricao: '',
+            // Plano 11
+            modalidade: 'presencial',
+            link: ''
+        },
         errosApi: {},
         tocados: {},
         erroForm: null,
@@ -244,7 +253,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         horario: 'hora',
         local: 'local',
         descricao: 'descricao',
-        capacidade: 'capacidade'
+        capacidade: 'capacidade',
+        link: 'link'
     };
 
     async function criarVaga() {
@@ -259,9 +269,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 body: JSON.stringify({
                     id_disciplina: Number(disciplinaID),
                     horario: data.toISOString(),
-                    local: S.form.local.trim(),
                     descricao: S.form.descricao.trim(),
-                    capacidade: Number(S.form.capacidade)
+                    capacidade: Number(S.form.capacidade),
+                    // Plano 11: on-line manda o link; a API grava o local "On-line"
+                    ...(S.form.modalidade === 'online'
+                        ? { modalidade: 'online', link: S.form.link.trim() }
+                        : { local: S.form.local.trim() })
                 })
             });
             if (r.success && r.monitoria) {
@@ -551,10 +564,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const inicio = D.dataDoFormulario(S.form.dia, S.form.hora);
         if (!inicio) return null;
         const capacidade = Math.max(Math.floor(Number(S.form.capacidade)) || 1, 1);
+        const online = S.form.modalidade === 'online';
         return {
             inicio,
             monitor: usuario.nome || 'Você',
-            local: S.form.local.trim(),
+            modalidade: online ? 'online' : 'presencial',
+            link: online ? S.form.link.trim() : '',
+            local: online ? D.LOCAL_ONLINE : S.form.local.trim(),
             descricao: S.form.descricao.trim(),
             capacidade,
             livres: capacidade
@@ -576,8 +592,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     const DICAS = {
         hora: 'De 15 em 15 minutos',
         capacidade: 'Alunos por vaga',
-        local: 'Ex.: Lab 3, Bloco C'
+        local: 'Ex.: Lab 3, Bloco C',
+        link: 'Meet, Teams, Zoom ou Jitsi. Só quem se inscrever vê o link.'
     };
+
+    // Plano 11: presencial ou on-line, como dois botões de opção
+    function campoModalidade(atual) {
+        const opcao = (valor, rotulo, ico) =>
+            '<label class="mod-op' +
+            (atual === valor ? ' ativa' : '') +
+            '"><input type="radio" name="modalidade" value="' +
+            valor +
+            '"' +
+            (atual === valor ? ' checked' : '') +
+            '>' +
+            C.icone(ico, 16) +
+            rotulo +
+            '</label>';
+        return (
+            '<fieldset class="modalidade"><legend>Modalidade</legend><div class="mod-ops">' +
+            opcao('presencial', 'Presencial', 'local') +
+            opcao('online', 'On-line', 'video') +
+            '</div></fieldset>'
+        );
+    }
 
     function campo(id, rotulo, controle, erro, dica) {
         return (
@@ -635,17 +673,30 @@ document.addEventListener('DOMContentLoaded', async () => {
                 DICAS.capacidade
             ) +
             '</div>' +
-            campo(
-                'local',
-                'Local',
-                '<input id="f-local" type="text" maxlength="140" autocomplete="off" placeholder="Laboratório 3, Bloco C" value="' +
-                    esc(f.local) +
-                    '"' +
-                    extra('local') +
-                    '>',
-                e.local,
-                DICAS.local
-            ) +
+            campoModalidade(f.modalidade) +
+            (f.modalidade === 'online'
+                ? campo(
+                      'link',
+                      'Link da sala',
+                      '<input id="f-link" type="url" inputmode="url" maxlength="500" autocomplete="off" placeholder="https://meet.google.com/abc-defg-hij" value="' +
+                          esc(f.link) +
+                          '"' +
+                          extra('link') +
+                          '>',
+                      e.link,
+                      DICAS.link
+                  )
+                : campo(
+                      'local',
+                      'Local',
+                      '<input id="f-local" type="text" maxlength="140" autocomplete="off" placeholder="Laboratório 3, Bloco C" value="' +
+                          esc(f.local) +
+                          '"' +
+                          extra('local') +
+                          '>',
+                      e.local,
+                      DICAS.local
+                  )) +
             campo(
                 'descricao',
                 'Assunto (opcional)',
@@ -713,7 +764,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             C.linhaResumo('Disciplina', 'livro', disciplinaNome) +
             C.linhaResumo('Dia', 'calendario', D.diaLongo(v.inicio)) +
             C.linhaResumo('Horário', 'relogio', D.hora(v.inicio)) +
-            C.linhaResumo('Local', 'local', v.local) +
+            (v.modalidade === 'online'
+                ? C.linhaResumo('Modalidade', 'video', 'On-line') +
+                  // O link fica como foi digitado (sem a maiúscula da primeira letra)
+                  '<dt>' +
+                  C.icone('video') +
+                  'Link da sala</dt><dd class="link">' +
+                  esc(v.link) +
+                  '</dd>'
+                : C.linhaResumo('Local', 'local', v.local)) +
             (v.descricao ? C.linhaResumo('Assunto', 'assunto', v.descricao) : '') +
             C.linhaResumo('Lugares', 'pessoas', D.plural(v.capacidade, 'aluno', 'alunos')) +
             '</dl><div class="previa"><p class="rotulo">' +
@@ -810,7 +869,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Digitar no formulário atualiza só dicas, prévia e botão (re-render tiraria o foco do campo)
     function atualizarFormulario() {
         const e = errosVisiveis();
-        ['hora', 'capacidade', 'local', 'descricao'].forEach((id) => {
+        ['hora', 'capacidade', 'local', 'link', 'descricao'].forEach((id) => {
             const bloco = raiz.querySelector('[data-campo="' + id + '"]');
             if (!bloco) return;
             bloco.classList.toggle('err', Boolean(e[id]));
@@ -955,6 +1014,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     raiz.addEventListener('input', (ev) => {
+        // Plano 11: trocar a modalidade troca o campo Local pelo Link da sala
+        if (ev.target.name === 'modalidade') {
+            S.form.modalidade = ev.target.value;
+            delete S.errosApi.local;
+            delete S.errosApi.link;
+            render();
+            const marcado = raiz.querySelector('input[name="modalidade"]:checked');
+            if (marcado) marcado.focus();
+            return;
+        }
         const id = ev.target.id;
         if (!id || id.indexOf('f-') !== 0) return;
         const nome = id.slice(2);

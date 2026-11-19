@@ -11,6 +11,7 @@
     const ICONES = {
         relogio: '<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>',
         local: '<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+        video: '<rect x="2" y="6" width="14" height="12" rx="2"/><path d="m22 8-6 4 6 4V8z"/>',
         pessoas:
             '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
         pessoa: '<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>',
@@ -197,10 +198,12 @@
             '</b><span class="meta"><span class="h">' +
             icone('relogio', 13) +
             D.hora(v.inicio) +
-            '</span><span>' +
-            icone('local', 13) +
-            esc(v.local || 'A definir') +
-            '</span></span>' +
+            '</span>' +
+            // Plano 11: on-line mostra o chip no lugar do local (o link é só para inscritos)
+            (v.modalidade === 'online'
+                ? '<span class="online">' + icone('video', 13) + 'On-line</span>'
+                : '<span>' + icone('local', 13) + esc(v.local || 'A definir') + '</span>') +
+            '</span>' +
             (v.descricao
                 ? '<span class="assunto">' + icone('assunto', 12) + esc(v.descricao) + '</span>'
                 : '') +

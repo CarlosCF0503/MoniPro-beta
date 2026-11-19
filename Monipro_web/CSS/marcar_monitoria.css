@@ -1083,3 +1083,62 @@
         animation-duration: 0s !important;
     }
 }
+
+/* ---------- Plano 11: monitoria on-line ---------- */
+.pagina-marcar .modalidade {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+}
+.pagina-marcar .modalidade legend {
+    margin-bottom: 4px;
+    padding: 0;
+    font-size: 14px;
+    font-weight: 700;
+}
+.pagina-marcar .mod-ops {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+.pagina-marcar .mod-op {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 8px 10px;
+    border: 2px solid var(--navy-2);
+    border-radius: 10px;
+    background: var(--white);
+    color: var(--navy);
+    font-weight: 700;
+    cursor: pointer;
+}
+.pagina-marcar .mod-op input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+.pagina-marcar .mod-op.ativa {
+    background: var(--navy);
+    border-color: var(--navy);
+    color: var(--white);
+}
+.pagina-marcar .mod-op:has(input:focus-visible) {
+    outline: 3px solid #1f4287;
+    outline-offset: 2px;
+}
+.pagina-marcar .meta .online {
+    color: var(--navy-2);
+    font-weight: 700;
+}
+.pagina-marcar .revisao dd.link {
+    font-weight: 500;
+}
+.pagina-marcar .revisao dd.link::first-letter {
+    text-transform: none;
+}
