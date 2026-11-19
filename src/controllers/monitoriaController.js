@@ -2,6 +2,7 @@
 // Tarefa 8: erros sobem para o middleware central (src/middlewares/tratadorDeErros.js).
 // Tarefa 9: o corpo de criar já chega validado por schemas/monitoriaSchemas.js.
 const monitoriaService = require('../services/monitoriaService');
+const listaEsperaService = require('../services/listaEsperaService');
 const { obterParametrosPaginacao, montarPaginacao } = require('../utils/paginacao');
 
 class MonitoriaController {
@@ -62,6 +63,18 @@ class MonitoriaController {
             monitoria,
             // Inscritos liberados para cancelar sem a regra das 24h (0 se só lugares/assunto mudaram)
             liberados: alterouQuandoOuOnde ? inscritos : 0
+        });
+    }
+
+    // Plano 8 (RF-013): entra na lista de espera de uma vaga lotada
+    async entrarNaFila(req, res) {
+        const id = parseInt(req.params.id, 10);
+        const { agendamento, posicao } = await listaEsperaService.entrar(id, req.usuario.id);
+        res.status(201).json({
+            success: true,
+            mensagem: `Você entrou na lista de espera. Sua posição: ${posicao}º.`,
+            agendamento,
+            posicao
         });
     }
 

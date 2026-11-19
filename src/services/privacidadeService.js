@@ -6,6 +6,7 @@ const crypto = require('node:crypto');
 const bcrypt = require('bcryptjs');
 const privacidadeRepository = require('../repositories/privacidadeRepository');
 const notificacaoRepository = require('../repositories/notificacaoRepository');
+const listaEsperaService = require('./listaEsperaService');
 const {
     MESES_CONTA_PARADA,
     ANOS_HISTORICO,
@@ -14,6 +15,16 @@ const {
     DIAS_NOTIFICACOES
 } = require('../config/retencao');
 const { ErroValidacao, ErroNaoEncontrado } = require('../utils/erros');
+
+// Anonimiza numa transação e passa os lugares que o aluno ocupava aos primeiros das listas de
+// espera (plano 8)
+async function anonimizarEPromover(idUsuario, hash, agora) {
+    await privacidadeRepository.emTransacao(async (tx) => {
+        const vagas = await privacidadeRepository.vagasOndeOcupaLugar(idUsuario, agora, tx);
+        await privacidadeRepository.anonimizar(idUsuario, hash, agora, tx);
+        for (const idMonitoria of vagas) await listaEsperaService.promover(idMonitoria, tx, agora);
+    });
+}
 
 // Hash de uma senha aleatória que ninguém conhece: a conta anonimizada não entra mais
 async function hashInutilizavel() {
@@ -40,9 +51,7 @@ class PrivacidadeService {
             throw new ErroValidacao('Senha incorreta.', { senha: 'Senha incorreta.' });
         }
         const hash = await hashInutilizavel();
-        await privacidadeRepository.emTransacao((tx) =>
-            privacidadeRepository.anonimizar(usuario.id, hash, agora, tx)
-        );
+        await anonimizarEPromover(usuario.id, hash, agora);
     }
 
     /**
@@ -83,9 +92,7 @@ class PrivacidadeService {
 
         for (const { id } of contas) {
             const hash = await hashInutilizavel();
-            await privacidadeRepository.emTransacao((tx) =>
-                privacidadeRepository.anonimizar(id, hash, agora, tx)
-            );
+            await anonimizarEPromover(id, hash, agora);
         }
         const apagado = await privacidadeRepository.emTransacao((tx) =>
             privacidadeRepository.apagarHistoricoAntigo(limiteHistorico, tx)

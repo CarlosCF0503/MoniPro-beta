@@ -20,6 +20,20 @@ class PrivacidadeRepository {
         });
     }
 
+    // Plano 8: vagas futuras em que o aluno ocupa lugar (para a fila andar quando ele sair)
+    async vagasOndeOcupaLugar(idUsuario, agora, db = prisma) {
+        const linhas = await db.agendamento.findMany({
+            where: {
+                id_aluno: parseInt(idUsuario),
+                status: { in: ['pendente', 'confirmado'] },
+                data_hora: { gt: agora }
+            },
+            select: { id_monitoria: true },
+            distinct: ['id_monitoria']
+        });
+        return linhas.map((l) => l.id_monitoria);
+    }
+
     /**
      * Anonimiza a conta e cancela o que ainda ia acontecer: as inscrições futuras do aluno
      * (libera os lugares) e as vagas futuras do monitor. Revoga as sessões (versao_token).
@@ -31,7 +45,7 @@ class PrivacidadeRepository {
         await db.agendamento.updateMany({
             where: {
                 id_aluno: id,
-                status: { in: ['pendente', 'confirmado'] },
+                status: { in: ['pendente', 'confirmado', 'em_espera'] },
                 data_hora: { gt: agora }
             },
             data: { status: 'cancelado' }

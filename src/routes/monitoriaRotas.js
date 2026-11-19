@@ -22,6 +22,9 @@ router.post(
 // Rotas específicas ANTES da rota com parâmetro (ordem importa no Express)
 router.get('/monitor/agendamentos', autenticar, monitoriaController.listarAgendamentosDoMonitor);
 
+// Plano 8 (RF-013): lista de espera de uma vaga lotada. Sair da fila é o DELETE /agendamentos/:id
+router.post('/:id/espera', autenticar, monitoriaController.entrarNaFila);
+
 // Rota de cancelar vaga — chamada pelo perfil.js do monitor
 router.put('/:id/cancelar', autenticar, monitoriaController.cancelar);
 

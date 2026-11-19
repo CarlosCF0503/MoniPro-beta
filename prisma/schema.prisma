@@ -24,6 +24,9 @@ enum StatusAgendamento {
   confirmado
   concluido
   cancelado
+  // Plano 8 (RF-013): na lista de espera de uma vaga lotada. Não ocupa lugar; a posição é a
+  // ordem de entrada (id)
+  em_espera
 }
 
 model Usuario {
@@ -101,6 +104,8 @@ model Agendamento {
   // Como a vaga era quando o aluno se inscreveu (só o que mudou), para o perfil mostrar o antes
   horario_anterior     DateTime?
   local_anterior       String?
+  // Plano 8: quando saiu da lista de espera e virou inscrição (RN-015)
+  promovido_em         DateTime?
 
   id_monitoria Int
   monitoria    Monitoria         @relation(fields: [id_monitoria], references: [id])
@@ -110,6 +115,7 @@ model Agendamento {
 
   @@index([id_monitoria])
   @@index([id_aluno])
+  @@index([id_monitoria, status, id])
   @@map("agendamentos")
 }
 

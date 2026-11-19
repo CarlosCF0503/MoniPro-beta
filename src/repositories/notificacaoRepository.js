@@ -2,9 +2,11 @@
 // Plano 3 (RF-010, RN-011): fila de e-mails de aviso (tabela notificacoes).
 
 const prisma = require('../config/bancoDeDados');
+const { OCUPA_LUGAR } = require('../utils/statusInscricao');
 
-// Inscrições que ainda contam: as mesmas da contagem de lugares da vaga
-const INSCRICAO_ATIVA = { status: { not: 'cancelado' } };
+// Quem é avisado quando a vaga muda ou é cancelada: os inscritos e quem está na lista de espera
+// (plano 8). `status` vem junto para o e-mail falar de inscrição ou de fila.
+const AFETADOS_PELA_VAGA = { status: { not: 'cancelado' } };
 
 class NotificacaoRepository {
     /**
@@ -36,16 +38,17 @@ class NotificacaoRepository {
 
     async buscarInscritosAtivos(idMonitoria, db = prisma) {
         return await db.agendamento.findMany({
-            where: { id_monitoria: parseInt(idMonitoria), ...INSCRICAO_ATIVA },
-            select: { id: true, id_aluno: true }
+            where: { id_monitoria: parseInt(idMonitoria), ...AFETADOS_PELA_VAGA },
+            select: { id: true, id_aluno: true, status: true }
         });
     }
 
-    // Inscrições ativas, em vagas ativas, que começam dentro da janela do lembrete
+    // Inscrições que ocupam lugar (a fila não recebe lembrete), em vagas ativas, que começam
+    // dentro da janela do lembrete
     async buscarSessoesParaLembrete(de, ate) {
         return await prisma.agendamento.findMany({
             where: {
-                ...INSCRICAO_ATIVA,
+                ...OCUPA_LUGAR,
                 data_hora: { gt: de, lte: ate },
                 monitoria: { status: 'ativa' }
             },

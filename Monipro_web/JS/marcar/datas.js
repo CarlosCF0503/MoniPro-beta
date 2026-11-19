@@ -120,8 +120,16 @@
             local: m.local || '',
             descricao: m.descricao || '',
             capacidade,
-            livres
+            livres,
+            // Plano 8: lista de espera da vaga lotada
+            naFila: Number(m.na_fila) || 0,
+            filaCheia: Boolean(m.fila_cheia)
         };
+    }
+
+    /** Plano 8: vaga lotada em que ainda dá para entrar na lista de espera. */
+    function aceitaFila(v) {
+        return v.livres <= 0 && !v.filaCheia;
     }
 
     /** Só vagas que ainda vão acontecer, em ordem de horário. */
@@ -219,6 +227,7 @@
         prazoCancelamento,
         mesVizinho,
         normalizarVaga,
+        aceitaFila,
         vagasFuturas,
         vagasDoDia,
         contarPorDia,

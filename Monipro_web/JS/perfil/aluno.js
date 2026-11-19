@@ -58,6 +58,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         relogio: '<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>',
         local: '<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
         pessoa: '<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>',
+        pessoas:
+            '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
         calendario:
             '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
         mais: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
@@ -91,21 +93,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     const confirmadas = () => S.inscricoes.filter((i) => i.status === 'concluido').length;
     const AVISO_24H = 'Cancelamento só até ' + D.HORAS_CANCELAMENTO + 'h antes';
     const AVISO_MUDOU = 'Pode cancelar até o início';
-    // Editar vaga: o que mudou desde a inscrição ("Horário alterado: era ...")
-    const textoMudou = (i) => D.mudancasDaVaga(i).join(' ') || 'A vaga foi alterada.';
+    // Editar vaga: o que mudou desde a inscrição ("Horário alterado: era ..."). Plano 8: quem
+    // saiu da lista de espera a menos de 24h também pode cancelar até o início
+    const textoMudou = (i) =>
+        D.mudancasDaVaga(i).join(' ') ||
+        (i.promovido ? 'Você saiu da lista de espera.' : 'A vaga foi alterada.');
     const notaMudou = (i, t) =>
         i.liberado ? '<span class="nota-24h">' + icone('relogio', t) + AVISO_MUDOU + '</span>' : '';
+    // Plano 8: posição na lista de espera ("2º da fila")
+    const posicaoTexto = (i) => (i.posicaoFila ? i.posicaoFila + 'º da fila' : 'Na fila');
     const SITUACOES = {
         confirmar: ['pill-atencao', 'relogio', 'Confirme sua presença'],
         antes: ['pill-aberta', 'calendario', 'Inscrito'],
         aguardando: ['pill-aberta', 'relogio', 'Aguardando o monitor'],
         confirmada: ['pill-ok', 'ok', 'Presença confirmada'],
         expirada: ['pill-perigo', 'x', 'Presença não confirmada'],
-        cancelada: ['pill-perigo', 'x', 'Vaga cancelada']
+        cancelada: ['pill-perigo', 'x', 'Vaga cancelada'],
+        fila: ['pill-atencao', 'pessoas', 'Lista de espera'],
+        semLugar: ['pill-perigo', 'x', 'Não abriu lugar']
     };
     function etiqueta(i) {
-        const [classe, ico, texto] = SITUACOES[situacao(i)];
-        return '<span class="pill ' + classe + '">' + icone(ico, 12) + texto + '</span>';
+        const sit = situacao(i);
+        const [classe, ico, texto] = SITUACOES[sit];
+        const rotulo = sit === 'fila' ? texto + ' · ' + posicaoTexto(i) : texto;
+        return '<span class="pill ' + classe + '">' + icone(ico, 12) + rotulo + '</span>';
     }
     function quando(i) {
         return i.fim ? D.hora(i.inicio) + '–' + D.hora(i.fim) : D.hora(i.inicio);
@@ -135,6 +146,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             );
         if (sit === 'expirada')
             return 'O prazo de ' + D.DIAS_CONFIRMACAO + ' dias para confirmar terminou.';
+        if (sit === 'fila')
+            return (
+                'Se abrir um lugar até ' +
+                D.HORAS_FILA +
+                'h antes do início, você é inscrito na hora e recebe um e-mail.'
+            );
+        if (sit === 'antes' && i.promovido) return 'Você entrou pela lista de espera.';
         return '';
     }
     // rotulo: na linha do celular o botão diz só "Confirmar" (o aria-label leva o texto completo)
@@ -155,13 +173,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         return (
             '<button type="button" class="pp-btn pp-btn-texto-perigo" data-acao="cancelar" data-id="' +
             esc(i.id) +
-            '">Cancelar inscrição</button>'
+            '">' +
+            (i.naFila ? 'Sair da fila' : 'Cancelar inscrição') +
+            '</button>'
         );
     }
     function acoes(i) {
         const sit = situacao(i);
         if (sit === 'confirmar')
             return '<div class="vg-acoes">' + botaoConfirmar(i, 'pp-btn pp-btn-pri') + '</div>';
+        if (sit === 'fila') return '<div class="vg-acoes">' + botaoCancelar(i) + '</div>';
         if (sit === 'antes')
             return (
                 '<div class="vg-acoes">' +
@@ -316,7 +337,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             esc(i.monitor) +
             '</span></div>' +
             (nota ? '<p class="pp-nota-presenca">' + nota + '</p>' : '') +
-            (sit === 'antes' && i.liberado
+            // Quem só saiu da fila já tem a nota acima ("Você entrou pela lista de espera")
+            (sit === 'antes' && i.liberado && (D.mudancasDaVaga(i).length || !i.promovido)
                 ? '<p class="pp-nota-presenca">' + esc(textoMudou(i)) + '</p>'
                 : '') +
             '</div>' +
@@ -457,9 +479,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     function linhaCel(i) {
         const sit = situacao(i);
         let sub;
-        if (sit === 'antes')
+        if (sit === 'fila')
             sub =
-                (i.liberado ? '<span class="lc-presenca">Vaga alterada</span> · ' : '') +
+                '<span class="lc-presenca">Lista de espera · ' +
+                posicaoTexto(i) +
+                '</span> · ' +
+                D.hora(i.inicio);
+        else if (sit === 'antes')
+            sub =
+                (i.liberado
+                    ? '<span class="lc-presenca">' +
+                      (D.mudancasDaVaga(i).length || !i.promovido
+                          ? 'Vaga alterada'
+                          : 'Saiu da fila') +
+                      '</span> · '
+                    : '') +
                 D.hora(i.inicio) +
                 ' · ' +
                 esc(i.monitor);
@@ -711,6 +745,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (sit === 'confirmar')
             acoesDet =
                 '<div class="pp-det-acoes">' + botaoConfirmar(i, 'pp-btn pp-btn-pri') + '</div>';
+        else if (sit === 'fila')
+            acoesDet = '<div class="pp-det-acoes">' + botaoCancelar(i) + '</div>';
         else if (sit === 'antes')
             acoesDet = D.podeCancelarInscricao(i, S.agora)
                 ? (i.liberado
@@ -799,8 +835,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // O mesmo diálogo serve para cancelar a inscrição e para sair da lista de espera (plano 8)
+    const TEXTOS_CANCELAR = {
+        inscricao: {
+            titulo: 'Cancelar sua inscrição?',
+            aviso: 'A vaga fica livre para outro aluno.',
+            manter: 'Manter inscrição',
+            confirmar: 'Cancelar inscrição',
+            feito: 'Inscrição cancelada.'
+        },
+        fila: {
+            titulo: 'Sair da lista de espera?',
+            aviso: 'Você perde a sua posição. Para voltar, entre de novo no fim da fila.',
+            manter: 'Continuar na fila',
+            confirmar: 'Sair da fila',
+            feito: 'Você saiu da lista de espera.'
+        }
+    };
+    const textosCancelar = (i) => TEXTOS_CANCELAR[i.naFila ? 'fila' : 'inscricao'];
     function abrirCancelar(i) {
         S.alvo = i;
+        const t = textosCancelar(i);
+        document.getElementById('can-titulo').textContent = t.titulo;
+        document.getElementById('can-aviso').textContent = t.aviso;
+        document.getElementById('can-manter').textContent = t.manter;
+        document.getElementById('can-confirmar').textContent = t.confirmar;
         document.getElementById('can-sub').textContent =
             i.disciplina + ' · ' + D.diaCurto(i.inicio) + ' às ' + D.hora(i.inicio);
         dlgCan.showModal();
@@ -826,7 +885,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             S.inscricoes = S.inscricoes.filter((x) => x !== i);
             dlgCan.close();
             render();
-            showToast('Inscrição cancelada.', 'success');
+            showToast(textosCancelar(i).feito, 'success');
+            // Quem estava atrás na mesma fila anda uma posição (plano 8)
+            if (i.naFila) carregar();
         } catch (erro) {
             showToast('Erro de rede. Verifique a conexão e tente de novo.', 'error', erro);
         } finally {
