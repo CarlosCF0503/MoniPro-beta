@@ -111,6 +111,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         expirada: ['pill-perigo', 'x', 'Presença não confirmada'],
         cancelada: ['pill-perigo', 'x', 'Vaga cancelada'],
         fila: ['pill-atencao', 'pessoas', 'Lista de espera'],
+        ausente: ['pill-perigo', 'x', 'Falta registrada'],
         semLugar: ['pill-perigo', 'x', 'Não abriu lugar']
     };
     function etiqueta(i) {
@@ -147,6 +148,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             );
         if (sit === 'expirada')
             return 'O prazo de ' + D.DIAS_CONFIRMACAO + ' dias para confirmar terminou.';
+        if (sit === 'ausente') {
+            const lim = D.limiteConfirmacao({ inicio: i.inicio });
+            return S.agora <= lim
+                ? 'O monitor registrou falta. Se foi engano, fale com ele: dá para corrigir até ' +
+                      D.diaMes(lim) +
+                      ' às ' +
+                      D.hora(lim) +
+                      '.'
+                : 'O monitor registrou falta nesta monitoria.';
+        }
         if (sit === 'fila')
             return (
                 'Se abrir um lugar até ' +
@@ -447,6 +458,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             comoGanharHTML() +
             '</section></div>' +
             '<div class="pp-principal">' +
+            avisoRestricao() +
             '<div class="pp-numeros" aria-label="Resumo">' +
             numeros
                 .map(
@@ -598,6 +610,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             '<div class="cel-topo"><h1>Minhas monitorias</h1><a class="pp-btn pp-btn-pri pp-btn-p" href="escolha_disciplina.html">' +
             icone('mais', 16) +
             'Marcar</a></div>' +
+            avisoRestricao() +
             filtro +
             '<div class="cel-corpo"' +
             (temDados() ? ' role="tabpanel" aria-labelledby="filtro-' + S.filtroCel + '"' : '') +
@@ -726,15 +739,35 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.location.href = 'index.html';
         }, 1500);
     }
+    // Plano 12: bloqueio de novas inscrições por faltas (ou null)
+    function avisoRestricao() {
+        const r = S.restricao;
+        if (!r) return '';
+        const ate = new Date(r.ate);
+        return (
+            '<div class="pp-aviso-presenca pp-aviso-bloqueio" role="status">' +
+            icone('x', 18) +
+            '<span><b>Novas inscrições bloqueadas até ' +
+            D.diaMes(ate) +
+            ' às ' +
+            D.hora(ate) +
+            '.</b> Você faltou a ' +
+            r.faltas +
+            ' monitorias nos últimos 30 dias. As inscrições que você já tem continuam valendo.</span></div>'
+        );
+    }
+
     async function carregar() {
         S.carregando = true;
         S.erro = null;
         render();
         try {
-            const [perfil, lista] = await Promise.all([
+            const [perfil, lista, restricao] = await Promise.all([
                 chamadaApi('/perfil'),
-                chamadaApi('/perfil/agendamentos?limit=' + LIMITE + '&page=1')
+                chamadaApi('/perfil/agendamentos?limit=' + LIMITE + '&page=1'),
+                chamadaApi('/perfil/restricao').catch(() => null)
             ]);
+            S.restricao = (restricao && restricao.success && restricao.restricao) || null;
             if (perfil.statusHttp === 401 || lista.statusHttp === 401) return sessaoExpirada();
             if (!perfil.success || !perfil.user)
                 throw new Error(mensagemDaApi(perfil, 'Não foi possível carregar seus dados.'));
