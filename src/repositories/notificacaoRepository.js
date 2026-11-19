@@ -29,6 +29,8 @@ class NotificacaoRepository {
                 horario: true,
                 local: true,
                 descricao: true,
+                modalidade: true,
+                link: true,
                 id_disciplina: true,
                 disciplina: { select: { nome: true } },
                 monitor: { select: { nome_completo: true } }

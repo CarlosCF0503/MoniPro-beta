@@ -3,10 +3,24 @@
 const { z } = require('zod');
 const { textoObrigatorio, inteiroPositivo, dataHoraIso, INT_MAXIMO } = require('./comuns');
 const { MINUTOS_TOLERANCIA_RELOGIO } = require('../utils/regrasConclusao');
+const { normalizarLinkSala, MENSAGEM_LINK_SALA } = require('../utils/linkSala');
 
 const MENSAGEM_CAPACIDADE = 'A capacidade da vaga deve ser um número inteiro maior ou igual a 1.';
 
-const criarMonitoriaSchema = z.object({
+// Plano 11: presencial (padrão) ou on-line
+const modalidade = z.enum(['presencial', 'online'], 'A modalidade deve ser presencial ou on-line.');
+// Link da sala: só Meet, Teams, Zoom e Jitsi, em https; sai normalizado
+const linkSala = z.string('O link da sala deve ser um texto.').transform((valor, ctx) => {
+    const link = normalizarLinkSala(valor);
+    if (!link) {
+        ctx.addIssue({ code: 'custom', message: MENSAGEM_LINK_SALA });
+        return z.NEVER;
+    }
+    return link;
+});
+const LOCAL_ONLINE = 'On-line';
+
+const camposCriar = z.object({
     id_disciplina: inteiroPositivo({
         obrigatorio: 'A disciplina é obrigatória.',
         invalido: 'A disciplina informada é inválida.'
@@ -20,7 +34,10 @@ const criarMonitoriaSchema = z.object({
         (valor) => new Date(valor).getTime() > Date.now() - MINUTOS_TOLERANCIA_RELOGIO * 60000,
         'Escolha um dia e horário que ainda não passaram.'
     ),
-    local: textoObrigatorio('O local é obrigatório.', 120),
+    // Obrigatório na presencial; na on-line o local vira "On-line" (ver o refinamento abaixo)
+    local: textoObrigatorio('O local é obrigatório.', 120).optional(),
+    modalidade: modalidade.optional(),
+    link: linkSala.optional(),
     descricao: z
         .string('A descrição deve ser um texto.')
         .trim()
@@ -35,6 +52,33 @@ const criarMonitoriaSchema = z.object({
         .max(INT_MAXIMO, MENSAGEM_CAPACIDADE)
         .optional()
 });
+
+// Presencial: local obrigatório e sem link. On-line: link obrigatório; o local é "On-line".
+const criarMonitoriaSchema = camposCriar
+    .superRefine((dados, ctx) => {
+        if (dados.modalidade === 'online') {
+            if (!dados.link)
+                ctx.addIssue({
+                    code: 'custom',
+                    path: ['link'],
+                    message: 'Informe o link da sala.'
+                });
+            return;
+        }
+        if (!dados.local)
+            ctx.addIssue({ code: 'custom', path: ['local'], message: 'O local é obrigatório.' });
+        if (dados.link)
+            ctx.addIssue({
+                code: 'custom',
+                path: ['link'],
+                message: 'Vaga presencial não tem link de sala.'
+            });
+    })
+    .transform((dados) =>
+        dados.modalidade === 'online'
+            ? { ...dados, local: LOCAL_ONLINE }
+            : { ...dados, modalidade: 'presencial' }
+    );
 
 // Finalização pelo monitor: só a data/hora de término. A regra "não pode ser anterior ao
 // início" depende da vaga no banco e fica em monitoriaService.finalizar.
@@ -57,12 +101,20 @@ const atualizarMonitoriaSchema = z
             invalido: 'O horário deve ser uma data/hora ISO 8601 (ex.: 2026-09-10T14:00:00.000Z).'
         }).optional(),
         local: textoObrigatorio('O local é obrigatório.', 120).optional(),
-        descricao: criarMonitoriaSchema.shape.descricao,
-        capacidade: criarMonitoriaSchema.shape.capacidade
+        // Plano 11: a combinação com a modalidade atual da vaga é conferida no service
+        modalidade: modalidade.optional(),
+        link: linkSala.optional(),
+        descricao: camposCriar.shape.descricao,
+        capacidade: camposCriar.shape.capacidade
     })
     .refine((dados) => Object.values(dados).some((valor) => valor !== undefined), {
         message: 'Informe pelo menos um campo para alterar.',
         path: ['corpo']
     });
 
-module.exports = { criarMonitoriaSchema, finalizarMonitoriaSchema, atualizarMonitoriaSchema };
+module.exports = {
+    criarMonitoriaSchema,
+    finalizarMonitoriaSchema,
+    atualizarMonitoriaSchema,
+    LOCAL_ONLINE
+};

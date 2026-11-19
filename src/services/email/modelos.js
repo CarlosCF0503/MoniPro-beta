@@ -187,6 +187,18 @@ function aviso({ assunto, titulo, abertura, linhas, depois, acao }) {
 
 const PERFIL = { texto: 'Ver no meu perfil', pagina: 'perfil_aluno.html' };
 
+// Plano 11: na monitoria on-line, o link da sala entra no quadro (só para quem tem lugar)
+const linhaLink = (d) =>
+    d.link
+        ? [
+              [
+                  'Link da sala',
+                  d.link,
+                  `<a href="${escapar(d.link)}" style="color:${COR.navy}">${escapar(d.link)}</a>`
+              ]
+          ]
+        : [];
+
 MODELOS.inscricao = (d) => {
     const prazo = new Date(new Date(d.horario).getTime() - 24 * 60 * 60 * 1000).toISOString();
     return aviso({
@@ -198,6 +210,7 @@ MODELOS.inscricao = (d) => {
             ['Monitor', d.monitor],
             ['Quando', quandoPorExtenso(d.horario)],
             ['Local', d.local],
+            ...linhaLink(d),
             ...(d.assunto ? [['Assunto', d.assunto]] : [])
         ],
         depois: `Você pode cancelar até ${quandoPorExtenso(prazo)} (24h antes).`,
@@ -215,6 +228,7 @@ MODELOS.lembrete = (d) =>
             ['Monitor', d.monitor],
             ['Quando', quandoPorExtenso(d.horario)],
             ['Local', d.local],
+            ...linhaLink(d),
             ...(d.assunto ? [['Assunto', d.assunto]] : [])
         ],
         depois: `Leve suas dúvidas anotadas. Depois da sessão, confirme sua presença no perfil para ganhar +${PONTOS_ALUNO} pontos.`,
@@ -227,6 +241,9 @@ MODELOS['vaga-alterada'] = (d) => {
     let oQue = 'o horário e o local';
     if (!mudouLocal) oQue = 'o horário';
     else if (!mudouQuando) oQue = 'o local';
+    // Plano 11: só o link da sala mudou
+    if (!mudouLocal && !mudouQuando && d.link_alterado) oQue = 'o link da sala';
+    else if (!mudouLocal && d.link_alterado) oQue = 'o horário e o link da sala';
     const quando = quandoPorExtenso(d.horario);
     const quandoAntes = mudouQuando ? quandoPorExtenso(d.horario_anterior) : null;
     return aviso({
@@ -244,7 +261,8 @@ MODELOS['vaga-alterada'] = (d) => {
                 'Local',
                 mudouLocal ? `${d.local_anterior} → ${d.local}` : d.local,
                 mudou(d.local_anterior, d.local)
-            ]
+            ],
+            ...linhaLink(d)
         ],
         depois: d.na_fila
             ? 'Se a mudança não serve para você, saia da lista de espera pelo seu perfil.'
@@ -279,6 +297,7 @@ MODELOS.espera = (d) => {
             ['Monitor', d.monitor],
             ['Quando', quandoPorExtenso(d.horario)],
             ['Local', d.local],
+            ...linhaLink(d),
             ...(d.assunto ? [['Assunto', d.assunto]] : [])
         ],
         depois: d.cancelar_ate_inicio

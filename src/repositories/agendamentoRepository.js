@@ -85,7 +85,7 @@ class AgendamentoRepository {
     async buscarPorAluno(idAluno, { skip, take } = {}) {
         const where = { id_aluno: parseInt(idAluno) };
 
-        const [dados, total] = await Promise.all([
+        const [linhas, total] = await Promise.all([
             prisma.agendamento.findMany({
                 where,
 
@@ -109,6 +109,13 @@ class AgendamentoRepository {
             prisma.agendamento.count({ where })
         ]);
 
+        // Plano 11: o link da sala on-line só vai para quem tem lugar na vaga. Na lista de
+        // espera ou com a inscrição cancelada, o aluno não vê o link.
+        const dados = linhas.map((a) =>
+            a.monitoria && ['cancelado', 'em_espera'].includes(a.status)
+                ? { ...a, monitoria: { ...a.monitoria, link: null } }
+                : a
+        );
         return { dados, total };
     }
 

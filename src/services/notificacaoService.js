@@ -16,15 +16,17 @@ const logger = require('../utils/logger');
 const MINUTO = 60 * 1000;
 const HORA = 60 * MINUTO;
 
-// Só o que os modelos precisam. Horários vão em ISO e são formatados no envio.
-function dadosDaVaga(vaga) {
+// Só o que os modelos precisam. Horários vão em ISO e são formatados no envio. Plano 11: o link
+// da sala on-line vai só para quem tem lugar (comLink); quem está na fila não recebe.
+function dadosDaVaga(vaga, comLink = true) {
     return {
         disciplina: vaga.disciplina.nome,
         id_disciplina: vaga.id_disciplina,
         monitor: vaga.monitor.nome_completo,
         horario: new Date(vaga.horario).toISOString(),
         local: vaga.local,
-        ...(vaga.descricao ? { assunto: vaga.descricao } : {})
+        ...(vaga.descricao ? { assunto: vaga.descricao } : {}),
+        ...(comLink && vaga.modalidade === 'online' && vaga.link ? { link: vaga.link } : {})
     };
 }
 
@@ -76,11 +78,18 @@ class NotificacaoService {
         const antesIso = new Date(antes.horario).toISOString();
         if (antesIso !== dados.horario) dados.horario_anterior = antesIso;
         if (antes.local !== dados.local) dados.local_anterior = antes.local;
+        // Plano 11: o link da sala mudou (o local continua "On-line")
+        if (antes.link !== undefined && antes.link !== (vaga.link ?? null) && vaga.link)
+            dados.link_alterado = true;
+        // Quem está na fila recebe o aviso sem o link (e sem a menção a ele)
+        const paraFila = { ...dados, na_fila: true };
+        delete paraFila.link;
+        delete paraFila.link_alterado;
         await notificacaoRepository.enfileirar(
             inscritos.map((i) => ({
                 id_usuario: i.id_aluno,
                 modelo: 'vaga-alterada',
-                dados: i.status === 'em_espera' ? { ...dados, na_fila: true } : dados,
+                dados: i.status === 'em_espera' ? paraFila : dados,
                 chave: `vaga-alterada:agendamento:${i.id}:${agora.toISOString()}`
             })),
             db
@@ -97,7 +106,7 @@ class NotificacaoService {
                 id_usuario: i.id_aluno,
                 modelo: 'vaga-cancelada',
                 dados: {
-                    ...dadosDaVaga(vaga),
+                    ...dadosDaVaga(vaga, false),
                     ...(i.status === 'em_espera' ? { na_fila: true } : {})
                 },
                 chave: `vaga-cancelada:agendamento:${i.id}`
