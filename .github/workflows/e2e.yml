@@ -1,6 +1,6 @@
 name: Testes de ponta a ponta
 
-# R1 (Fase 03): casos CT-01 a CT-16 no navegador (Playwright), no computador e no celular,
+# R1 (Fase 03): casos CT-01 a CT-17 no navegador (Playwright), no computador e no celular,
 # contra a pilha completa e descartável de docker-compose.e2e.yml (Postgres com SSL, backend,
 # frontend e um Nginx na frente, como no servidor). Nada aqui toca hml ou produção.
 # O relatório (com trace e capturas das falhas) fica como artefato da execução: é a evidência
@@ -14,7 +14,7 @@ on:
 
 jobs:
   e2e:
-    name: Playwright CT-01 a CT-16
+    name: Playwright CT-01 a CT-17
     runs-on: ubuntu-latest
     timeout-minutes: 25
 

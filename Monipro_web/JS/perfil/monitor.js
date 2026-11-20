@@ -165,6 +165,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         );
     }
     const AVISO_24H = 'Cancelamento só até ' + D.HORAS_CANCELAMENTO + 'h antes';
+    // Plano 10 (RF-015): baixa o .ics da vaga para a agenda do aparelho
+    function botaoAgenda(v) {
+        return (
+            '<button type="button" class="pp-btn pp-btn-sec pp-btn-agenda" data-acao="agenda" data-id="' +
+            esc(v.id) +
+            '" aria-label="Adicionar ' +
+            esc(v.disciplina) +
+            ' à agenda">' +
+            icone('calendario', 16) +
+            'Adicionar à agenda</button>'
+        );
+    }
+    function adicionarAgenda(v) {
+        try {
+            window.AgendaIcs.baixar(window.AgendaIcs.eventoDaVaga(v, window.location.origin));
+            showToast('Arquivo baixado. Abra-o para colocar a monitoria na sua agenda.', 'success');
+        } catch (erro) {
+            showToast('Não foi possível gerar o arquivo da agenda.', 'error', erro);
+        }
+    }
     // P2 (R4): presença confirmada pelo monitor depois do início da sessão (D1)
     const inscricoesDa = (v) => S.inscricoes.get(v.id) || [];
     const aConfirmar = (v) => D.presencasAConfirmar(inscricoesDa(v), v, S.agora);
@@ -214,6 +234,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return (
                 '<div class="vg-acoes">' +
                 botaoEditar(v) +
+                botaoAgenda(v) +
                 (D.podeCancelar(v, S.agora)
                     ? botaoCancelar(v)
                     : '<span class="nota-24h">' + icone('relogio', 12) + AVISO_24H + '</span>') +
@@ -993,9 +1014,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 '</div>';
         else if (g === 'proximas')
             acoesDet = D.podeCancelar(v, S.agora)
-                ? '<div class="pp-det-acoes">' + botaoEditar(v) + botaoCancelar(v) + '</div>'
+                ? '<div class="pp-det-acoes">' +
+                  botaoEditar(v) +
+                  botaoAgenda(v) +
+                  botaoCancelar(v) +
+                  '</div>'
                 : '<div class="pp-det-acoes">' +
                   botaoEditar(v) +
+                  botaoAgenda(v) +
                   '</div><p class="nota-24h nota-bloco">' +
                   icone('relogio', 14) +
                   AVISO_24H +
@@ -1808,6 +1834,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (acao === 'emitir-certificado') return emitirCertificado();
         const vaga = vagaPorId(b.dataset.id);
         if (!vaga) return;
+        if (acao === 'agenda') return adicionarAgenda(vaga);
         const deDentro = b.closest('dialog');
         if (deDentro) deDentro.close();
         else S.gatilho = b;
