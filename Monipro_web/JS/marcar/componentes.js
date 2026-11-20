@@ -30,7 +30,9 @@
         olho: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
         esquerda: '<polyline points="15 18 9 12 15 6"/>',
         direita: '<polyline points="9 18 15 12 9 6"/>',
-        abaixo: '<polyline points="6 9 12 15 18 9"/>'
+        abaixo: '<polyline points="6 9 12 15 18 9"/>',
+        // Plano 13: filtros de horários
+        filtro: '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>'
     };
 
     function icone(nome, tamanho, traco) {

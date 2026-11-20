@@ -162,6 +162,47 @@
         return vagas.filter((v) => v.inicio > agora).sort((a, b) => a.inicio - b.inicio);
     }
 
+    // Plano 13 (RF-017): turnos pela hora de início mostrada na tela. Mesmas faixas da API
+    // (src/config/turnos.js): manhã até 11:59, tarde de 12:00 a 17:59, noite a partir das 18:00.
+    const TURNOS = [
+        ['manha', 'Manhã'],
+        ['tarde', 'Tarde'],
+        ['noite', 'Noite']
+    ];
+    const FILTROS_VAZIOS = Object.freeze({ periodo: '', monitor: '', livres: false });
+
+    function turno(data) {
+        const h = data.getHours();
+        if (h < 12) return 'manha';
+        return h < 18 ? 'tarde' : 'noite';
+    }
+
+    function filtrosAtivos(f) {
+        return Boolean(f && (f.periodo || f.monitor || f.livres));
+    }
+
+    /** Vagas que passam nos filtros { periodo, monitor (id em texto), livres }. */
+    function filtrarVagas(vagas, f) {
+        if (!filtrosAtivos(f)) return vagas;
+        return vagas.filter(
+            (v) =>
+                (!f.periodo || turno(v.inicio) === f.periodo) &&
+                (!f.monitor || String(v.idMonitor) === String(f.monitor)) &&
+                (!f.livres || v.livres > 0)
+        );
+    }
+
+    /** Monitores das vagas, sem repetir, em ordem alfabética: [{ id, nome }]. */
+    function monitoresDe(vagas) {
+        const vistos = new Map();
+        vagas.forEach((v) => {
+            if (!vistos.has(v.idMonitor)) vistos.set(v.idMonitor, v.monitor);
+        });
+        return Array.from(vistos, ([id, nome]) => ({ id, nome })).sort((a, b) =>
+            a.nome.localeCompare(b.nome, 'pt-BR')
+        );
+    }
+
     function vagasDoDia(vagas, k) {
         return vagas.filter((v) => chave(v.inicio) === k);
     }
@@ -261,6 +302,12 @@
         mesVizinho,
         normalizarVaga,
         aceitaFila,
+        TURNOS,
+        FILTROS_VAZIOS,
+        turno,
+        filtrosAtivos,
+        filtrarVagas,
+        monitoresDe,
         vagasFuturas,
         vagasDoDia,
         contarPorDia,

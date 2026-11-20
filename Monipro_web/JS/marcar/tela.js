@@ -65,6 +65,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         vagaId: null,
         etapa: 'escolha', // escolha | revisao | sucesso
         passo: 1,
+        // Plano 13: período do dia, monitor (id em texto) e só com lugar livre
+        filtros: Object.assign({}, D.FILTROS_VAZIOS),
         erro: null,
         erroDefinitivo: false,
         // monitor
@@ -91,7 +93,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         return S.vagas.filter((v) => v.idMonitor === Number(usuario.id));
     }
     function vagasDoPerfil() {
-        return PERFIL === 'monitor' ? minhas() : S.vagas;
+        return PERFIL === 'monitor' ? minhas() : filtradas();
+    }
+    // Plano 13: o que o aluno vê no calendário e na lista
+    function filtradas() {
+        return D.filtrarVagas(S.vagas, S.filtros);
     }
     function minhasNoDia(k) {
         return D.vagasDoDia(minhas(), k);
@@ -336,10 +342,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         );
         const diasNoMes = new Set(noMes.map((v) => D.chave(v.inicio))).size;
         let resumo;
-        if (!noMes.length)
-            resumo =
-                PERFIL === 'monitor' ? 'Nenhuma vaga sua neste mês' : 'Nenhum horário neste mês';
-        else
+        if (!noMes.length) {
+            if (PERFIL === 'monitor') resumo = 'Nenhuma vaga sua neste mês';
+            else
+                resumo = D.filtrosAtivos(S.filtros)
+                    ? 'Nenhum horário com esses filtros neste mês'
+                    : 'Nenhum horário neste mês';
+        } else
             resumo =
                 '<b>' +
                 noMes.length +
@@ -377,9 +386,75 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // --- 6. Aluno ---
+    // Plano 13 (RF-017): período, monitor e só com lugar livre. Calendário e lista mostram só o
+    // que combina; o resumo é anunciado pelo leitor de tela.
+    function barraFiltros() {
+        const f = S.filtros;
+        const monitores = D.monitoresDe(S.vagas);
+        const periodo = D.TURNOS.map(
+            ([valor, rotulo]) =>
+                '<button type="button" class="f-op" data-acao="periodo" data-valor="' +
+                valor +
+                '" aria-pressed="' +
+                (f.periodo === valor) +
+                '">' +
+                rotulo +
+                '</button>'
+        ).join('');
+        const opcoes =
+            '<option value="">Todos</option>' +
+            monitores
+                .map(
+                    (m) =>
+                        '<option value="' +
+                        esc(m.id) +
+                        '"' +
+                        (String(m.id) === f.monitor ? ' selected' : '') +
+                        '>' +
+                        esc(m.nome) +
+                        '</option>'
+                )
+                .join('');
+        const total = D.vagasFuturas(S.vagas, new Date()).length;
+        const mostradas = D.vagasFuturas(filtradas(), new Date()).length;
+        const ativos = D.filtrosAtivos(f);
+        return (
+            '<div class="filtros" role="group" aria-labelledby="filtros-titulo">' +
+            '<p class="filtros-titulo" id="filtros-titulo">' +
+            C.icone('filtro', 16) +
+            'Filtrar horários</p>' +
+            '<div class="f-grupo" role="group" aria-label="Período do dia"><span class="f-rotulo" aria-hidden="true">Período</span><div class="f-ops">' +
+            periodo +
+            '</div></div>' +
+            (monitores.length > 1
+                ? '<label class="f-grupo"><span class="f-rotulo">Monitor</span><select id="filtro-monitor">' +
+                  opcoes +
+                  '</select></label>'
+                : '') +
+            '<label class="f-chk"><input type="checkbox" id="filtro-livres"' +
+            (f.livres ? ' checked' : '') +
+            '>Só com lugar livre</label>' +
+            '<p class="filtros-resumo" aria-live="polite">' +
+            (ativos
+                ? '<span>' +
+                  D.plural(mostradas, 'horário', 'horários') +
+                  ' de ' +
+                  total +
+                  '</span><button type="button" class="f-limpar" data-acao="limpar-filtros">Limpar filtros</button>'
+                : '') +
+            '</p></div>'
+        );
+    }
+    function semCombinar() {
+        return (
+            '<div class="vazio vazio-filtro"><p>Nenhum horário deste dia combina com os filtros.</p>' +
+            '<button type="button" class="btn sec" data-acao="limpar-filtros">Limpar filtros</button></div>'
+        );
+    }
     function lista(semTitulo) {
         if (!S.dia) return '<p class="vazio">Selecione um dia disponível (marcado em azul).</p>';
-        const vagas = D.vagasDoDia(S.vagas, S.dia);
+        const vagas = D.vagasDoDia(filtradas(), S.dia);
+        if (!vagas.length && D.vagasDoDia(S.vagas, S.dia).length) return semCombinar();
         if (!vagas.length)
             return '<p class="vazio">Nenhuma monitoria encontrada para este dia.</p>';
         return (
@@ -563,6 +638,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                       lista(false) +
                       botaoAgendar;
             return (
+                (S.etapa === 'revisao' ? '' : barraFiltros()) +
                 '<div class="colunas"><div class="col"><h2 class="area-titulo">Dias disponíveis</h2>' +
                 calendario(S.dia) +
                 '</div><div class="col col-dir">' +
@@ -573,7 +649,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         let passo = S.etapa === 'revisao' ? 3 : S.passo;
         if (passo === 2 && !S.dia) passo = 1;
         let h = '<div class="colunas">' + C.passos(['Dia', 'Horário', 'Confirmar'], passo);
-        if (passo === 1) h += calendario(S.dia);
+        if (passo === 1) h += barraFiltros() + calendario(S.dia);
         else if (passo === 2)
             h +=
                 C.diaSelecionado(S.dia, 'passo') +
@@ -1004,6 +1080,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             case 'recarregar':
                 carregar();
                 return;
+            case 'periodo':
+                S.filtros.periodo =
+                    S.filtros.periodo === alvo.dataset.valor ? '' : alvo.dataset.valor;
+                aplicarFiltros('[data-acao="periodo"][data-valor="' + alvo.dataset.valor + '"]');
+                return;
+            case 'limpar-filtros':
+                S.filtros = Object.assign({}, D.FILTROS_VAZIOS);
+                aplicarFiltros('[data-acao="periodo"]');
+                return;
             default:
                 return;
         }
@@ -1054,6 +1139,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         requestAnimationFrame(soltar);
         setTimeout(soltar, 32);
     }
+
+    // Plano 13: trocar um filtro redesenha calendário e lista e devolve o foco ao controle. A
+    // vaga escolhida que deixou de aparecer sai da seleção.
+    function aplicarFiltros(seletorFoco) {
+        if (S.vagaId && !filtradas().some((v) => v.id === S.vagaId)) S.vagaId = null;
+        render();
+        const el = raiz.querySelector(seletorFoco);
+        if (el) el.focus({ preventScroll: true });
+    }
+    raiz.addEventListener('change', (ev) => {
+        if (ev.target.id === 'filtro-monitor') {
+            S.filtros.monitor = ev.target.value;
+            aplicarFiltros('#filtro-monitor');
+        } else if (ev.target.id === 'filtro-livres') {
+            S.filtros.livres = ev.target.checked;
+            aplicarFiltros('#filtro-livres');
+        }
+    });
 
     raiz.addEventListener('input', (ev) => {
         // Plano 11: trocar a modalidade troca o campo Local pelo Link da sala
