@@ -4,6 +4,7 @@ const { z } = require('zod');
 const { textoObrigatorio, inteiroPositivo, dataHoraIso, INT_MAXIMO } = require('./comuns');
 const { MINUTOS_TOLERANCIA_RELOGIO } = require('../utils/regrasConclusao');
 const { normalizarLinkSala, MENSAGEM_LINK_SALA } = require('../utils/linkSala');
+const { TURNOS } = require('../config/turnos');
 
 const MENSAGEM_CAPACIDADE = 'A capacidade da vaga deve ser um número inteiro maior ou igual a 1.';
 
@@ -112,7 +113,22 @@ const atualizarMonitoriaSchema = z
         path: ['corpo']
     });
 
+// Plano 13 (RF-017): filtros opcionais da listagem por disciplina (query string). Monitor que
+// não existe não é erro: só não traz nenhuma vaga.
+const filtrosListagemSchema = z.object({
+    periodo: z.enum(Object.keys(TURNOS), 'O período deve ser manha, tarde ou noite.').optional(),
+    monitor: inteiroPositivo({
+        obrigatorio: 'O monitor é obrigatório.',
+        invalido: 'O monitor informado é inválido.'
+    }).optional(),
+    livres: z
+        .enum(['1', 'true', '0', 'false'], 'Use livres=1 para só vagas com lugar.')
+        .optional()
+        .transform((v) => v === '1' || v === 'true')
+});
+
 module.exports = {
+    filtrosListagemSchema,
     criarMonitoriaSchema,
     finalizarMonitoriaSchema,
     atualizarMonitoriaSchema,

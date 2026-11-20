@@ -4,6 +4,20 @@
 const monitoriaService = require('../services/monitoriaService');
 const listaEsperaService = require('../services/listaEsperaService');
 const { obterParametrosPaginacao, montarPaginacao } = require('../utils/paginacao');
+const { filtrosListagemSchema } = require('../schemas/monitoriaSchemas');
+const { ErroValidacao } = require('../utils/erros');
+
+// Plano 13: filtros da query string. No Express 5 o req.query é só leitura, então a validação
+// fica aqui e não no validarCorpo.
+function validarFiltros(query) {
+    const { periodo, monitor, livres } = query;
+    const r = filtrosListagemSchema.safeParse({ periodo, monitor, livres });
+    if (!r.success) {
+        const issue = r.error.issues[0];
+        throw new ErroValidacao(issue.message, { [issue.path.join('.')]: issue.message });
+    }
+    return r.data;
+}
 
 class MonitoriaController {
     async criar(req, res) {
@@ -16,9 +30,11 @@ class MonitoriaController {
 
     async listar(req, res) {
         const paginacao = obterParametrosPaginacao(req.query);
+        const filtros = validarFiltros(req.query);
         const { dados, total } = await monitoriaService.listarPorDisciplina(
             req.params.idDisciplina,
-            paginacao
+            paginacao,
+            filtros
         );
         res.json({
             monitorias: dados,

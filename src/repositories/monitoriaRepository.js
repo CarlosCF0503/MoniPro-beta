@@ -1,6 +1,10 @@
 // src/repositories/monitoriaRepository.js
+const { Prisma } = require('@prisma/client');
 const prisma = require('../config/bancoDeDados');
 const { OCUPA_LUGAR, NA_FILA } = require('../utils/statusInscricao');
+const { FUSO_TURNOS, TURNOS } = require('../config/turnos');
+
+const temFiltro = (f = {}) => Boolean(f.periodo || f.monitor || f.livres);
 
 class MonitoriaRepository {
     async criar(dados) {
@@ -33,13 +37,57 @@ class MonitoriaRepository {
         });
     }
 
-    async buscarPorDisciplina(idDisciplina, { skip, take } = {}) {
-        const where = {
+    // Plano 13 (RF-017): ids das vagas ativas da disciplina que passam nos filtros, já
+    // paginados. O turno (hora no fuso do campus) e "com lugar livre" (inscritos que ocupam
+    // lugar < capacidade) não cabem no where do Prisma, por isso a consulta é SQL.
+    async buscarIdsFiltrados(idDisciplina, filtros, { skip = 0, take = 100 } = {}) {
+        const condicoes = [
+            Prisma.sql`m."id_disciplina" = ${idDisciplina}`,
+            Prisma.sql`m."status" = 'ativa'`
+        ];
+        if (filtros.monitor) condicoes.push(Prisma.sql`m."id_monitor" = ${filtros.monitor}`);
+        if (filtros.periodo) {
+            const [de, ate] = TURNOS[filtros.periodo];
+            const hora = Prisma.sql`EXTRACT(HOUR FROM (m."horario" AT TIME ZONE 'UTC') AT TIME ZONE ${FUSO_TURNOS})`;
+            condicoes.push(Prisma.sql`${hora} >= ${de} AND ${hora} < ${ate}`);
+        }
+        if (filtros.livres) {
+            // Mesmo critério de OCUPA_LUGAR: nem cancelada nem na lista de espera
+            condicoes.push(Prisma.sql`(
+                SELECT count(*) FROM "agendamentos" a
+                WHERE a."id_monitoria" = m."id"
+                  AND a."status"::text NOT IN ('cancelado', 'em_espera')
+            ) < m."capacidade"`);
+        }
+        const where = Prisma.join(condicoes, ' AND ');
+        const [linhas, contagem] = await Promise.all([
+            prisma.$queryRaw`
+                SELECT m."id" FROM "monitorias" m
+                WHERE ${where}
+                ORDER BY m."horario" ASC, m."id" ASC
+                OFFSET ${skip} LIMIT ${take}
+            `,
+            prisma.$queryRaw`SELECT count(*)::int AS "total" FROM "monitorias" m WHERE ${where}`
+        ]);
+        return { ids: linhas.map((l) => l.id), total: contagem[0].total };
+    }
+
+    async buscarPorDisciplina(idDisciplina, { skip, take } = {}, filtros = {}) {
+        let where = {
             id_disciplina: idDisciplina,
             status: 'ativa'
         };
+        let total = null;
+        if (temFiltro(filtros)) {
+            const filtrado = await this.buscarIdsFiltrados(idDisciplina, filtros, { skip, take });
+            if (!filtrado.ids.length) return { dados: [], total: filtrado.total };
+            where = { id: { in: filtrado.ids } };
+            total = filtrado.total;
+            skip = undefined;
+            take = undefined;
+        }
 
-        const [dados, total] = await Promise.all([
+        const [dados, contados] = await Promise.all([
             prisma.monitoria.findMany({
                 where,
                 // Plano 11: o link da sala é só de quem se inscreveu, nunca da listagem
@@ -49,14 +97,14 @@ class MonitoriaRepository {
                     // Inscrições que ocupam lugar (nem canceladas nem na lista de espera)
                     _count: { select: { inscricoes: { where: OCUPA_LUGAR } } }
                 },
-                orderBy: { horario: 'asc' },
+                orderBy: [{ horario: 'asc' }, { id: 'asc' }],
                 skip,
                 take
             }),
-            prisma.monitoria.count({ where })
+            total === null ? prisma.monitoria.count({ where }) : total
         ]);
 
-        return { dados, total };
+        return { dados, total: contados };
     }
 
     async buscarAgendamentos(monitorId, { skip, take } = {}) {
