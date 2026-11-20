@@ -204,6 +204,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             'Entrar na sala</a>'
         );
     }
+    // Plano 10 (RF-015): baixa o .ics da inscrição para a agenda do aparelho
+    function botaoAgenda(i) {
+        return (
+            '<button type="button" class="pp-btn pp-btn-sec pp-btn-agenda" data-acao="agenda" data-id="' +
+            esc(i.id) +
+            '" aria-label="Adicionar ' +
+            esc(i.disciplina) +
+            ' à agenda">' +
+            icone('calendario', 16) +
+            'Adicionar à agenda</button>'
+        );
+    }
+    function adicionarAgenda(i) {
+        try {
+            window.AgendaIcs.baixar(window.AgendaIcs.eventoDaInscricao(i, window.location.origin));
+            showToast('Arquivo baixado. Abra-o para colocar a monitoria na sua agenda.', 'success');
+        } catch (erro) {
+            showToast('Não foi possível gerar o arquivo da agenda.', 'error', erro);
+        }
+    }
     // Local na linha: "On-line" no lugar do endereço
     function localHTML(i) {
         return i.online ? icone('video') + 'On-line' : icone('local') + esc(i.local);
@@ -217,6 +237,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return (
                 '<div class="vg-acoes">' +
                 botaoSala(i) +
+                botaoAgenda(i) +
                 (D.podeCancelarInscricao(i, S.agora)
                     ? notaMudou(i, 12) + botaoCancelar(i)
                     : '<span class="nota-24h">' + icone('relogio', 12) + AVISO_24H + '</span>') +
@@ -801,7 +822,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             acoesDet = '<div class="pp-det-acoes">' + botaoCancelar(i) + '</div>';
         else if (sit === 'antes')
             acoesDet =
-                (i.link ? '<div class="pp-det-acoes">' + botaoSala(i) + '</div>' : '') +
+                '<div class="pp-det-acoes">' +
+                botaoSala(i) +
+                botaoAgenda(i) +
+                '</div>' +
                 (D.podeCancelarInscricao(i, S.agora)
                     ? (i.liberado
                           ? '<p class="nota-24h nota-bloco">' +
@@ -995,6 +1019,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (acao === 'presenca') return confirmarPresenca(b);
         const i = inscricaoPorId(b.dataset.id);
         if (!i) return;
+        if (acao === 'agenda') return adicionarAgenda(i);
         const deDentro = b.closest('dialog');
         if (deDentro) deDentro.close();
         else S.gatilho = b;
