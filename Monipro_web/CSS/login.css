@@ -130,6 +130,11 @@ body, html {
     color: white;
 }
 
+/* Plano 7: o botão Coordenação fica escondido fora de ?perfil=coordenacao */
+.btn-profile[hidden] {
+    display: none;
+}
+
 .btn-profile:hover {
     background-color: #e0eaff; /* Azul clarinho sutil */
 }

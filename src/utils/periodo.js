@@ -36,4 +36,10 @@ function nomeDoPeriodo(periodo) {
     return `${semestre}º semestre de ${ano}`;
 }
 
-module.exports = { periodoDe, limitesDoPeriodo, nomeDoPeriodo };
+/** Semestre anterior: 2026.2 -> 2026.1, 2026.1 -> 2025.2 */
+function periodoAnterior(periodo) {
+    const [ano, semestre] = periodo.split('.').map(Number);
+    return semestre === 2 ? `${ano}.1` : `${ano - 1}.2`;
+}
+
+module.exports = { periodoDe, limitesDoPeriodo, nomeDoPeriodo, periodoAnterior };
