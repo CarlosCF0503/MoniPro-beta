@@ -147,7 +147,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (r.statusHttp === 201 && r.disciplina) {
-            showToast('Disciplina criada com sucesso.', 'success');
+            // Plano 7: fica pendente até a coordenação revisar
+            showToast(
+                'Disciplina enviada para a coordenação. Você já pode criar vagas; os alunos veem depois da aprovação.',
+                'success'
+            );
             const { id, nome: salvo } = r.disciplina;
             // Segue para criar a primeira vaga da disciplina nova (o botão continua desativado)
             setTimeout(() => {
@@ -156,7 +160,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     encodeURIComponent(id) +
                     '&disciplinaNome=' +
                     encodeURIComponent(salvo);
-            }, 800);
+            }, 1800);
             return;
         }
 

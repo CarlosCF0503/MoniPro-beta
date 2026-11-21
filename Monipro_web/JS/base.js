@@ -38,8 +38,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 3. FUNÇÕES DE AUTENTICAÇÃO E PERFIL ---
     // P3 (R7): quem está logado vem de GET /auth/sessao (obterSessao, em api.js)
+    // Plano 7: a coordenação não tem perfil próprio; o ícone de perfil leva ao painel
+    const PAGINA_DO_PERFIL = { monitor: 'perfil_monitor.html', coordenador: 'painel.html' };
     const paginaDoPerfil = (user) =>
-        String(user.tipo).toLowerCase() === 'monitor' ? 'perfil_monitor.html' : 'perfil_aluno.html';
+        PAGINA_DO_PERFIL[String(user.tipo).toLowerCase()] || 'perfil_aluno.html';
 
     // Redireciona de forma dinâmica para a tela correta baseado no perfil
     const handleProfileRedirect = async () => {

@@ -40,7 +40,7 @@
     <section id="dados">
         <h2>2. Quais dados usamos</h2>
         <ul>
-            <li><strong>Cadastro:</strong> nome completo, e-mail, matrícula e perfil (aluno ou monitor). A senha é guardada só como <em>hash</em> (não é possível lê-la de volta).</li>
+            <li><strong>Cadastro:</strong> nome completo, e-mail, matrícula e perfil (aluno, monitor ou coordenação; a conta da coordenação só é criada pela equipe, no servidor). A senha é guardada só como <em>hash</em> (não é possível lê-la de volta).</li>
             <li><strong>Uso do sistema:</strong> as vagas que você cria (monitor) ou em que se inscreve (aluno), as confirmações de presença, as faltas marcadas pelo monitor e a sua pontuação.</li>
             <li><strong>Acesso:</strong> a data do seu último login.</li>
             <li><strong>Registros técnicos:</strong> data, rota acessada e resultado das requisições. Nas falhas de login, o e-mail ou a matrícula digitados aparecem mascarados: só a primeira letra e o domínio do e-mail (<code>a***@exemplo.com</code>) ou os dois últimos dígitos da matrícula (<code>***42</code>).</li>
@@ -53,6 +53,7 @@
         <ul>
             <li><strong>Criar a sua conta e permitir o login</strong>, marcar e cancelar monitorias e confirmar presenças: execução do serviço que você pediu ao se cadastrar (art. 7º, V).</li>
             <li><strong>Registrar faltas</strong>: o monitor marca quem não veio. Quem falta a 3 monitorias em 30 dias fica 7 dias sem poder se inscrever em novas (as inscrições já feitas continuam). Você vê as suas faltas no perfil, e o monitor pode corrigir uma falta marcada por engano até 7 dias depois da sessão. Base: execução do serviço (art. 7º, V).</li>
+            <li><strong>Acompanhamento pela coordenação</strong>: a coordenação do curso vê, num painel, os números do semestre (monitorias realizadas, horas, presença e faltas, sem nomes de alunos) e uma tabela por monitor com nome, e-mail, disciplinas, sessões, horas, quantidade de alunos atendidos, presença e se o certificado foi emitido. Toda ação de escrita da coordenação fica registrada com quem fez e quando. Base: execução do serviço e gestão acadêmica das monitorias (art. 7º, V).</li>
             <li><strong>Mostrar pontos e ranking</strong> da gamificação: o ranking lista só monitores, por disciplina e semestre, com nome, pontos, número de monitorias e horas, nunca e-mail ou matrícula. O extrato de pontos e a posição de cada aluno só aparecem para ele mesmo. Base: execução do serviço (art. 7º, V).</li>
             <li><strong>Manter o sistema seguro</strong> (limite de tentativas de login, investigação de falhas): legítimo interesse (art. 7º, IX).</li>
         </ul>
@@ -60,7 +61,7 @@
 
     <section id="compartilhamento">
         <h2>4. Com quem compartilhamos</h2>
-        <p>Não vendemos nem cedemos os seus dados. Eles ficam num servidor contratado na <strong>Oracle Cloud</strong>, que atua como operadora: guarda e processa os dados só para manter o sistema no ar. Os e-mails do sistema, como o link para confirmar o e-mail do cadastro, o link para criar uma senha nova e os avisos sobre as suas monitorias (inscrição, mudança, cancelamento e lembrete), saem pelo <strong>Brevo</strong>, que também atua como operador: recebe só o seu nome, o seu e-mail e o conteúdo da mensagem, para entregá-la. Outros usuários veem apenas o necessário para o agendamento: o aluno vê o nome do monitor da vaga; o monitor vê o nome de quem se inscreveu.</p>
+        <p>Não vendemos nem cedemos os seus dados. Eles ficam num servidor contratado na <strong>Oracle Cloud</strong>, que atua como operadora: guarda e processa os dados só para manter o sistema no ar. Os e-mails do sistema, como o link para confirmar o e-mail do cadastro, o link para criar uma senha nova e os avisos sobre as suas monitorias (inscrição, mudança, cancelamento e lembrete), saem pelo <strong>Brevo</strong>, que também atua como operador: recebe só o seu nome, o seu e-mail e o conteúdo da mensagem, para entregá-la. Outros usuários veem apenas o necessário para o agendamento: o aluno vê o nome do monitor da vaga; o monitor vê o nome de quem se inscreveu; a coordenação vê os dados de acompanhamento dos monitores descritos no item 3.</p>
     </section>
 
     <section id="prazos">
@@ -76,6 +77,7 @@
                     <tr><td>Link para criar uma senha nova</td><td>30 minutos (registro apagado em 24 horas)</td><td>O link só funciona uma vez. Guardamos apenas um código derivado dele, que não permite refazer o link.</td></tr>
                     <tr><td>Falta marcada pelo monitor</td><td>180 dias</td><td>A marcação é apagada; a inscrição continua no histórico até o prazo dela.</td></tr>
                     <tr><td>Avisos por e-mail sobre monitorias</td><td>90 dias depois do envio</td><td>O registro do aviso (disciplina, horário e local da monitoria) é apagado. Esses avisos fazem parte do serviço e não podem ser desligados; o MoniPro não manda e-mail de divulgação.</td></tr>
+                    <tr><td>Registro das ações da coordenação</td><td>Sem prazo de exclusão</td><td>Guarda só quem fez, o quê, quando e um resumo (por exemplo, "assinou o certificado de Fulana"). Serve para conferir as decisões da coordenação depois.</td></tr>
                     <tr><td>Declaração de horas emitida (monitor)</td><td>Sem prazo de exclusão</td><td>A declaração guarda o nome, o semestre e as horas como estavam na emissão. Ela continua existindo mesmo se a conta for excluída, porque você pode tê-la entregado à faculdade e alguém pode precisar conferi-la (LGPD, art. 7º, VI). Quem tem o código impresso na declaração consegue conferir, sem login, o nome, o semestre, a carga horária e se ela ainda vale; nunca o e-mail, a matrícula ou as monitorias.</td></tr>
                     <tr><td>Registros técnicos</td><td>Rotação automática</td><td>Cada serviço guarda até 5 arquivos de 10 MB; o mais antigo é apagado quando um novo começa.</td></tr>
                 </tbody>

@@ -95,6 +95,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         '<footer class="cert-rodape"><p>Emitida em ' +
         esc(data(c.emitido_em)) +
         ' pela plataforma MoniPro.</p>' +
+        // Plano 7: assinatura da coordenação, quando houver
+        (c.assinado_em
+            ? '<p class="cert-assinatura">Assinada pela coordenação: <strong>' +
+              esc(c.assinante) +
+              '</strong>, em ' +
+              esc(data(c.assinado_em)) +
+              '.</p>'
+            : '') +
         '<p>Código de verificação: <strong class="cert-codigo">' +
         esc(codigoLegivel(c.codigo)) +
         '</strong></p><p>Confira em <span class="cert-url">' +

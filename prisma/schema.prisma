@@ -9,6 +9,8 @@ datasource db {
 enum TipoUsuario {
   aluno
   monitor
+  // Plano 7 (RN-014): só criado por scripts/criar-coordenador.js, nunca pelo cadastro público
+  coordenador
 }
 
 enum StatusMonitoria {
@@ -60,10 +62,17 @@ model Usuario {
   notificacoes       Notificacao[]
   eventos_pontuacao  EventoPontuacao[]
   certificados       Certificado[]
+  auditoria          Auditoria[]
 
   @@unique([email, tipo_usuario])
   @@unique([matricula, tipo_usuario])
   @@map("usuarios")
+}
+
+// Plano 7: a disciplina criada por monitor fica pendente até a coordenação aprovar ou mesclar
+enum StatusDisciplina {
+  pendente
+  aprovada
 }
 
 model Disciplina {
@@ -71,7 +80,13 @@ model Disciplina {
   nome       String      @unique
   monitorias Monitoria[]
   eventos_pontuacao EventoPontuacao[]
+  // Plano 7: pendente só aparece para quem criou e para a coordenação. As que já existiam
+  // ficam aprovadas
+  status     StatusDisciplina @default(aprovada)
+  id_criador Int?
+  criada_em  DateTime    @default(now())
 
+  @@index([status])
   @@map("disciplinas")
 }
 
@@ -238,7 +253,29 @@ model Certificado {
   emitido_em       DateTime            @default(now())
   revogado_em      DateTime?
   motivo_revogacao String?
+  // Plano 7: assinatura da coordenação (null = só "emitida pela plataforma"). O nome fica
+  // guardado como estava ao assinar, como o snapshot; id_assinante é só referência (a ação
+  // também fica na auditoria)
+  assinado_em      DateTime?
+  id_assinante     Int?
+  assinante_nome   String?
 
   @@index([id_usuario, periodo])
+  @@index([situacao, assinado_em])
   @@map("certificados")
+}
+
+// Plano 7 (RN-014): cada ação de escrita do painel da coordenação, com quem e quando. Guarda só
+// ids e um resumo; o painel não apaga nem edita linhas.
+model Auditoria {
+  id         Int      @id @default(autoincrement())
+  id_usuario Int
+  usuario    Usuario  @relation(fields: [id_usuario], references: [id])
+  acao       String   @db.VarChar(40) // criar_coordenador | assinar_certificado | revogar_certificado | aprovar_disciplina | mesclar_disciplina
+  alvo       String   @db.VarChar(60) // "certificado:12", "disciplina:5"
+  descricao  String   @db.VarChar(300)
+  criado_em  DateTime @default(now())
+
+  @@index([criado_em])
+  @@map("auditoria")
 }

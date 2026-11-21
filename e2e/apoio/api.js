@@ -86,17 +86,39 @@ async function clienteDe(request, conta) {
     const token = await tokenDe(request, conta);
     const cabecalhos = { Cookie: `${COOKIE}=${token}` };
     return {
+        request,
         get: (url) => request.get(url, { headers: cabecalhos }),
         post: (url, data) => request.post(url, { data, headers: cabecalhos }),
         delete: (url) => request.delete(url, { headers: cabecalhos })
     };
 }
 
-async function criarDisciplina(clienteMonitor, nome = `Disciplina E2E ${sufixo()}`) {
+// Plano 7: a coordenação fictícia do seed (prisma/seed.js, senha SEED_SENHA da pilha E2E)
+const COORDENACAO = {
+    email: 'coordenacao@ficticio.invalid',
+    senha: process.env.E2E_SENHA_SEED || 'senhaFicticiaE2e1', // pragma: allowlist secret
+    tipo: 'coordenador'
+};
+
+/**
+ * Cria uma disciplina pela API, como o monitor. Plano 7: ela nasce pendente (os alunos não
+ * veem); por padrão a coordenação do seed já aprova, para o caso testar o resto do fluxo.
+ */
+async function criarDisciplina(
+    clienteMonitor,
+    nome = `Disciplina E2E ${sufixo()}`,
+    { aprovar = true } = {}
+) {
     const resposta = await clienteMonitor.post('/disciplinas', { nome });
     expect(resposta.status(), await resposta.text()).toBe(201);
     const corpo = await resposta.json();
-    return corpo.disciplina || corpo;
+    const disciplina = corpo.disciplina || corpo;
+    if (aprovar) {
+        const coordenacao = await clienteDe(clienteMonitor.request, COORDENACAO);
+        const r = await coordenacao.post(`/admin/disciplinas/${disciplina.id}/aprovar`, {});
+        expect(r.status(), await r.text()).toBe(200);
+    }
+    return disciplina;
 }
 
 /**

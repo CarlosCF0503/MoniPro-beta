@@ -32,6 +32,7 @@ const MONITORES = [
     { nome: 'Carla Souza', email: 'monitor3', matricula: 990003, disciplinas: [2, 4] }
 ];
 
+const COORDENACAO = { nome: 'Coordenação', email: 'coordenacao', matricula: 992900 };
 const ALUNOS = [
     { nome: 'Diego Martins', email: 'aluno1', matricula: 991001 },
     { nome: 'Elisa Costa', email: 'aluno2', matricula: 991002 },
@@ -115,6 +116,9 @@ async function main() {
             monitores.push({ ...m, registro: await salvarUsuario(m, 'monitor') });
         const alunos = [];
         for (const a of ALUNOS) alunos.push(await salvarUsuario(a, 'aluno'));
+        // Plano 7: uma coordenação fictícia (a de verdade só nasce por scripts/criar-coordenador.js).
+        // Os testes E2E entram com ela para aprovar as disciplinas que os monitores criam.
+        await salvarUsuario(COORDENACAO, 'coordenador');
 
         // Recria as vagas dos monitores fictícios para que as datas fiquem sempre a partir de hoje.
         const idsMonitores = monitores.map((m) => m.registro.id);

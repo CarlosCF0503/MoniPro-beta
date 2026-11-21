@@ -5,6 +5,8 @@ const { Prisma } = require('@prisma/client');
 const { gerarToken } = require('./helpers/token');
 
 jest.mock('../src/config/bancoDeDados', () => ({
+    // Plano 7: a disciplina das vagas existe e está aprovada
+    disciplina: { findUnique: async () => ({ id: 1, status: 'aprovada', id_criador: null }) },
     usuario: {},
     monitoria: { findMany: jest.fn(), count: jest.fn() },
     agendamento: { groupBy: jest.fn().mockResolvedValue([]) },

@@ -23,6 +23,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Plano 7 (RN-014): a coordenação entra pelo endereço com ?perfil=coordenacao, que mostra e
+    // marca o botão Coordenação (aqui e em Esqueci minha senha). A tela pública continua igual.
+    const perfilCoordenacao =
+        new URLSearchParams(window.location.search).get('perfil') === 'coordenacao';
+    const radioCoordenacao = document.getElementById('radioCoordenacao');
+    if (perfilCoordenacao && radioCoordenacao) {
+        radioCoordenacao.checked = true;
+        document.querySelector('label[for="radioCoordenacao"]').hidden = false;
+        const esqueci = document.querySelector('a.esqueci');
+        if (esqueci) esqueci.href = 'redefinir_senha.html?perfil=coordenacao';
+    }
+
     // IDs alinhados com o index.html: formLogin, inputIdentificador, inputSenha
     const formLogin = document.getElementById('formLogin');
 
@@ -62,8 +74,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 // P3 (R7): a sessão ficou no cookie httpOnly que a API gravou; nada a guardar aqui
                 if (typeof showToast === 'function')
                     showToast('Login realizado com sucesso!', 'success');
+                // Plano 7: a coordenação vai direto para o painel
+                const destino =
+                    dados.usuario && dados.usuario.tipo === 'coordenador'
+                        ? 'painel.html'
+                        : 'base.html';
                 setTimeout(() => {
-                    window.location.href = 'base.html';
+                    window.location.href = destino;
                 }, 1000);
             } else if (dados.codigo === 'email_nao_confirmado' && aviso) {
                 // Plano 14 (RF-018): só chega aqui com a senha certa

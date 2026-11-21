@@ -58,6 +58,14 @@ document.addEventListener('DOMContentLoaded', () => {
             '</dd></div><div><dt>Emitida em</dt><dd>' +
             esc(data(d.emitido_em)) +
             '</dd></div>' +
+            // Plano 7: quem da coordenação assinou
+            (d.assinado_em
+                ? '<div><dt>Assinada por</dt><dd>' +
+                  esc(d.assinante) +
+                  ', em ' +
+                  esc(data(d.assinado_em)) +
+                  '</dd></div>'
+                : '') +
             (d.revogado_em
                 ? '<div><dt>Revogada em</dt><dd>' + esc(data(d.revogado_em)) + '</dd></div>'
                 : '') +

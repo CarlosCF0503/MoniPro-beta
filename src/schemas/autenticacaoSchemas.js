@@ -10,6 +10,15 @@ const tipoUsuario = z.enum(['aluno', 'monitor'], {
             : "O tipo de usuário deve ser 'aluno' ou 'monitor'."
 });
 
+// Plano 7 (RN-014): a coordenação entra pelo mesmo login, mas não se cadastra pela tela (a conta
+// só é criada por scripts/criar-coordenador.js). Vale no login e no pedido de nova senha.
+const tipoUsuarioLogin = z.enum(['aluno', 'monitor', 'coordenador'], {
+    error: (iss) =>
+        iss.input === undefined
+            ? 'O tipo de usuário é obrigatório.'
+            : "O tipo de usuário deve ser 'aluno' ou 'monitor'."
+});
+
 // Política de senha forte: mín. 8 caracteres, com pelo menos uma letra e um número.
 // Máx. 72 porque o bcrypt ignora o que passa de 72 bytes.
 const senhaForte = z
@@ -37,14 +46,14 @@ const cadastroSchema = z.object({
 const loginSchema = z.object({
     identificador: textoObrigatorio('Informe o e-mail ou a matrícula.', 254),
     senha: z.string({ error: 'A senha é obrigatória.' }).min(1, 'A senha é obrigatória.'),
-    tipo_usuario: tipoUsuario
+    tipo_usuario: tipoUsuarioLogin
 });
 
 // RF-008: pedir o link de redefinição. O e-mail só precisa ter formato válido: a resposta é a
 // mesma exista a conta ou não.
 const esqueciSenhaSchema = z.object({
     email: cadastroSchema.shape.email,
-    tipo_usuario: tipoUsuario
+    tipo_usuario: tipoUsuarioLogin
 });
 
 // RF-008: criar a senha nova com o token do link. A senha segue a mesma política do cadastro.

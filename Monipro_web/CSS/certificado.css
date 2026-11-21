@@ -24,6 +24,7 @@ body { margin: 0; background: #e9edf5; color: var(--ink); font-family: Inter, 'S
 .cert-regra { font-size: 12px; color: var(--slate); margin: 0; }
 .cert-rodape { margin-top: auto; border-top: 1px solid var(--line); padding-top: 12px; font-size: 13px; color: var(--slate); }
 .cert-rodape p { margin: 2px 0; }
+.cert-rodape .cert-assinatura { color: var(--navy); font-size: 14px; } /* Plano 7: assinatura da coordenação */
 .cert-codigo { color: var(--navy); font-family: Consolas, 'Cascadia Mono', monospace; letter-spacing: 0.04em; }
 .cert-url { word-break: break-all; color: var(--navy-2); }
 .cert-carregando, .cert-erro { text-align: center; color: var(--slate); margin: auto; }
