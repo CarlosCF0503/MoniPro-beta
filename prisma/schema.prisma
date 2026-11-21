@@ -271,7 +271,7 @@ model Auditoria {
   id         Int      @id @default(autoincrement())
   id_usuario Int
   usuario    Usuario  @relation(fields: [id_usuario], references: [id])
-  acao       String   @db.VarChar(40) // criar_coordenador | assinar_certificado | revogar_certificado | aprovar_disciplina | mesclar_disciplina
+  acao       String   @db.VarChar(40) // criar_coordenador | assinar_certificado | revogar_certificado | aprovar_disciplina | mesclar_disciplina | marcar_falta | anular_falta
   alvo       String   @db.VarChar(60) // "certificado:12", "disciplina:5"
   descricao  String   @db.VarChar(300)
   criado_em  DateTime @default(now())

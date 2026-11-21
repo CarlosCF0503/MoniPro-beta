@@ -189,6 +189,66 @@ class PainelRepository {
         return count ? { vagas: vagas.count, pontos: pontos.count } : null;
     }
 
+    /**
+     * Plano 7 (faltas): inscrições das vagas que começaram entre `inicio` e `ate`, com aluno,
+     * monitor e disciplina. `faltas` = com falta marcada; `semPresenca` = vaga não cancelada,
+     * inscrição ativa, sem presença dos dois lados e sem falta.
+     */
+    async listarInscricoesParaFaltas(inicio, ate, limite = 300) {
+        const select = {
+            id: true,
+            ausente_em: true,
+            presenca_aluno_em: true,
+            aluno: { select: { nome_completo: true } },
+            monitoria: {
+                select: {
+                    horario: true,
+                    monitor: { select: { nome_completo: true } },
+                    disciplina: { select: { nome: true } }
+                }
+            }
+        };
+        const naJanela = { horario: { gte: inicio, lt: ate } };
+        const [faltas, semPresenca] = await Promise.all([
+            prisma.agendamento.findMany({
+                where: { ausente_em: { not: null }, monitoria: naJanela },
+                orderBy: [{ ausente_em: 'desc' }, { id: 'desc' }],
+                take: limite,
+                select
+            }),
+            prisma.agendamento.findMany({
+                where: {
+                    ausente_em: null,
+                    status: { notIn: ['concluido', 'cancelado', 'em_espera'] },
+                    monitoria: { ...naJanela, status: { not: 'cancelada' } }
+                },
+                orderBy: [{ monitoria: { horario: 'desc' } }, { id: 'desc' }],
+                take: limite,
+                select
+            })
+        ]);
+        return { faltas, semPresenca };
+    }
+
+    /** Nomes dos alunos (para a lista de bloqueados). */
+    async nomesDeUsuarios(ids) {
+        if (!ids.length) return new Map();
+        const linhas = await prisma.usuario.findMany({
+            where: { id: { in: ids } },
+            select: { id: true, nome_completo: true }
+        });
+        return new Map(linhas.map((u) => [u.id, u.nome_completo]));
+    }
+
+    /** Anula a falta se ela ainda estiver marcada (duas anulações ao mesmo tempo gravam uma). */
+    async anularFalta(id, db) {
+        const { count } = await db.agendamento.updateMany({
+            where: { id, ausente_em: { not: null } },
+            data: { ausente_em: null }
+        });
+        return count;
+    }
+
     async emTransacao(fn) {
         return await prisma.$transaction(fn);
     }
