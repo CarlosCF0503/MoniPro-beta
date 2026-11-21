@@ -1351,19 +1351,52 @@ document.addEventListener('DOMContentLoaded', async () => {
         else if (v.naFila > 1)
             partes.push('Os ' + v.naFila + ' da lista de espera também são avisados.');
         partes.push('Esta ação não pode ser desfeita.');
-        document.getElementById('can-aviso').textContent = partes.join(' ');
+        S.avisoCancelar = partes.join(' ');
+        document.getElementById('can-aviso').textContent = S.avisoCancelar;
+        // Plano 9: na vaga de uma série, escolher entre só esta e esta e as próximas
+        const serie = D.proximasDaSerie(v, S.vagas, S.agora);
+        const escopo = document.getElementById('can-escopo');
+        escopo.hidden = serie.cancelaveis.length < 2;
+        escopo.querySelector('input[value="esta"]').checked = true;
+        S.serieAlvo = serie;
+        if (!escopo.hidden) {
+            const ultima = serie.cancelaveis[serie.cancelaveis.length - 1];
+            document.getElementById('can-proximas').textContent =
+                'Esta e as próximas: ' +
+                D.plural(serie.cancelaveis.length, 'vaga', 'vagas') +
+                ', até ' +
+                D.diaMes(ultima.inicio);
+        }
+        atualizarCancelar();
         dlgCan.showModal();
     }
+    // Texto do aviso e do botão conforme a escolha (só esta ou esta e as próximas)
+    function atualizarCancelar() {
+        const proximas =
+            !document.getElementById('can-escopo').hidden &&
+            document.querySelector('#can-escopo input[value="proximas"]').checked;
+        const n = proximas ? S.serieAlvo.cancelaveis.length : 1;
+        document.getElementById('can-confirmar').textContent =
+            n > 1 ? 'Cancelar ' + n + ' vagas' : 'Cancelar vaga';
+        document.getElementById('can-aviso').textContent = proximas
+            ? 'Cada inscrito e quem está na lista de espera dessas vagas recebe o aviso. Esta ação não pode ser desfeita.'
+            : S.avisoCancelar;
+    }
+    document.getElementById('can-escopo').addEventListener('change', atualizarCancelar);
     document.getElementById('can-form').addEventListener('submit', async (ev) => {
         ev.preventDefault();
         const vaga = S.alvo;
         if (!vaga) return;
         const botao = document.getElementById('can-confirmar');
         botao.disabled = true;
+        const proximas =
+            !document.getElementById('can-escopo').hidden &&
+            document.querySelector('#can-escopo input[value="proximas"]').checked;
         try {
-            const dados = await chamadaApi('/monitorias/' + vaga.id + '/cancelar', {
-                method: 'PUT'
-            });
+            const dados = await chamadaApi(
+                '/monitorias/' + vaga.id + (proximas ? '/cancelar-proximas' : '/cancelar'),
+                { method: 'PUT' }
+            );
             if (dados.statusHttp === 401) return sessaoExpirada();
             if (dados.erro || !dados.success) {
                 dlgCan.close();
@@ -1374,8 +1407,27 @@ document.addEventListener('DOMContentLoaded', async () => {
                 );
                 return;
             }
-            vaga.status = 'cancelada';
             dlgCan.close();
+            if (proximas) {
+                // Plano 9: a API devolve as canceladas e as que ficaram (menos de 24h)
+                (dados.canceladas || []).forEach((id) => {
+                    const v = vagaPorId(id);
+                    if (v) v.status = 'cancelada';
+                });
+                const ficaram = (dados.mantidas || []).length;
+                render();
+                showToast(
+                    (dados.mensagem || 'Vagas canceladas.') +
+                        (ficaram
+                            ? ' ' +
+                              D.plural(ficaram, 'vaga ficou', 'vagas ficaram') +
+                              ': faltam menos de 24h.'
+                            : ''),
+                    'success'
+                );
+                return;
+            }
+            vaga.status = 'cancelada';
             render();
             showToast('Vaga cancelada.', 'success');
         } catch (erro) {

@@ -111,7 +111,29 @@
             descricao: m.descricao || '',
             // Plano 11: o dono da vaga recebe o link da sala
             online: m.modalidade === 'online',
-            link: m.link || null
+            link: m.link || null,
+            // Plano 9: vagas criadas juntas, toda semana
+            idSerie: m.id_serie || null
+        };
+    }
+
+    /**
+     * Plano 9: vagas ativas da mesma série a partir desta (inclusive), em ordem, separadas em
+     * as que podem ser canceladas agora e as que ficam (menos de 24h para o início).
+     */
+    function proximasDaSerie(vaga, vagas, agora) {
+        if (!vaga.idSerie) return { cancelaveis: [], ficam: [] };
+        const serie = vagas
+            .filter(
+                (v) =>
+                    v.idSerie === vaga.idSerie &&
+                    ATIVAS.includes(v.status) &&
+                    v.inicio >= vaga.inicio
+            )
+            .sort((a, b) => a.inicio - b.inicio);
+        return {
+            cancelaveis: serie.filter((v) => podeCancelar(v, agora)),
+            ficam: serie.filter((v) => !podeCancelar(v, agora))
         };
     }
 
@@ -395,6 +417,7 @@
         separar,
         realizada,
         podeCancelar,
+        proximasDaSerie,
         opcoesTermino,
         agruparPorMes,
         normalizarInscricao,
