@@ -5,6 +5,7 @@ const { ErroValidacao } = require('../utils/erros');
 
 const FORMATO_PERIODO = /^\d{4}\.[12]$/;
 const MAX_AUDITORIA = 100;
+const SITUACOES_CERTIFICADO = ['pendente', 'assinado'];
 
 function periodoDaConsulta(valor) {
     if (valor === undefined) return undefined;
@@ -36,4 +37,53 @@ exports.auditoria = async (req, res) => {
     const registros = await painelService.auditoria(quantos);
     res.set('Cache-Control', 'no-store');
     return res.status(200).json({ success: true, registros });
+};
+
+function idDaRota(valor) {
+    const id = Number(valor);
+    if (!Number.isInteger(id) || id <= 0) {
+        throw new ErroValidacao('Certificado inválido.', { id: 'Certificado inválido.' });
+    }
+    return id;
+}
+
+const coordenadorDe = (req) => ({ id: req.usuario.id, nome: req.usuario.nome_completo });
+
+// GET /admin/certificados?situacao=pendente|assinado&periodo=2026.2
+exports.certificados = async (req, res) => {
+    const situacao = req.query.situacao || 'pendente';
+    if (!SITUACOES_CERTIFICADO.includes(situacao)) {
+        const mensagem = "A situação deve ser 'pendente' ou 'assinado'.";
+        throw new ErroValidacao(mensagem, { situacao: mensagem });
+    }
+    const certificados = await painelService.certificados(
+        situacao,
+        periodoDaConsulta(req.query.periodo)
+    );
+    res.set('Cache-Control', 'no-store');
+    return res.status(200).json({ success: true, certificados });
+};
+
+// GET /admin/certificados/:id/sessoes: as sessões guardadas na emissão, para conferir
+exports.sessoesDoCertificado = async (req, res) => {
+    const resultado = await painelService.sessoesDoCertificado(idDaRota(req.params.id));
+    res.set('Cache-Control', 'no-store');
+    return res.status(200).json({ success: true, ...resultado });
+};
+
+// POST /admin/certificados/:id/assinar
+exports.assinarCertificado = async (req, res) => {
+    const r = await painelService.assinarCertificado(idDaRota(req.params.id), coordenadorDe(req));
+    return res.status(200).json({ success: true, ...r });
+};
+
+// POST /admin/certificados/:id/revogar { motivo }
+exports.revogarCertificado = async (req, res) => {
+    const motivo = req.body ? req.body.motivo : undefined;
+    const r = await painelService.revogarCertificado(
+        idDaRota(req.params.id),
+        motivo,
+        coordenadorDe(req)
+    );
+    return res.status(200).json({ success: true, ...r });
 };

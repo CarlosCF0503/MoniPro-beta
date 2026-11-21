@@ -129,12 +129,19 @@ function resumirSemestre(vagas, { inicio, fim, agora }) {
     };
 }
 
+/** nenhum | pendente (emitido, esperando a assinatura) | assinado */
+function situacaoDoCertificado(comCertificado, idMonitor) {
+    if (!comCertificado.has(idMonitor)) return 'nenhum';
+    return comCertificado.get(idMonitor) ? 'assinado' : 'pendente';
+}
+
 /**
  * Uma linha por monitor que teve vaga no semestre, das mais horas para as menos.
  * @param {Array} vagas - as mesmas de resumirSemestre, com monitor: { nome, email }
- * @param {{ fim: Date, agora: Date, comCertificado: Set<number> }} opcoes
+ * @param {{ fim: Date, agora: Date, comCertificado: Map<number, boolean> }} opcoes - id do
+ *   monitor com certificado válido no semestre -> true se a coordenação já assinou
  */
-function resumirMonitores(vagas, { fim, agora, comCertificado = new Set() }) {
+function resumirMonitores(vagas, { fim, agora, comCertificado = new Map() }) {
     const ate = fim < agora ? fim : agora;
     const ultimaSemana = inicioDaSemana(new Date(ate.getTime() - 1)).getTime();
     const primeiraSemana = ultimaSemana - (SEMANAS_DO_MONITOR - 1) * SEMANA;
@@ -182,7 +189,7 @@ function resumirMonitores(vagas, { fim, agora, comCertificado = new Set() }) {
             alunos: m.alunos.size,
             presenca: taxa(m.presentes, m.faltas),
             semanas: m.semanas,
-            certificado: comCertificado.has(m.id) ? 'emitido' : 'nenhum'
+            certificado: situacaoDoCertificado(comCertificado, m.id)
         }))
         .sort(
             (a, b) => b.minutos - a.minutos || b.sessoes - a.sessoes || a.nome.localeCompare(b.nome)

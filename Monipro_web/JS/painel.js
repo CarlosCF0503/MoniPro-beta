@@ -2,7 +2,7 @@
 // Plano 7 (RF-012): painel da coordenação. As rotas /admin/* exigem tipo_usuario = coordenador
 // (middleware isCoordenador; aluno e monitor recebem 403) e toda ação de escrita entra na auditoria.
 // Os gráficos são SVG/HTML montados aqui: a CSP do site só aceita scripts do próprio domínio.
-// Depende de: api.js (chamadaApi, escaparHtml, obterSessao), toast.js (showToast).
+// Depende de: api.js (chamadaApi, escaparHtml, obterSessao), toast.js (showToast, mensagemDaApi).
 document.addEventListener('DOMContentLoaded', async () => {
     const esc = escaparHtml;
     const raiz = document.getElementById('painel-app');
@@ -20,7 +20,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    const S = { periodo: null, aba: 'monitores', resumo: null, monitores: [], auditoria: [] };
+    const S = {
+        periodo: null,
+        aba: 'certificados',
+        filtroCert: 'pendente',
+        resumo: null,
+        monitores: [],
+        certificados: { pendente: [], assinado: [] },
+        auditoria: []
+    };
 
     // ---------- formatação ----------
     const horas = (min) => {
@@ -50,6 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         d +
         '</svg>';
     const ICO = {
+        cert: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="m9 15 2 2 4-4"/>',
         alerta: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/>',
         bloqueio:
             '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
@@ -65,12 +74,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function carregar() {
         raiz.setAttribute('aria-busy', 'true');
         const q = S.periodo ? '?periodo=' + encodeURIComponent(S.periodo) : '';
-        let r, m, a;
+        const ps = q ? '&' + q.slice(1) : '';
+        let r, m, a, cp, ca;
         try {
-            [r, m, a] = await Promise.all([
+            [r, m, a, cp, ca] = await Promise.all([
                 chamadaApi('/admin/resumo' + q),
                 chamadaApi('/admin/monitores' + q),
-                chamadaApi('/admin/auditoria?limit=20')
+                chamadaApi('/admin/auditoria?limit=20'),
+                chamadaApi('/admin/certificados?situacao=pendente'),
+                chamadaApi('/admin/certificados?situacao=assinado' + ps)
             ]);
         } catch {
             r = { success: false, erro: 'Não foi possível conectar ao servidor.' };
@@ -87,6 +99,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         S.periodo = r.periodo;
         S.monitores = (m && m.monitores) || [];
         S.auditoria = (a && a.registros) || [];
+        S.certificados = {
+            pendente: (cp && cp.certificados) || [],
+            assinado: (ca && ca.certificados) || []
+        };
         render();
     }
 
@@ -94,7 +110,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     function pendencias() {
         const baixa = S.monitores.filter(presencaBaixa).length;
         const bloq = S.resumo.inscricoes.bloqueados;
+        const cert = S.certificados.pendente.length;
         const itens = [
+            [
+                'certificados',
+                ICO.cert,
+                'Certificados para assinar',
+                cert ? 'monitores esperando a assinatura' : 'nenhum esperando assinatura',
+                cert
+            ],
             [
                 'monitores',
                 ICO.alerta,
@@ -111,7 +135,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             ]
         ];
         return (
-            '<section class="pn-pend pn-pend-2" aria-label="Precisa da coordenação">' +
+            '<section class="pn-pend" aria-label="Precisa da coordenação">' +
             itens
                 .map(([aba, i, t, s, n]) => {
                     const conteudo =
@@ -348,7 +372,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             (sem[sem.length - 1].parcial
                 ? '<li><i style="background:var(--soft-2);border:1px dashed var(--navy-2)"></i>Semana em andamento</li>'
                 : '') +
-            '<li><i class="linha"></i>Média das semanas completas</li></ul>' +
+            '<li><i class="linha"></i>Média das semanas completas desde a primeira monitoria</li></ul>' +
             '</section>'
         );
     }
@@ -554,7 +578,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function abaMonitores() {
-        const situ = { emitido: ['pill-ok', 'Emitido'], nenhum: ['pill-aberta', 'Não emitido'] };
+        const situ = {
+            assinado: ['pill-ok', 'Assinado'],
+            pendente: ['pill-atencao', 'Para assinar'],
+            nenhum: ['pill-aberta', 'Não emitido']
+        };
         return tabela(
             [
                 ['Monitor'],
@@ -607,6 +635,99 @@ document.addEventListener('DOMContentLoaded', async () => {
         );
     }
 
+    const codigoLegivel = (c) => c.match(/.{1,4}/g).join('-');
+
+    function abaCertificados() {
+        const f = S.filtroCert;
+        const lista = S.certificados[f];
+        const filtro =
+            '<div class="pn-filtro" role="group" aria-label="Situação">' +
+            [
+                ['pendente', 'Para assinar', S.certificados.pendente.length],
+                ['assinado', 'Assinados em ' + S.periodo, S.certificados.assinado.length]
+            ]
+                .map(
+                    ([k, t, n]) =>
+                        '<button type="button" data-pn-cert="' +
+                        k +
+                        '" aria-pressed="' +
+                        (f === k) +
+                        '">' +
+                        esc(t) +
+                        ' (' +
+                        n +
+                        ')</button>'
+                )
+                .join('') +
+            '</div>';
+        const nome = (c) =>
+            '<td><b>' +
+            esc(c.monitor) +
+            '</b><small class="pn-cod">' +
+            esc(codigoLegivel(c.codigo)) +
+            '</small></td>';
+        if (f === 'pendente')
+            return (
+                filtro +
+                '<p class="pn-dica">O certificado já vale como "emitido pela plataforma". Com a assinatura, o documento e a verificação pública passam a mostrar quem da coordenação assinou e quando. Confira as sessões antes de assinar.</p>' +
+                tabela(
+                    [
+                        ['Monitor'],
+                        ['Semestre'],
+                        ['Carga', 'num'],
+                        ['Sessões', 'num'],
+                        ['Emitido em'],
+                        ['', 'num']
+                    ],
+                    lista.map(
+                        (c) =>
+                            '<tr>' +
+                            nome(c) +
+                            '<td>' +
+                            esc(c.periodo) +
+                            '</td><td class="num">' +
+                            horas(c.carga_minutos) +
+                            '</td><td class="num">' +
+                            (c.sessoes == null ? '—' : c.sessoes) +
+                            '</td><td>' +
+                            dataCurta(c.emitido_em) +
+                            '</td><td><div class="pn-acoes"><button type="button" class="pp-btn pp-btn-sec pp-btn-p" data-pn="sessoes" data-id="' +
+                            c.id +
+                            '">Conferir sessões</button><button type="button" class="pp-btn pp-btn-pri pp-btn-p" data-pn="assinar" data-id="' +
+                            c.id +
+                            '">' +
+                            ico(ICO.pena, 16) +
+                            'Assinar</button></div></td></tr>'
+                    ),
+                    'Nenhum certificado esperando assinatura.'
+                )
+            );
+        return (
+            filtro +
+            '<p class="pn-dica">Revogar invalida o código na verificação pública e avisa o monitor por e-mail com o motivo. Ele pode emitir outro certificado depois.</p>' +
+            tabela(
+                [['Monitor'], ['Semestre'], ['Carga', 'num'], ['Assinado em'], ['', 'num']],
+                lista.map(
+                    (c) =>
+                        '<tr>' +
+                        nome(c) +
+                        '<td>' +
+                        esc(c.periodo) +
+                        '</td><td class="num">' +
+                        horas(c.carga_minutos) +
+                        '</td><td>' +
+                        dataCurta(c.assinado_em) +
+                        '<small>por ' +
+                        esc(c.assinante) +
+                        '</small></td><td><div class="pn-acoes"><button type="button" class="pp-btn pp-btn-texto-perigo pp-btn-p" data-pn="revogar" data-id="' +
+                        c.id +
+                        '">Revogar</button></div></td></tr>'
+                ),
+                'Nenhum certificado assinado em ' + esc(S.periodo) + '.'
+            )
+        );
+    }
+
     function abaAtividade() {
         const tipo = {
             criar_coordenador: [ICO.pessoa, ''],
@@ -645,11 +766,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function gestao() {
         const baixa = S.monitores.filter(presencaBaixa).length;
+        const pend = S.certificados.pendente.length;
         const abas = [
+            ['certificados', 'Certificados', pend, pend > 0],
             ['monitores', 'Monitores', S.monitores.length, baixa > 0],
             ['atividade', 'Atividade', null, false]
         ];
-        const corpo = S.aba === 'atividade' ? abaAtividade() : abaMonitores();
+        const corpo = {
+            certificados: abaCertificados,
+            monitores: abaMonitores,
+            atividade: abaAtividade
+        }[S.aba]();
         return (
             '<section class="pp-cartao pn-gestao" id="pn-gestao" aria-label="Gestão">' +
             '<div class="pp-abas" role="tablist">' +
@@ -715,6 +842,152 @@ document.addEventListener('DOMContentLoaded', async () => {
             '</div>';
     }
 
+    // ---------- certificados: diálogos e ações ----------
+    const dlgSes = document.getElementById('dlg-sessoes');
+    const dlgRev = document.getElementById('dlg-revogar');
+    document
+        .querySelectorAll('.pp-dlg [data-fechar]')
+        .forEach((b) => b.addEventListener('click', () => b.closest('dialog').close()));
+    const dataLonga = (iso) =>
+        new Date(iso).toLocaleString('pt-BR', {
+            weekday: 'short',
+            day: '2-digit',
+            month: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            ...FUSO
+        });
+
+    async function abrirSessoes(c) {
+        document.getElementById('ses-titulo').textContent = c.monitor + ' · ' + c.periodo;
+        const lista = document.getElementById('ses-lista');
+        const total = document.getElementById('ses-total');
+        lista.innerHTML = '<li><small>Carregando…</small></li>';
+        total.textContent = '';
+        document.getElementById('ses-assinar').dataset.id = c.id;
+        dlgSes.showModal();
+        let r;
+        try {
+            r = await chamadaApi('/admin/certificados/' + c.id + '/sessoes');
+        } catch {
+            r = { success: false };
+        }
+        if (!r.success) {
+            lista.innerHTML =
+                '<li><small>' +
+                esc(r.erro || 'Não foi possível carregar as sessões.') +
+                '</small></li>';
+            return;
+        }
+        lista.innerHTML =
+            r.sessoes
+                .map(
+                    (s) =>
+                        '<li><div><b>' +
+                        esc(s.disciplina) +
+                        '</b><small>' +
+                        esc(dataLonga(s.data)) +
+                        '</small></div><span class="h">' +
+                        horas(s.minutos) +
+                        '</span></li>'
+                )
+                .join('') || '<li><small>Nenhuma sessão guardada neste certificado.</small></li>';
+        total.innerHTML =
+            '<span>' +
+            r.sessoes.length +
+            (r.sessoes.length === 1 ? ' sessão' : ' sessões') +
+            ' com presença confirmada</span><b>' +
+            horas(r.carga_minutos) +
+            '</b>';
+    }
+
+    function abrirRevogar(c) {
+        document.getElementById('rev-sub').textContent =
+            c.monitor +
+            ' · ' +
+            c.periodo +
+            ' · ' +
+            horas(c.carga_minutos) +
+            ' · código ' +
+            codigoLegivel(c.codigo);
+        const motivo = document.getElementById('rev-motivo');
+        motivo.value = '';
+        document.getElementById('rev-erro').textContent = '';
+        document.getElementById('rev-confirmar').dataset.id = c.id;
+        dlgRev.showModal();
+        motivo.focus();
+    }
+
+    async function executar(botao, rota, corpo, sucesso) {
+        botao.disabled = true;
+        let r;
+        try {
+            r = await chamadaApi(rota, {
+                method: 'POST',
+                body: corpo ? JSON.stringify(corpo) : undefined
+            });
+        } catch {
+            r = { success: false, erro: 'Não foi possível conectar ao servidor.' };
+        }
+        botao.disabled = false;
+        if (!r.success) {
+            showToast(mensagemDaApi(r, 'Não foi possível concluir. Tente de novo.'), 'error');
+            return null;
+        }
+        if (r.registro) S.auditoria.unshift(r.registro);
+        showToast(sucesso, 'success');
+        return r;
+    }
+
+    async function assinar(id, botao) {
+        const c = S.certificados.pendente.find((x) => x.id === id);
+        if (!c) return;
+        const r = await executar(
+            botao,
+            '/admin/certificados/' + id + '/assinar',
+            null,
+            'Certificado de ' + c.monitor + ' assinado. O monitor recebe um e-mail.'
+        );
+        if (!r) return;
+        S.certificados.pendente = S.certificados.pendente.filter((x) => x.id !== id);
+        if (c.periodo === S.periodo) S.certificados.assinado.unshift(r.certificado);
+        const m = S.monitores.find((x) => x.nome === c.monitor);
+        if (m && c.periodo === S.periodo) m.certificado = 'assinado';
+        if (dlgSes.open) dlgSes.close();
+        render();
+    }
+
+    document
+        .getElementById('ses-assinar')
+        .addEventListener('click', (ev) =>
+            assinar(Number(ev.currentTarget.dataset.id), ev.currentTarget)
+        );
+
+    document.getElementById('rev-form').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const b = document.getElementById('rev-confirmar');
+        const id = Number(b.dataset.id);
+        const motivo = document.getElementById('rev-motivo').value.trim();
+        if (motivo.length < 10) {
+            document.getElementById('rev-erro').textContent =
+                'Escreva o motivo com pelo menos 10 caracteres. Ele vai no e-mail para o monitor.';
+            return;
+        }
+        const c = S.certificados.assinado.find((x) => x.id === id);
+        const r = await executar(
+            b,
+            '/admin/certificados/' + id + '/revogar',
+            { motivo },
+            'Certificado revogado. O código já aparece como revogado na verificação.'
+        );
+        if (!r) return;
+        S.certificados.assinado = S.certificados.assinado.filter((x) => x.id !== id);
+        const m = c && S.monitores.find((x) => x.nome === c.monitor);
+        if (m) m.certificado = 'nenhum';
+        dlgRev.close();
+        render();
+    });
+
     // ---------- eventos ----------
     raiz.addEventListener('change', (ev) => {
         if (ev.target.id === 'pn-sem') {
@@ -727,6 +1000,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const ir = ev.target.closest('[data-pn-ir]');
         if (ir) {
             S.aba = ir.dataset.pnIr;
+            if (S.aba === 'certificados') S.filtroCert = 'pendente';
             render();
             document
                 .getElementById('pn-gestao')
@@ -738,7 +1012,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             S.aba = aba.dataset.pnAba;
             render();
             document.getElementById('aba-' + S.aba).focus();
+            return;
         }
+        const fc = ev.target.closest('[data-pn-cert]');
+        if (fc) {
+            S.filtroCert = fc.dataset.pnCert;
+            render();
+            return;
+        }
+        const b = ev.target.closest('[data-pn]');
+        if (!b) return;
+        const id = Number(b.dataset.id);
+        if (b.dataset.pn === 'sessoes')
+            return abrirSessoes(S.certificados.pendente.find((x) => x.id === id));
+        if (b.dataset.pn === 'assinar') return assinar(id, b);
+        if (b.dataset.pn === 'revogar')
+            return abrirRevogar(S.certificados.assinado.find((x) => x.id === id));
     });
 
     carregar();

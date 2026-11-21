@@ -166,7 +166,7 @@ const RODAPE_AVISO =
     'Você recebe este e-mail porque tem uma inscrição no MoniPro. Avisos sobre suas monitorias não podem ser desligados, porque fazem parte do serviço.';
 
 // Monta o e-mail de aviso: linhas = [rótulo, valor em texto, valor em HTML opcional]
-function aviso({ assunto, titulo, abertura, linhas, depois, acao }) {
+function aviso({ assunto, titulo, abertura, linhas, depois, acao, rodape = RODAPE_AVISO }) {
     const app = urlDoApp();
     const htmlLinhas = linhas.map(([r, t, h]) => [r, h ?? escapar(t)]);
     const textoLinhas = linhas.map(([r, t]) => [r, t]);
@@ -180,7 +180,7 @@ function aviso({ assunto, titulo, abertura, linhas, depois, acao }) {
                 quadro(htmlLinhas) +
                 paragrafo(escapar(depois), `font-size:14px`) +
                 botao(acao.texto, `${app}/${acao.pagina}`),
-            rodape: RODAPE_AVISO
+            rodape
         })
     };
 }
@@ -306,6 +306,43 @@ MODELOS.espera = (d) => {
         acao: PERFIL
     });
 };
+
+// ---------- Plano 7: certificado assinado ou revogado pela coordenação ----------
+const CERTIFICADOS = { texto: 'Ver meus certificados', pagina: 'perfil_monitor.html' };
+const RODAPE_CERTIFICADO =
+    'Você recebe este e-mail porque emitiu uma declaração de horas de monitoria no MoniPro.';
+const horasPorExtenso = (minutos) => {
+    const h = Math.floor(minutos / 60);
+    const m = minutos % 60;
+    return m ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`;
+};
+const linhasDoCertificado = (d) => [
+    ['Semestre', d.semestre],
+    ['Carga horária', horasPorExtenso(d.carga_minutos)],
+    ['Código', d.codigo]
+];
+
+MODELOS['certificado-assinado'] = (d) =>
+    aviso({
+        assunto: `Sua declaração de horas de ${d.semestre} foi assinada`,
+        titulo: 'Declaração assinada',
+        abertura: `Olá, ${primeiroNome(d.nome)}. A coordenação (${d.assinante}) assinou sua declaração de horas de monitoria.`,
+        linhas: linhasDoCertificado(d),
+        depois: 'O documento e a verificação pública já mostram a assinatura. Se você já tinha impresso a declaração, imprima de novo pelo perfil.',
+        acao: CERTIFICADOS,
+        rodape: RODAPE_CERTIFICADO
+    });
+
+MODELOS['certificado-revogado'] = (d) =>
+    aviso({
+        assunto: `Sua declaração de horas de ${d.semestre} foi revogada`,
+        titulo: 'Declaração revogada',
+        abertura: `Olá, ${primeiroNome(d.nome)}. A coordenação revogou sua declaração de horas de monitoria. O código passa a aparecer como revogado na verificação pública.`,
+        linhas: [...linhasDoCertificado(d), ['Motivo', d.motivo]],
+        depois: 'Se as horas forem corrigidas, você pode emitir uma declaração nova pelo perfil. Em caso de dúvida, fale com a coordenação do curso.',
+        acao: CERTIFICADOS,
+        rodape: RODAPE_CERTIFICADO
+    });
 
 function montar(modelo, dados) {
     const gerar = MODELOS[modelo];

@@ -241,8 +241,15 @@ model Certificado {
   emitido_em       DateTime            @default(now())
   revogado_em      DateTime?
   motivo_revogacao String?
+  // Plano 7: assinatura da coordenação (null = só "emitida pela plataforma"). O nome fica
+  // guardado como estava ao assinar, como o snapshot; id_assinante é só referência (a ação
+  // também fica na auditoria)
+  assinado_em      DateTime?
+  id_assinante     Int?
+  assinante_nome   String?
 
   @@index([id_usuario, periodo])
+  @@index([situacao, assinado_em])
   @@map("certificados")
 }
 

@@ -13,4 +13,10 @@ router.get('/resumo', painelController.resumo);
 router.get('/monitores', painelController.monitores);
 router.get('/auditoria', painelController.auditoria);
 
+// Certificados: assinar (com a coordenação no documento) e revogar com motivo
+router.get('/certificados', painelController.certificados);
+router.get('/certificados/:id/sessoes', painelController.sessoesDoCertificado);
+router.post('/certificados/:id/assinar', painelController.assinarCertificado);
+router.post('/certificados/:id/revogar', painelController.revogarCertificado);
+
 module.exports = router;

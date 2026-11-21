@@ -177,6 +177,6 @@ describe('Rotas /admin/*', () => {
             data: { ...base, codigo: 'VALIDO000000000000000000AA' }
         });
         r = await get(coord, '/admin/monitores');
-        expect(r.body.monitores[0].certificado).toBe('emitido');
+        expect(r.body.monitores[0].certificado).toBe('pendente');
     });
 });
