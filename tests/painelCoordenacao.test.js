@@ -205,7 +205,7 @@ describe('Indicadores do semestre', () => {
 });
 
 describe('Tabela de monitores', () => {
-    const opcoes = { fim: FIM, agora: AGORA, comCertificado: new Set([2]) };
+    const opcoes = { fim: FIM, agora: AGORA, comCertificado: new Map([[2, true]]) };
 
     it('uma linha por monitor, de mais horas para menos, com presença e certificado', () => {
         const vagas = [
@@ -229,7 +229,7 @@ describe('Tabela de monitores', () => {
             minutos: 180,
             alunos: 1,
             presenca: 0.5,
-            certificado: 'emitido',
+            certificado: 'assinado',
             disciplinas: ['Física I']
         });
         expect(segundo).toMatchObject({ id: 1, minutos: 90, presenca: 1, certificado: 'nenhum' });
@@ -325,10 +325,10 @@ describe('Serviço do painel', () => {
 
     it('monitores do semestre com quem já emitiu certificado', async () => {
         repo.buscarVagas.mockResolvedValue([vaga('2026-11-10T17:00:00.000Z')]);
-        repo.monitoresComCertificado.mockResolvedValue(new Set([1]));
+        repo.monitoresComCertificado.mockResolvedValue(new Map([[1, false]]));
         const r = await painelService.monitores(undefined, AGORA);
         expect(r).toHaveLength(1);
-        expect(r[0].certificado).toBe('emitido');
+        expect(r[0].certificado).toBe('pendente');
         expect(repo.monitoresComCertificado).toHaveBeenCalledWith('2026.2');
     });
 
@@ -351,7 +351,7 @@ describe('Rotas /admin/*', () => {
     beforeEach(() => {
         repo.buscarVagas.mockResolvedValue([]);
         repo.buscarAusencias.mockResolvedValue([]);
-        repo.monitoresComCertificado.mockResolvedValue(new Set());
+        repo.monitoresComCertificado.mockResolvedValue(new Map());
         repo.listarAuditoria.mockResolvedValue([]);
     });
 

@@ -220,6 +220,45 @@
       <p class="pp-carregando">Carregando o painel…</p>
     </main>
 
+    <!-- Conferir as sessões guardadas no certificado antes de assinar -->
+    <dialog class="pp-dlg" id="dlg-sessoes" aria-labelledby="ses-titulo">
+      <div class="pp-dlg-corpo">
+        <div class="pp-dlg-topo">
+          <div>
+            <h2 id="ses-titulo"></h2>
+            <p class="pp-sub">Sessões finalizadas com presença confirmada pelo aluno e pelo monitor, como estavam na emissão.</p>
+          </div>
+          <button type="button" class="pp-icone-btn" data-fechar aria-label="Fechar"><svg class="ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
+        </div>
+        <ul class="pn-sessoes" id="ses-lista"></ul>
+        <p class="pn-total" id="ses-total"></p>
+        <div class="pp-acoes">
+          <button type="button" class="pp-btn pp-btn-sec" data-fechar>Voltar</button>
+          <button type="button" class="pp-btn pp-btn-pri" id="ses-assinar">Assinar certificado</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Revogar um certificado (motivo obrigatório, vai no e-mail para o monitor) -->
+    <dialog class="pp-dlg" id="dlg-revogar" aria-labelledby="rev-titulo">
+      <form id="rev-form" novalidate>
+        <div>
+          <h2 id="rev-titulo">Revogar este certificado?</h2>
+          <p class="pp-sub" id="rev-sub"></p>
+        </div>
+        <div class="pp-campo">
+          <label class="pp-rotulo" for="rev-motivo">Motivo</label>
+          <textarea id="rev-motivo" rows="3" maxlength="300" placeholder="Ex.: sessões de 12/09 e 19/09 registradas sem alunos presentes."></textarea>
+          <p class="pp-erro" id="rev-erro" aria-live="polite"></p>
+        </div>
+        <p class="pp-aviso">O código passa a aparecer como revogado na verificação pública, e o monitor recebe um e-mail com o motivo. Não dá para desfazer, mas o monitor pode emitir outro certificado.</p>
+        <div class="pp-acoes">
+          <button type="button" class="pp-btn pp-btn-sec" data-fechar>Manter certificado</button>
+          <button type="submit" class="pp-btn pp-btn-perigo" id="rev-confirmar">Revogar</button>
+        </div>
+      </form>
+    </dialog>
+
     <div id="toast-container"></div>
     <script src="JS/config.js"></script>
     <script src="JS/api.js" defer></script>

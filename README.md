@@ -41,8 +41,8 @@ do horário e a plataforma registra pontos e horas de monitoria.
 | RF-018 / RN-017 | Confirmação do e-mail no cadastro                                                                   | Concluído    |
 | RN-001          | Cancelamento com pelo menos 24 h de antecedência                                                    | Concluído    |
 
-No RF-005, a revogação da declaração é feita pelo script `scripts/certificados.js` até existir
-o perfil Administrador. Os códigos a partir do RF-008 vêm dos planos de novas funcionalidades e
+No RF-005, a coordenação assina e revoga a declaração pelo painel; o script
+`scripts/certificados.js` continua para emergências. Os códigos a partir do RF-008 vêm dos planos de novas funcionalidades e
 entram no Documento de Especificação na versão seguinte à v7.2.
 
 ### Páginas (`Monipro_web/`)
@@ -196,6 +196,10 @@ indicam rota restrita a esse papel.
 | GET    | `/admin/resumo`                     | Indicadores e gráficos do semestre (`periodo` opcional) (coordenação)        |
 | GET    | `/admin/monitores`                  | Uma linha por monitor com vaga no semestre (coordenação)                     |
 | GET    | `/admin/auditoria`                  | Últimas ações registradas no painel (coordenação)                            |
+| GET    | `/admin/certificados`               | Certificados para assinar (`situacao=pendente`) ou assinados (coordenação)   |
+| GET    | `/admin/certificados/:id/sessoes`   | Sessões guardadas no certificado, para conferir (coordenação)                |
+| POST   | `/admin/certificados/:id/assinar`   | Assina o certificado e avisa o monitor (coordenação)                         |
+| POST   | `/admin/certificados/:id/revogar`   | Revoga com motivo e avisa o monitor (coordenação)                            |
 
 Um prefixo novo na API também precisa entrar no Nginx do servidor (homologação e produção) e
 em `e2e/pilha/gateway.conf`. Sem isso, o caminho cai no frontend.

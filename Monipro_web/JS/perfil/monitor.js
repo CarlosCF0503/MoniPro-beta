@@ -325,7 +325,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                         '</small></span><span class="cert-sit ' +
                         esc(c.situacao) +
                         '">' +
-                        esc(SITUACAO_CERT[c.situacao] || c.situacao) +
+                        // Plano 7: a válida que a coordenação já assinou
+                        esc(
+                            c.situacao === 'valido' && c.assinado_em
+                                ? 'Assinada'
+                                : SITUACAO_CERT[c.situacao] || c.situacao
+                        ) +
                         '</span><a class="cert-abrir" href="certificado.html?c=' +
                         encodeURIComponent(c.codigo) +
                         '">Abrir</a></li>'

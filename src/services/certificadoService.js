@@ -111,6 +111,7 @@ class CertificadoService {
             carga_minutos: c.carga_minutos,
             emitido_em: c.emitido_em,
             situacao: c.situacao,
+            ...assinatura(c),
             ...(c.situacao === 'revogado' ? { revogado_em: c.revogado_em } : {})
         };
     }
@@ -177,13 +178,19 @@ class CertificadoService {
     }
 }
 
+// Plano 7: quem da coordenação assinou e quando (nada, se ainda não foi assinado)
+function assinatura(c) {
+    return c.assinado_em ? { assinado_em: c.assinado_em, assinante: c.assinante_nome } : {};
+}
+
 function publico(c) {
     return {
         codigo: c.codigo,
         periodo: c.periodo,
         carga_minutos: c.carga_minutos,
         situacao: c.situacao,
-        emitido_em: c.emitido_em
+        emitido_em: c.emitido_em,
+        ...assinatura(c)
     };
 }
 

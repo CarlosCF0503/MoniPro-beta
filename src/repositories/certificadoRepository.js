@@ -62,7 +62,8 @@ class CertificadoRepository {
                 periodo: true,
                 carga_minutos: true,
                 situacao: true,
-                emitido_em: true
+                emitido_em: true,
+                assinado_em: true
             }
         });
     }
@@ -70,8 +71,8 @@ class CertificadoRepository {
         return await prisma.certificado.findUnique({ where: { codigo } });
     }
     // Só muda se ainda não estiver revogada: duas revogações ao mesmo tempo gravam uma só
-    async revogar(id, motivo, quando) {
-        const { count } = await prisma.certificado.updateMany({
+    async revogar(id, motivo, quando, db = prisma) {
+        const { count } = await db.certificado.updateMany({
             where: { id, situacao: { not: 'revogado' } },
             data: { situacao: 'revogado', revogado_em: quando, motivo_revogacao: motivo }
         });
