@@ -26,7 +26,8 @@ const {
     HORAS_TOKEN_REDEFINICAO,
     DIAS_CONTA_PENDENTE,
     DIAS_NOTIFICACOES,
-    DIAS_AUSENCIAS
+    DIAS_AUSENCIAS,
+    DIAS_RECURSOS
 } = require('../src/config/retencao');
 
 async function main() {
@@ -48,6 +49,9 @@ async function main() {
     );
     console.log(`  avisos por e-mail com mais de ${DIAS_NOTIFICACOES} dias: ${r.notificacoes}`);
     console.log(`  marcações de falta com mais de ${DIAS_AUSENCIAS} dias: ${r.ausencias}`);
+    console.log(
+        `  pedidos de revisão de falta (com atestado) com mais de ${DIAS_RECURSOS} dias: ${r.recursos}`
+    );
     if (!r.aplicado) console.log('Rode de novo com --aplicar para aplicar.');
 }
 

@@ -182,6 +182,7 @@ indicam rota restrita a esse papel.
 | PATCH  | `/agendamentos/:id/presenca`           | O aluno confirma que a sessão aconteceu                                      |
 | PATCH  | `/agendamentos/:id/concluir`           | O monitor confirma a presença do aluno (monitor)                             |
 | PATCH  | `/agendamentos/:id/ausencia`           | O monitor marca que o aluno faltou (monitor)                                 |
+| POST   | `/agendamentos/:id/recurso`            | O aluno pede revisão da falta com comprovante (aluno)                        |
 | GET    | `/perfil`                              | Dados do perfil                                                              |
 | GET    | `/perfil/agendamentos`                 | Inscrições exibidas no perfil                                                |
 | GET    | `/perfil/monitorias`                   | Vagas exibidas no perfil do monitor                                          |
@@ -206,6 +207,9 @@ indicam rota restrita a esse papel.
 | GET    | `/admin/faltas`                        | Faltas do semestre, inscrições sem presença e bloqueados (coordenação)       |
 | POST   | `/admin/agendamentos/:id/falta`        | Marca a falta, sem o prazo de 7 dias do monitor (coordenação)                |
 | POST   | `/admin/agendamentos/:id/anular-falta` | Anula a falta com justificativa (coordenação)                                |
+| GET    | `/admin/recursos/:id/arquivo`          | Comprovante de um pedido de revisão de falta (coordenação)                   |
+| POST   | `/admin/recursos/:id/aceitar`          | Aceita o pedido e anula a falta (coordenação)                                |
+| POST   | `/admin/recursos/:id/recusar`          | Recusa o pedido com motivo (coordenação)                                     |
 
 Um prefixo novo na API também precisa entrar no Nginx do servidor (homologação e produção) e
 em `e2e/pilha/gateway.conf`. Sem isso, o caminho cai no frontend.

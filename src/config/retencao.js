@@ -22,6 +22,10 @@ const DIAS_NOTIFICACOES = 90;
 // Plano 12: a marcação de falta (dado de comportamento) é apagada depois disto; a inscrição fica
 const DIAS_AUSENCIAS = 180;
 
+// Plano 7: pedido de revisão de falta com comprovante (atestado, dado de saúde): apagado inteiro
+// depois disto, contado do envio
+const DIAS_RECURSOS = 180;
+
 // Dados que substituem os pessoais numa conta anonimizada
 const NOME_ANONIMO = 'Usuário removido';
 const DOMINIO_ANONIMO = '@anonimo.invalid';
@@ -32,6 +36,7 @@ module.exports = {
     HORAS_TOKEN_REDEFINICAO,
     DIAS_CONTA_PENDENTE,
     DIAS_AUSENCIAS,
+    DIAS_RECURSOS,
     DIAS_NOTIFICACOES,
     NOME_ANONIMO,
     DOMINIO_ANONIMO

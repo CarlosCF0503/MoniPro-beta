@@ -374,6 +374,31 @@ MODELOS['disciplina-mesclada'] = (d) =>
         rodape: RODAPE_DISCIPLINA
     });
 
+// ---------- Plano 7: resposta ao pedido de revisão da falta ----------
+const RODAPE_RECURSO = 'Você recebe este e-mail porque pediu a revisão de uma falta no MoniPro.';
+
+MODELOS['recurso-aceito'] = (d) =>
+    aviso({
+        assunto: 'Seu pedido de revisão da falta foi aceito',
+        titulo: 'Falta anulada',
+        abertura: `Olá, ${primeiroNome(d.nome)}. A coordenação aceitou o pedido de revisão que você enviou em ${d.enviado_em}.`,
+        linhas: [['Resultado', 'A falta foi anulada e não conta mais para o bloqueio']],
+        depois: 'A monitoria continua no seu histórico, sem presença confirmada.',
+        acao: PERFIL,
+        rodape: RODAPE_RECURSO
+    });
+
+MODELOS['recurso-recusado'] = (d) =>
+    aviso({
+        assunto: 'Seu pedido de revisão da falta foi recusado',
+        titulo: 'Pedido recusado',
+        abertura: `Olá, ${primeiroNome(d.nome)}. A coordenação analisou o pedido de revisão que você enviou em ${d.enviado_em} e manteve a falta.`,
+        linhas: [['Motivo', d.motivo]],
+        depois: 'Se tiver dúvida, fale com a coordenação do curso.',
+        acao: PERFIL,
+        rodape: RODAPE_RECURSO
+    });
+
 function montar(modelo, dados) {
     const gerar = MODELOS[modelo];
     if (!gerar) throw new Error(`Modelo de e-mail desconhecido: ${modelo}`);

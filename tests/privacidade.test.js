@@ -23,7 +23,9 @@ jest.mock('../src/config/bancoDeDados', () => {
         monitoria: { updateMany: jest.fn(), count: jest.fn(), deleteMany: jest.fn() },
         tokenRedefinicao: { count: jest.fn(), deleteMany: jest.fn() },
         tokenConfirmacaoEmail: { count: jest.fn(), deleteMany: jest.fn() },
-        notificacao: { count: jest.fn(), deleteMany: jest.fn() }
+        notificacao: { count: jest.fn(), deleteMany: jest.fn() },
+        // Plano 7: pedidos de revisão de falta (com atestado)
+        recursoFalta: { count: jest.fn(), deleteMany: jest.fn() }
     };
     prisma.$transaction = jest.fn((fn) => fn(prisma));
     return prisma;
@@ -51,6 +53,8 @@ beforeEach(() => {
     prisma.tokenConfirmacaoEmail.count.mockResolvedValue(0);
     prisma.notificacao.count.mockResolvedValue(0);
     prisma.notificacao.deleteMany.mockResolvedValue({ count: 0 });
+    prisma.recursoFalta.count.mockResolvedValue(0);
+    prisma.recursoFalta.deleteMany.mockResolvedValue({ count: 0 });
     prisma.usuario.count.mockResolvedValue(0);
     prisma.usuario.deleteMany.mockResolvedValue({ count: 0 });
 });
@@ -238,6 +242,7 @@ describe('Rotina de retenção', () => {
             tokensConfirmacao: 6,
             notificacoes: 4,
             ausencias: 4,
+            recursos: 0,
             aplicado: false
         });
         expect(prisma.usuario.update).not.toHaveBeenCalled();
@@ -304,6 +309,7 @@ describe('Rotina de retenção', () => {
             tokensConfirmacao: 6,
             notificacoes: 4,
             ausencias: 1,
+            recursos: 0,
             aplicado: true
         });
         const anonimizadas = prisma.usuario.update.mock.calls.map(([arg]) => arg.where.id);

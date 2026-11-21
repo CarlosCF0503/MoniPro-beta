@@ -55,6 +55,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- 3. Ícones (os mesmos do perfil do monitor) ---
     const ICONES = {
+        // Plano 7: comprovante anexado ao pedido de revisão da falta
+        doc: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/>',
         relogio: '<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>',
         local: '<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
         video: '<rect x="2" y="6" width="14" height="12" rx="2"/><path d="m22 8-6 4 6 4V8z"/>',
@@ -114,6 +116,51 @@ document.addEventListener('DOMContentLoaded', async () => {
         ausente: ['pill-perigo', 'x', 'Falta registrada'],
         semLugar: ['pill-perigo', 'x', 'Não abriu lugar']
     };
+    // Plano 7: pedido de revisão da falta (recurso) com atestado, até 30 dias depois da marcação
+    const DIAS_RECURSO = 30;
+    const MAX_ANEXO = 5 * 1024 * 1024;
+    const TIPOS_ANEXO = ['application/pdf', 'image/jpeg', 'image/png'];
+    function situacaoRecurso(i) {
+        if (i.recurso && i.recurso.status === 'pendente') return 'pendente';
+        if (i.recurso && i.recurso.status === 'recusado') return 'recusado';
+        if (!i.ausenteEm) return 'fora';
+        const limite = new Date(i.ausenteEm.getTime() + DIAS_RECURSO * 24 * 3600e3);
+        return S.agora <= limite ? 'pode' : 'fora';
+    }
+    function limiteRecurso(i) {
+        const limite = new Date(i.ausenteEm.getTime() + DIAS_RECURSO * 24 * 3600e3);
+        return D.diaMes(limite);
+    }
+    function botaoRecurso(i) {
+        return (
+            '<button type="button" class="pp-btn pp-btn-sec" data-acao="recurso" data-id="' +
+            esc(i.id) +
+            '">' +
+            icone('doc', 14) +
+            'Pedir revisão da falta</button>'
+        );
+    }
+    function notaRecurso(i) {
+        const r = situacaoRecurso(i);
+        if (r === 'pendente')
+            return (
+                '<span class="nota-24h nota-recurso">' +
+                icone('relogio', 12) +
+                'Revisão pedida em ' +
+                esc(D.diaMes(new Date(i.recurso.criado_em))) +
+                ' · em análise pela coordenação</span>'
+            );
+        if (r === 'recusado')
+            return (
+                '<span class="nota-24h nota-recurso recusado">' +
+                icone('x', 12) +
+                'Revisão recusada: ' +
+                esc(i.recurso.motivo_decisao || 'sem motivo informado') +
+                '</span>'
+            );
+        return '';
+    }
+
     function etiqueta(i) {
         const sit = situacao(i);
         const [classe, ico, texto] = SITUACOES[sit];
@@ -155,8 +202,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                       D.diaMes(lim) +
                       ' às ' +
                       D.hora(lim) +
-                      '.'
-                : 'O monitor registrou falta nesta monitoria.';
+                      '.' +
+                      (situacaoRecurso(i) === 'pode'
+                          ? ' Se você faltou por um motivo justificado, peça a revisão à coordenação com o atestado.'
+                          : '')
+                : situacaoRecurso(i) === 'pode'
+                  ? 'O monitor registrou falta. Se foi por um motivo justificado, peça a revisão à coordenação com o atestado até ' +
+                    limiteRecurso(i) +
+                    '.'
+                  : 'O monitor registrou falta nesta monitoria.';
         }
         if (sit === 'fila')
             return (
@@ -233,6 +287,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (sit === 'confirmar')
             return '<div class="vg-acoes">' + botaoConfirmar(i, 'pp-btn pp-btn-pri') + '</div>';
         if (sit === 'fila') return '<div class="vg-acoes">' + botaoCancelar(i) + '</div>';
+        if (sit === 'ausente')
+            return (
+                '<div class="vg-acoes">' +
+                (situacaoRecurso(i) === 'pode' ? botaoRecurso(i) : notaRecurso(i)) +
+                '</div>'
+            );
         if (sit === 'antes')
             return (
                 '<div class="vg-acoes">' +
@@ -820,6 +880,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 '<div class="pp-det-acoes">' + botaoConfirmar(i, 'pp-btn pp-btn-pri') + '</div>';
         else if (sit === 'fila')
             acoesDet = '<div class="pp-det-acoes">' + botaoCancelar(i) + '</div>';
+        else if (sit === 'ausente')
+            acoesDet =
+                '<div class="pp-det-acoes">' +
+                (situacaoRecurso(i) === 'pode' ? botaoRecurso(i) : notaRecurso(i)) +
+                '</div>';
         else if (sit === 'antes')
             acoesDet =
                 '<div class="pp-det-acoes">' +
@@ -973,12 +1038,87 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // Plano 7: pedir revisão da falta com o atestado (PDF, JPG ou PNG, até 5 MB)
+    const dlgRec = document.getElementById('dlg-recurso');
+    function abrirRecurso(i) {
+        S.alvo = i;
+        document.getElementById('rec-sub').textContent =
+            i.disciplina + ' · ' + D.diaCurto(i.inicio) + ' às ' + D.hora(i.inicio);
+        document.getElementById('rec-justificativa').value = '';
+        document.getElementById('rec-arquivo').value = '';
+        document.getElementById('rec-erro').textContent = '';
+        dlgRec.showModal();
+    }
+    const lerBase64 = (arquivo) =>
+        new Promise((ok, falha) => {
+            const leitor = new FileReader();
+            leitor.onload = () => ok(String(leitor.result).split(',')[1] || '');
+            leitor.onerror = () => falha(new Error('Não foi possível ler o arquivo.'));
+            leitor.readAsDataURL(arquivo);
+        });
+    document.getElementById('rec-form').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const i = S.alvo;
+        if (!i) return;
+        const erro = document.getElementById('rec-erro');
+        const justificativa = document.getElementById('rec-justificativa').value.trim();
+        const arquivo = document.getElementById('rec-arquivo').files[0];
+        if (justificativa.length < 10) {
+            erro.textContent = 'Explique o motivo da falta com pelo menos 10 caracteres.';
+            return;
+        }
+        if (!arquivo) {
+            erro.textContent = 'Anexe o atestado ou outro comprovante.';
+            return;
+        }
+        if (!TIPOS_ANEXO.includes(arquivo.type)) {
+            erro.textContent = 'O comprovante precisa ser PDF, JPG ou PNG.';
+            return;
+        }
+        if (arquivo.size > MAX_ANEXO) {
+            erro.textContent =
+                'O arquivo passa de 5 MB. Tire a foto com menos resolução ou envie em PDF.';
+            return;
+        }
+        const botao = document.getElementById('rec-enviar');
+        botao.disabled = true;
+        try {
+            const dados = await chamadaApi('/agendamentos/' + i.id + '/recurso', {
+                method: 'POST',
+                body: JSON.stringify({
+                    justificativa,
+                    arquivo: {
+                        nome: arquivo.name,
+                        tipo: arquivo.type,
+                        conteudo: await lerBase64(arquivo)
+                    }
+                })
+            });
+            if (dados.statusHttp === 401) return sessaoExpirada();
+            if (!dados.success) {
+                erro.textContent = mensagemDaApi(dados, 'Não foi possível enviar o pedido.');
+                return;
+            }
+            i.recurso = dados.recurso;
+            dlgRec.close();
+            showToast(
+                'Pedido enviado. A coordenação analisa e você recebe a resposta por e-mail.',
+                'success'
+            );
+            render();
+        } catch (e) {
+            erro.textContent = e.message || 'Não foi possível enviar o pedido.';
+        } finally {
+            botao.disabled = false;
+        }
+    });
+
     // Fechar pelos botões "Voltar"/X e devolver o foco a quem abriu
     document.addEventListener('click', (ev) => {
         const b = ev.target.closest('.pp-dlg [data-fechar]');
         if (b) b.closest('dialog').close();
     });
-    [dlgCan, dlgDet].forEach((d) =>
+    [dlgCan, dlgDet, dlgRec].forEach((d) =>
         d.addEventListener('close', () => {
             if (document.querySelector('.pp-dlg[open]')) return;
             if (S.gatilho && document.body.contains(S.gatilho)) S.gatilho.focus();
@@ -1025,6 +1165,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         else S.gatilho = b;
         if (acao === 'detalhes') abrirDetalhes(i);
         else if (acao === 'cancelar') abrirCancelar(i);
+        else if (acao === 'recurso') abrirRecurso(i);
     }
     raiz.addEventListener('click', aoAgir);
     dlgDet.addEventListener('click', aoAgir);

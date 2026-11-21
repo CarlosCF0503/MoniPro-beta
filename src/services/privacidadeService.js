@@ -5,6 +5,7 @@
 const crypto = require('node:crypto');
 const bcrypt = require('bcryptjs');
 const privacidadeRepository = require('../repositories/privacidadeRepository');
+const recursoRepository = require('../repositories/recursoRepository');
 const notificacaoRepository = require('../repositories/notificacaoRepository');
 const listaEsperaService = require('./listaEsperaService');
 const {
@@ -13,7 +14,8 @@ const {
     HORAS_TOKEN_REDEFINICAO,
     DIAS_CONTA_PENDENTE,
     DIAS_NOTIFICACOES,
-    DIAS_AUSENCIAS
+    DIAS_AUSENCIAS,
+    DIAS_RECURSOS
 } = require('../config/retencao');
 const { ErroValidacao, ErroNaoEncontrado } = require('../utils/erros');
 
@@ -71,6 +73,7 @@ class PrivacidadeService {
             agora.getTime() - DIAS_NOTIFICACOES * 24 * 60 * 60 * 1000
         );
         const limiteAusencias = new Date(agora.getTime() - DIAS_AUSENCIAS * 24 * 60 * 60 * 1000);
+        const limiteRecursos = new Date(agora.getTime() - DIAS_RECURSOS * 24 * 60 * 60 * 1000);
 
         const contas = await privacidadeRepository.buscarContasParadas(limiteConta);
         if (!aplicar) {
@@ -82,6 +85,7 @@ class PrivacidadeService {
                 await privacidadeRepository.contarTokensConfirmacaoAntigos(limitePendente);
             const notificacoes = await notificacaoRepository.contarAntigas(limiteNotificacoes);
             const ausencias = await privacidadeRepository.contarAusenciasAntigas(limiteAusencias);
+            const recursos = await recursoRepository.contarAntigos(limiteRecursos);
             return {
                 contasParadas: contas.length,
                 ...antigo,
@@ -90,6 +94,7 @@ class PrivacidadeService {
                 tokensConfirmacao,
                 notificacoes,
                 ausencias,
+                recursos,
                 aplicado: false
             };
         }
@@ -109,6 +114,7 @@ class PrivacidadeService {
             await privacidadeRepository.apagarTokensConfirmacaoAntigos(limitePendente);
         const notificacoes = await notificacaoRepository.apagarAntigas(limiteNotificacoes);
         const ausencias = await privacidadeRepository.apagarAusenciasAntigas(limiteAusencias);
+        const recursos = await recursoRepository.apagarAntigos(limiteRecursos);
         return {
             contasParadas: contas.length,
             ...apagado,
@@ -117,6 +123,7 @@ class PrivacidadeService {
             tokensConfirmacao,
             notificacoes,
             ausencias,
+            recursos,
             aplicado: true
         };
     }

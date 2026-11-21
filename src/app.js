@@ -61,6 +61,9 @@ const limiteGeral = rateLimit({
     message: { erro: 'Muitas requisições. Aguarde um minuto e tente novamente.' }
 });
 app.use(limiteGeral);
+// Plano 7: o comprovante do pedido de revisão de falta vem em base64 (até 5 MB de arquivo); só
+// esta rota aceita um corpo maior. As outras seguem com o limite padrão (100 KB).
+app.use('/agendamentos/:id/recurso', express.json({ limit: '7mb' }));
 app.use(express.json());
 
 // Tarefa 17: health check para monitoramento externo. Rota pública, sem dado sensível. Fica

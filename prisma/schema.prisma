@@ -136,6 +136,8 @@ model Agendamento {
   // Plano 12 (RN-016): o monitor marcou que o aluno faltou. Exclui a presença do monitor;
   // apagado pela retenção depois de 180 dias (LGPD)
   ausente_em           DateTime?
+  // Plano 7: pedido de revisão da falta (recurso), um por inscrição
+  recurso              RecursoFalta?
 
   id_monitoria Int
   monitoria    Monitoria         @relation(fields: [id_monitoria], references: [id])
@@ -278,4 +280,35 @@ model Auditoria {
 
   @@index([criado_em])
   @@map("auditoria")
+}
+
+// Plano 7: o aluno pede revisão da falta com um comprovante (atestado). Dado de saúde (LGPD,
+// art. 11): só a coordenação baixa o arquivo, e a rotina de retenção apaga o pedido 180 dias
+// depois do envio. Sai junto com a inscrição (cascade) e com a exclusão da conta do aluno.
+enum StatusRecurso {
+  pendente
+  aceito
+  recusado
+}
+
+model RecursoFalta {
+  id              Int           @id @default(autoincrement())
+  id_agendamento  Int           @unique
+  agendamento     Agendamento   @relation(fields: [id_agendamento], references: [id], onDelete: Cascade)
+  id_aluno        Int
+  justificativa   String        @db.VarChar(500)
+  arquivo_nome    String        @db.VarChar(120)
+  arquivo_tipo    String        @db.VarChar(30)
+  arquivo_tamanho Int
+  arquivo         Bytes
+  status          StatusRecurso @default(pendente)
+  motivo_decisao  String?       @db.VarChar(300)
+  id_decisor      Int?
+  criado_em       DateTime      @default(now())
+  decidido_em     DateTime?
+
+  @@index([status])
+  @@index([id_aluno])
+  @@index([criado_em])
+  @@map("recursos_falta")
 }

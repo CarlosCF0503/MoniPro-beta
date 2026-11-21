@@ -313,6 +313,26 @@
       </form>
     </dialog>
 
+    <!-- Recusar um pedido de revisão de falta (o aluno recebe o motivo por e-mail) -->
+    <dialog class="pp-dlg" id="dlg-recusar" aria-labelledby="rcs-titulo">
+      <form id="rcs-form" novalidate>
+        <div>
+          <h2 id="rcs-titulo">Recusar o pedido de revisão?</h2>
+          <p class="pp-sub" id="rcs-sub"></p>
+        </div>
+        <div class="pp-campo">
+          <label class="pp-rotulo" for="rcs-motivo">Motivo</label>
+          <textarea id="rcs-motivo" rows="3" maxlength="300" placeholder="Ex.: o atestado é de outra data (15/11)."></textarea>
+          <p class="pp-erro" id="rcs-erro" aria-live="polite"></p>
+        </div>
+        <p class="nota-24h nota-bloco">A falta continua contando. O aluno recebe o motivo por e-mail e vê a resposta no perfil.</p>
+        <div class="pp-acoes">
+          <button type="button" class="pp-btn pp-btn-sec" data-fechar>Voltar</button>
+          <button type="submit" class="pp-btn pp-btn-perigo" id="rcs-confirmar">Recusar pedido</button>
+        </div>
+      </form>
+    </dialog>
+
     <div id="toast-container"></div>
     <script src="JS/config.js"></script>
     <script src="JS/api.js" defer></script>
