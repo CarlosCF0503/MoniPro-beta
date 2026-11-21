@@ -251,6 +251,59 @@
      * conflito de horário com outra vaga do mesmo monitor no dia (só o front verifica hoje).
      * @returns {object} campo → mensagem; vazio quando está tudo certo.
      */
+    // Plano 9 (RF-014): vaga que se repete toda semana até um dia, no máximo 16 de uma vez.
+    // Mesmas regras da API (src/utils/recorrencia.js).
+    const MAX_OCORRENCIAS = 16;
+
+    /** Datas da série: a cada 7 dias, mesmo horário, até o dia `ate` ("AAAA-MM-DD"). Para em 17. */
+    function ocorrencias(inicio, ate) {
+        const lista = [];
+        for (let k = 0; lista.length <= MAX_OCORRENCIAS; k += 1) {
+            const d = new Date(inicio);
+            d.setDate(d.getDate() + 7 * k);
+            if (chave(d) > ate) break;
+            lista.push(d);
+        }
+        return lista;
+    }
+
+    /** Dia que fica `semanas` semanas depois de `k`, como chave. */
+    function somarSemanas(k, semanas) {
+        const d = deChave(k);
+        d.setDate(d.getDate() + 7 * semanas);
+        return chave(d);
+    }
+
+    /**
+     * Série do formulário: datas, as que serão puladas (o monitor já tem vaga no mesmo horário) e
+     * as que serão criadas. null quando não repete ou falta dia, horário ou data final.
+     */
+    function serieDoForm(form, minhas) {
+        if (!form.repetir || !form.ate || !form.hora) return null;
+        const inicio = dataDoFormulario(form.dia, form.hora);
+        if (!inicio || form.ate < form.dia) return null;
+        const datas = ocorrencias(inicio, form.ate);
+        const ocupadas = new Set((minhas || []).map((v) => v.inicio.getTime()));
+        return {
+            datas,
+            puladas: datas.filter((d) => ocupadas.has(d.getTime())),
+            criadas: datas.filter((d) => !ocupadas.has(d.getTime()))
+        };
+    }
+
+    /** "24/11" */
+    function diaMes(d) {
+        return (
+            String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0')
+        );
+    }
+
+    /** "Toda terça-feira" / "Todo sábado" */
+    function todaSemana(d) {
+        const nome = d.toLocaleDateString('pt-BR', { weekday: 'long' });
+        return (d.getDay() === 0 || d.getDay() === 6 ? 'Todo ' : 'Toda ') + nome;
+    }
+
     function validarVaga(form, agora, minhasNoDia) {
         const erros = {};
         const data = dataDoFormulario(form.dia, form.hora);
@@ -271,6 +324,17 @@
                 erros.local = 'Máximo de ' + LIMITE_LOCAL + ' caracteres.';
         }
 
+        if (form.repetir) {
+            if (!form.ate) erros.ate = 'Escolha até quando a vaga se repete.';
+            else if (form.dia && form.ate < form.dia)
+                erros.ate = 'A data final não pode ser antes do dia da vaga.';
+            else if (data && ocorrencias(data, form.ate).length > MAX_OCORRENCIAS)
+                erros.ate =
+                    'No máximo ' +
+                    MAX_OCORRENCIAS +
+                    ' vagas de uma vez. Escolha uma data final mais próxima.';
+        }
+
         if (String(form.descricao || '').length > LIMITE_DESCRICAO)
             erros.descricao = 'Máximo de ' + LIMITE_DESCRICAO + ' caracteres.';
 
@@ -285,6 +349,12 @@
     }
 
     const api = {
+        MAX_OCORRENCIAS,
+        ocorrencias,
+        somarSemanas,
+        serieDoForm,
+        diaMes,
+        todaSemana,
         MESES,
         DIAS_SEMANA,
         LIMITE_DESCRICAO,

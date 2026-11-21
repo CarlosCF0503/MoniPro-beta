@@ -21,11 +21,20 @@ function validarFiltros(query) {
 
 class MonitoriaController {
     async criar(req, res) {
-        const monitoria = await monitoriaService.criar({
+        const resultado = await monitoriaService.criar({
             ...req.body,
             id_monitor: req.usuario.id
         });
-        res.status(201).json({ success: true, monitoria });
+        // Plano 9: na série, a resposta traz as vagas criadas e as datas puladas
+        if (resultado.criadas) {
+            return res.status(201).json({
+                success: true,
+                monitoria: resultado.criadas[0],
+                criadas: resultado.criadas,
+                puladas: resultado.puladas
+            });
+        }
+        res.status(201).json({ success: true, monitoria: resultado });
     }
 
     async listar(req, res) {
@@ -91,6 +100,21 @@ class MonitoriaController {
             mensagem: `Você entrou na lista de espera. Sua posição: ${posicao}º.`,
             agendamento,
             posicao
+        });
+    }
+
+    // Plano 9: "Cancelar esta e as próximas" da série
+    async cancelarProximas(req, res) {
+        const r = await monitoriaService.cancelarProximas(
+            parseInt(req.params.id, 10),
+            req.usuario.id
+        );
+        const n = r.canceladas.length;
+        res.json({
+            success: true,
+            mensagem: n === 1 ? '1 vaga cancelada.' : `${n} vagas canceladas.`,
+            canceladas: r.canceladas,
+            mantidas: r.mantidas
         });
     }
 

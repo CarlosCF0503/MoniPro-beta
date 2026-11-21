@@ -4,24 +4,58 @@ const prisma = require('../config/bancoDeDados');
 const { OCUPA_LUGAR, NA_FILA } = require('../utils/statusInscricao');
 const { FUSO_TURNOS, TURNOS } = require('../config/turnos');
 
+// Campos gravados ao criar uma vaga (avulsa ou de uma série)
+function dadosDaVaga(dados) {
+    return {
+        id_disciplina: Number(dados.id_disciplina),
+        id_monitor: dados.id_monitor,
+        local: dados.local,
+        descricao: dados.descricao,
+        status: dados.status || 'ativa',
+        horario: dados.horario,
+        // Plano 11: presencial ou on-line (com o link da sala)
+        modalidade: dados.modalidade || 'presencial',
+        link: dados.modalidade === 'online' ? dados.link : null,
+        // Plano 9: série semanal
+        ...(dados.id_serie && { id_serie: dados.id_serie }),
+        // Omitido => o banco aplica o default (1)
+        ...(dados.capacidade !== undefined && { capacidade: dados.capacidade })
+    };
+}
+
 const temFiltro = (f = {}) => Boolean(f.periodo || f.monitor || f.livres);
 
 class MonitoriaRepository {
     async criar(dados) {
-        return await prisma.monitoria.create({
-            data: {
-                id_disciplina: Number(dados.id_disciplina),
-                id_monitor: dados.id_monitor,
-                local: dados.local,
-                descricao: dados.descricao,
-                status: dados.status || 'ativa',
-                horario: dados.horario,
-                // Plano 11: presencial ou on-line (com o link da sala)
-                modalidade: dados.modalidade || 'presencial',
-                link: dados.modalidade === 'online' ? dados.link : null,
-                // Omitido => o banco aplica o default (1)
-                ...(dados.capacidade !== undefined && { capacidade: dados.capacidade })
-            }
+        return await prisma.monitoria.create({ data: dadosDaVaga(dados) });
+    }
+
+    // Plano 9: as vagas de uma série, numa transação só. Devolve as linhas criadas.
+    async criarSerie(dados, horarios, idSerie) {
+        return await prisma.$transaction((tx) =>
+            tx.monitoria.createManyAndReturn({
+                data: horarios.map((horario) =>
+                    dadosDaVaga({ ...dados, horario, id_serie: idSerie })
+                )
+            })
+        );
+    }
+
+    // Plano 9: horários (entre os informados) em que o monitor já tem vaga ativa
+    async horariosOcupadosDoMonitor(idMonitor, horarios) {
+        const linhas = await prisma.monitoria.findMany({
+            where: { id_monitor: idMonitor, status: 'ativa', horario: { in: horarios } },
+            select: { horario: true }
+        });
+        return linhas.map((l) => l.horario);
+    }
+
+    // Plano 9: vagas ativas da série a partir de um horário (inclusive), em ordem
+    async buscarDaSerieAPartirDe(idSerie, horario) {
+        return await prisma.monitoria.findMany({
+            where: { id_serie: idSerie, status: 'ativa', horario: { gte: horario } },
+            select: { id: true, horario: true },
+            orderBy: { horario: 'asc' }
         });
     }
 
