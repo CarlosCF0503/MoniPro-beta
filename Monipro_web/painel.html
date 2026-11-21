@@ -259,6 +259,25 @@
       </form>
     </dialog>
 
+    <!-- Mesclar uma disciplina pendente com uma já aprovada -->
+    <dialog class="pp-dlg" id="dlg-mesclar" aria-labelledby="mes-titulo">
+      <form id="mes-form">
+        <div>
+          <h2 id="mes-titulo">Mesclar disciplina</h2>
+          <p class="pp-sub" id="mes-sub"></p>
+        </div>
+        <div class="pp-campo">
+          <label class="pp-rotulo" for="mes-destino">Juntar com</label>
+          <select id="mes-destino"></select>
+        </div>
+        <p class="nota-24h nota-bloco">As vagas e os pontos da disciplina pedida passam para a escolhida, e o pedido some da lista. O monitor que cadastrou recebe um aviso por e-mail.</p>
+        <div class="pp-acoes">
+          <button type="button" class="pp-btn pp-btn-sec" data-fechar>Voltar</button>
+          <button type="submit" class="pp-btn pp-btn-pri" id="mes-confirmar">Mesclar</button>
+        </div>
+      </form>
+    </dialog>
+
     <div id="toast-container"></div>
     <script src="JS/config.js"></script>
     <script src="JS/api.js" defer></script>

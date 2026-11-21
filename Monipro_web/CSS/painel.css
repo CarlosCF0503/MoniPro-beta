@@ -15,7 +15,7 @@
 .pn select:focus-visible, .pn button:focus-visible { outline: 3px solid var(--navy-2); outline-offset: 2px; }
 
 /* ---------- precisa da coordenação ---------- */
-.pn .pn-pend { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.pn .pn-pend { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .pagina-perfil .pn-pend-item {
     display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; gap: 12px;
     padding: 14px 16px; text-align: left; border: 1px solid var(--line); border-radius: 15px;
@@ -145,6 +145,8 @@
 .pp-dlg .pn-sessoes small { color: var(--slate); }
 .pp-dlg .pn-sessoes .h { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .pp-dlg textarea { width: 100%; padding: 10px 12px; border: 1.5px solid var(--line-2); border-radius: 10px; font: inherit; font-size: 14px; color: var(--navy); background: var(--white); resize: vertical; }
+.pp-dlg select { width: 100%; min-height: 44px; padding: 0 12px; border: 1.5px solid var(--line-2); border-radius: 10px; font: inherit; font-size: 14px; color: var(--navy); background: var(--white); }
+.pp-dlg select:focus-visible,
 .pp-dlg textarea:focus-visible { outline: 3px solid var(--navy-2); outline-offset: 1px; }
 .pp-dlg .pn-total { display: flex; justify-content: space-between; font-size: 13px; color: var(--slate-ink); }
 .pp-dlg .pn-total b { color: var(--navy); }
@@ -152,6 +154,7 @@
 @media (max-width: 999px) {
     .pn .pn-graficos { grid-template-columns: minmax(0, 1fr); }
     .pn .pn-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .pn .pn-pend { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 699px) {
     .pn .pn-desk { padding: 16px 16px 40px; gap: 16px; }

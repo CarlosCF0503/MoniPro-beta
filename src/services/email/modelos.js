@@ -344,6 +344,36 @@ MODELOS['certificado-revogado'] = (d) =>
         rodape: RODAPE_CERTIFICADO
     });
 
+// ---------- Plano 7: disciplina criada pelo monitor, revisada pela coordenação ----------
+const VAGAS = { texto: 'Ver minhas vagas', pagina: 'perfil_monitor.html' };
+const RODAPE_DISCIPLINA = 'Você recebe este e-mail porque cadastrou uma disciplina no MoniPro.';
+
+MODELOS['disciplina-aprovada'] = (d) =>
+    aviso({
+        assunto: `Disciplina aprovada: ${d.disciplina}`,
+        titulo: 'Disciplina aprovada',
+        abertura: `Olá, ${primeiroNome(d.nome)}. A coordenação aprovou a disciplina que você cadastrou.`,
+        linhas: [['Disciplina', d.disciplina]],
+        depois: 'Os alunos já veem a disciplina e as vagas que você criou nela.',
+        acao: VAGAS,
+        rodape: RODAPE_DISCIPLINA
+    });
+
+MODELOS['disciplina-mesclada'] = (d) =>
+    aviso({
+        assunto: `Sua disciplina "${d.disciplina}" passou para "${d.destino}"`,
+        titulo: 'Disciplina juntada com outra',
+        abertura: `Olá, ${primeiroNome(d.nome)}. A disciplina que você cadastrou já existia com outro nome, e a coordenação juntou as duas.`,
+        linhas: [
+            ['Você cadastrou', d.disciplina],
+            ['Ficou como', d.destino],
+            ['Vagas movidas', String(d.vagas)]
+        ],
+        depois: 'Suas vagas continuam valendo, agora na disciplina acima. Os inscritos não precisam fazer nada.',
+        acao: VAGAS,
+        rodape: RODAPE_DISCIPLINA
+    });
+
 function montar(modelo, dados) {
     const gerar = MODELOS[modelo];
     if (!gerar) throw new Error(`Modelo de e-mail desconhecido: ${modelo}`);

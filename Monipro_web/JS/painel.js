@@ -27,6 +27,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         resumo: null,
         monitores: [],
         certificados: { pendente: [], assinado: [] },
+        disciplinas: [],
+        aprovadas: [],
         auditoria: []
     };
 
@@ -59,6 +61,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         '</svg>';
     const ICO = {
         cert: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="m9 15 2 2 4-4"/>',
+        livro: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
         alerta: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/>',
         bloqueio:
             '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
@@ -75,14 +78,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         raiz.setAttribute('aria-busy', 'true');
         const q = S.periodo ? '?periodo=' + encodeURIComponent(S.periodo) : '';
         const ps = q ? '&' + q.slice(1) : '';
-        let r, m, a, cp, ca;
+        let r, m, a, cp, ca, di;
         try {
-            [r, m, a, cp, ca] = await Promise.all([
+            [r, m, a, cp, ca, di] = await Promise.all([
                 chamadaApi('/admin/resumo' + q),
                 chamadaApi('/admin/monitores' + q),
                 chamadaApi('/admin/auditoria?limit=20'),
                 chamadaApi('/admin/certificados?situacao=pendente'),
-                chamadaApi('/admin/certificados?situacao=assinado' + ps)
+                chamadaApi('/admin/certificados?situacao=assinado' + ps),
+                chamadaApi('/admin/disciplinas')
             ]);
         } catch {
             r = { success: false, erro: 'Não foi possível conectar ao servidor.' };
@@ -103,6 +107,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             pendente: (cp && cp.certificados) || [],
             assinado: (ca && ca.certificados) || []
         };
+        S.disciplinas = (di && di.disciplinas) || [];
+        S.aprovadas = (di && di.aprovadas) || [];
         render();
     }
 
@@ -111,6 +117,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const baixa = S.monitores.filter(presencaBaixa).length;
         const bloq = S.resumo.inscricoes.bloqueados;
         const cert = S.certificados.pendente.length;
+        const disc = S.disciplinas.length;
         const itens = [
             [
                 'certificados',
@@ -118,6 +125,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 'Certificados para assinar',
                 cert ? 'monitores esperando a assinatura' : 'nenhum esperando assinatura',
                 cert
+            ],
+            [
+                'disciplinas',
+                ICO.livro,
+                'Disciplinas para revisar',
+                disc
+                    ? 'criadas por monitores, ainda ocultas para alunos'
+                    : 'nenhuma esperando revisão',
+                disc
             ],
             [
                 'monitores',
@@ -728,6 +744,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         );
     }
 
+    function abaDisciplinas() {
+        return (
+            '<p class="pn-dica">Disciplinas cadastradas por monitores ficam ocultas para os alunos até a revisão. Aprovar publica a disciplina. Mesclar junta com uma que já existe: as vagas e os pontos passam para ela.</p>' +
+            tabela(
+                [['Nome pedido'], ['Pedido por'], ['Parecida com'], ['Vagas', 'num'], ['', 'num']],
+                S.disciplinas.map(
+                    (d) =>
+                        '<tr><td><b>' +
+                        esc(d.nome) +
+                        '</b><small>em ' +
+                        dataCurta(d.criada_em) +
+                        '</small></td><td>' +
+                        esc(d.criador || '—') +
+                        '</td><td>' +
+                        (d.parecida
+                            ? '<span class="pill pill-atencao">' + esc(d.parecida.nome) + '</span>'
+                            : '<small>nenhuma</small>') +
+                        '</td><td class="num">' +
+                        d.vagas +
+                        '</td><td><div class="pn-acoes">' +
+                        '<button type="button" class="pp-btn pp-btn-sec pp-btn-p" data-pn="mesclar" data-id="' +
+                        d.id +
+                        '">' +
+                        ico(ICO.juntar, 16) +
+                        'Mesclar</button><button type="button" class="pp-btn pp-btn-pri pp-btn-p" data-pn="aprovar" data-id="' +
+                        d.id +
+                        '">Aprovar</button></div></td></tr>'
+                ),
+                'Nenhuma disciplina esperando revisão.'
+            )
+        );
+    }
+
     function abaAtividade() {
         const tipo = {
             criar_coordenador: [ICO.pessoa, ''],
@@ -769,11 +818,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         const pend = S.certificados.pendente.length;
         const abas = [
             ['certificados', 'Certificados', pend, pend > 0],
+            [
+                'disciplinas',
+                'Disciplinas pendentes',
+                S.disciplinas.length,
+                S.disciplinas.length > 0
+            ],
             ['monitores', 'Monitores', S.monitores.length, baixa > 0],
             ['atividade', 'Atividade', null, false]
         ];
         const corpo = {
             certificados: abaCertificados,
+            disciplinas: abaDisciplinas,
             monitores: abaMonitores,
             atividade: abaAtividade
         }[S.aba]();
@@ -988,6 +1044,72 @@ document.addEventListener('DOMContentLoaded', async () => {
         render();
     });
 
+    // ---------- disciplinas: aprovar e mesclar ----------
+    const dlgMes = document.getElementById('dlg-mesclar');
+
+    function abrirMesclar(d) {
+        document.getElementById('mes-sub').textContent =
+            '"' +
+            d.nome +
+            '"' +
+            (d.criador ? ', pedida por ' + d.criador : '') +
+            ' · ' +
+            d.vagas +
+            (d.vagas === 1 ? ' vaga' : ' vagas');
+        const sel = document.getElementById('mes-destino');
+        sel.innerHTML = S.aprovadas
+            .map(
+                (x) =>
+                    '<option value="' +
+                    x.id +
+                    '"' +
+                    (d.parecida && x.id === d.parecida.id ? ' selected' : '') +
+                    '>' +
+                    esc(x.nome) +
+                    '</option>'
+            )
+            .join('');
+        document.getElementById('mes-confirmar').dataset.id = d.id;
+        dlgMes.showModal();
+    }
+
+    async function aprovarDisciplina(id, botao) {
+        const d = S.disciplinas.find((x) => x.id === id);
+        if (!d) return;
+        const r = await executar(
+            botao,
+            '/admin/disciplinas/' + id + '/aprovar',
+            null,
+            '"' + d.nome + '" aprovada. Os alunos já veem a disciplina e as vagas.'
+        );
+        if (!r) return;
+        S.disciplinas = S.disciplinas.filter((x) => x.id !== id);
+        S.aprovadas = S.aprovadas
+            .concat({ id: d.id, nome: d.nome })
+            .sort((a, b) => a.nome.localeCompare(b.nome));
+        render();
+    }
+
+    document.getElementById('mes-form').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const b = document.getElementById('mes-confirmar');
+        const id = Number(b.dataset.id);
+        const destino = Number(document.getElementById('mes-destino').value);
+        const alvo = S.aprovadas.find((x) => x.id === destino);
+        const r = await executar(
+            b,
+            '/admin/disciplinas/' + id + '/mesclar',
+            { id_destino: destino },
+            'Disciplinas mescladas. As vagas agora aparecem em ' +
+                (alvo ? alvo.nome : 'outra disciplina') +
+                '.'
+        );
+        if (!r) return;
+        S.disciplinas = S.disciplinas.filter((x) => x.id !== id);
+        dlgMes.close();
+        render();
+    });
+
     // ---------- eventos ----------
     raiz.addEventListener('change', (ev) => {
         if (ev.target.id === 'pn-sem') {
@@ -1028,6 +1150,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (b.dataset.pn === 'assinar') return assinar(id, b);
         if (b.dataset.pn === 'revogar')
             return abrirRevogar(S.certificados.assinado.find((x) => x.id === id));
+        if (b.dataset.pn === 'mesclar') return abrirMesclar(S.disciplinas.find((x) => x.id === id));
+        if (b.dataset.pn === 'aprovar') return aprovarDisciplina(id, b);
     });
 
     carregar();

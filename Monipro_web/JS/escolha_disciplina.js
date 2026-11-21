@@ -56,6 +56,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
                 <h2>${nome}</h2>
             `;
+            // Plano 7: a que o próprio monitor cadastrou e a coordenação ainda não revisou
+            if (disc.status === 'pendente') {
+                card.classList.add('pendente');
+                const aviso = document.createElement('p');
+                aviso.className = 'disciplina-pendente';
+                aviso.textContent = 'Em análise pela coordenação · alunos ainda não veem';
+                card.appendChild(aviso);
+            }
             containerDisciplinas.appendChild(card);
         });
     } catch (error) {

@@ -4,6 +4,8 @@ const { gerarToken } = require('./helpers/token');
 // Plano 3: os avisos por e-mail têm testes próprios (tests/notificacoes.test.js)
 jest.mock('../src/services/notificacaoService');
 jest.mock('../src/config/bancoDeDados', () => ({
+    // Plano 7: a disciplina das vagas existe e está aprovada
+    disciplina: { findUnique: async () => ({ id: 1, status: 'aprovada', id_criador: null }) },
     usuario: {},
     monitoria: {
         create: jest.fn(),

@@ -69,12 +69,24 @@ model Usuario {
   @@map("usuarios")
 }
 
+// Plano 7: a disciplina criada por monitor fica pendente até a coordenação aprovar ou mesclar
+enum StatusDisciplina {
+  pendente
+  aprovada
+}
+
 model Disciplina {
   id         Int         @id @default(autoincrement())
   nome       String      @unique
   monitorias Monitoria[]
   eventos_pontuacao EventoPontuacao[]
+  // Plano 7: pendente só aparece para quem criou e para a coordenação. As que já existiam
+  // ficam aprovadas
+  status     StatusDisciplina @default(aprovada)
+  id_criador Int?
+  criada_em  DateTime    @default(now())
 
+  @@index([status])
   @@map("disciplinas")
 }
 

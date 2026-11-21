@@ -3,9 +3,10 @@
 // Tarefa 9: o corpo de criar já chega validado por schemas/monitoriaSchemas.js.
 const monitoriaService = require('../services/monitoriaService');
 const listaEsperaService = require('../services/listaEsperaService');
+const disciplinaService = require('../services/disciplinaService');
 const { obterParametrosPaginacao, montarPaginacao } = require('../utils/paginacao');
 const { filtrosListagemSchema } = require('../schemas/monitoriaSchemas');
-const { ErroValidacao } = require('../utils/erros');
+const { ErroValidacao, ErroNaoEncontrado } = require('../utils/erros');
 
 // Plano 13: filtros da query string. No Express 5 o req.query é só leitura, então a validação
 // fica aqui e não no validarCorpo.
@@ -21,6 +22,15 @@ function validarFiltros(query) {
 
 class MonitoriaController {
     async criar(req, res) {
+        // Plano 7: em disciplina pendente, só quem a criou abre vaga (para os outros ela não existe)
+        try {
+            await disciplinaService.exigirVisivel(Number(req.body.id_disciplina), req.usuario);
+        } catch (erro) {
+            if (!(erro instanceof ErroNaoEncontrado)) throw erro;
+            throw new ErroValidacao('A disciplina informada não existe.', {
+                id_disciplina: 'A disciplina informada não existe.'
+            });
+        }
         const resultado = await monitoriaService.criar({
             ...req.body,
             id_monitor: req.usuario.id
@@ -40,6 +50,11 @@ class MonitoriaController {
     async listar(req, res) {
         const paginacao = obterParametrosPaginacao(req.query);
         const filtros = validarFiltros(req.query);
+        // Plano 7: disciplina pendente responde 404 para quem não pode vê-la
+        const idDisciplina = Number(req.params.idDisciplina);
+        if (!Number.isInteger(idDisciplina) || idDisciplina <= 0)
+            throw new ErroNaoEncontrado('Disciplina não encontrada.');
+        await disciplinaService.exigirVisivel(idDisciplina, req.usuario);
         const { dados, total } = await monitoriaService.listarPorDisciplina(
             req.params.idDisciplina,
             paginacao,

@@ -11,6 +11,7 @@ const logger = require('../utils/logger');
 const { periodoDe, limitesDoPeriodo, nomeDoPeriodo, periodoAnterior } = require('../utils/periodo');
 const { resumirSemestre, resumirMonitores } = require('../utils/painelCoordenacao');
 const { calcularRestricao, DIAS_CONSULTA } = require('../utils/restricao');
+const { maisParecida } = require('../utils/semelhancaDisciplina');
 
 const DIA = 24 * 60 * 60 * 1000;
 // Motivo da revogação: aparece para o monitor no e-mail e fica no certificado
@@ -95,6 +96,21 @@ function avisarTitular(contato, modelo, c, extra) {
             ...extra
         }
     });
+}
+
+async function exigirPendente(id, tx) {
+    const d = await painelRepository.buscarDisciplina(id, tx);
+    if (!d) throw new ErroNaoEncontrado('Disciplina não encontrada.');
+    if (d.status !== 'pendente') throw new ErroAplicacao('Esta disciplina já foi aprovada.', 409);
+    return d;
+}
+
+/** Avisa o monitor que criou a disciplina (sem e-mail se a conta foi excluída). */
+async function avisarCriador(d, modelo, dados) {
+    if (!d.id_criador) return;
+    const contato = await painelRepository.contatoDoUsuario(d.id_criador);
+    if (contato)
+        enviarSemEsperar({ para: contato.email, modelo, dados: { nome: contato.nome, ...dados } });
 }
 
 class PainelService {
@@ -251,6 +267,93 @@ class PainelService {
             { motivo }
         );
         return { registro: { ...registro, usuario: coordenador.nome } };
+    }
+
+    /** Pendentes para revisar, cada uma com a aprovada mais parecida, e a lista das aprovadas. */
+    async disciplinasPendentes() {
+        const [pendentes, aprovadas] = await Promise.all([
+            painelRepository.listarDisciplinasPendentes(),
+            painelRepository.listarDisciplinasAprovadas()
+        ]);
+        return {
+            disciplinas: pendentes.map((d) => ({
+                id: d.id,
+                nome: d.nome,
+                criada_em: d.criada_em,
+                criador: d.criador,
+                vagas: d.vagas,
+                parecida: maisParecida(d.nome, aprovadas)
+            })),
+            aprovadas
+        };
+    }
+
+    /** Publica a disciplina para os alunos. */
+    async aprovarDisciplina(id, coordenador) {
+        const { d, registro } = await painelRepository.emTransacao(async (tx) => {
+            const d = await exigirPendente(id, tx);
+            if (!(await painelRepository.aprovarDisciplina(id, tx)))
+                throw new ErroAplicacao(
+                    'Esta disciplina acabou de ser revisada. Recarregue o painel.',
+                    409
+                );
+            const registro = await painelRepository.registrar(
+                {
+                    id_usuario: coordenador.id,
+                    acao: 'aprovar_disciplina',
+                    alvo: `disciplina:${id}`,
+                    descricao: `Aprovou a disciplina "${d.nome}"`.slice(0, 300)
+                },
+                tx
+            );
+            return { d, registro };
+        });
+        logger.info({ id_disciplina: id, id_coordenador: coordenador.id }, 'Disciplina aprovada');
+        avisarCriador(d, 'disciplina-aprovada', { disciplina: d.nome });
+        return { registro: { ...registro, usuario: coordenador.nome } };
+    }
+
+    /**
+     * Junta a pendente numa aprovada: vagas e pontos passam para ela, na mesma transação, e a
+     * pendente deixa de existir.
+     */
+    async mesclarDisciplina(id, idDestino, coordenador) {
+        if (!Number.isInteger(idDestino) || idDestino <= 0)
+            throw new ErroAplicacao('Escolha a disciplina com que juntar.', 400);
+        if (idDestino === id) throw new ErroAplicacao('Escolha uma disciplina diferente.', 400);
+        const { d, destino, movidas, registro } = await painelRepository.emTransacao(async (tx) => {
+            const d = await exigirPendente(id, tx);
+            const destino = await painelRepository.buscarDisciplina(idDestino, tx);
+            if (!destino || destino.status !== 'aprovada')
+                throw new ErroAplicacao('Escolha uma disciplina já aprovada para juntar.', 400);
+            const movidas = await painelRepository.mesclarDisciplina(id, idDestino, tx);
+            if (!movidas)
+                throw new ErroAplicacao(
+                    'Esta disciplina acabou de ser revisada. Recarregue o painel.',
+                    409
+                );
+            const registro = await painelRepository.registrar(
+                {
+                    id_usuario: coordenador.id,
+                    acao: 'mesclar_disciplina',
+                    alvo: `disciplina:${idDestino}`,
+                    descricao:
+                        `Mesclou "${d.nome}" com "${destino.nome}" (${movidas.vagas} ${movidas.vagas === 1 ? 'vaga movida' : 'vagas movidas'})`.slice(
+                            0,
+                            300
+                        )
+                },
+                tx
+            );
+            return { d, destino, movidas, registro };
+        });
+        logger.info({ origem: id, destino: idDestino, ...movidas }, 'Disciplinas mescladas');
+        avisarCriador(d, 'disciplina-mesclada', {
+            disciplina: d.nome,
+            destino: destino.nome,
+            vagas: movidas.vagas
+        });
+        return { ...movidas, registro: { ...registro, usuario: coordenador.nome } };
     }
 
     async auditoria(quantos = 20) {

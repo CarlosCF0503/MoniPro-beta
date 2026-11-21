@@ -87,18 +87,26 @@ describe('POST /disciplinas (cadastro de disciplina, Fase 03 P5)', () => {
         expect(resposta.status).toBe(201);
         expect(resposta.body).toEqual({
             success: true,
-            mensagem: 'Disciplina criada com sucesso.',
-            disciplina: { id: 5, nome: 'Estruturas de Dados' }
+            mensagem: expect.stringMatching(/^Disciplina enviada para a coordenação/),
+            disciplina: { id: 5, nome: 'Estruturas de Dados', status: 'pendente', id_criador: 30 }
         });
+        // Plano 7: nasce pendente, com quem criou
         expect(prisma.disciplina.create).toHaveBeenCalledWith({
-            data: { nome: 'Estruturas de Dados' }
+            data: {
+                nome: 'Estruturas de Dados',
+                status: 'pendente',
+                id_criador: expect.any(Number)
+            }
         });
     });
 
     it('descarta campos não declarados no corpo', async () => {
         await cadastrar({ nome: 'Cálculo I', id: 99 });
 
-        expect(prisma.disciplina.create).toHaveBeenCalledWith({ data: { nome: 'Cálculo I' } });
+        expect(prisma.disciplina.create).toHaveBeenCalledWith({
+            data: expect.objectContaining({ nome: 'Cálculo I', status: 'pendente' })
+        });
+        expect(prisma.disciplina.create.mock.calls[0][0].data).not.toHaveProperty('id');
     });
 
     it('retorna 409 para nome repetido, sem diferenciar maiúsculas', async () => {

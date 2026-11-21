@@ -14,11 +14,14 @@ class AgendamentoRepository {
     // inscrições concorrentes na mesma vaga. Sem isso, duas requisições simultâneas poderiam
     // contar a mesma ocupação e ultrapassar a capacidade.
     async bloquearMonitoria(idMonitoria, db = prisma) {
+        // Plano 7: traz também a situação da disciplina (pendente não aceita inscrição de aluno)
         const linhas = await db.$queryRaw`
-            SELECT "id", "capacidade", "status"::text AS "status", "horario"
-            FROM "monitorias"
-            WHERE "id" = ${parseInt(idMonitoria)}
-            FOR UPDATE
+            SELECT m."id", m."capacidade", m."status"::text AS "status", m."horario",
+                   d."status"::text AS "status_disciplina"
+            FROM "monitorias" m
+            JOIN "disciplinas" d ON d."id" = m."id_disciplina"
+            WHERE m."id" = ${parseInt(idMonitoria)}
+            FOR UPDATE OF m
         `;
         return linhas[0] || null;
     }
