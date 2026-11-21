@@ -19,6 +19,7 @@ const monitoriaRotas = require('./routes/monitoriaRotas');
 const perfilRotas = require('./routes/perfilRotas');
 const pontosRotas = require('./routes/pontosRotas');
 const certificadoRotas = require('./routes/certificadoRotas');
+const painelRotas = require('./routes/painelRotas');
 const saudeController = require('./controllers/saudeController');
 const tratadorDeErros = require('./middlewares/tratadorDeErros');
 const { ErroNaoAutorizado } = require('./utils/erros');
@@ -79,6 +80,8 @@ app.use('/monitorias', monitoriaRotas);
 app.use('/perfil', perfilRotas);
 app.use('/pontos', pontosRotas);
 app.use('/certificados', certificadoRotas);
+// Plano 7: painel da coordenação (só coordenador)
+app.use('/admin', painelRotas);
 
 // Tarefa 8: middleware central de erro — sempre o último registrado
 app.use(tratadorDeErros);

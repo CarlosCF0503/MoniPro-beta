@@ -9,6 +9,8 @@ datasource db {
 enum TipoUsuario {
   aluno
   monitor
+  // Plano 7 (RN-014): só criado por scripts/criar-coordenador.js, nunca pelo cadastro público
+  coordenador
 }
 
 enum StatusMonitoria {
@@ -60,6 +62,7 @@ model Usuario {
   notificacoes       Notificacao[]
   eventos_pontuacao  EventoPontuacao[]
   certificados       Certificado[]
+  auditoria          Auditoria[]
 
   @@unique([email, tipo_usuario])
   @@unique([matricula, tipo_usuario])
@@ -241,4 +244,19 @@ model Certificado {
 
   @@index([id_usuario, periodo])
   @@map("certificados")
+}
+
+// Plano 7 (RN-014): cada ação de escrita do painel da coordenação, com quem e quando. Guarda só
+// ids e um resumo; o painel não apaga nem edita linhas.
+model Auditoria {
+  id         Int      @id @default(autoincrement())
+  id_usuario Int
+  usuario    Usuario  @relation(fields: [id_usuario], references: [id])
+  acao       String   @db.VarChar(40) // criar_coordenador | assinar_certificado | revogar_certificado | aprovar_disciplina | mesclar_disciplina
+  alvo       String   @db.VarChar(60) // "certificado:12", "disciplina:5"
+  descricao  String   @db.VarChar(300)
+  criado_em  DateTime @default(now())
+
+  @@index([criado_em])
+  @@map("auditoria")
 }

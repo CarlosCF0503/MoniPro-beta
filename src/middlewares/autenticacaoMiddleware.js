@@ -43,7 +43,14 @@ const isMonitor = (req, res, next) => {
     return next(new ErroNaoAutorizado('Acesso permitido apenas a monitores.'));
 };
 
+// Plano 7 (RN-014): rotas /admin/* do painel da coordenação. Aluno e monitor recebem 403.
+const isCoordenador = (req, res, next) => {
+    if (req.usuario && req.usuario.tipo === 'coordenador') return next();
+    return next(new ErroNaoAutorizado('Acesso permitido apenas à coordenação.'));
+};
+
 module.exports = {
     autenticar,
-    isMonitor
+    isMonitor,
+    isCoordenador
 };
