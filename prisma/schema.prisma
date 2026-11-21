@@ -86,6 +86,8 @@ model Monitoria {
   // Plano 11: on-line tem link (só para inscritos, nunca na listagem) e local "On-line"
   modalidade    Modalidade      @default(presencial)
   link          String?
+  // Plano 9: uuid compartilhado pelas vagas criadas juntas, toda semana (null = vaga avulsa)
+  id_serie      String?
 
   id_monitor    Int
   monitor       Usuario         @relation("MonitorParaMonitoria", fields: [id_monitor], references: [id])
@@ -97,6 +99,7 @@ model Monitoria {
 
   @@index([id_monitor])
   @@index([id_disciplina])
+  @@index([id_serie])
   @@map("monitorias")
 }
 

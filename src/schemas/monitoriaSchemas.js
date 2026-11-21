@@ -5,6 +5,8 @@ const { textoObrigatorio, inteiroPositivo, dataHoraIso, INT_MAXIMO } = require('
 const { MINUTOS_TOLERANCIA_RELOGIO } = require('../utils/regrasConclusao');
 const { normalizarLinkSala, MENSAGEM_LINK_SALA } = require('../utils/linkSala');
 const { TURNOS } = require('../config/turnos');
+const { MAX_OCORRENCIAS } = require('../config/recorrencia');
+const { gerarOcorrencias, diaNoCampus } = require('../utils/recorrencia');
 
 const MENSAGEM_CAPACIDADE = 'A capacidade da vaga deve ser um número inteiro maior ou igual a 1.';
 
@@ -51,12 +53,40 @@ const camposCriar = z.object({
         .int(MENSAGEM_CAPACIDADE)
         .min(1, MENSAGEM_CAPACIDADE)
         .max(INT_MAXIMO, MENSAGEM_CAPACIDADE)
+        .optional(),
+    // Plano 9 (RF-014): repetir toda semana até a data `ate` (dia, sem hora)
+    repeticao: z
+        .object({
+            frequencia: z.literal('semanal', 'A vaga só pode se repetir toda semana.'),
+            ate: z
+                .string('Informe até quando a vaga se repete.')
+                .regex(/^\d{4}-\d{2}-\d{2}$/, 'A data final deve estar no formato AAAA-MM-DD.')
+                .refine(
+                    (v) => !Number.isNaN(new Date(v + 'T12:00:00Z').getTime()),
+                    'A data final é inválida.'
+                )
+        })
         .optional()
 });
 
 // Presencial: local obrigatório e sem link. On-line: link obrigatório; o local é "On-line".
 const criarMonitoriaSchema = camposCriar
     .superRefine((dados, ctx) => {
+        if (dados.repeticao) {
+            const inicio = new Date(dados.horario);
+            if (dados.repeticao.ate < diaNoCampus(inicio))
+                ctx.addIssue({
+                    code: 'custom',
+                    path: ['repeticao', 'ate'],
+                    message: 'A data final não pode ser antes do dia da primeira vaga.'
+                });
+            else if (gerarOcorrencias(inicio, dados.repeticao.ate).length > MAX_OCORRENCIAS)
+                ctx.addIssue({
+                    code: 'custom',
+                    path: ['repeticao', 'ate'],
+                    message: `Dá para criar no máximo ${MAX_OCORRENCIAS} vagas de uma vez. Escolha uma data final mais próxima.`
+                });
+        }
         if (dados.modalidade === 'online') {
             if (!dados.link)
                 ctx.addIssue({

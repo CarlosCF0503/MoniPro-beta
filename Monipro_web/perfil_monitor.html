@@ -268,6 +268,12 @@
           <h2 id="can-titulo">Cancelar esta vaga?</h2>
           <p class="pp-sub" id="can-sub"></p>
         </div>
+        <!-- Plano 9: vaga de uma série semanal -->
+        <fieldset class="pp-escopo" id="can-escopo" hidden>
+          <legend>Esta vaga se repete toda semana</legend>
+          <label class="pp-escopo-op"><input type="radio" name="escopo" value="esta" checked><span>Só esta vaga</span></label>
+          <label class="pp-escopo-op"><input type="radio" name="escopo" value="proximas"><span id="can-proximas">Esta e as próximas</span></label>
+        </fieldset>
         <p class="pp-aviso" id="can-aviso"></p>
         <div class="pp-acoes">
           <button type="button" class="pp-btn pp-btn-sec" data-fechar>Manter vaga</button>

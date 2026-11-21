@@ -1300,3 +1300,75 @@
         justify-content: space-between;
     }
 }
+
+/* ---------- Plano 9: vaga que se repete toda semana ---------- */
+.pagina-marcar .repetir {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    background: var(--white);
+}
+.pagina-marcar .repetir .campo {
+    margin: 0;
+}
+.pagina-marcar .repetir input[type='date'] {
+    max-width: 220px;
+}
+.pagina-marcar .serie:empty {
+    display: none;
+}
+.pagina-marcar .serie-txt {
+    margin: 0 0 6px;
+    font-size: 14px;
+}
+.pagina-marcar .serie-datas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.pagina-marcar .serie-datas li {
+    padding: 2px 10px;
+    border-radius: 99px;
+    background: var(--soft-2);
+    color: var(--navy);
+    font-size: 13px;
+    font-weight: 600;
+}
+.pagina-marcar .serie-datas li.pulada {
+    background: var(--warn-soft);
+    color: var(--warn-ink);
+    text-decoration: line-through;
+}
+.pagina-marcar .serie-pulas {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 8px 0 0;
+    color: var(--warn-ink);
+    font-size: 13px;
+}
+.pagina-marcar .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+.pagina-marcar .repetir .f-chk input:focus-visible,
+.pagina-marcar .repetir input[type='date']:focus-visible {
+    outline: 3px solid #1f4287;
+    outline-offset: 2px;
+}
+@media (max-width: 699px) {
+    .pagina-marcar .repetir input[type='date'] {
+        max-width: none;
+        min-height: 44px;
+    }
+}

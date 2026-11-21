@@ -78,8 +78,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             descricao: '',
             // Plano 11
             modalidade: 'presencial',
-            link: ''
+            link: '',
+            // Plano 9: repetir toda semana até o dia `ate`
+            repetir: false,
+            ate: ''
         },
+        serieCriada: null,
         errosApi: {},
         tocados: {},
         erroForm: null,
@@ -279,7 +283,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         local: 'local',
         descricao: 'descricao',
         capacidade: 'capacidade',
-        link: 'link'
+        link: 'link',
+        'repeticao.ate': 'ate'
     };
 
     async function criarVaga() {
@@ -299,19 +304,33 @@ document.addEventListener('DOMContentLoaded', async () => {
                     // Plano 11: on-line manda o link; a API grava o local "On-line"
                     ...(S.form.modalidade === 'online'
                         ? { modalidade: 'online', link: S.form.link.trim() }
-                        : { local: S.form.local.trim() })
+                        : { local: S.form.local.trim() }),
+                    // Plano 9: série semanal
+                    ...(S.form.repetir
+                        ? { repeticao: { frequencia: 'semanal', ate: S.form.ate } }
+                        : {})
                 })
             });
             if (r.success && r.monitoria) {
-                const nova = D.normalizarVaga({
-                    ...r.monitoria,
-                    vagas_disponiveis: r.monitoria.capacidade,
-                    monitor: { nome_completo: usuario.nome }
-                });
-                S.vagas.push(nova);
+                const novas = (r.criadas || [r.monitoria]).map((m) =>
+                    D.normalizarVaga({
+                        ...m,
+                        vagas_disponiveis: m.capacidade,
+                        monitor: { nome_completo: usuario.nome }
+                    })
+                );
+                S.vagas.push(...novas);
                 S.vagas.sort((a, b) => a.inicio - b.inicio);
-                S.criada = nova;
-                showToast('Vaga de monitoria criada com sucesso!', 'success');
+                S.criada = novas[0];
+                S.serieCriada = r.criadas
+                    ? { vagas: novas, puladas: (r.puladas || []).map((p) => new Date(p)) }
+                    : null;
+                showToast(
+                    novas.length > 1
+                        ? novas.length + ' vagas de monitoria criadas com sucesso!'
+                        : 'Vaga de monitoria criada com sucesso!',
+                    'success'
+                );
             } else {
                 // Erro de validação volta para o formulário, junto do campo
                 S.errosApi = {};
@@ -755,6 +774,77 @@ document.addEventListener('DOMContentLoaded', async () => {
         );
     }
 
+    // Plano 9: resumo da série embaixo do campo "Até": quantas vagas e quais datas (as puladas
+    // riscadas, porque o monitor já tem vaga no mesmo horário)
+    function resumoSerie() {
+        const s = D.serieDoForm(S.form, minhas());
+        if (!s || s.datas.length > D.MAX_OCORRENCIAS) return '';
+        const itens = s.datas
+            .map((d) => {
+                const pulada = s.puladas.some((p) => p.getTime() === d.getTime());
+                return (
+                    '<li' +
+                    (pulada ? ' class="pulada"' : '') +
+                    '>' +
+                    D.diaMes(d) +
+                    (pulada ? '<span class="sr-only"> (pulada: você já tem vaga)</span>' : '') +
+                    '</li>'
+                );
+            })
+            .join('');
+        return (
+            '<p class="serie-txt"><b>' +
+            D.plural(s.criadas.length, 'vaga', 'vagas') +
+            '</b> · ' +
+            esc(D.todaSemana(s.datas[0])) +
+            ' às ' +
+            esc(S.form.hora) +
+            '</p><ul class="serie-datas" aria-label="Datas da série">' +
+            itens +
+            '</ul>' +
+            (s.puladas.length
+                ? '<p class="serie-pulas">' +
+                  C.icone('alerta', 14) +
+                  (s.puladas.length === 1 ? 'A data riscada fica' : 'As datas riscadas ficam') +
+                  ' de fora: você já tem vaga às ' +
+                  esc(S.form.hora) +
+                  '.</p>'
+                : '')
+        );
+    }
+
+    function campoRepetir(e, extra) {
+        const f = S.form;
+        const maximo = f.dia ? D.somarSemanas(f.dia, D.MAX_OCORRENCIAS - 1) : '';
+        return (
+            '<div class="repetir">' +
+            '<label class="f-chk"><input type="checkbox" id="f-repetir"' +
+            (f.repetir ? ' checked' : '') +
+            '>' +
+            C.icone('calendario', 16) +
+            'Repetir toda semana</label>' +
+            (f.repetir
+                ? campo(
+                      'ate',
+                      'Até',
+                      '<input id="f-ate" type="date"' +
+                          (f.dia ? ' min="' + f.dia + '" max="' + maximo + '"' : '') +
+                          ' value="' +
+                          esc(f.ate) +
+                          '"' +
+                          extra('ate') +
+                          '>',
+                      e.ate,
+                      'No máximo ' + D.MAX_OCORRENCIAS + ' vagas'
+                  ) +
+                  '<div class="serie" id="serie-resumo" aria-live="polite">' +
+                  resumoSerie() +
+                  '</div>'
+                : '') +
+            '</div>'
+        );
+    }
+
     function campos() {
         const f = S.form;
         const e = errosVisiveis();
@@ -815,6 +905,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                       e.local,
                       DICAS.local
                   )) +
+            campoRepetir(e, extra) +
             campo(
                 'descricao',
                 'Assunto (opcional)',
@@ -876,11 +967,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     function revisaoVaga() {
         const v = vagaDoForm();
         if (!v) return '';
+        const serie = D.serieDoForm(S.form, minhas());
+        const n = serie ? serie.criadas.length : 1;
         return (
             '<section class="revisao" id="revisao-vaga" tabindex="-1" aria-labelledby="revv-titulo">' +
             '<p class="rotulo" id="revv-titulo">Revise a vaga antes de criar</p><dl>' +
             C.linhaResumo('Disciplina', 'livro', disciplinaNome) +
-            C.linhaResumo('Dia', 'calendario', D.diaLongo(v.inicio)) +
+            (serie
+                ? C.linhaResumo(
+                      'Repete',
+                      'calendario',
+                      D.todaSemana(v.inicio) +
+                          ', de ' +
+                          D.diaMes(serie.criadas[0] || v.inicio) +
+                          ' a ' +
+                          D.diaMes(serie.datas[serie.datas.length - 1])
+                  ) +
+                  (serie.puladas.length
+                      ? C.linhaResumo(
+                            'Fica de fora',
+                            'alerta',
+                            serie.puladas.map(D.diaMes).join(', ') +
+                                ' (você já tem vaga nesse horário)'
+                        )
+                      : '')
+                : C.linhaResumo('Dia', 'calendario', D.diaLongo(v.inicio))) +
             C.linhaResumo('Horário', 'relogio', D.hora(v.inicio)) +
             (v.modalidade === 'online'
                 ? C.linhaResumo('Modalidade', 'video', 'On-line') +
@@ -897,18 +1008,57 @@ document.addEventListener('DOMContentLoaded', async () => {
             C.icone('olho', 14) +
             'Como o aluno vai ver</p>' +
             C.cardVaga(v, { estatico: true }) +
-            '</div><p class="aviso">Depois de criada, a vaga só pode ser cancelada até 24h antes do horário.</p>' +
+            '</div><p class="aviso">' +
+            (n > 1
+                ? 'São ' +
+                  n +
+                  ' vagas independentes: depois dá para editar ou cancelar cada uma, ou cancelar a série a partir de uma data, sempre até 24h antes do horário.'
+                : 'Depois de criada, a vaga só pode ser cancelada até 24h antes do horário.') +
+            '</p>' +
             '<div class="linha acoes"><button type="button" class="btn sec" data-acao="m-editar">Editar</button>' +
             '<button type="button" class="btn" data-acao="criar"' +
             (S.enviando ? ' disabled aria-busy="true"' : '') +
             '>' +
-            (S.enviando ? 'Criando vaga…' : C.icone('criar', 20) + 'Criar vaga') +
+            (S.enviando
+                ? n > 1
+                    ? 'Criando vagas…'
+                    : 'Criando vaga…'
+                : C.icone('criar', 20) + (n > 1 ? 'Criar ' + n + ' vagas' : 'Criar vaga')) +
             '</button></div></section>'
         );
     }
 
     function sucessoMonitor() {
         const v = S.criada;
+        const serie = S.serieCriada;
+        if (serie && serie.vagas.length > 1) {
+            const ultima = serie.vagas[serie.vagas.length - 1];
+            return (
+                '<section class="sucesso" id="sucesso" tabindex="-1"><span class="ok-icone">' +
+                C.icone('ok', 28, 3) +
+                '</span><h2>' +
+                serie.vagas.length +
+                ' vagas criadas!</h2><p>' +
+                esc(D.todaSemana(v.inicio)) +
+                ' às ' +
+                D.hora(v.inicio) +
+                ', de ' +
+                D.diaMes(v.inicio) +
+                ' a ' +
+                D.diaMes(ultima.inicio) +
+                ' · ' +
+                esc(v.local) +
+                (serie.puladas.length
+                    ? '<br>Ficaram de fora: ' +
+                      serie.puladas.map(D.diaMes).join(', ') +
+                      ' (você já tinha vaga nesse horário).'
+                    : '') +
+                '<br>Os alunos de ' +
+                esc(disciplinaNome) +
+                ' já podem agendar.</p><div class="linha"><button type="button" class="btn sec" data-acao="nova-vaga">Criar outra</button>' +
+                '<a class="btn" href="perfil_monitor.html">Ver minhas vagas</a></div></section>'
+            );
+        }
         return (
             '<section class="sucesso" id="sucesso" tabindex="-1"><span class="ok-icone">' +
             C.icone('ok', 28, 3) +
@@ -987,7 +1137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Digitar no formulário atualiza só dicas, prévia e botão (re-render tiraria o foco do campo)
     function atualizarFormulario() {
         const e = errosVisiveis();
-        ['hora', 'capacidade', 'local', 'link', 'descricao'].forEach((id) => {
+        ['hora', 'capacidade', 'local', 'link', 'ate', 'descricao'].forEach((id) => {
             const bloco = raiz.querySelector('[data-campo="' + id + '"]');
             if (!bloco) return;
             bloco.classList.toggle('err', Boolean(e[id]));
@@ -998,8 +1148,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 e[id] ||
                 (id === 'descricao'
                     ? S.form.descricao.length + '/' + D.LIMITE_DESCRICAO
-                    : DICAS[id]);
+                    : id === 'ate'
+                      ? 'No máximo ' + D.MAX_OCORRENCIAS + ' vagas'
+                      : DICAS[id]);
         });
+        const resumo = document.getElementById('serie-resumo');
+        if (resumo) resumo.innerHTML = resumoSerie();
         const caixa = document.getElementById('previa');
         if (caixa) caixa.innerHTML = previa();
         const botao = document.getElementById('btn-revisar-vaga');
@@ -1074,6 +1228,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             case 'nova-vaga':
                 S.criada = null;
+                S.serieCriada = null;
                 S.m = { passo: 2, etapa: 'form' };
                 S.tocados = {};
                 break;
@@ -1159,6 +1314,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     raiz.addEventListener('input', (ev) => {
+        // Plano 9: ligar "Repetir toda semana" mostra o campo "Até" (sugere 4 semanas)
+        if (ev.target.id === 'f-repetir') {
+            S.form.repetir = ev.target.checked;
+            if (S.form.repetir && !S.form.ate && S.form.dia)
+                S.form.ate = D.somarSemanas(S.form.dia, 3);
+            delete S.errosApi.ate;
+            render();
+            const caixa = document.getElementById('f-repetir');
+            if (caixa) caixa.focus();
+            return;
+        }
         // Plano 11: trocar a modalidade troca o campo Local pelo Link da sala
         if (ev.target.name === 'modalidade') {
             S.form.modalidade = ev.target.value;

@@ -27,6 +27,8 @@ router.post('/:id/espera', autenticar, monitoriaController.entrarNaFila);
 
 // Rota de cancelar vaga — chamada pelo perfil.js do monitor
 router.put('/:id/cancelar', autenticar, monitoriaController.cancelar);
+// Plano 9: cancelar esta vaga e as próximas da mesma série
+router.put('/:id/cancelar-proximas', autenticar, isMonitor, monitoriaController.cancelarProximas);
 
 // Rota com parâmetro por último
 router.get('/:idDisciplina', autenticar, monitoriaController.listar);

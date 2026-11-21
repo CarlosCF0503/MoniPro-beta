@@ -10,6 +10,8 @@ const {
     HORAS_MINIMAS_CANCELAMENTO
 } = require('../utils/validarAntecedencia');
 const logger = require('../utils/logger');
+const { randomUUID } = require('crypto');
+const { gerarOcorrencias } = require('../utils/recorrencia');
 const { MINUTOS_MAX_SESSAO, MINUTOS_TOLERANCIA_RELOGIO } = require('../utils/regrasConclusao');
 const {
     ErroValidacao,
@@ -84,7 +86,67 @@ function definirModalidade(vaga, dados, alteracoes) {
 }
 
 class MonitoriaService {
+    // Plano 9 (RF-014): vaga semanal. Cada data vira uma vaga independente com o mesmo id_serie;
+    // as datas em que o monitor já tem vaga ativa no mesmo horário são puladas.
+    async criarSerie({ repeticao, ...dados }) {
+        const horarios = gerarOcorrencias(new Date(dados.horario), repeticao.ate);
+        const ocupados = new Set(
+            (await monitoriaRepository.horariosOcupadosDoMonitor(dados.id_monitor, horarios)).map(
+                (h) => new Date(h).getTime()
+            )
+        );
+        const livres = horarios.filter((h) => !ocupados.has(h.getTime()));
+        const puladas = horarios.filter((h) => ocupados.has(h.getTime()));
+        if (!livres.length) {
+            throw new ErroConflito('Você já tem vaga ativa em todos esses horários.');
+        }
+        try {
+            const criadas = await monitoriaRepository.criarSerie(dados, livres, randomUUID());
+            return { criadas, puladas };
+        } catch (error) {
+            if (error.code === 'P2003') {
+                throw new ErroValidacao('A disciplina informada não existe.', {
+                    id_disciplina: 'A disciplina informada não existe.'
+                });
+            }
+            throw error;
+        }
+    }
+
+    // Plano 9: cancela esta vaga e as próximas da mesma série. As que começam em menos de 24h
+    // ficam (RN-001) e voltam em `mantidas`; inscritos e fila de cada cancelada são avisados
+    // como no cancelamento comum.
+    async cancelarProximas(id, monitorId, agora = new Date()) {
+        const vaga = await monitoriaRepository.buscarPorId(id);
+        if (!vaga) throw new ErroNaoEncontrado('Vaga de monitoria não encontrada.');
+        if (vaga.id_monitor !== monitorId) {
+            throw new ErroNaoAutorizado('Você não tem permissão para cancelar esta vaga.');
+        }
+        if (!vaga.id_serie) throw new ErroValidacao('Esta vaga não se repete.');
+        if (vaga.status !== 'ativa') throw new ErroValidacao('Esta vaga não está mais ativa.');
+
+        const serie = await monitoriaRepository.buscarDaSerieAPartirDe(vaga.id_serie, vaga.horario);
+        const limite = agora.getTime() + HORAS_MINIMAS_CANCELAMENTO * 60 * 60 * 1000;
+        const canceladas = serie.filter((v) => new Date(v.horario).getTime() >= limite);
+        const mantidas = serie.filter((v) => new Date(v.horario).getTime() < limite);
+        if (!canceladas.length) validarAntecedenciaCancelamento(vaga.horario);
+
+        await monitoriaRepository.emTransacao(async (tx) => {
+            for (const v of canceladas) {
+                await monitoriaRepository.cancelar(v.id, tx);
+                await notificacaoService.avisarCancelamento(v.id, tx);
+                await agendamentoRepository.encerrarFila(v.id, tx);
+            }
+        });
+        logger.info(
+            { id_serie: vaga.id_serie, canceladas: canceladas.length, mantidas: mantidas.length },
+            'série de vagas cancelada a partir de uma data'
+        );
+        return { canceladas: canceladas.map((v) => v.id), mantidas };
+    }
+
     async criar(dados) {
+        if (dados.repeticao) return await this.criarSerie(dados);
         // O monitor não pode ter duas vagas ativas começando no mesmo horário. A tela de criar
         // vaga já avisa; aqui a regra vale também para chamadas diretas à API.
         const conflito = await monitoriaRepository.buscarAtivaDoMonitorNoHorario(
