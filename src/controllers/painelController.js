@@ -114,3 +114,29 @@ exports.mesclarDisciplina = async (req, res) => {
     );
     return res.status(200).json({ success: true, ...r });
 };
+
+// GET /admin/faltas?periodo=2026.2: faltas do semestre, inscrições sem presença e bloqueados
+exports.faltas = async (req, res) => {
+    const r = await painelService.faltas(periodoDaConsulta(req.query.periodo));
+    res.set('Cache-Control', 'no-store');
+    return res.status(200).json({ success: true, ...r });
+};
+
+// POST /admin/agendamentos/:id/falta
+exports.marcarFalta = async (req, res) => {
+    const r = await painelService.marcarFalta(
+        idDaRota(req.params.id, 'Inscrição inválida.'),
+        coordenadorDe(req)
+    );
+    return res.status(200).json({ success: true, ...r });
+};
+
+// POST /admin/agendamentos/:id/anular-falta { motivo }
+exports.anularFalta = async (req, res) => {
+    const r = await painelService.anularFalta(
+        idDaRota(req.params.id, 'Inscrição inválida.'),
+        req.body ? req.body.motivo : undefined,
+        coordenadorDe(req)
+    );
+    return res.status(200).json({ success: true, ...r });
+};

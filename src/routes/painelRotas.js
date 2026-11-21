@@ -24,4 +24,9 @@ router.get('/disciplinas', painelController.disciplinas);
 router.post('/disciplinas/:id/aprovar', painelController.aprovarDisciplina);
 router.post('/disciplinas/:id/mesclar', painelController.mesclarDisciplina);
 
+// Faltas: a coordenação é a instância de recurso (marca e anula, sem o prazo do monitor)
+router.get('/faltas', painelController.faltas);
+router.post('/agendamentos/:id/falta', painelController.marcarFalta);
+router.post('/agendamentos/:id/anular-falta', painelController.anularFalta);
+
 module.exports = router;
