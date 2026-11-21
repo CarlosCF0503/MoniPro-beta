@@ -1164,3 +1164,139 @@
 .pagina-marcar .aviso-bloqueio p {
     margin: 0;
 }
+
+/* ---------- Plano 13: filtros de horários ---------- */
+.pagina-marcar .filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 10px 16px;
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--soft);
+}
+.pagina-marcar .filtros-titulo {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+}
+.pagina-marcar .f-grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+.pagina-marcar .f-rotulo {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--slate-ink);
+}
+.pagina-marcar .f-ops {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.pagina-marcar .f-op {
+    min-height: 36px;
+    padding: 6px 14px;
+    border: 1.5px solid var(--navy-2);
+    border-radius: 99px;
+    background: var(--white);
+    color: var(--navy);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background-color var(--dur),
+        color var(--dur);
+}
+.pagina-marcar .f-op[aria-pressed='true'] {
+    border-color: var(--navy);
+    background: var(--navy);
+    color: var(--white);
+}
+.pagina-marcar .filtros select {
+    min-width: 190px;
+    min-height: 36px;
+    padding: 6px 10px;
+    border: 1.5px solid var(--navy-2);
+    border-radius: 8px;
+    background: var(--white);
+    color: var(--navy);
+    font: inherit;
+    font-size: 14px;
+}
+.pagina-marcar .f-chk {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.pagina-marcar .f-chk input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--navy-2);
+}
+.pagina-marcar .filtros-resumo {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    min-height: 36px;
+    margin: 0 0 0 auto;
+    font-size: 14px;
+    color: var(--slate-ink);
+}
+.pagina-marcar .filtros-resumo:empty {
+    display: none;
+}
+.pagina-marcar .f-limpar {
+    min-height: 36px;
+    color: var(--navy-2);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: underline;
+    cursor: pointer;
+}
+.pagina-marcar .f-op:focus-visible,
+.pagina-marcar .f-limpar:focus-visible,
+.pagina-marcar .filtros select:focus-visible,
+.pagina-marcar .f-chk input:focus-visible {
+    outline: 3px solid #1f4287;
+    outline-offset: 2px;
+}
+.pagina-marcar .vazio-filtro .btn {
+    margin-top: 8px;
+}
+@media (max-width: 699px) {
+    .pagina-marcar .filtros {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .pagina-marcar .f-ops {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .pagina-marcar .f-op,
+    .pagina-marcar .filtros select,
+    .pagina-marcar .f-chk,
+    .pagina-marcar .f-limpar {
+        min-height: 44px;
+    }
+    .pagina-marcar .filtros select {
+        width: 100%;
+    }
+    .pagina-marcar .filtros-resumo {
+        margin: 0;
+        justify-content: space-between;
+    }
+}

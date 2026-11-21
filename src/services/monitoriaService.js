@@ -108,10 +108,12 @@ class MonitoriaService {
         }
     }
 
-    async listarPorDisciplina(idDisciplina, paginacao) {
+    // Plano 13: filtros opcionais { periodo, monitor, livres } (já validados no controller)
+    async listarPorDisciplina(idDisciplina, paginacao, filtros = {}) {
         const { dados, total } = await monitoriaRepository.buscarPorDisciplina(
             Number(idDisciplina),
-            paginacao
+            paginacao,
+            filtros
         );
 
         // Expõe a ocupação sem vazar o _count interno do Prisma. Plano 8: o tamanho da lista de
