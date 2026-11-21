@@ -20,7 +20,8 @@ class AgendamentoService {
         // travada, para que inscrições simultâneas não ultrapassem o limite de vagas.
         return await agendamentoRepository.emTransacao(async (tx) => {
             const monitoria = await agendamentoRepository.bloquearMonitoria(dados.id_monitoria, tx);
-            if (!monitoria) {
+            // Plano 7: vaga de disciplina ainda pendente não existe para o aluno
+            if (!monitoria || monitoria.status_disciplina === 'pendente') {
                 // A monitoria vem do corpo da requisição, não da URL: é dado inválido (400), não 404
                 throw new ErroValidacao('A monitoria selecionada não foi encontrada.', {
                     id_monitoria: 'A monitoria selecionada não foi encontrada.'

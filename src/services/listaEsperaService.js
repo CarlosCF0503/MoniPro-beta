@@ -35,7 +35,9 @@ class ListaEsperaService {
         }
         return await agendamentoRepository.emTransacao(async (tx) => {
             const vaga = await agendamentoRepository.bloquearMonitoria(idMonitoria, tx);
-            if (!vaga) throw new ErroNaoEncontrado('Vaga de monitoria não encontrada.');
+            // Plano 7: vaga de disciplina ainda pendente não existe para o aluno
+            if (!vaga || vaga.status_disciplina === 'pendente')
+                throw new ErroNaoEncontrado('Vaga de monitoria não encontrada.');
             // Plano 12: quem faltou demais também não entra na fila por um tempo
             await restricaoService.exigirSemRestricao(idAluno, tx);
             if (vaga.status !== 'ativa') {

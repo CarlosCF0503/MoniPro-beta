@@ -39,10 +39,10 @@ exports.auditoria = async (req, res) => {
     return res.status(200).json({ success: true, registros });
 };
 
-function idDaRota(valor) {
+function idDaRota(valor, mensagem = 'Certificado inválido.') {
     const id = Number(valor);
     if (!Number.isInteger(id) || id <= 0) {
-        throw new ErroValidacao('Certificado inválido.', { id: 'Certificado inválido.' });
+        throw new ErroValidacao(mensagem, { id: mensagem });
     }
     return id;
 }
@@ -83,6 +83,33 @@ exports.revogarCertificado = async (req, res) => {
     const r = await painelService.revogarCertificado(
         idDaRota(req.params.id),
         motivo,
+        coordenadorDe(req)
+    );
+    return res.status(200).json({ success: true, ...r });
+};
+
+// GET /admin/disciplinas: pendentes de revisão (com a aprovada mais parecida) e as aprovadas
+exports.disciplinas = async (req, res) => {
+    const r = await painelService.disciplinasPendentes();
+    res.set('Cache-Control', 'no-store');
+    return res.status(200).json({ success: true, ...r });
+};
+
+// POST /admin/disciplinas/:id/aprovar
+exports.aprovarDisciplina = async (req, res) => {
+    const r = await painelService.aprovarDisciplina(
+        idDaRota(req.params.id, 'Disciplina inválida.'),
+        coordenadorDe(req)
+    );
+    return res.status(200).json({ success: true, ...r });
+};
+
+// POST /admin/disciplinas/:id/mesclar { id_destino }
+exports.mesclarDisciplina = async (req, res) => {
+    const destino = req.body ? Number(req.body.id_destino) : NaN;
+    const r = await painelService.mesclarDisciplina(
+        idDaRota(req.params.id, 'Disciplina inválida.'),
+        destino,
         coordenadorDe(req)
     );
     return res.status(200).json({ success: true, ...r });

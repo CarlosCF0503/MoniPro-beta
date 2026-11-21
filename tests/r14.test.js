@@ -2,6 +2,8 @@
 // no futuro nem sessão com mais de 4h. Sem isso, duas contas combinadas forjariam pontos e horas.
 jest.mock('../src/services/notificacaoService');
 jest.mock('../src/config/bancoDeDados', () => ({
+    // Plano 7: a disciplina das vagas existe e está aprovada
+    disciplina: { findUnique: async () => ({ id: 1, status: 'aprovada', id_criador: null }) },
     usuario: { update: jest.fn() },
     monitoria: {
         create: jest.fn(),

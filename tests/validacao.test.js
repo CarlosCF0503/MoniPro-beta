@@ -6,6 +6,8 @@ const { gerarToken } = require('./helpers/token');
 jest.mock('../src/services/notificacaoService');
 jest.mock('../src/config/bancoDeDados', () => {
     const prismaMock = {
+        // Plano 7: a disciplina das vagas existe e está aprovada
+        disciplina: { findUnique: async () => ({ id: 1, status: 'aprovada', id_criador: null }) },
         usuario: { create: jest.fn(), findFirst: jest.fn() },
         monitoria: { create: jest.fn(), findFirst: jest.fn(), findUnique: jest.fn() },
         agendamento: {

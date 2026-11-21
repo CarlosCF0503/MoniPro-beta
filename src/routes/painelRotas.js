@@ -19,4 +19,9 @@ router.get('/certificados/:id/sessoes', painelController.sessoesDoCertificado);
 router.post('/certificados/:id/assinar', painelController.assinarCertificado);
 router.post('/certificados/:id/revogar', painelController.revogarCertificado);
 
+// Disciplinas criadas por monitores: aprovar (publica) ou mesclar com uma aprovada
+router.get('/disciplinas', painelController.disciplinas);
+router.post('/disciplinas/:id/aprovar', painelController.aprovarDisciplina);
+router.post('/disciplinas/:id/mesclar', painelController.mesclarDisciplina);
+
 module.exports = router;

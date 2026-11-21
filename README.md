@@ -166,7 +166,7 @@ indicam rota restrita a esse papel.
 | POST   | `/auth/email/reenviar`              | Reenvia o link de confirmação (pública)                                      |
 | POST   | `/auth/email/corrigir`              | Corrige o e-mail de uma conta ainda não confirmada (pública)                 |
 | GET    | `/disciplinas`                      | Lista as disciplinas                                                         |
-| POST   | `/disciplinas`                      | Cadastra uma disciplina (monitor)                                            |
+| POST   | `/disciplinas`                      | Cadastra uma disciplina, pendente até a coordenação revisar (monitor)        |
 | GET    | `/disciplinas/:id/ranking`          | Ranking de pontos da disciplina                                              |
 | POST   | `/monitorias`                       | Cria uma vaga, ou uma série semanal com `repeticao` (monitor)                |
 | GET    | `/monitorias/:idDisciplina`         | Vagas de uma disciplina; filtros opcionais `periodo`, `monitor` e `livres=1` |
@@ -200,6 +200,9 @@ indicam rota restrita a esse papel.
 | GET    | `/admin/certificados/:id/sessoes`   | Sessões guardadas no certificado, para conferir (coordenação)                |
 | POST   | `/admin/certificados/:id/assinar`   | Assina o certificado e avisa o monitor (coordenação)                         |
 | POST   | `/admin/certificados/:id/revogar`   | Revoga com motivo e avisa o monitor (coordenação)                            |
+| GET    | `/admin/disciplinas`                | Pendentes de revisão, com a aprovada mais parecida (coordenação)             |
+| POST   | `/admin/disciplinas/:id/aprovar`    | Publica a disciplina para os alunos (coordenação)                            |
+| POST   | `/admin/disciplinas/:id/mesclar`    | Junta com uma aprovada; vagas e pontos passam para ela (coordenação)         |
 
 Um prefixo novo na API também precisa entrar no Nginx do servidor (homologação e produção) e
 em `e2e/pilha/gateway.conf`. Sem isso, o caminho cai no frontend.
