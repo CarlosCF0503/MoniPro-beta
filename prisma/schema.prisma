@@ -115,6 +115,7 @@ model Monitoria {
   @@index([id_monitor])
   @@index([id_disciplina])
   @@index([id_serie])
+  @@index([horario]) // painel da coordenação: vagas do semestre
   @@map("monitorias")
 }
 
@@ -151,6 +152,8 @@ model Agendamento {
   @@index([id_aluno])
   @@index([id_monitoria, status, id])
   @@index([id_aluno, ausente_em])
+  @@index([data_hora]) // lembretes: a cada minuto, as sessões das próximas 20 a 24h
+  @@index([ausente_em]) // painel da coordenação: faltas recentes de todos os alunos
   @@map("agendamentos")
 }
 
