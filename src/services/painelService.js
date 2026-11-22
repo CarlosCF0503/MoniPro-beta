@@ -5,6 +5,8 @@
 
 const painelRepository = require('../repositories/painelRepository');
 const certificadoRepository = require('../repositories/certificadoRepository');
+const agendamentoRepository = require('../repositories/agendamentoRepository');
+const recursoService = require('./recursoService');
 const { enviarSemEsperar } = require('./email');
 const { ErroAplicacao, ErroNaoEncontrado } = require('../utils/erros');
 const logger = require('../utils/logger');
@@ -112,6 +114,26 @@ async function avisarCriador(d, modelo, dados) {
     if (contato)
         enviarSemEsperar({ para: contato.email, modelo, dados: { nome: contato.nome, ...dados } });
 }
+
+/** Linha das listas de faltas do painel. */
+function linhaInscricao(a) {
+    return {
+        id: a.id,
+        aluno: a.aluno.nome_completo,
+        monitor: a.monitoria.monitor.nome_completo,
+        disciplina: a.monitoria.disciplina.nome,
+        horario: a.monitoria.horario,
+        ausente_em: a.ausente_em,
+        aluno_confirmou: Boolean(a.presenca_aluno_em)
+    };
+}
+
+const dataCurtaBr = (d) =>
+    new Date(d).toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        timeZone: 'America/Sao_Paulo'
+    });
 
 class PainelService {
     async resumo(periodo, agora = new Date()) {
@@ -354,6 +376,133 @@ class PainelService {
             vagas: movidas.vagas
         });
         return { ...movidas, registro: { ...registro, usuario: coordenador.nome } };
+    }
+
+    /**
+     * Plano 7 (faltas, decisão de 21/11): a coordenação é a instância de recurso. Lista as faltas
+     * do semestre, as inscrições passadas sem presença e quem está bloqueado agora.
+     */
+    async faltas(periodo, agora = new Date()) {
+        const p = periodo || periodoDe(agora);
+        const j = janela(p, agora);
+        const [listas, ausencias, recursos] = await Promise.all([
+            j.inicio >= j.ate
+                ? { faltas: [], semPresenca: [] }
+                : painelRepository.listarInscricoesParaFaltas(j.inicio, j.ate),
+            painelRepository.buscarAusencias(new Date(agora.getTime() - DIAS_CONSULTA * DIA)),
+            recursoService.pendentes()
+        ]);
+        const porAluno = new Map();
+        for (const a of ausencias) {
+            if (!porAluno.has(a.id_aluno)) porAluno.set(a.id_aluno, []);
+            porAluno.get(a.id_aluno).push(a.ausente_em);
+        }
+        const bloqueados = [];
+        for (const [id, datas] of porAluno) {
+            const r = calcularRestricao(datas, agora);
+            if (r) bloqueados.push({ id_aluno: id, ate: r.ate, faltas: r.faltas });
+        }
+        const nomes = await painelRepository.nomesDeUsuarios(bloqueados.map((b) => b.id_aluno));
+        return {
+            periodo: p,
+            // Pedidos de revisão pendentes, de qualquer semestre
+            recursos,
+            faltas: listas.faltas.map(linhaInscricao),
+            sem_presenca: listas.semPresenca.map(linhaInscricao),
+            bloqueados: bloqueados
+                .map((b) => ({
+                    aluno: nomes.get(b.id_aluno) || null,
+                    ate: b.ate,
+                    faltas: b.faltas
+                }))
+                .sort((a, b) => a.ate - b.ate)
+        };
+    }
+
+    /**
+     * A coordenação marca a falta em qualquer vaga, sem o prazo de 7 dias do monitor. Continua
+     * valendo: só depois do início, inscrição ativa, vaga não cancelada e sem a presença dos dois.
+     */
+    async marcarFalta(id, coordenador, agora = new Date()) {
+        const { ag, registro } = await painelRepository.emTransacao(async (tx) => {
+            const ag = await agendamentoRepository.bloquearParaPresenca(id, tx);
+            if (!ag) throw new ErroNaoEncontrado('Inscrição não encontrada.');
+            if (ag.status === 'concluido')
+                throw new ErroAplicacao(
+                    'A presença deste aluno já foi confirmada pelos dois: não dá para marcar falta.',
+                    409
+                );
+            if (['cancelado', 'em_espera'].includes(ag.status) || ag.status_vaga === 'cancelada')
+                throw new ErroAplicacao(
+                    'Esta inscrição não está ativa: não há falta a marcar.',
+                    422
+                );
+            if (ag.ausente_em) throw new ErroAplicacao('A falta deste aluno já foi marcada.', 409);
+            if (agora < new Date(ag.horario))
+                throw new ErroAplicacao(
+                    'A falta só pode ser marcada depois do horário da sessão.',
+                    422
+                );
+            await agendamentoRepository.marcarAusencia(id, agora, tx);
+            const registro = await painelRepository.registrar(
+                {
+                    id_usuario: coordenador.id,
+                    acao: 'marcar_falta',
+                    alvo: `agendamento:${id}`,
+                    descricao: `Marcou falta na inscrição ${id} (sessão de ${dataCurtaBr(ag.horario)})`
+                },
+                tx
+            );
+            return { ag, registro };
+        });
+        logger.info(
+            { id_agendamento: id, id_coordenador: coordenador.id },
+            'Falta marcada pela coordenação'
+        );
+        return {
+            ausente_em: agora,
+            id_aluno: ag.id_aluno,
+            registro: { ...registro, usuario: coordenador.nome }
+        };
+    }
+
+    /**
+     * Anula a falta (o aluno justificou). Não vira presença nem dá pontos: a inscrição volta a
+     * ficar sem confirmação, e o bloqueio por faltas é recalculado na hora.
+     */
+    async anularFalta(id, motivoDigitado, coordenador) {
+        const motivo = String(motivoDigitado || '').trim();
+        if (motivo.length < MOTIVO_MIN || motivo.length > MOTIVO_MAX)
+            throw new ErroAplicacao(
+                `Escreva a justificativa com ${MOTIVO_MIN} a ${MOTIVO_MAX} caracteres. Ela fica no registro de atividade.`,
+                400
+            );
+        const registro = await painelRepository.emTransacao(async (tx) => {
+            const ag = await agendamentoRepository.bloquearParaPresenca(id, tx);
+            if (!ag) throw new ErroNaoEncontrado('Inscrição não encontrada.');
+            if (!ag.ausente_em)
+                throw new ErroAplicacao('Esta inscrição não tem falta marcada.', 409);
+            if (!(await painelRepository.anularFalta(id, tx)))
+                throw new ErroAplicacao('Esta falta acabou de ser anulada.', 409);
+            return await painelRepository.registrar(
+                {
+                    id_usuario: coordenador.id,
+                    acao: 'anular_falta',
+                    alvo: `agendamento:${id}`,
+                    descricao:
+                        `Anulou a falta da inscrição ${id} (sessão de ${dataCurtaBr(ag.horario)}): ${motivo}`.slice(
+                            0,
+                            300
+                        )
+                },
+                tx
+            );
+        });
+        logger.info(
+            { id_agendamento: id, id_coordenador: coordenador.id },
+            'Falta anulada pela coordenação'
+        );
+        return { registro: { ...registro, usuario: coordenador.nome } };
     }
 
     async auditoria(quantos = 20) {

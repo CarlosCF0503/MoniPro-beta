@@ -2,6 +2,8 @@
 // Tarefa 8: erros sobem para o middleware central (src/middlewares/tratadorDeErros.js).
 // Tarefa 9: o corpo de criar já chega validado por schemas/agendamentoSchemas.js.
 const agendamentoService = require('../services/agendamentoService');
+const recursoService = require('../services/recursoService');
+const { ErroNaoAutorizado, ErroNaoEncontrado } = require('../utils/erros');
 const { obterParametrosPaginacao, montarPaginacao } = require('../utils/paginacao');
 const { PONTOS_MONITOR, PONTOS_ALUNO } = require('../utils/regrasConclusao');
 
@@ -43,6 +45,17 @@ class AgendamentoController {
     }
 
     // Plano 12: o monitor dono da vaga marca que o aluno faltou
+    // Plano 7: POST /agendamentos/:id/recurso { justificativa, arquivo: { nome, tipo, conteudo } }
+    async pedirRecurso(req, res) {
+        if (req.usuario.tipo !== 'aluno')
+            throw new ErroNaoAutorizado('Só o aluno pode pedir a revisão da própria falta.');
+        const id = Number(req.params.id);
+        if (!Number.isInteger(id) || id <= 0)
+            throw new ErroNaoEncontrado('Inscrição não encontrada.');
+        const recurso = await recursoService.pedir(id, req.usuario.id, req.body);
+        return res.status(201).json({ success: true, recurso });
+    }
+
     async marcarAusencia(req, res) {
         const agendamento = await agendamentoService.marcarAusencia(
             parseInt(req.params.id, 10),

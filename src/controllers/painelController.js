@@ -1,6 +1,7 @@
 // src/controllers/painelController.js
 // Plano 7 (RF-012): rotas /admin/* do painel da coordenação (só coordenador; ver painelRotas.js).
 const painelService = require('../services/painelService');
+const recursoService = require('../services/recursoService');
 const { ErroValidacao } = require('../utils/erros');
 
 const FORMATO_PERIODO = /^\d{4}\.[12]$/;
@@ -110,6 +111,68 @@ exports.mesclarDisciplina = async (req, res) => {
     const r = await painelService.mesclarDisciplina(
         idDaRota(req.params.id, 'Disciplina inválida.'),
         destino,
+        coordenadorDe(req)
+    );
+    return res.status(200).json({ success: true, ...r });
+};
+
+// GET /admin/faltas?periodo=2026.2: faltas do semestre, inscrições sem presença e bloqueados
+exports.faltas = async (req, res) => {
+    const r = await painelService.faltas(periodoDaConsulta(req.query.periodo));
+    res.set('Cache-Control', 'no-store');
+    return res.status(200).json({ success: true, ...r });
+};
+
+// POST /admin/agendamentos/:id/falta
+exports.marcarFalta = async (req, res) => {
+    const r = await painelService.marcarFalta(
+        idDaRota(req.params.id, 'Inscrição inválida.'),
+        coordenadorDe(req)
+    );
+    return res.status(200).json({ success: true, ...r });
+};
+
+// POST /admin/agendamentos/:id/anular-falta { motivo }
+exports.anularFalta = async (req, res) => {
+    const r = await painelService.anularFalta(
+        idDaRota(req.params.id, 'Inscrição inválida.'),
+        req.body ? req.body.motivo : undefined,
+        coordenadorDe(req)
+    );
+    return res.status(200).json({ success: true, ...r });
+};
+
+// GET /admin/recursos/:id/arquivo: o comprovante, aberto no navegador (só coordenação)
+exports.arquivoDoRecurso = async (req, res) => {
+    const a = await recursoService.arquivo(idDaRota(req.params.id, 'Pedido inválido.'));
+    // Nome só com caracteres seguros no cabeçalho; o original vai codificado (RFC 5987)
+    const ascii = a.nome.replace(/[^A-Za-z0-9._-]/g, '_');
+    res.set({
+        'Content-Type': a.tipo,
+        'Content-Length': String(a.conteudo.length),
+        'Content-Disposition': `inline; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(a.nome)}`,
+        'Cache-Control': 'no-store, private',
+        // Só o próprio arquivo: o PDF ou a imagem abrem no visualizador do navegador, sem script
+        'Content-Security-Policy':
+            "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; object-src 'self'; frame-ancestors 'none'; sandbox"
+    });
+    return res.status(200).send(a.conteudo);
+};
+
+// POST /admin/recursos/:id/aceitar
+exports.aceitarRecurso = async (req, res) => {
+    const r = await recursoService.aceitar(
+        idDaRota(req.params.id, 'Pedido inválido.'),
+        coordenadorDe(req)
+    );
+    return res.status(200).json({ success: true, ...r });
+};
+
+// POST /admin/recursos/:id/recusar { motivo }
+exports.recusarRecurso = async (req, res) => {
+    const r = await recursoService.recusar(
+        idDaRota(req.params.id, 'Pedido inválido.'),
+        req.body ? req.body.motivo : undefined,
         coordenadorDe(req)
     );
     return res.status(200).json({ success: true, ...r });

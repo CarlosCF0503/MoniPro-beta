@@ -2,7 +2,8 @@
 // Plano 7 (RF-012): painel da coordenação. As rotas /admin/* exigem tipo_usuario = coordenador
 // (middleware isCoordenador; aluno e monitor recebem 403) e toda ação de escrita entra na auditoria.
 // Os gráficos são SVG/HTML montados aqui: a CSP do site só aceita scripts do próprio domínio.
-// Depende de: api.js (chamadaApi, escaparHtml, obterSessao), toast.js (showToast, mensagemDaApi).
+// Depende de: api.js (chamadaApi, escaparHtml, obterSessao, MB_BETA_ORM), toast.js (showToast,
+// mensagemDaApi).
 document.addEventListener('DOMContentLoaded', async () => {
     const esc = escaparHtml;
     const raiz = document.getElementById('painel-app');
@@ -29,6 +30,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         certificados: { pendente: [], assinado: [] },
         disciplinas: [],
         aprovadas: [],
+        faltas: { recursos: [], faltas: [], sem_presenca: [], bloqueados: [] },
+        filtroFalta: 'recursos',
         auditoria: []
     };
 
@@ -78,15 +81,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         raiz.setAttribute('aria-busy', 'true');
         const q = S.periodo ? '?periodo=' + encodeURIComponent(S.periodo) : '';
         const ps = q ? '&' + q.slice(1) : '';
-        let r, m, a, cp, ca, di;
+        let r, m, a, cp, ca, di, fa;
         try {
-            [r, m, a, cp, ca, di] = await Promise.all([
+            [r, m, a, cp, ca, di, fa] = await Promise.all([
                 chamadaApi('/admin/resumo' + q),
                 chamadaApi('/admin/monitores' + q),
                 chamadaApi('/admin/auditoria?limit=20'),
                 chamadaApi('/admin/certificados?situacao=pendente'),
                 chamadaApi('/admin/certificados?situacao=assinado' + ps),
-                chamadaApi('/admin/disciplinas')
+                chamadaApi('/admin/disciplinas'),
+                chamadaApi('/admin/faltas' + q)
             ]);
         } catch {
             r = { success: false, erro: 'Não foi possível conectar ao servidor.' };
@@ -109,6 +113,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
         S.disciplinas = (di && di.disciplinas) || [];
         S.aprovadas = (di && di.aprovadas) || [];
+        S.faltas = {
+            recursos: (fa && fa.recursos) || [],
+            faltas: (fa && fa.faltas) || [],
+            sem_presenca: (fa && fa.sem_presenca) || [],
+            bloqueados: (fa && fa.bloqueados) || []
+        };
         render();
     }
 
@@ -143,11 +153,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 baixa
             ],
             [
-                null,
+                'faltas',
                 ICO.bloqueio,
-                'Alunos bloqueados por faltas',
-                bloq ? 'agora, pela regra de 3 faltas em 30 dias' : 'nenhum aluno bloqueado agora',
-                bloq
+                'Recursos de falta',
+                S.faltas.recursos.length
+                    ? 'alunos pedindo revisão com atestado'
+                    : bloq
+                      ? 'nenhum pedido; ' +
+                        bloq +
+                        (bloq === 1 ? ' aluno bloqueado' : ' alunos bloqueados')
+                      : 'nenhum pedido de revisão',
+                S.faltas.recursos.length
             ]
         ];
         return (
@@ -777,13 +793,136 @@ document.addEventListener('DOMContentLoaded', async () => {
         );
     }
 
+    function abaFaltas() {
+        const F = S.faltas;
+        const f = S.filtroFalta;
+        const bloq = F.bloqueados.length
+            ? '<p class="pn-dica"><b>Bloqueados agora:</b> ' +
+              F.bloqueados
+                  .map((b) => esc(b.aluno || 'conta excluída') + ' (até ' + dataCurta(b.ate) + ')')
+                  .join(', ') +
+              '. Anular uma falta recalcula o bloqueio na hora.</p>'
+            : '<p class="pn-dica">Nenhum aluno bloqueado por faltas agora.</p>';
+        const filtro =
+            '<div class="pn-filtro" role="group" aria-label="Lista">' +
+            [
+                ['recursos', 'Pedidos de revisão', F.recursos.length],
+                ['faltas', 'Faltas registradas', F.faltas.length],
+                ['sem', 'Sem presença confirmada', F.sem_presenca.length]
+            ]
+                .map(
+                    ([k, t, n]) =>
+                        '<button type="button" data-pn-falta="' +
+                        k +
+                        '" aria-pressed="' +
+                        (f === k) +
+                        '">' +
+                        t +
+                        ' (' +
+                        n +
+                        ')</button>'
+                )
+                .join('') +
+            '</div>';
+        const sessao = (x) =>
+            '<td><b>' +
+            esc(x.aluno) +
+            '</b><small>' +
+            esc(x.disciplina) +
+            ' · ' +
+            esc(x.monitor) +
+            '</small></td><td>' +
+            dataHora(x.horario) +
+            '</td>';
+        const tamanho = (b) =>
+            b >= 1048576
+                ? (b / 1048576).toFixed(1).replace('.', ',') + ' MB'
+                : Math.max(1, Math.round(b / 1024)) + ' KB';
+        if (f === 'recursos')
+            return (
+                filtro +
+                '<p class="pn-dica">O aluno explicou a falta e anexou um comprovante. Aceitar anula a falta (não vira presença nem dá pontos). Recusar mantém a falta, e o aluno recebe o motivo por e-mail. O comprovante é um dado de saúde: abra só para decidir, sem baixar para outro lugar.</p>' +
+                tabela(
+                    [['Aluno'], ['Sessão'], ['Justificativa'], ['Comprovante'], ['', 'num']],
+                    F.recursos.map(
+                        (x) =>
+                            '<tr>' +
+                            sessao(x) +
+                            '<td class="pn-just">' +
+                            esc(x.justificativa) +
+                            '<small>enviado em ' +
+                            dataCurta(x.criado_em) +
+                            '</small></td><td>' +
+                            '<a class="pn-anexo" href="' +
+                            MB_BETA_ORM +
+                            '/admin/recursos/' +
+                            x.id +
+                            '/arquivo" target="_blank" rel="noopener">' +
+                            ico(ICO.cert, 16) +
+                            esc(x.arquivo.nome) +
+                            '</a><small>' +
+                            esc(tamanho(x.arquivo.tamanho)) +
+                            '</small></td><td><div class="pn-acoes"><button type="button" class="pp-btn pp-btn-texto-perigo pp-btn-p" data-pn="recusar-recurso" data-id="' +
+                            x.id +
+                            '">Recusar</button><button type="button" class="pp-btn pp-btn-pri pp-btn-p" data-pn="aceitar-recurso" data-id="' +
+                            x.id +
+                            '">Aceitar e anular</button></div></td></tr>'
+                    ),
+                    'Nenhum pedido de revisão esperando análise.'
+                )
+            );
+        if (f === 'faltas')
+            return (
+                filtro +
+                bloq +
+                tabela(
+                    [['Aluno'], ['Sessão'], ['Falta marcada em'], ['', 'num']],
+                    F.faltas.map(
+                        (x) =>
+                            '<tr>' +
+                            sessao(x) +
+                            '<td>' +
+                            dataHora(x.ausente_em) +
+                            '</td><td><div class="pn-acoes"><button type="button" class="pp-btn pp-btn-sec pp-btn-p" data-pn="anular" data-id="' +
+                            x.id +
+                            '">Anular falta</button></div></td></tr>'
+                    ),
+                    'Nenhuma falta registrada neste semestre.'
+                )
+            );
+        return (
+            filtro +
+            '<p class="pn-dica">Inscrições em sessões que já começaram, sem presença confirmada pelos dois lados e sem falta. A coordenação pode marcar a falta mesmo depois dos 7 dias do monitor.</p>' +
+            tabela(
+                [['Aluno'], ['Sessão'], ['Aluno confirmou?'], ['', 'num']],
+                F.sem_presenca.map(
+                    (x) =>
+                        '<tr>' +
+                        sessao(x) +
+                        '<td>' +
+                        (x.aluno_confirmou
+                            ? '<span class="pill pill-ok">Sim</span>'
+                            : '<span class="pill pill-aberta">Não</span>') +
+                        '</td><td><div class="pn-acoes"><button type="button" class="pp-btn pp-btn-texto-perigo pp-btn-p" data-pn="marcar-falta" data-id="' +
+                        x.id +
+                        '">Marcar falta</button></div></td></tr>'
+                ),
+                'Nenhuma inscrição sem presença neste semestre.'
+            )
+        );
+    }
+
     function abaAtividade() {
         const tipo = {
             criar_coordenador: [ICO.pessoa, ''],
             assinar_certificado: [ICO.pena, 'ok'],
             revogar_certificado: [ICO.x, 'perigo'],
             aprovar_disciplina: [ICO.ok, 'ok'],
-            mesclar_disciplina: [ICO.juntar, '']
+            mesclar_disciplina: [ICO.juntar, ''],
+            marcar_falta: [ICO.alerta, 'perigo'],
+            anular_falta: [ICO.ok, 'ok'],
+            aceitar_recurso: [ICO.ok, 'ok'],
+            recusar_recurso: [ICO.x, 'perigo']
         };
         if (!S.auditoria.length) return '<p class="pn-vazio">Nenhuma ação registrada ainda.</p>';
         return (
@@ -824,12 +963,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 S.disciplinas.length,
                 S.disciplinas.length > 0
             ],
+            [
+                'faltas',
+                'Faltas',
+                S.faltas.recursos.length || S.faltas.faltas.length,
+                S.faltas.recursos.length > 0
+            ],
             ['monitores', 'Monitores', S.monitores.length, baixa > 0],
             ['atividade', 'Atividade', null, false]
         ];
         const corpo = {
             certificados: abaCertificados,
             disciplinas: abaDisciplinas,
+            faltas: abaFaltas,
             monitores: abaMonitores,
             atividade: abaAtividade
         }[S.aba]();
@@ -1110,6 +1256,107 @@ document.addEventListener('DOMContentLoaded', async () => {
         render();
     });
 
+    // ---------- faltas: marcar e anular ----------
+    const dlgAnu = document.getElementById('dlg-anular');
+    const dlgFal = document.getElementById('dlg-falta');
+    const descricaoSessao = (x) =>
+        x.aluno + ' · ' + x.disciplina + ' com ' + x.monitor + ' · ' + dataHora(x.horario);
+
+    function abrirAnular(x) {
+        document.getElementById('anu-sub').textContent = descricaoSessao(x);
+        const motivo = document.getElementById('anu-motivo');
+        motivo.value = '';
+        document.getElementById('anu-erro').textContent = '';
+        document.getElementById('anu-confirmar').dataset.id = x.id;
+        dlgAnu.showModal();
+        motivo.focus();
+    }
+
+    function abrirMarcar(x) {
+        document.getElementById('fal-sub').textContent = descricaoSessao(x);
+        document.getElementById('fal-confirmar').dataset.id = x.id;
+        dlgFal.showModal();
+    }
+
+    document.getElementById('anu-form').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const b = document.getElementById('anu-confirmar');
+        const id = Number(b.dataset.id);
+        const motivo = document.getElementById('anu-motivo').value.trim();
+        if (motivo.length < 10) {
+            document.getElementById('anu-erro').textContent =
+                'Escreva a justificativa com pelo menos 10 caracteres. Ela fica no registro de atividade.';
+            return;
+        }
+        const r = await executar(
+            b,
+            '/admin/agendamentos/' + id + '/anular-falta',
+            { motivo },
+            'Falta anulada. O bloqueio do aluno, se houver, já foi recalculado.'
+        );
+        if (!r) return;
+        dlgAnu.close();
+        carregar();
+    });
+
+    document.getElementById('fal-form').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const b = document.getElementById('fal-confirmar');
+        const r = await executar(
+            b,
+            '/admin/agendamentos/' + Number(b.dataset.id) + '/falta',
+            null,
+            'Falta marcada. Ela aparece no perfil do aluno.'
+        );
+        if (!r) return;
+        dlgFal.close();
+        S.filtroFalta = 'faltas';
+        carregar();
+    });
+
+    // ---------- recursos de falta: aceitar e recusar ----------
+    const dlgRecusar = document.getElementById('dlg-recusar');
+    async function aceitarRecurso(id, botao) {
+        const x = S.faltas.recursos.find((r) => r.id === id);
+        if (!x) return;
+        const r = await executar(
+            botao,
+            '/admin/recursos/' + id + '/aceitar',
+            null,
+            'Pedido aceito e falta anulada. ' + x.aluno + ' recebe a resposta por e-mail.'
+        );
+        if (r) carregar();
+    }
+    function abrirRecusar(x) {
+        document.getElementById('rcs-sub').textContent =
+            x.aluno + ' · ' + x.disciplina + ' · ' + dataHora(x.horario);
+        const motivo = document.getElementById('rcs-motivo');
+        motivo.value = '';
+        document.getElementById('rcs-erro').textContent = '';
+        document.getElementById('rcs-confirmar').dataset.id = x.id;
+        dlgRecusar.showModal();
+        motivo.focus();
+    }
+    document.getElementById('rcs-form').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const b = document.getElementById('rcs-confirmar');
+        const motivo = document.getElementById('rcs-motivo').value.trim();
+        if (motivo.length < 10) {
+            document.getElementById('rcs-erro').textContent =
+                'Escreva o motivo com pelo menos 10 caracteres. O aluno recebe esse texto por e-mail.';
+            return;
+        }
+        const r = await executar(
+            b,
+            '/admin/recursos/' + Number(b.dataset.id) + '/recusar',
+            { motivo },
+            'Pedido recusado. O aluno recebe o motivo por e-mail.'
+        );
+        if (!r) return;
+        dlgRecusar.close();
+        carregar();
+    });
+
     // ---------- eventos ----------
     raiz.addEventListener('change', (ev) => {
         if (ev.target.id === 'pn-sem') {
@@ -1123,6 +1370,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (ir) {
             S.aba = ir.dataset.pnIr;
             if (S.aba === 'certificados') S.filtroCert = 'pendente';
+            if (S.aba === 'faltas') S.filtroFalta = 'recursos';
             render();
             document
                 .getElementById('pn-gestao')
@@ -1134,6 +1382,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             S.aba = aba.dataset.pnAba;
             render();
             document.getElementById('aba-' + S.aba).focus();
+            return;
+        }
+        const ff = ev.target.closest('[data-pn-falta]');
+        if (ff) {
+            S.filtroFalta = ff.dataset.pnFalta;
+            render();
             return;
         }
         const fc = ev.target.closest('[data-pn-cert]');
@@ -1152,6 +1406,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             return abrirRevogar(S.certificados.assinado.find((x) => x.id === id));
         if (b.dataset.pn === 'mesclar') return abrirMesclar(S.disciplinas.find((x) => x.id === id));
         if (b.dataset.pn === 'aprovar') return aprovarDisciplina(id, b);
+        if (b.dataset.pn === 'anular') return abrirAnular(S.faltas.faltas.find((x) => x.id === id));
+        if (b.dataset.pn === 'aceitar-recurso') return aceitarRecurso(id, b);
+        if (b.dataset.pn === 'recusar-recurso')
+            return abrirRecusar(S.faltas.recursos.find((x) => x.id === id));
+        if (b.dataset.pn === 'marcar-falta')
+            return abrirMarcar(S.faltas.sem_presenca.find((x) => x.id === id));
     });
 
     carregar();

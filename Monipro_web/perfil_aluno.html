@@ -231,6 +231,31 @@
       </form>
     </dialog>
 
+    <!-- Plano 7: pedir revisão da falta à coordenação, com o atestado -->
+    <dialog class="pp-dlg" id="dlg-recurso" aria-labelledby="rec-titulo">
+      <form id="rec-form" novalidate>
+        <div>
+          <h2 id="rec-titulo">Pedir revisão da falta</h2>
+          <p class="pp-sub" id="rec-sub"></p>
+        </div>
+        <div class="pp-campo">
+          <label class="pp-rotulo" for="rec-justificativa">Por que você faltou?</label>
+          <textarea id="rec-justificativa" rows="3" maxlength="500" placeholder="Ex.: consulta médica no horário da monitoria."></textarea>
+        </div>
+        <div class="pp-campo">
+          <label class="pp-rotulo" for="rec-arquivo">Atestado ou comprovante</label>
+          <input type="file" id="rec-arquivo" accept="application/pdf,image/jpeg,image/png" />
+          <small class="pp-ajuda">PDF, JPG ou PNG, até 5 MB. Uma foto nítida do celular serve.</small>
+        </div>
+        <p class="pp-erro" id="rec-erro" aria-live="polite"></p>
+        <p class="nota-24h nota-bloco">O atestado é um dado de saúde: só a coordenação do curso vê, e ele é apagado 180 dias depois do envio. Se a coordenação aceitar, a falta deixa de contar.</p>
+        <div class="pp-acoes">
+          <button type="button" class="pp-btn pp-btn-sec" data-fechar>Voltar</button>
+          <button type="submit" class="pp-btn pp-btn-pri" id="rec-enviar">Enviar pedido</button>
+        </div>
+      </form>
+    </dialog>
+
     <!-- Detalhes da monitoria (celular): abre ao tocar numa linha da lista -->
     <dialog class="pp-dlg" id="dlg-detalhes" aria-labelledby="det-titulo">
       <div class="pp-dlg-corpo">

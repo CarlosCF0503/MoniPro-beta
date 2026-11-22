@@ -153,56 +153,63 @@ docker compose -f docker-compose.e2e.yml down -v
 Todas as rotas exigem sessão, exceto as marcadas como públicas. "Monitor" e "coordenação"
 indicam rota restrita a esse papel.
 
-| Método | Caminho                             | Descrição                                                                    |
-| :----- | :---------------------------------- | :--------------------------------------------------------------------------- |
-| GET    | `/saude`                            | Situação da API e do banco (pública)                                         |
-| POST   | `/auth/cadastro`                    | Cria a conta e envia o link de confirmação do e-mail (pública)               |
-| POST   | `/auth/login`                       | Entra e grava o cookie de sessão (pública)                                   |
-| GET    | `/auth/sessao`                      | Dados da sessão atual                                                        |
-| POST   | `/auth/sair`                        | Encerra todas as sessões do usuário                                          |
-| POST   | `/auth/senha/esqueci`               | Envia o link para redefinir a senha (pública)                                |
-| POST   | `/auth/senha/redefinir`             | Grava a senha nova a partir do link (pública)                                |
-| POST   | `/auth/email/confirmar`             | Confirma o e-mail a partir do link (pública)                                 |
-| POST   | `/auth/email/reenviar`              | Reenvia o link de confirmação (pública)                                      |
-| POST   | `/auth/email/corrigir`              | Corrige o e-mail de uma conta ainda não confirmada (pública)                 |
-| GET    | `/disciplinas`                      | Lista as disciplinas                                                         |
-| POST   | `/disciplinas`                      | Cadastra uma disciplina, pendente até a coordenação revisar (monitor)        |
-| GET    | `/disciplinas/:id/ranking`          | Ranking de pontos da disciplina                                              |
-| POST   | `/monitorias`                       | Cria uma vaga, ou uma série semanal com `repeticao` (monitor)                |
-| GET    | `/monitorias/:idDisciplina`         | Vagas de uma disciplina; filtros opcionais `periodo`, `monitor` e `livres=1` |
-| GET    | `/monitorias/monitor/agendamentos`  | Inscrições nas vagas do monitor                                              |
-| PATCH  | `/monitorias/:id`                   | Edita uma vaga ativa (monitor)                                               |
-| PUT    | `/monitorias/:id/cancelar`          | Cancela uma vaga (monitor)                                                   |
-| PUT    | `/monitorias/:id/cancelar-proximas` | Cancela esta vaga e as próximas da mesma série semanal (monitor)             |
-| POST   | `/monitorias/:id/espera`            | Entra na lista de espera de uma vaga lotada                                  |
-| PATCH  | `/monitorias/:id/finalizar`         | Registra o término da sessão (monitor)                                       |
-| POST   | `/agendamentos`                     | Inscreve o aluno numa vaga                                                   |
-| GET    | `/agendamentos`                     | Inscrições do usuário                                                        |
-| DELETE | `/agendamentos/:id`                 | Cancela uma inscrição (RN-001) ou sai da lista de espera                     |
-| PATCH  | `/agendamentos/:id/presenca`        | O aluno confirma que a sessão aconteceu                                      |
-| PATCH  | `/agendamentos/:id/concluir`        | O monitor confirma a presença do aluno (monitor)                             |
-| PATCH  | `/agendamentos/:id/ausencia`        | O monitor marca que o aluno faltou (monitor)                                 |
-| GET    | `/perfil`                           | Dados do perfil                                                              |
-| GET    | `/perfil/agendamentos`              | Inscrições exibidas no perfil                                                |
-| GET    | `/perfil/monitorias`                | Vagas exibidas no perfil do monitor                                          |
-| GET    | `/perfil/restricao`                 | Bloqueio de novas inscrições por faltas (ou `null`)                          |
-| DELETE | `/perfil`                           | Exclui (anonimiza) a conta, com confirmação da senha                         |
-| GET    | `/pontos/extrato`                   | Extrato de pontos do usuário                                                 |
-| GET    | `/certificados/elegibilidade`       | Horas do semestre e se a declaração pode ser emitida (monitor)               |
-| GET    | `/certificados`                     | Declarações emitidas (monitor)                                               |
-| POST   | `/certificados`                     | Emite a declaração do semestre (monitor)                                     |
-| GET    | `/certificados/:codigo`             | Abre uma declaração                                                          |
-| GET    | `/certificados/verificar/:codigo`   | Confere a situação de uma declaração (pública)                               |
-| GET    | `/admin/resumo`                     | Indicadores e gráficos do semestre (`periodo` opcional) (coordenação)        |
-| GET    | `/admin/monitores`                  | Uma linha por monitor com vaga no semestre (coordenação)                     |
-| GET    | `/admin/auditoria`                  | Últimas ações registradas no painel (coordenação)                            |
-| GET    | `/admin/certificados`               | Certificados para assinar (`situacao=pendente`) ou assinados (coordenação)   |
-| GET    | `/admin/certificados/:id/sessoes`   | Sessões guardadas no certificado, para conferir (coordenação)                |
-| POST   | `/admin/certificados/:id/assinar`   | Assina o certificado e avisa o monitor (coordenação)                         |
-| POST   | `/admin/certificados/:id/revogar`   | Revoga com motivo e avisa o monitor (coordenação)                            |
-| GET    | `/admin/disciplinas`                | Pendentes de revisão, com a aprovada mais parecida (coordenação)             |
-| POST   | `/admin/disciplinas/:id/aprovar`    | Publica a disciplina para os alunos (coordenação)                            |
-| POST   | `/admin/disciplinas/:id/mesclar`    | Junta com uma aprovada; vagas e pontos passam para ela (coordenação)         |
+| Método | Caminho                                | Descrição                                                                    |
+| :----- | :------------------------------------- | :--------------------------------------------------------------------------- |
+| GET    | `/saude`                               | Situação da API e do banco (pública)                                         |
+| POST   | `/auth/cadastro`                       | Cria a conta e envia o link de confirmação do e-mail (pública)               |
+| POST   | `/auth/login`                          | Entra e grava o cookie de sessão (pública)                                   |
+| GET    | `/auth/sessao`                         | Dados da sessão atual                                                        |
+| POST   | `/auth/sair`                           | Encerra todas as sessões do usuário                                          |
+| POST   | `/auth/senha/esqueci`                  | Envia o link para redefinir a senha (pública)                                |
+| POST   | `/auth/senha/redefinir`                | Grava a senha nova a partir do link (pública)                                |
+| POST   | `/auth/email/confirmar`                | Confirma o e-mail a partir do link (pública)                                 |
+| POST   | `/auth/email/reenviar`                 | Reenvia o link de confirmação (pública)                                      |
+| POST   | `/auth/email/corrigir`                 | Corrige o e-mail de uma conta ainda não confirmada (pública)                 |
+| GET    | `/disciplinas`                         | Lista as disciplinas                                                         |
+| POST   | `/disciplinas`                         | Cadastra uma disciplina, pendente até a coordenação revisar (monitor)        |
+| GET    | `/disciplinas/:id/ranking`             | Ranking de pontos da disciplina                                              |
+| POST   | `/monitorias`                          | Cria uma vaga, ou uma série semanal com `repeticao` (monitor)                |
+| GET    | `/monitorias/:idDisciplina`            | Vagas de uma disciplina; filtros opcionais `periodo`, `monitor` e `livres=1` |
+| GET    | `/monitorias/monitor/agendamentos`     | Inscrições nas vagas do monitor                                              |
+| PATCH  | `/monitorias/:id`                      | Edita uma vaga ativa (monitor)                                               |
+| PUT    | `/monitorias/:id/cancelar`             | Cancela uma vaga (monitor)                                                   |
+| PUT    | `/monitorias/:id/cancelar-proximas`    | Cancela esta vaga e as próximas da mesma série semanal (monitor)             |
+| POST   | `/monitorias/:id/espera`               | Entra na lista de espera de uma vaga lotada                                  |
+| PATCH  | `/monitorias/:id/finalizar`            | Registra o término da sessão (monitor)                                       |
+| POST   | `/agendamentos`                        | Inscreve o aluno numa vaga                                                   |
+| GET    | `/agendamentos`                        | Inscrições do usuário                                                        |
+| DELETE | `/agendamentos/:id`                    | Cancela uma inscrição (RN-001) ou sai da lista de espera                     |
+| PATCH  | `/agendamentos/:id/presenca`           | O aluno confirma que a sessão aconteceu                                      |
+| PATCH  | `/agendamentos/:id/concluir`           | O monitor confirma a presença do aluno (monitor)                             |
+| PATCH  | `/agendamentos/:id/ausencia`           | O monitor marca que o aluno faltou (monitor)                                 |
+| POST   | `/agendamentos/:id/recurso`            | O aluno pede revisão da falta com comprovante (aluno)                        |
+| GET    | `/perfil`                              | Dados do perfil                                                              |
+| GET    | `/perfil/agendamentos`                 | Inscrições exibidas no perfil                                                |
+| GET    | `/perfil/monitorias`                   | Vagas exibidas no perfil do monitor                                          |
+| GET    | `/perfil/restricao`                    | Bloqueio de novas inscrições por faltas (ou `null`)                          |
+| DELETE | `/perfil`                              | Exclui (anonimiza) a conta, com confirmação da senha                         |
+| GET    | `/pontos/extrato`                      | Extrato de pontos do usuário                                                 |
+| GET    | `/certificados/elegibilidade`          | Horas do semestre e se a declaração pode ser emitida (monitor)               |
+| GET    | `/certificados`                        | Declarações emitidas (monitor)                                               |
+| POST   | `/certificados`                        | Emite a declaração do semestre (monitor)                                     |
+| GET    | `/certificados/:codigo`                | Abre uma declaração                                                          |
+| GET    | `/certificados/verificar/:codigo`      | Confere a situação de uma declaração (pública)                               |
+| GET    | `/admin/resumo`                        | Indicadores e gráficos do semestre (`periodo` opcional) (coordenação)        |
+| GET    | `/admin/monitores`                     | Uma linha por monitor com vaga no semestre (coordenação)                     |
+| GET    | `/admin/auditoria`                     | Últimas ações registradas no painel (coordenação)                            |
+| GET    | `/admin/certificados`                  | Certificados para assinar (`situacao=pendente`) ou assinados (coordenação)   |
+| GET    | `/admin/certificados/:id/sessoes`      | Sessões guardadas no certificado, para conferir (coordenação)                |
+| POST   | `/admin/certificados/:id/assinar`      | Assina o certificado e avisa o monitor (coordenação)                         |
+| POST   | `/admin/certificados/:id/revogar`      | Revoga com motivo e avisa o monitor (coordenação)                            |
+| GET    | `/admin/disciplinas`                   | Pendentes de revisão, com a aprovada mais parecida (coordenação)             |
+| POST   | `/admin/disciplinas/:id/aprovar`       | Publica a disciplina para os alunos (coordenação)                            |
+| POST   | `/admin/disciplinas/:id/mesclar`       | Junta com uma aprovada; vagas e pontos passam para ela (coordenação)         |
+| GET    | `/admin/faltas`                        | Faltas do semestre, inscrições sem presença e bloqueados (coordenação)       |
+| POST   | `/admin/agendamentos/:id/falta`        | Marca a falta, sem o prazo de 7 dias do monitor (coordenação)                |
+| POST   | `/admin/agendamentos/:id/anular-falta` | Anula a falta com justificativa (coordenação)                                |
+| GET    | `/admin/recursos/:id/arquivo`          | Comprovante de um pedido de revisão de falta (coordenação)                   |
+| POST   | `/admin/recursos/:id/aceitar`          | Aceita o pedido e anula a falta (coordenação)                                |
+| POST   | `/admin/recursos/:id/recusar`          | Recusa o pedido com motivo (coordenação)                                     |
 
 Um prefixo novo na API também precisa entrar no Nginx do servidor (homologação e produção) e
 em `e2e/pilha/gateway.conf`. Sem isso, o caminho cai no frontend.

@@ -137,6 +137,11 @@
 .pn .pn-log small { font-size: 12px; color: var(--slate); }
 .pn .pn-log time { font-size: 12px; color: var(--slate); white-space: nowrap; font-variant-numeric: tabular-nums; }
 
+/* recursos de falta */
+.pn .pn-just { max-width: 320px; font-size: 13px; }
+.pagina-perfil .pn-anexo { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--navy-2); text-decoration: none; overflow-wrap: anywhere; }
+.pagina-perfil .pn-anexo:hover { text-decoration: underline; }
+
 /* diálogos */
 .pp-dlg .pn-sessoes { list-style: none; display: flex; flex-direction: column; max-height: 300px; overflow-y: auto; border: 1px solid var(--line); border-radius: 10px; }
 .pp-dlg .pn-sessoes li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--line); font-size: 13px; }
