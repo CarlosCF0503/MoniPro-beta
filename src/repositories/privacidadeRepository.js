@@ -63,6 +63,8 @@ class PrivacidadeRepository {
         await db.notificacao.deleteMany({ where: { id_usuario: id } });
         // Plano 7: pedidos de revisão de falta levam atestado (dado de saúde): saem na hora
         await db.recursoFalta.deleteMany({ where: { id_aluno: id } });
+        // Plano 6: as avaliações que o aluno deu (ligam aluno e monitor)
+        await db.avaliacao.deleteMany({ where: { id_aluno: id } });
         return await db.usuario.update({
             where: { id },
             data: {

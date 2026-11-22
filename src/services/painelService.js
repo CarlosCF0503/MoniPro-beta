@@ -7,6 +7,8 @@ const painelRepository = require('../repositories/painelRepository');
 const certificadoRepository = require('../repositories/certificadoRepository');
 const agendamentoRepository = require('../repositories/agendamentoRepository');
 const recursoService = require('./recursoService');
+const avaliacaoRepository = require('../repositories/avaliacaoRepository');
+const { MINIMO_MEDIA } = require('../utils/avaliacao');
 const { enviarSemEsperar } = require('./email');
 const { ErroAplicacao, ErroNaoEncontrado } = require('../utils/erros');
 const logger = require('../utils/logger');
@@ -173,11 +175,25 @@ class PainelService {
         const p = periodo || periodoDe(agora);
         const j = janela(p, agora);
         if (j.inicio >= j.ate) return [];
-        const [vagas, comCertificado] = await Promise.all([
+        const [vagas, comCertificado, medias] = await Promise.all([
             painelRepository.buscarVagas(j.inicio, j.ate),
-            painelRepository.monitoresComCertificado(p)
+            painelRepository.monitoresComCertificado(p),
+            avaliacaoRepository.mediasPorMonitor(j.inicio, j.ate)
         ]);
-        return resumirMonitores(vagas, { fim: j.fim, agora, comCertificado });
+        // Plano 6: média do semestre (só as visíveis; com menos de 3, sem média)
+        return resumirMonitores(vagas, { fim: j.fim, agora, comCertificado }).map((m) => {
+            const a = medias.get(m.id);
+            return {
+                ...m,
+                avaliacao: {
+                    total: a ? a.total : 0,
+                    media:
+                        a && a.total >= MINIMO_MEDIA
+                            ? Math.round((a.soma / a.total) * 10) / 10
+                            : null
+                }
+            };
+        });
     }
 
     /** pendente: válidos sem assinatura (todos os semestres); assinado: do semestre pedido. */

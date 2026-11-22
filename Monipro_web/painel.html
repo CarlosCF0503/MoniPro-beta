@@ -333,6 +333,26 @@
       </form>
     </dialog>
 
+    <!-- Plano 6: ocultar um comentário de avaliação (a nota sai da média enquanto estiver oculto) -->
+    <dialog class="pp-dlg" id="dlg-ocultar" aria-labelledby="ocu-titulo">
+      <form id="ocu-form" novalidate>
+        <div>
+          <h2 id="ocu-titulo">Ocultar este comentário?</h2>
+          <p class="pp-sub" id="ocu-sub"></p>
+        </div>
+        <div class="pp-campo">
+          <label class="pp-rotulo" for="ocu-motivo">Motivo</label>
+          <textarea id="ocu-motivo" rows="2" maxlength="300" placeholder="Ex.: comentário ofensivo ao monitor."></textarea>
+          <p class="pp-erro" id="ocu-erro" aria-live="polite"></p>
+        </div>
+        <p class="nota-24h nota-bloco">O monitor deixa de ver o texto, e a nota sai da média dele. Se você mostrar de novo, a nota volta a contar.</p>
+        <div class="pp-acoes">
+          <button type="button" class="pp-btn pp-btn-sec" data-fechar>Voltar</button>
+          <button type="submit" class="pp-btn pp-btn-perigo" id="ocu-confirmar">Ocultar</button>
+        </div>
+      </form>
+    </dialog>
+
     <div id="toast-container"></div>
     <script src="JS/config.js"></script>
     <script src="JS/api.js" defer></script>

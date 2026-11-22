@@ -101,7 +101,9 @@ class AgendamentoRepository {
                         }
                     },
                     // Plano 7: o pedido de revisão da falta, sem o arquivo
-                    recurso: { select: { status: true, criado_em: true, motivo_decisao: true } }
+                    recurso: { select: { status: true, criado_em: true, motivo_decisao: true } },
+                    // Plano 6: a nota que o próprio aluno deu (o comentário fica de fora)
+                    avaliacao: { select: { nota: true } }
                 },
 
                 orderBy: { data_hora: 'desc' },

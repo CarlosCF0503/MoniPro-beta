@@ -161,6 +161,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         return '';
     }
 
+    // Plano 6 (RF-006): avaliar a monitoria (nota de 1 a 5), com presença dos dois lados, uma vez,
+    // até 7 dias depois da sessão (o mesmo prazo da confirmação)
+    // Nota em número ("4/5"): mais legível no celular que uma fileira de estrelas
+    const SIGNIFICADO = { 1: 'Ruim', 2: 'Fraca', 3: 'Ok', 4: 'Boa', 5: 'Ótima' };
+    function podeAvaliar(i) {
+        return !i.avaliacao && S.agora <= D.limiteConfirmacao({ inicio: i.inicio });
+    }
+    const botaoAvaliar = (i, classe, rotulo) =>
+        '<button type="button" class="' +
+        classe +
+        '" data-acao="avaliar" data-id="' +
+        esc(i.id) +
+        '" aria-label="Avaliar a monitoria de ' +
+        esc(i.disciplina) +
+        '">' +
+        rotulo +
+        '</button>';
+    function avaliacaoHTML(i) {
+        if (i.avaliacao)
+            return (
+                '<span class="nota-chip" title="Sua avaliação">Sua nota ' +
+                i.avaliacao.nota +
+                '/5</span>'
+            );
+        if (podeAvaliar(i)) return botaoAvaliar(i, 'pp-btn pp-btn-sec', 'Avaliar monitoria');
+        return '';
+    }
+    // Celular: monitorias com presença confirmada que ainda dá para avaliar
+    const paraAvaliar = (L) =>
+        L.historico.filter((i) => situacao(i) === 'confirmada' && podeAvaliar(i));
+
     function etiqueta(i) {
         const sit = situacao(i);
         const [classe, ico, texto] = SITUACOES[sit];
@@ -287,6 +318,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (sit === 'confirmar')
             return '<div class="vg-acoes">' + botaoConfirmar(i, 'pp-btn pp-btn-pri') + '</div>';
         if (sit === 'fila') return '<div class="vg-acoes">' + botaoCancelar(i) + '</div>';
+        if (sit === 'confirmada' && avaliacaoHTML(i))
+            return '<div class="vg-acoes">' + avaliacaoHTML(i) + '</div>';
         if (sit === 'ausente')
             return (
                 '<div class="vg-acoes">' +
@@ -619,6 +652,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const ponto = classe === 'pill-ok' ? 'ok' : classe === 'pill-perigo' ? 'perigo' : '';
             sub = '<span class="ponto ' + ponto + '"></span>' + texto;
         }
+        const avaliar = sit === 'confirmada' && podeAvaliar(i);
         return (
             '<li class="lc' +
             (sit === 'confirmar' ? ' lc-atencao' : '') +
@@ -633,9 +667,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             '</span><span class="lc-sub">' +
             sub +
             '</span></span>' +
-            (sit === 'confirmar' ? '' : icone('direita', 18)) +
+            (sit === 'confirmar' || avaliar ? '' : icone('direita', 18)) +
             '</button>' +
             (sit === 'confirmar' ? botaoConfirmar(i, 'lc-acao', 'Confirmar') : '') +
+            (avaliar ? botaoAvaliar(i, 'lc-acao lc-acao-sec', 'Avaliar') : '') +
             '</li>'
         );
     }
@@ -669,6 +704,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                       L.confirmar.length +
                       '</h2><ul class="lc-lista">' +
                       L.confirmar.map(linhaCel).join('') +
+                      '</ul>'
+                    : '') +
+                (paraAvaliar(L).length
+                    ? '<h2 class="lc-secao">Para avaliar · ' +
+                      paraAvaliar(L).length +
+                      '</h2><ul class="lc-lista">' +
+                      paraAvaliar(L).map(linhaCel).join('') +
                       '</ul>'
                     : '') +
                 '<h2 class="lc-secao">Próximas · ' +
@@ -880,6 +922,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 '<div class="pp-det-acoes">' + botaoConfirmar(i, 'pp-btn pp-btn-pri') + '</div>';
         else if (sit === 'fila')
             acoesDet = '<div class="pp-det-acoes">' + botaoCancelar(i) + '</div>';
+        else if (sit === 'confirmada' && avaliacaoHTML(i))
+            acoesDet = '<div class="pp-det-acoes">' + avaliacaoHTML(i) + '</div>';
         else if (sit === 'ausente')
             acoesDet =
                 '<div class="pp-det-acoes">' +
@@ -1113,12 +1157,69 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // Plano 6: diálogo de avaliação
+    const dlgAva = document.getElementById('dlg-avaliar');
+    function abrirAvaliar(i) {
+        S.alvo = i;
+        document.getElementById('ava-sub').textContent =
+            i.disciplina + ' com ' + i.monitor + ' · ' + D.diaCurto(i.inicio);
+        document
+            .querySelectorAll('#ava-form input[name="nota"]')
+            .forEach((r) => (r.checked = false));
+        document.getElementById('ava-comentario').value = '';
+        document.getElementById('ava-erro').textContent = '';
+        document.getElementById('ava-escolha').textContent = 'Toque numa nota de 1 a 5';
+        dlgAva.showModal();
+    }
+    document.getElementById('ava-form').addEventListener('change', (ev) => {
+        if (ev.target.name !== 'nota') return;
+        document.getElementById('ava-escolha').textContent =
+            ev.target.value + ' de 5 · ' + SIGNIFICADO[ev.target.value];
+        document.getElementById('ava-erro').textContent = '';
+    });
+    document.getElementById('ava-form').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const i = S.alvo;
+        if (!i) return;
+        const marcada = document.querySelector('#ava-form input[name="nota"]:checked');
+        const erro = document.getElementById('ava-erro');
+        if (!marcada) {
+            erro.textContent = 'Escolha uma nota de 1 a 5.';
+            return;
+        }
+        const comentario = document.getElementById('ava-comentario').value.trim();
+        const botao = document.getElementById('ava-enviar');
+        botao.disabled = true;
+        try {
+            const dados = await chamadaApi('/agendamentos/' + i.id + '/avaliacao', {
+                method: 'POST',
+                body: JSON.stringify({
+                    nota: Number(marcada.value),
+                    comentario: comentario || undefined
+                })
+            });
+            if (dados.statusHttp === 401) return sessaoExpirada();
+            if (!dados.success) {
+                erro.textContent = mensagemDaApi(dados, 'Não foi possível enviar a avaliação.');
+                return;
+            }
+            i.avaliacao = { nota: Number(marcada.value) };
+            dlgAva.close();
+            showToast('Obrigado! Sua avaliação foi enviada sem o seu nome.', 'success');
+            render();
+        } catch (e) {
+            erro.textContent = e.message || 'Não foi possível enviar a avaliação.';
+        } finally {
+            botao.disabled = false;
+        }
+    });
+
     // Fechar pelos botões "Voltar"/X e devolver o foco a quem abriu
     document.addEventListener('click', (ev) => {
         const b = ev.target.closest('.pp-dlg [data-fechar]');
         if (b) b.closest('dialog').close();
     });
-    [dlgCan, dlgDet, dlgRec].forEach((d) =>
+    [dlgCan, dlgDet, dlgRec, dlgAva].forEach((d) =>
         d.addEventListener('close', () => {
             if (document.querySelector('.pp-dlg[open]')) return;
             if (S.gatilho && document.body.contains(S.gatilho)) S.gatilho.focus();
@@ -1166,6 +1267,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (acao === 'detalhes') abrirDetalhes(i);
         else if (acao === 'cancelar') abrirCancelar(i);
         else if (acao === 'recurso') abrirRecurso(i);
+        else if (acao === 'avaliar') abrirAvaliar(i);
     }
     raiz.addEventListener('click', aoAgir);
     dlgDet.addEventListener('click', aoAgir);

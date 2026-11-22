@@ -27,6 +27,7 @@ do horário e a plataforma registra pontos e horas de monitoria.
 | RF-003          | Perfil do aluno e do monitor, com as inscrições, as vagas e a exclusão da conta (LGPD)              | Concluído    |
 | RF-004          | Gamificação: pontos depois da confirmação dos dois lados (monitor +10, aluno +2), extrato e ranking | Concluído    |
 | RF-005          | Declaração de horas do monitor, por semestre, com código de verificação                             | Concluído    |
+| RF-006 / RF-007 | Avaliação da monitoria (1 a 5), resumo sem nome para o monitor e moderação                          | Concluído    |
 | RF-008 / RN-009 | Recuperar a senha por e-mail                                                                        | Concluído    |
 | RF-009 / RN-010 | Editar uma vaga ativa                                                                               | Concluído    |
 | RF-010 / RN-011 | Avisos por e-mail ao aluno (vaga alterada ou cancelada, lembretes)                                  | Concluído    |
@@ -183,10 +184,12 @@ indicam rota restrita a esse papel.
 | PATCH  | `/agendamentos/:id/concluir`           | O monitor confirma a presença do aluno (monitor)                             |
 | PATCH  | `/agendamentos/:id/ausencia`           | O monitor marca que o aluno faltou (monitor)                                 |
 | POST   | `/agendamentos/:id/recurso`            | O aluno pede revisão da falta com comprovante (aluno)                        |
+| POST   | `/agendamentos/:id/avaliacao`          | O aluno avalia a monitoria de 1 a 5, com comentário opcional (aluno)         |
 | GET    | `/perfil`                              | Dados do perfil                                                              |
 | GET    | `/perfil/agendamentos`                 | Inscrições exibidas no perfil                                                |
 | GET    | `/perfil/monitorias`                   | Vagas exibidas no perfil do monitor                                          |
 | GET    | `/perfil/restricao`                    | Bloqueio de novas inscrições por faltas (ou `null`)                          |
+| GET    | `/perfil/avaliacoes/resumo`            | Média, distribuição e comentários sem nome (monitor)                         |
 | DELETE | `/perfil`                              | Exclui (anonimiza) a conta, com confirmação da senha                         |
 | GET    | `/pontos/extrato`                      | Extrato de pontos do usuário                                                 |
 | GET    | `/certificados/elegibilidade`          | Horas do semestre e se a declaração pode ser emitida (monitor)               |
@@ -210,6 +213,9 @@ indicam rota restrita a esse papel.
 | GET    | `/admin/recursos/:id/arquivo`          | Comprovante de um pedido de revisão de falta (coordenação)                   |
 | POST   | `/admin/recursos/:id/aceitar`          | Aceita o pedido e anula a falta (coordenação)                                |
 | POST   | `/admin/recursos/:id/recusar`          | Recusa o pedido com motivo (coordenação)                                     |
+| GET    | `/admin/avaliacoes`                    | Comentários do semestre, visíveis e ocultos (coordenação)                    |
+| POST   | `/admin/avaliacoes/:id/ocultar`        | Oculta o comentário; a nota sai da média (coordenação)                       |
+| POST   | `/admin/avaliacoes/:id/reexibir`       | Mostra o comentário de novo (coordenação)                                    |
 
 Um prefixo novo na API também precisa entrar no Nginx do servidor (homologação e produção) e
 em `e2e/pilha/gateway.conf`. Sem isso, o caminho cai no frontend.

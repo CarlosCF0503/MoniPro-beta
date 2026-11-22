@@ -3,6 +3,7 @@
 // Tarefa 9: o corpo de criar já chega validado por schemas/agendamentoSchemas.js.
 const agendamentoService = require('../services/agendamentoService');
 const recursoService = require('../services/recursoService');
+const avaliacaoService = require('../services/avaliacaoService');
 const { ErroNaoAutorizado, ErroNaoEncontrado } = require('../utils/erros');
 const { obterParametrosPaginacao, montarPaginacao } = require('../utils/paginacao');
 const { PONTOS_MONITOR, PONTOS_ALUNO } = require('../utils/regrasConclusao');
@@ -45,6 +46,17 @@ class AgendamentoController {
     }
 
     // Plano 12: o monitor dono da vaga marca que o aluno faltou
+    // Plano 6: POST /agendamentos/:id/avaliacao { nota, comentario? }
+    async avaliar(req, res) {
+        if (req.usuario.tipo !== 'aluno')
+            throw new ErroNaoAutorizado('Só o aluno avalia a monitoria em que esteve.');
+        const id = Number(req.params.id);
+        if (!Number.isInteger(id) || id <= 0)
+            throw new ErroNaoEncontrado('Inscrição não encontrada.');
+        const avaliacao = await avaliacaoService.avaliar(id, req.usuario.id, req.body);
+        return res.status(201).json({ success: true, avaliacao });
+    }
+
     // Plano 7: POST /agendamentos/:id/recurso { justificativa, arquivo: { nome, tipo, conteudo } }
     async pedirRecurso(req, res) {
         if (req.usuario.tipo !== 'aluno')

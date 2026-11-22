@@ -138,6 +138,8 @@ model Agendamento {
   ausente_em           DateTime?
   // Plano 7: pedido de revisão da falta (recurso), um por inscrição
   recurso              RecursoFalta?
+  // Plano 6 (RF-006): a avaliação que o aluno deu a esta monitoria, uma por inscrição
+  avaliacao            Avaliacao?
 
   id_monitoria Int
   monitoria    Monitoria         @relation(fields: [id_monitoria], references: [id])
@@ -273,7 +275,7 @@ model Auditoria {
   id         Int      @id @default(autoincrement())
   id_usuario Int
   usuario    Usuario  @relation(fields: [id_usuario], references: [id])
-  acao       String   @db.VarChar(40) // criar_coordenador | assinar_certificado | revogar_certificado | aprovar_disciplina | mesclar_disciplina | marcar_falta | anular_falta
+  acao       String   @db.VarChar(40) // criar_coordenador | assinar_certificado | revogar_certificado | aprovar_disciplina | mesclar_disciplina | marcar_falta | anular_falta | aceitar_recurso | recusar_recurso | ocultar_avaliacao | reexibir_avaliacao
   alvo       String   @db.VarChar(60) // "certificado:12", "disciplina:5"
   descricao  String   @db.VarChar(300)
   criado_em  DateTime @default(now())
@@ -311,4 +313,25 @@ model RecursoFalta {
   @@index([id_aluno])
   @@index([criado_em])
   @@map("recursos_falta")
+}
+
+// Plano 6 (RF-006/007, RN-013): o aluno com presença dos dois lados avalia a monitoria (1 a 5,
+// comentário opcional), uma vez, até 7 dias depois. O monitor vê sem o nome do aluno; a
+// coordenação oculta comentário ofensivo ou pessoal, e a nota oculta sai da média (22/11).
+model Avaliacao {
+  id             Int         @id @default(autoincrement())
+  id_agendamento Int         @unique
+  agendamento    Agendamento @relation(fields: [id_agendamento], references: [id], onDelete: Cascade)
+  id_aluno       Int
+  id_monitor     Int         // desnormalizado para o resumo do monitor
+  nota           Int         // 1 a 5 (check na migração)
+  comentario     String?     @db.VarChar(300)
+  oculto_em      DateTime?
+  id_moderador   Int?
+  criado_em      DateTime    @default(now())
+
+  @@index([id_monitor, oculto_em])
+  @@index([criado_em])
+  @@index([id_aluno])
+  @@map("avaliacoes")
 }
