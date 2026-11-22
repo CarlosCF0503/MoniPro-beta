@@ -7,6 +7,37 @@ import { montarAcoesConfirmacao } from './confirmacao_email.js';
 const SVG_OLHO_ABERTO = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
 const SVG_OLHO_FECHADO = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`;
 
+const LOGIN_COORDENACAO = 'index.html?perfil=coordenacao';
+
+/** Plano 7: login e "Esqueci minha senha" só com o perfil Coordenação (ver o comentário abaixo). */
+function aplicarModoCoordenacao() {
+    const radio = document.getElementById('radioCoordenacao');
+    if (!radio) return;
+    radio.checked = true;
+    const secao = radio.closest('.profile-section');
+    if (secao) secao.hidden = true;
+    const texto = {
+        tituloLogin: 'Painel da coordenação',
+        subtituloLogin: 'Entre com o e-mail ou a matrícula da sua conta.'
+    };
+    for (const [id, valor] of Object.entries(texto)) {
+        const alvo = document.getElementById(id);
+        if (alvo) alvo.textContent = valor;
+    }
+    const visivel = { linkCadastro: false, linkVoltarPublico: true, acessoCoordenacao: false };
+    for (const [id, mostrar] of Object.entries(visivel)) {
+        const alvo = document.getElementById(id);
+        if (alvo) alvo.hidden = !mostrar;
+    }
+    document.querySelectorAll('a.esqueci').forEach((a) => {
+        a.href = 'redefinir_senha.html?perfil=coordenacao';
+    });
+    // Em "Esqueci minha senha", os links "Voltar ao login" voltam para o login da coordenação
+    document.querySelectorAll('a[href="index.html"]:not(#linkVoltarPublico a)').forEach((a) => {
+        a.href = LOGIN_COORDENACAO;
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // Toggle de senha — troca o conteúdo do SVG ao clicar
     document.querySelectorAll('.olho').forEach((olho) => {
@@ -27,17 +58,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Plano 7 (RN-014): a coordenação entra pelo endereço com ?perfil=coordenacao, que mostra e
-    // marca o botão Coordenação (aqui e em Esqueci minha senha). A tela pública continua igual.
-    const perfilCoordenacao =
-        new URLSearchParams(window.location.search).get('perfil') === 'coordenacao';
-    const radioCoordenacao = document.getElementById('radioCoordenacao');
-    if (perfilCoordenacao && radioCoordenacao) {
-        radioCoordenacao.checked = true;
-        document.querySelector('label[for="radioCoordenacao"]').hidden = false;
-        const esqueci = document.querySelector('a.esqueci');
-        if (esqueci) esqueci.href = 'redefinir_senha.html?perfil=coordenacao';
-    }
+    // Plano 7 (RN-014): a coordenação entra por /coordenacao (o Nginx leva a ?perfil=coordenacao)
+    // ou pelo link "Acesso da coordenação" do rodapé. Nesse modo o perfil já vem marcado e a
+    // escolha some (aqui e em Esqueci minha senha), junto com o "Cadastre-se", que não vale para
+    // a coordenação. A conta continua só sendo criada no servidor.
+    if (new URLSearchParams(window.location.search).get('perfil') === 'coordenacao')
+        aplicarModoCoordenacao();
 
     // IDs alinhados com o index.html: formLogin, inputIdentificador, inputSenha
     const formLogin = document.getElementById('formLogin');

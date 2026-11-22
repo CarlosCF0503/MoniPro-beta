@@ -92,6 +92,53 @@ describe('Perfil coordenador', () => {
             expect.objectContaining({ acao: 'criar_coordenador', usuario: 'Profa. Teste' })
         ]);
     });
+
+    it('o convite define a primeira senha e a coordenação entra com ela', async () => {
+        const email = require('../../src/services/email');
+        email.enviados.length = 0;
+        const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+        try {
+            await script.main(
+                [
+                    '--nome',
+                    'Profa. Convite',
+                    '--email',
+                    'convite@integracao.invalid',
+                    '--matricula',
+                    '4343',
+                    '--aplicar'
+                ],
+                h.prisma
+            );
+        } finally {
+            log.mockRestore();
+        }
+        const [convite] = email.enviados;
+        expect(convite.modelo).toBe('convite-coordenacao');
+        const token = new URL(convite.dados.link).searchParams.get('token');
+
+        const login = (senha) =>
+            request(app).post('/auth/login').set('Origin', ORIGEM).send({
+                identificador: 'convite@integracao.invalid',
+                senha,
+                tipo_usuario: 'coordenador'
+            });
+        expect((await login('senhaDoConvite1')).status).toBe(401);
+
+        const definir = await request(app)
+            .post('/auth/senha/redefinir')
+            .set('Origin', ORIGEM)
+            .send({ token, senha: 'senhaDoConvite1' });
+        expect(definir.status).toBe(200);
+        expect((await login('senhaDoConvite1')).status).toBe(200);
+
+        // O convite vale uma vez só
+        const deNovo = await request(app)
+            .post('/auth/senha/redefinir')
+            .set('Origin', ORIGEM)
+            .send({ token, senha: 'outraSenha2' });
+        expect(deNovo.status).toBe(410);
+    });
 });
 
 describe('Rotas /admin/*', () => {

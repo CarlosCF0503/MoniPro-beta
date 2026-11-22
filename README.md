@@ -147,9 +147,11 @@ docker compose -f docker-compose.e2e.yml down -v
 - **Declarações de horas:** `scripts/certificados.js --revogar CODIGO --motivo "..."` revoga uma
   declaração (só simula sem `--aplicar`), grava a data e o motivo e registra no log.
 - **Coordenação:** `scripts/criar-coordenador.js --nome "..." --email ... --matricula N` cria a
-  conta da coordenação (só simula sem `--aplicar`), já com o e-mail confirmado, e mostra uma
-  senha provisória uma vez. `--email ... --nova-senha` gera outra. O cadastro público não cria
-  coordenador.
+  conta da coordenação (só simula sem `--aplicar`), já com o e-mail confirmado, e manda um
+  convite por e-mail com o link "Defina sua senha" (48 horas, uso único). Nenhuma senha passa
+  pelo terminal. `--email ... --reenviar-convite` manda outro; a própria pessoa também pode pedir
+  um link em "Esqueci minha senha". A coordenação entra por `/coordenacao` (ou pelo link "Acesso
+  da coordenação" no rodapé do login). O cadastro público não cria coordenador.
 - **Segredos:** ficam só no `.env` de cada servidor, que não é versionado.
 
 ## Endpoints da API

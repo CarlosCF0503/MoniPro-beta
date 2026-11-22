@@ -440,6 +440,8 @@ describe('Coordenação no login e fora do cadastro (RN-014)', () => {
 });
 
 describe('scripts/criar-coordenador.js', () => {
+    const email = require('../src/services/email');
+    const { hashDoToken } = require('../src/utils/tokenDeUso');
     const ARGS = [
         '--nome',
         'Profa. Helena',
@@ -454,6 +456,7 @@ describe('scripts/criar-coordenador.js', () => {
         log = jest.spyOn(console, 'log').mockImplementation(() => {});
         erro = jest.spyOn(console, 'error').mockImplementation(() => {});
         process.exitCode = undefined;
+        email.enviados.length = 0;
     });
     afterEach(() => {
         log.mockRestore();
@@ -465,18 +468,22 @@ describe('scripts/criar-coordenador.js', () => {
     function bancoFalso({ existe = false, coordenador = null } = {}) {
         const tx = {
             usuario: { create: jest.fn().mockResolvedValue({ id: 77 }) },
-            auditoria: { create: jest.fn().mockResolvedValue({}) }
+            auditoria: { create: jest.fn().mockResolvedValue({}) },
+            tokenRedefinicao: {
+                updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+                create: jest.fn().mockResolvedValue({ id: 1 })
+            }
         };
         return {
             tx,
             usuario: {
-                findFirst: jest.fn().mockResolvedValue(existe ? { id: 1 } : coordenador),
-                update: jest.fn().mockResolvedValue({})
+                findFirst: jest.fn().mockResolvedValue(existe ? { id: 1 } : coordenador)
             },
             $transaction: jest.fn((fn) => fn(tx))
         };
     }
     const saida = () => log.mock.calls.map((c) => c.join(' ')).join('\n');
+    const tokenDoLink = (link) => new URL(link).searchParams.get('token');
 
     it('lê os argumentos e normaliza o e-mail', () => {
         expect(script.lerArgumentos([...ARGS, '--aplicar'])).toEqual({
@@ -484,56 +491,73 @@ describe('scripts/criar-coordenador.js', () => {
             nome_completo: 'Profa. Helena',
             email: 'coord@exemplo.invalid',
             matricula: 1001,
-            aplicar: true
+            aplicar: true,
+            mostrarLink: false
         });
-        expect(script.lerArgumentos(['--email', 'A@B.invalid', '--nova-senha'])).toEqual({
-            modo: 'senha',
+        expect(script.lerArgumentos(['--email', 'A@B.invalid', '--reenviar-convite'])).toEqual({
+            modo: 'reenviar',
             email: 'a@b.invalid',
-            aplicar: false
+            aplicar: false,
+            mostrarLink: false
         });
     });
 
     it('faltando dado ou com dado inválido, mostra o uso', () => {
         expect(script.lerArgumentos(['--nome', 'X']).erro).toMatch(/uso:/);
-        expect(script.lerArgumentos(['--nova-senha']).erro).toMatch(/uso:/);
+        expect(script.lerArgumentos(['--reenviar-convite']).erro).toMatch(/uso:/);
         expect(script.lerArgumentos([...ARGS.slice(0, 4), '--matricula', 'abc']).erro).toMatch(
             /matrícula/
         );
     });
 
-    it('senha provisória com 16 caracteres, letra e número, sem caracteres ambíguos', () => {
-        for (let i = 0; i < 20; i++) {
-            const s = script.gerarSenhaProvisoria();
-            expect(s).toHaveLength(16);
-            expect(s).toMatch(/\p{L}/u);
-            expect(s).toMatch(/\d/);
-            expect(s).not.toMatch(/[01lIO]/);
-        }
-    });
-
-    it('sem --aplicar só simula', async () => {
+    it('sem --aplicar só simula e não manda e-mail', async () => {
         const db = bancoFalso();
         await script.main(ARGS, db);
         expect(db.$transaction).not.toHaveBeenCalled();
+        expect(email.enviados).toHaveLength(0);
         expect(saida()).toMatch(/simulação/);
     });
 
-    it('com --aplicar cria a conta já confirmada e grava a auditoria', async () => {
+    it('com --aplicar cria a conta confirmada, grava a auditoria e manda o convite', async () => {
         const db = bancoFalso();
-        await script.main([...ARGS, '--aplicar'], db);
+        const agora = new Date('2026-11-22T12:00:00.000Z');
+        await script.main([...ARGS, '--aplicar'], db, agora);
         const dados = db.tx.usuario.create.mock.calls[0][0].data;
         expect(dados).toMatchObject({
             tipo_usuario: 'coordenador',
             email: 'coord@exemplo.invalid'
         });
-        expect(dados.email_confirmado_em).toBeInstanceOf(Date);
+        expect(dados.email_confirmado_em).toBe(agora);
         expect(dados.senha).toMatch(/^\$2[aby]\$/);
         expect(db.tx.auditoria.create.mock.calls[0][0].data).toMatchObject({
             id_usuario: 77,
             acao: 'criar_coordenador',
             alvo: 'usuario:77'
         });
-        expect(saida()).toMatch(/senha provisória/);
+
+        // Convite de 48 horas, e o banco guarda só o hash do token que foi no e-mail
+        const convite = db.tx.tokenRedefinicao.create.mock.calls[0][0].data;
+        expect(convite.id_usuario).toBe(77);
+        expect(convite.expira_em.getTime() - agora.getTime()).toBe(48 * 60 * 60 * 1000);
+        expect(email.enviados).toHaveLength(1);
+        const [enviado] = email.enviados;
+        expect(enviado).toMatchObject({
+            para: 'coord@exemplo.invalid',
+            modelo: 'convite-coordenacao'
+        });
+        expect(enviado.dados.link).toMatch(/\/redefinir_senha\.html\?convite=1&token=/);
+        expect(hashDoToken(tokenDoLink(enviado.dados.link))).toBe(convite.hash);
+        expect(enviado.html).toContain('Definir minha senha');
+        expect(enviado.texto).toContain('/coordenacao');
+
+        // Nenhuma senha nem link no terminal
+        expect(saida()).not.toMatch(/senha provisória|token=/);
+        expect(saida()).toMatch(/convite enviado/);
+    });
+
+    it('--mostrar-link escreve o link no terminal (teste local)', async () => {
+        await script.main([...ARGS, '--aplicar', '--mostrar-link'], bancoFalso());
+        expect(saida()).toMatch(/redefinir_senha\.html\?convite=1&token=/);
     });
 
     it('e-mail ou matrícula já usados por outra coordenação: erro', async () => {
@@ -543,16 +567,42 @@ describe('scripts/criar-coordenador.js', () => {
         expect(process.exitCode).toBe(1);
     });
 
-    it('nova senha: troca e encerra as sessões abertas', async () => {
-        const db = bancoFalso({ coordenador: { id: 9, nome_completo: 'Helena' } });
-        await script.main(['--email', 'c@x.invalid', '--nova-senha'], db);
-        expect(db.usuario.update).not.toHaveBeenCalled();
-        await script.main(['--email', 'c@x.invalid', '--nova-senha', '--aplicar'], db);
-        expect(db.usuario.update.mock.calls[0][0].data.versao_token).toEqual({ increment: 1 });
+    it('e-mail que não sai: a conta fica criada e o comando diz como reenviar', async () => {
+        const falha = jest.spyOn(email, 'enviar').mockRejectedValueOnce(new Error('SMTP fora'));
+        try {
+            const db = bancoFalso();
+            await script.main([...ARGS, '--aplicar'], db);
+            expect(db.tx.usuario.create).toHaveBeenCalled();
+            expect(process.exitCode).toBe(1);
+            expect(erro.mock.calls.join('\n')).toMatch(/--reenviar-convite/);
+        } finally {
+            falha.mockRestore();
+        }
     });
 
-    it('nova senha para quem não é coordenação: erro', async () => {
-        await script.main(['--email', 'c@x.invalid', '--nova-senha', '--aplicar'], bancoFalso());
+    it('reenviar convite: invalida os abertos, grava outro e registra na auditoria', async () => {
+        const db = bancoFalso({
+            coordenador: { id: 9, nome_completo: 'Helena', email: 'c@x.invalid' }
+        });
+        await script.main(['--email', 'c@x.invalid', '--reenviar-convite'], db);
+        expect(db.$transaction).not.toHaveBeenCalled();
+        await script.main(['--email', 'c@x.invalid', '--reenviar-convite', '--aplicar'], db);
+        expect(db.tx.tokenRedefinicao.updateMany.mock.calls[0][0].where).toEqual({
+            id_usuario: 9,
+            usado_em: null
+        });
+        expect(db.tx.tokenRedefinicao.create.mock.calls[0][0].data.id_usuario).toBe(9);
+        expect(db.tx.auditoria.create.mock.calls[0][0].data.acao).toBe('convidar_coordenador');
+        expect(email.enviados).toEqual([
+            expect.objectContaining({ para: 'c@x.invalid', modelo: 'convite-coordenacao' })
+        ]);
+    });
+
+    it('reenviar para quem não é coordenação: erro', async () => {
+        await script.main(
+            ['--email', 'c@x.invalid', '--reenviar-convite', '--aplicar'],
+            bancoFalso()
+        );
         expect(process.exitCode).toBe(1);
     });
 

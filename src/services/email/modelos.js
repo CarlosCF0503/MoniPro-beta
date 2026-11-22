@@ -111,6 +111,39 @@ MoniPro`,
     };
 };
 
+// Plano 7 (RN-014): convite da coordenação, mandado por scripts/criar-coordenador.js. Usa o
+// mesmo link da redefinição de senha, com validade maior.
+MODELOS['convite-coordenacao'] = ({ nome, link, horas }) => {
+    // Nome completo: na coordenação o primeiro "nome" costuma ser o título ("Profa.", "Prof. Dr.")
+    const completo = String(nome || '').trim();
+    const ola = `Olá, ${completo.endsWith('.') ? completo.slice(0, -1) : completo}.`;
+    const pedido =
+        'Você recebeu acesso à coordenação do MoniPro. Pelo painel você acompanha os monitores, assina as declarações de horas, revisa disciplinas e cuida das faltas.';
+    const passo = 'Para começar, defina a sua senha.';
+    const aviso = `O link vale por ${horas} horas e só funciona uma vez. Se ele vencer, peça outro em "Esqueci minha senha", com o perfil Coordenação. Se você não esperava este convite, ignore este e-mail.`;
+    const entrada = `${urlDoApp()}/coordenacao`;
+    return {
+        assunto: 'Seu acesso à coordenação do MoniPro',
+        texto: `${ola} ${pedido}\n\n${passo}\nDefinir senha: ${link}\n\nDepois, entre sempre por ${entrada}\n\n${aviso}\n\nMoniPro`,
+        html: casca({
+            titulo: 'Bem-vindo à coordenação',
+            corpo:
+                paragrafo(`${escapar(ola)} ${escapar(pedido)}`) +
+                paragrafo(escapar(passo)) +
+                botao('Definir minha senha', link) +
+                paragrafo(
+                    `Depois, entre sempre por <a href="${escapar(entrada)}" style="color:${COR.navy2}">${escapar(entrada)}</a>.`
+                ) +
+                paragrafo(escapar(aviso), `font-size:13px;color:${COR.suave}`) +
+                paragrafo(
+                    `Se o botão não funcionar, copie este endereço no navegador:<br><span style="word-break:break-all">${escapar(link)}</span>`,
+                    `font-size:12px;color:${COR.suave}`
+                ),
+            rodape: 'Este e-mail foi enviado porque a equipe do MoniPro criou uma conta de coordenação com este endereço.'
+        })
+    };
+};
+
 // ---------- Plano 3 (RF-010): avisos sobre monitorias ----------
 // Horários no fuso do campus, por extenso ("sexta, 13/11, às 15:00") e curto ("sex 13/11 às 15:00")
 const FUSO = 'America/Sao_Paulo';
