@@ -20,27 +20,27 @@ do horário e a plataforma registra pontos e horas de monitoria.
 
 ## Funcionalidades
 
-| Código          | Funcionalidade                                                                                      | Situação     |
-| :-------------- | :-------------------------------------------------------------------------------------------------- | :----------- |
-| RF-001          | Cadastro e login de aluno e monitor, sessão por cookie                                              | Concluído    |
-| RF-002          | Vagas por disciplina e inscrição pelo calendário, com limite de capacidade                          | Concluído    |
-| RF-003          | Perfil do aluno e do monitor, com as inscrições, as vagas e a exclusão da conta (LGPD)              | Concluído    |
-| RF-004          | Gamificação: pontos depois da confirmação dos dois lados (monitor +10, aluno +2), extrato e ranking | Concluído    |
-| RF-005          | Declaração de horas do monitor, por semestre, com código de verificação                             | Concluído    |
-| RF-006 / RF-007 | Avaliação da monitoria (1 a 5), resumo sem nome para o monitor e moderação                          | Concluído    |
-| RF-008 / RN-009 | Recuperar a senha por e-mail                                                                        | Concluído    |
-| RF-009 / RN-010 | Editar uma vaga ativa                                                                               | Concluído    |
-| RF-010 / RN-011 | Avisos por e-mail ao aluno (vaga alterada ou cancelada, lembretes)                                  | Concluído    |
-| RF-011 / RN-008 | Extrato de pontos e ranking por disciplina e semestre                                               | Concluído    |
-| RF-012 / RN-014 | Painel da coordenação: indicadores e gráficos do semestre, monitores e registro de ações            | Em andamento |
-| RF-013 / RN-015 | Lista de espera nas vagas lotadas, com inscrição automática quando abre um lugar                    | Concluído    |
-| RF-014          | Vaga semanal: até 16 de uma vez, pula a data com conflito; cancelar esta e as próximas              | Concluído    |
-| RF-015          | Adicionar à agenda: arquivo .ics da inscrição ou da vaga, gerado no navegador, com alarme 1 h antes | Concluído    |
-| RF-016          | Monitoria on-line, com o link da sala só para os inscritos                                          | Concluído    |
-| RN-016          | Faltas marcadas pelo monitor; 3 em 30 dias bloqueiam novas inscrições por 7 dias                    | Concluído    |
-| RF-017          | Filtros em Marcar monitoria: período do dia, monitor e só com lugar livre (tela e API)              | Concluído    |
-| RF-018 / RN-017 | Confirmação do e-mail no cadastro                                                                   | Concluído    |
-| RN-001          | Cancelamento com pelo menos 24 h de antecedência                                                    | Concluído    |
+| Código          | Funcionalidade                                                                                      | Situação  |
+| :-------------- | :-------------------------------------------------------------------------------------------------- | :-------- |
+| RF-001          | Cadastro e login de aluno e monitor, sessão por cookie                                              | Concluído |
+| RF-002          | Vagas por disciplina e inscrição pelo calendário, com limite de capacidade                          | Concluído |
+| RF-003          | Perfil do aluno e do monitor, com as inscrições, as vagas e a exclusão da conta (LGPD)              | Concluído |
+| RF-004          | Gamificação: pontos depois da confirmação dos dois lados (monitor +10, aluno +2), extrato e ranking | Concluído |
+| RF-005          | Declaração de horas do monitor, por semestre, com código de verificação                             | Concluído |
+| RF-006 / RF-007 | Avaliação da monitoria (1 a 5), resumo sem nome para o monitor e moderação                          | Concluído |
+| RF-008 / RN-009 | Recuperar a senha por e-mail                                                                        | Concluído |
+| RF-009 / RN-010 | Editar uma vaga ativa                                                                               | Concluído |
+| RF-010 / RN-011 | Avisos por e-mail ao aluno (vaga alterada ou cancelada, lembretes)                                  | Concluído |
+| RF-011 / RN-008 | Extrato de pontos e ranking por disciplina e semestre                                               | Concluído |
+| RF-012 / RN-014 | Painel da coordenação: indicadores e gráficos do semestre, monitores e registro de ações            | Concluído |
+| RF-013 / RN-015 | Lista de espera nas vagas lotadas, com inscrição automática quando abre um lugar                    | Concluído |
+| RF-014          | Vaga semanal: até 16 de uma vez, pula a data com conflito; cancelar esta e as próximas              | Concluído |
+| RF-015          | Adicionar à agenda: arquivo .ics da inscrição ou da vaga, gerado no navegador, com alarme 1 h antes | Concluído |
+| RF-016          | Monitoria on-line, com o link da sala só para os inscritos                                          | Concluído |
+| RN-016          | Faltas marcadas pelo monitor; 3 em 30 dias bloqueiam novas inscrições por 7 dias                    | Concluído |
+| RF-017          | Filtros em Marcar monitoria: período do dia, monitor e só com lugar livre (tela e API)              | Concluído |
+| RF-018 / RN-017 | Confirmação do e-mail no cadastro                                                                   | Concluído |
+| RN-001          | Cancelamento com pelo menos 24 h de antecedência                                                    | Concluído |
 
 No RF-005, a coordenação assina e revoga a declaração pelo painel; o script
 `scripts/certificados.js` continua para emergências. Os códigos a partir do RF-008 vêm dos planos de novas funcionalidades e
@@ -70,7 +70,10 @@ entram no Documento de Especificação na versão seguinte à v7.2.
   tratador de erros é central (`middlewares/tratadorDeErros.js`). Os logs são estruturados,
   com pino.
 - **Frontend:** HTML, CSS e JavaScript sem framework, servidos por Nginx sem root
-  (`Monipro_web/Dockerfile`). As chamadas passam por `chamadaApi()` em `Monipro_web/JS/api.js`.
+  (`Monipro_web/Dockerfile`). O JavaScript usa ES modules: cada página carrega
+  `JS/config.js` (script comum, gerado no servidor) e o módulo da tela
+  (`<script type="module">`), que importa o que usa, como `chamadaApi()` e `escaparHtml()` de
+  `JS/api.js` e `showToast()` de `JS/toast.js`. Nada é compartilhado por variável global.
 - **Banco:** migrações versionadas em `prisma/migrations/`. As regras que dependem de
   concorrência (capacidade da vaga, inscrição duplicada, confirmação de presença) rodam em
   `$transaction` com trava de linha.

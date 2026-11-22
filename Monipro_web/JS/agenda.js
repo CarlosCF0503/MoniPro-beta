@@ -1,11 +1,10 @@
 // JS/agenda.js
 // Plano 10 (RF-015): "Adicionar à agenda". Monta um arquivo .ics (RFC 5545) com a monitoria e
 // entrega ao navegador para baixar. Nada vai ao servidor: o arquivo é feito com os dados que a
-// tela já tem. As funções de texto não tocam no DOM, então rodam no navegador (global
-// AgendaIcs) e no Jest (module.exports) — ver tests/agendaIcs.test.js.
-/* global module */
+// tela já tem. As funções de texto não tocam no DOM: os perfis importam AgendaIcs, e o Jest
+// testa as mesmas funções — ver tests/agendaIcs.test.js.
 
-(function (raiz) {
+const AgendaIcs = (function () {
     const DOMINIO_UID = 'moni-pro.app.br';
     // Alarme dentro do evento: o app de agenda avisa 1h antes (além do lembrete por e-mail)
     const MINUTOS_ALARME = 60;
@@ -193,6 +192,7 @@
         baixar
     };
 
-    if (typeof module !== 'undefined' && module.exports) module.exports = api;
-    else raiz.AgendaIcs = api;
-})(typeof window !== 'undefined' ? window : this);
+    return api;
+})();
+
+export { AgendaIcs };

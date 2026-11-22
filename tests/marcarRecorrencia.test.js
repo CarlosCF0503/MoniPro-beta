@@ -1,7 +1,7 @@
 // Plano 9 (RF-014): série semanal no navegador (marcar/datas.js) e "esta e as próximas" no
 // perfil do monitor (perfil/dados.js).
-const D = require('../Monipro_web/JS/marcar/datas.js');
-const P = require('../Monipro_web/JS/perfil/dados.js');
+const { MarcarDatas: D } = require('../Monipro_web/JS/marcar/datas.js');
+const { PerfilDados: P } = require('../Monipro_web/JS/perfil/dados.js');
 
 const form = (extra) => ({
     dia: '2027-03-02',

@@ -1,5 +1,5 @@
 // Plano 13 (RF-017): filtros de Marcar monitoria no navegador (Monipro_web/JS/marcar/datas.js)
-const D = require('../Monipro_web/JS/marcar/datas.js');
+const { MarcarDatas: D } = require('../Monipro_web/JS/marcar/datas.js');
 
 const vaga = (id, hora, minuto, campos = {}) =>
     D.normalizarVaga({

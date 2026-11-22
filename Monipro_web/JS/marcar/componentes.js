@@ -3,8 +3,11 @@
 // Todo texto vindo da API passa por escaparHtml (api.js) antes de entrar no HTML.
 // Depende de: api.js (escaparHtml), marcar/datas.js (MarcarDatas).
 
-(function () {
-    const D = window.MarcarDatas;
+import { escaparHtml } from '../api.js';
+import { MarcarDatas } from './datas.js';
+
+const MarcarComponentes = (function () {
+    const D = MarcarDatas;
     const esc = escaparHtml;
 
     // Ícones de traço no mesmo estilo dos SVGs do header (stroke arredondado, currentColor)
@@ -307,7 +310,7 @@
         );
     }
 
-    window.MarcarComponentes = {
+    return {
         icone,
         calendario,
         cardVaga,
@@ -318,3 +321,5 @@
         campoHora
     };
 })();
+
+export { MarcarComponentes };

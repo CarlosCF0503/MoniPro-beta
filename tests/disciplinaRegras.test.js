@@ -1,5 +1,5 @@
 // Regras puras da tela "Nova disciplina" (Monipro_web/JS/disciplina/regras.js)
-const R = require('../Monipro_web/JS/disciplina/regras.js');
+const { DisciplinaRegras: R } = require('../Monipro_web/JS/disciplina/regras.js');
 const { criarDisciplinaSchema } = require('../src/schemas/disciplinaSchemas');
 
 const LISTA = [

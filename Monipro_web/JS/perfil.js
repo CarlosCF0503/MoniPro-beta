@@ -1,18 +1,19 @@
 // monipro-web/JS/perfil.js
 
+import { showToast, mensagemDaApi } from './toast.js';
+import { chamadaApi, obterSessao, escaparHtml } from './api.js';
+
 document.addEventListener('DOMContentLoaded', async () => {
     // P3 (R7): quem está logado vem de GET /auth/sessao (o token fica no cookie httpOnly)
     let userData;
     try {
         userData = await obterSessao();
     } catch (erro) {
-        if (typeof showToast === 'function')
-            showToast(erro.message || 'Falha na comunicação com o servidor.', 'error', erro);
+        showToast(erro.message || 'Falha na comunicação com o servidor.', 'error', erro);
         return;
     }
     if (!userData) {
-        if (typeof showToast === 'function')
-            showToast('Sessão expirada. Faça login novamente.', 'error');
+        showToast('Sessão expirada. Faça login novamente.', 'error');
         setTimeout(() => {
             window.location.href = 'index.html';
         }, 1500);
@@ -69,8 +70,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 tipo.charAt(0).toUpperCase() + tipo.slice(1);
         } else {
             // Exibe a mensagem real retornada pelo servidor (erro 401, 404, 500, etc.)
-            if (typeof showToast === 'function')
-                showToast(mensagemDaApi(data, 'Erro ao carregar perfil.'), 'error', data);
+            showToast(mensagemDaApi(data, 'Erro ao carregar perfil.'), 'error', data);
 
             // Se token inválido/expirado, redireciona para login
             if (data.statusHttp === 401) {
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
         // Erro de REDE (servidor offline, CORS, sem internet)
         const msg = error.message || 'Falha na comunicação com o servidor.';
-        if (typeof showToast === 'function') showToast(msg, 'error', error);
+        showToast(msg, 'error', error);
     }
 
     // ==========================================
@@ -160,13 +160,12 @@ async function handleSairMonitoria(agendamentoId, itemElement) {
     try {
         const data = await chamadaApi(`/agendamentos/${agendamentoId}`, { method: 'DELETE' });
         if (!data.erro && data.success) {
-            if (typeof showToast === 'function')
-                showToast(mensagemDaApi(data, 'Inscrição cancelada com sucesso.'), 'success');
+            showToast(mensagemDaApi(data, 'Inscrição cancelada com sucesso.'), 'success');
             itemElement.remove();
-        } else if (typeof showToast === 'function') {
+        } else {
             showToast(mensagemDaApi(data, 'Erro ao cancelar.'), 'error', data);
         }
     } catch (error) {
-        if (typeof showToast === 'function') showToast('Erro de rede.', 'error', error);
+        showToast('Erro de rede.', 'error', error);
     }
 }

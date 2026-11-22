@@ -1,5 +1,5 @@
 // Plano 10 (RF-015): arquivo .ics de "Adicionar à agenda" (Monipro_web/JS/agenda.js)
-const A = require('../Monipro_web/JS/agenda.js');
+const { AgendaIcs: A } = require('../Monipro_web/JS/agenda.js');
 
 const AGORA = new Date('2026-11-19T15:00:00.000Z');
 const INICIO = new Date('2026-11-20T17:00:00.000Z');

@@ -1,11 +1,10 @@
 // JS/disciplina/regras.js
 // Regras puras do cadastro de disciplina, iguais às do backend (src/schemas/disciplinaSchemas.js
-// e disciplinaService.criar). Não tocam no DOM, então rodam no navegador (global
-// DisciplinaRegras) e no Jest (module.exports) — ver tests/disciplinaRegras.test.js.
+// e disciplinaService.criar). Não tocam no DOM: a tela importa DisciplinaRegras, e o Jest testa
+// as mesmas funções — ver tests/disciplinaRegras.test.js.
 // A tela usa estas regras só para avisar antes do envio; quem decide é a API.
-/* global module */
 
-(function (raiz) {
+const DisciplinaRegras = (function () {
     const NOME_MINIMO = 3;
     const NOME_MAXIMO = 80;
 
@@ -61,6 +60,7 @@
         ordenar
     };
 
-    if (typeof module !== 'undefined' && module.exports) module.exports = api;
-    else raiz.DisciplinaRegras = api;
-})(typeof window !== 'undefined' ? window : this);
+    return api;
+})();
+
+export { DisciplinaRegras };
