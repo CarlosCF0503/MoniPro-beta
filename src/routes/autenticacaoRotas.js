@@ -16,12 +16,14 @@ const {
 } = require('../schemas/autenticacaoSchemas');
 const {
     limiteTentativasAuth,
+    limiteFalhasLoginPorConta,
+    limiteFalhasLoginPorIp,
     limitePedidosSenhaPorEmail,
     limitePedidosSenhaPorIp
 } = require('../config/limites');
 
-// Limita tentativas de login/cadastro por IP para dificultar força bruta (padrão: 10; ver
-// src/config/limites.js)
+// Limita por IP o cadastro, a troca de senha e as rotas de e-mail (padrão: 10 a cada 15 min; ver
+// src/config/limites.js). O login tem limites próprios, logo abaixo.
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutos
     max: limiteTentativasAuth(),
@@ -36,7 +38,37 @@ router.post(
     validarCorpo(cadastroSchema),
     autenticacaoController.cadastrar
 );
-router.post('/login', authLimiter, validarCorpo(loginSchema), autenticacaoController.login);
+
+// Login: só as tentativas que falham contam (o login certo não gasta o limite de ninguém), por
+// IP e por conta. Antes, login e cadastro dividiam 10 tentativas por IP, e numa sala inteira
+// atrás do mesmo IP da faculdade a 11ª pessoa ficava 15 minutos sem entrar.
+const QUINZE_MINUTOS = 15 * 60 * 1000;
+const MENSAGEM_LIMITE_LOGIN = { erro: 'Muitas tentativas. Tente novamente mais tarde.' };
+const limiteLoginPorIp = rateLimit({
+    windowMs: QUINZE_MINUTOS,
+    max: limiteFalhasLoginPorIp(),
+    skipSuccessfulRequests: true,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: MENSAGEM_LIMITE_LOGIN
+});
+const limiteLoginPorConta = rateLimit({
+    windowMs: QUINZE_MINUTOS,
+    max: limiteFalhasLoginPorConta(),
+    skipSuccessfulRequests: true,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) =>
+        `${req.body.tipo_usuario}:${String(req.body.identificador).trim().toLowerCase()}`,
+    message: MENSAGEM_LIMITE_LOGIN
+});
+router.post(
+    '/login',
+    limiteLoginPorIp,
+    validarCorpo(loginSchema),
+    limiteLoginPorConta,
+    autenticacaoController.login
+);
 
 // RF-008 (recuperar senha). O pedido de link tem limites próprios, por hora: por IP (antes da
 // validação) e por conta (e-mail + tipo, depois dela). A resposta do limite é a mesma exista a

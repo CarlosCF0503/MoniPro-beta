@@ -6,7 +6,7 @@ const listaEsperaService = require('../services/listaEsperaService');
 const disciplinaService = require('../services/disciplinaService');
 const { obterParametrosPaginacao, montarPaginacao } = require('../utils/paginacao');
 const { filtrosListagemSchema } = require('../schemas/monitoriaSchemas');
-const { ErroValidacao, ErroNaoEncontrado } = require('../utils/erros');
+const { ErroValidacao, ErroNaoEncontrado, ErroNaoAutorizado } = require('../utils/erros');
 
 // Plano 13: filtros da query string. No Express 5 o req.query é só leitura, então a validação
 // fica aqui e não no validarCorpo.
@@ -108,6 +108,8 @@ class MonitoriaController {
 
     // Plano 8 (RF-013): entra na lista de espera de uma vaga lotada
     async entrarNaFila(req, res) {
+        if (req.usuario.tipo !== 'aluno')
+            throw new ErroNaoAutorizado('Só alunos entram na lista de espera.');
         const id = parseInt(req.params.id, 10);
         const { agendamento, posicao } = await listaEsperaService.entrar(id, req.usuario.id);
         res.status(201).json({

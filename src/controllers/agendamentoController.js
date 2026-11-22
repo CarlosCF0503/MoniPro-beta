@@ -12,6 +12,9 @@ class AgendamentoController {
     async criar(req, res) {
         // Tarefa 31: só id_monitoria vem do cliente. status nasce sempre 'pendente' e a
         // data/hora é derivada do horário da vaga no service.
+        // Só a conta de aluno se inscreve: monitor e coordenação não ocupam lugar nas vagas
+        if (req.usuario.tipo !== 'aluno')
+            throw new ErroNaoAutorizado('Só alunos se inscrevem em monitorias.');
         const { id_monitoria } = req.body;
 
         const agendamento = await agendamentoService.criar({
