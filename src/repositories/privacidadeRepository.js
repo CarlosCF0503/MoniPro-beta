@@ -61,6 +61,8 @@ class PrivacidadeRepository {
         // Avisos por e-mail (plano 3): os pendentes não saem mais, e os enviados guardam dados
         // da conta (nome da disciplina, horário)
         await db.notificacao.deleteMany({ where: { id_usuario: id } });
+        // Plano 7: pedidos de revisão de falta levam atestado (dado de saúde): saem na hora
+        await db.recursoFalta.deleteMany({ where: { id_aluno: id } });
         return await db.usuario.update({
             where: { id },
             data: {

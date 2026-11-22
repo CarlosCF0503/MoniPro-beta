@@ -52,6 +52,15 @@ function tratarErro(error) {
         return { statusCode: 400, mensagem: 'Corpo da requisição não é um JSON válido.' };
     }
 
+    // Plano 7: corpo maior que o limite (o comprovante do pedido de revisão chega a 7 MB em
+    // base64; as outras rotas aceitam 100 KB). Antes caía no 500 genérico.
+    if (error.type === 'entity.too.large') {
+        return {
+            statusCode: 413,
+            mensagem: 'O envio passou do tamanho permitido. Para comprovantes, o limite é 5 MB.'
+        };
+    }
+
     // --- Erros do Prisma ---
     if (error.code === 'P2002') {
         const campo = campoDuplicado(error.meta);

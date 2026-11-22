@@ -99,7 +99,9 @@ class AgendamentoRepository {
 
                             monitor: { select: { nome_completo: true } }
                         }
-                    }
+                    },
+                    // Plano 7: o pedido de revisão da falta, sem o arquivo
+                    recurso: { select: { status: true, criado_em: true, motivo_decisao: true } }
                 },
 
                 orderBy: { data_hora: 'desc' },

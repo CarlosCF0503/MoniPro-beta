@@ -2,10 +2,12 @@
 // real fica com tests/integracao/coordenacaoFaltas.int.test.js.
 jest.mock('../src/repositories/painelRepository');
 jest.mock('../src/repositories/agendamentoRepository');
+jest.mock('../src/repositories/recursoRepository');
 
 const request = require('supertest');
 const repo = require('../src/repositories/painelRepository');
 const agRepo = require('../src/repositories/agendamentoRepository');
+const recRepo = require('../src/repositories/recursoRepository');
 const painelService = require('../src/services/painelService');
 const { gerarToken } = require('./helpers/token');
 const app = require('../src/app');
@@ -41,6 +43,7 @@ beforeEach(() => {
     jest.clearAllMocks();
     repo.emTransacao.mockImplementation((fn) => fn('tx'));
     repo.registrar.mockImplementation(async (dados) => ({ ...dados, criado_em: AGORA }));
+    recRepo.listarPendentes.mockResolvedValue([]);
 });
 
 describe('Listas de faltas', () => {

@@ -6,6 +6,7 @@
 const painelRepository = require('../repositories/painelRepository');
 const certificadoRepository = require('../repositories/certificadoRepository');
 const agendamentoRepository = require('../repositories/agendamentoRepository');
+const recursoService = require('./recursoService');
 const { enviarSemEsperar } = require('./email');
 const { ErroAplicacao, ErroNaoEncontrado } = require('../utils/erros');
 const logger = require('../utils/logger');
@@ -384,11 +385,12 @@ class PainelService {
     async faltas(periodo, agora = new Date()) {
         const p = periodo || periodoDe(agora);
         const j = janela(p, agora);
-        const [listas, ausencias] = await Promise.all([
+        const [listas, ausencias, recursos] = await Promise.all([
             j.inicio >= j.ate
                 ? { faltas: [], semPresenca: [] }
                 : painelRepository.listarInscricoesParaFaltas(j.inicio, j.ate),
-            painelRepository.buscarAusencias(new Date(agora.getTime() - DIAS_CONSULTA * DIA))
+            painelRepository.buscarAusencias(new Date(agora.getTime() - DIAS_CONSULTA * DIA)),
+            recursoService.pendentes()
         ]);
         const porAluno = new Map();
         for (const a of ausencias) {
@@ -403,6 +405,8 @@ class PainelService {
         const nomes = await painelRepository.nomesDeUsuarios(bloqueados.map((b) => b.id_aluno));
         return {
             periodo: p,
+            // Pedidos de revisão pendentes, de qualquer semestre
+            recursos,
             faltas: listas.faltas.map(linhaInscricao),
             sem_presenca: listas.semPresenca.map(linhaInscricao),
             bloqueados: bloqueados
