@@ -1,5 +1,8 @@
 // JS/base.js
 
+import { showToast } from './toast.js';
+import { obterSessao, encerrarSessao } from './api.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- 1. SELEÇÃO DOS ELEMENTOS GERAIS ---
     const menuIcon = document.getElementById('menu');
@@ -49,8 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             user = await obterSessao();
         } catch (erro) {
-            if (typeof showToast === 'function')
-                showToast('Não foi possível conectar ao servidor.', 'error', erro);
+            showToast('Não foi possível conectar ao servidor.', 'error', erro);
             return;
         }
         window.location.href = user ? paginaDoPerfil(user) : 'index.html';
@@ -90,9 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
             confirmLogoutButton.disabled = true;
             // P3 (R7): o servidor revoga o token e apaga o cookie
             await encerrarSessao();
-            if (typeof showToast === 'function') {
-                showToast('Sessão encerrada com sucesso!', 'success');
-            }
+            showToast('Sessão encerrada com sucesso!', 'success');
             setTimeout(() => {
                 window.location.href = 'index.html';
             }, 1000);
@@ -115,8 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 dashLinkPerfil.href = paginaDoPerfil(user);
             },
             (erro) => {
-                if (typeof showToast === 'function')
-                    showToast('Não foi possível conectar ao servidor.', 'error', erro);
+                showToast('Não foi possível conectar ao servidor.', 'error', erro);
             }
         );
     }

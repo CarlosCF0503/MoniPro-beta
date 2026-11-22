@@ -306,6 +306,17 @@ describe('Rotas', () => {
         ).toBe(404);
     });
 
+    it('sem sessão, o corpo nem é lido: 401 antes do leitor de 7 MB', async () => {
+        // JSON quebrado: se o corpo fosse lido antes do login, a resposta seria 400
+        const r = await request(app)
+            .post('/agendamentos/9/recurso')
+            .set('Content-Type', 'application/json')
+            .send('{"justificativa": ');
+
+        expect(r.status).toBe(401);
+        expect(recRepo.bloquearInscricao).not.toHaveBeenCalled();
+    });
+
     it('as outras rotas continuam com o limite padrão de corpo', async () => {
         const r = await com(request(app).post('/agendamentos'), aluno).send({
             id_monitoria: 1,

@@ -4,6 +4,10 @@
 // Os gráficos são SVG/HTML montados aqui: a CSP do site só aceita scripts do próprio domínio.
 // Depende de: api.js (chamadaApi, escaparHtml, obterSessao, MB_BETA_ORM), toast.js (showToast,
 // mensagemDaApi).
+
+import { showToast, mensagemDaApi } from './toast.js';
+import { chamadaApi, obterSessao, escaparHtml, MB_BETA_ORM } from './api.js';
+
 document.addEventListener('DOMContentLoaded', async () => {
     const esc = escaparHtml;
     const raiz = document.getElementById('painel-app');

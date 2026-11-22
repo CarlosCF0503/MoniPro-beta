@@ -19,6 +19,7 @@ const { HORAS_MINIMAS_CANCELAMENTO } = require('../utils/validarAntecedencia');
 const {
     ErroAplicacao,
     ErroConflito,
+    ErroNaoAutorizado,
     ErroNaoEncontrado,
     ErroRegraNegocio
 } = require('../utils/erros');
@@ -34,10 +35,15 @@ class ListaEsperaService {
             throw new ErroNaoEncontrado('Vaga de monitoria não encontrada.');
         }
         return await agendamentoRepository.emTransacao(async (tx) => {
-            const vaga = await agendamentoRepository.bloquearMonitoria(idMonitoria, tx);
+            const vaga = await agendamentoRepository.bloquearMonitoria(idMonitoria, tx, idAluno);
             // Plano 7: vaga de disciplina ainda pendente não existe para o aluno
             if (!vaga || vaga.status_disciplina === 'pendente')
                 throw new ErroNaoEncontrado('Vaga de monitoria não encontrada.');
+            // O monitor não entra na fila da própria vaga (ver bloquearMonitoria)
+            if (vaga.mesma_pessoa)
+                throw new ErroNaoAutorizado(
+                    'Você é o monitor desta vaga: não dá para entrar na lista de espera dela.'
+                );
             // Plano 12: quem faltou demais também não entra na fila por um tempo
             await restricaoService.exigirSemRestricao(idAluno, tx);
             if (vaga.status !== 'ativa') {

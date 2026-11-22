@@ -1,5 +1,9 @@
 // monipro-web/JS/cadastro.js
 
+import { showToast, mensagemDaApi } from './toast.js';
+import { chamadaApi } from './api.js';
+import { montarAcoesConfirmacao } from './confirmacao_email.js';
+
 const SVG_OLHO_ABERTO = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
 const SVG_OLHO_FECHADO = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`;
 
@@ -56,11 +60,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const confirmarSenha = document.getElementById('inputConfirmarSenha').value;
 
         if (!nome || !email || !matricula || !senha) {
-            if (typeof showToast === 'function') showToast('Preencha todos os campos.', 'error');
+            showToast('Preencha todos os campos.', 'error');
             return;
         }
         if (senha !== confirmarSenha) {
-            if (typeof showToast === 'function') showToast('As senhas não coincidem!', 'error');
+            showToast('As senhas não coincidem!', 'error');
             return;
         }
 
@@ -87,12 +91,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.success) {
                 // Plano 14 (RF-018): a conta só entra depois de abrir o link do e-mail
                 mostrarConfiraEmail({ email, matricula, senha, tipo_usuario });
-            } else if (typeof showToast === 'function') {
+            } else {
                 showToast(mensagemDaApi(data, 'Erro ao realizar o cadastro.'), 'error', data);
             }
         } catch (error) {
-            if (typeof showToast === 'function')
-                showToast('Sem conexão com o servidor.', 'error', error);
+            showToast('Sem conexão com o servidor.', 'error', error);
         } finally {
             btnSubmit.value = 'Cadastrar';
             btnSubmit.disabled = false;

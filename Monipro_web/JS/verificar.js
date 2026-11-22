@@ -2,6 +2,10 @@
 // Certificados (PR 4): verificação pública de uma declaração pelo código
 // (GET /certificados/verificar/:codigo). Não exige login.
 // Depende de: api.js (chamadaApi, escaparHtml, mensagemDaApi), toast.js.
+
+import { mensagemDaApi } from './toast.js';
+import { chamadaApi, escaparHtml } from './api.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     const esc = escaparHtml;
     const form = document.getElementById('vf-form');

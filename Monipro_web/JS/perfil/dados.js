@@ -1,10 +1,9 @@
 // JS/perfil/dados.js
 // Funções puras do perfil do monitor: classificação das vagas, horas comprovadas, regra de
-// cancelamento e opções de término. Não tocam no DOM, então rodam no navegador (global
-// PerfilDados) e no Jest (module.exports) — ver tests/perfilDados.test.js.
-/* global module */
+// cancelamento e opções de término. Não tocam no DOM: as telas importam PerfilDados, e o Jest
+// testa as mesmas funções — ver tests/perfilDados.test.js.
 
-(function (raiz) {
+const PerfilDados = (function () {
     const MESES = [
         'Janeiro',
         'Fevereiro',
@@ -441,6 +440,7 @@
         plural
     };
 
-    if (typeof module !== 'undefined' && module.exports) module.exports = api;
-    else raiz.PerfilDados = api;
-})(typeof window !== 'undefined' ? window : this);
+    return api;
+})();
+
+export { PerfilDados };

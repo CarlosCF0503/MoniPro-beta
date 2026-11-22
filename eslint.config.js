@@ -30,7 +30,7 @@ module.exports = [
             }
         },
         rules: {
-            'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }]
+            'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }]
         }
     },
     {
@@ -43,45 +43,27 @@ module.exports = [
             globals: { ...globals.node, ...globals.browser }
         },
         rules: {
-            'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }]
+            'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }]
         }
     },
     {
-        // Múltiplos <script> não-modulares compartilham o mesmo escopo global no navegador.
-        // Estas funções são definidas em um arquivo (toast.js, api.js, calendario.js) e
-        // consumidas em outros, então precisam ser declaradas aqui para o ESLint enxergá-las.
+        // O front usa ES modules: cada arquivo importa o que usa de outro (import/export),
+        // então o ESLint confere os nomes sem uma lista de globais compartilhadas.
         files: ['Monipro_web/**/*.js'],
         languageOptions: {
             ecmaVersion: 2022,
-            sourceType: 'script',
-            globals: {
-                ...globals.browser,
-                showToast: 'readonly',
-                mensagemDaApi: 'readonly',
-                chamadaApi: 'readonly',
-                // P3 (R7): sessão em cookie httpOnly (api.js)
-                obterSessao: 'readonly',
-                encerrarSessao: 'readonly',
-                escaparHtml: 'readonly',
-                MB_BETA_ORM: 'readonly',
-                // Tela de marcar monitoria (JS/marcar/): datas.js e componentes.js
-                MarcarDatas: 'readonly',
-                MarcarComponentes: 'readonly',
-                // Perfil do monitor (JS/perfil/): dados.js
-                PerfilDados: 'readonly',
-                // R3 (LGPD): excluir a conta (JS/perfil/excluir_conta.js)
-                PerfilExcluirConta: 'readonly',
-                // Plano 14: confirmar o e-mail (JS/confirmacao_email.js)
-                montarAcoesConfirmacao: 'readonly'
-            }
+            sourceType: 'module',
+            globals: globals.browser
         },
         rules: {
-            'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-            // Os próprios arquivos que definem showToast/chamadaApi/MB_BETA_ORM colidem
-            // com a declaração desses nomes como globais (necessária para os arquivos que
-            // os consomem) — comportamento esperado neste padrão de múltiplos <script>.
-            'no-redeclare': 'off'
+            'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }]
         }
+    },
+    {
+        // JS/config.js é gerado no servidor a partir do template (envsubst) e carregado como
+        // script comum, antes dos módulos: só define window.MONIPRO_CONFIG.
+        files: ['Monipro_web/JS/config.js'],
+        languageOptions: { sourceType: 'script' }
     },
     prettier
 ];

@@ -3,7 +3,10 @@
 // aluno.js e monitor.js colocam PerfilExcluirConta.blocoHTML() nos dados do usuário; este
 // arquivo cria o diálogo, pede a senha e chama DELETE /perfil. Depende de api.js e toast.js.
 
-const PerfilExcluirConta = (() => {
+import { showToast, mensagemDaApi } from '../toast.js';
+import { chamadaApi } from '../api.js';
+
+export const PerfilExcluirConta = (() => {
     const ID = 'dlg-excluir-conta';
 
     function blocoHTML() {

@@ -4,7 +4,7 @@
 // URL base do servidor, definida em JS/config.js — gerada por ambiente no arranque do
 // container Nginx (ver Monipro_web/JS/config.js.template). Fallback abaixo cobre o caso de
 // config.js não ter sido carregado (ex.: script bloqueado ou faltando na página).
-const MB_BETA_ORM =
+export const MB_BETA_ORM =
     (window.MONIPRO_CONFIG && window.MONIPRO_CONFIG.API_BASE_URL) || 'https://moni-pro.app.br';
 
 /**
@@ -14,7 +14,7 @@ const MB_BETA_ORM =
  * @param {*} valor - Qualquer valor; null/undefined viram string vazia.
  * @returns {string} Texto seguro para conteúdo e atributos HTML entre aspas.
  */
-function escaparHtml(valor) {
+export function escaparHtml(valor) {
     return String(valor ?? '')
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -36,7 +36,7 @@ try {
  * @param {object} opcoes - Configurações do fetch (method, body, etc.)
  * @returns {Promise<object>} - A resposta do servidor (garantida como objeto)
  */
-async function chamadaApi(endpoint, opcoes = {}) {
+export async function chamadaApi(endpoint, opcoes = {}) {
     // Configura os cabeçalhos (headers) padrão
     const cabecalhos = {
         'Content-Type': 'application/json',
@@ -100,7 +100,7 @@ let sessaoAtual = null;
  * Erros de rede sobem como exceção, para a página avisar em vez de mandar ao login.
  * @returns {Promise<{id:number, nome:string, tipo:string}|null>}
  */
-function obterSessao() {
+export function obterSessao() {
     if (!sessaoAtual) {
         sessaoAtual = chamadaApi('/auth/sessao').then(
             (dados) => (dados.success && dados.usuario ? dados.usuario : null),
@@ -114,7 +114,7 @@ function obterSessao() {
 }
 
 /** Encerra a sessão no servidor (revoga o token e apaga o cookie). Não lança erro. */
-async function encerrarSessao() {
+export async function encerrarSessao() {
     try {
         await chamadaApi('/auth/sair', { method: 'POST' });
     } catch (erro) {

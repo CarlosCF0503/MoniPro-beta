@@ -1,5 +1,5 @@
 // Funções puras do perfil do monitor (Monipro_web/JS/perfil/dados.js)
-const D = require('../Monipro_web/JS/perfil/dados.js');
+const { PerfilDados: D } = require('../Monipro_web/JS/perfil/dados.js');
 
 const AGORA = new Date(2026, 10, 7, 12, 0);
 

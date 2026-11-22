@@ -1,10 +1,9 @@
 // JS/marcar/datas.js
 // Funções puras da tela de marcar monitoria: datas, agrupamento de vagas e validação do
-// formulário do monitor. Não tocam no DOM, então rodam no navegador (global MarcarDatas)
-// e no Jest (module.exports) — ver tests/marcarDatas.test.js.
-/* global module */
+// formulário do monitor. Não tocam no DOM: as telas importam MarcarDatas, e o Jest testa as
+// mesmas funções — ver tests/marcarDatas.test.js.
 
-(function (raiz) {
+const MarcarDatas = (function () {
     const MESES = [
         'janeiro',
         'fevereiro',
@@ -386,6 +385,7 @@
         validarVaga
     };
 
-    if (typeof module !== 'undefined' && module.exports) module.exports = api;
-    else raiz.MarcarDatas = api;
-})(typeof window !== 'undefined' ? window : this);
+    return api;
+})();
+
+export { MarcarDatas };
