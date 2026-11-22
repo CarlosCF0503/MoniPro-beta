@@ -1,5 +1,5 @@
 // Funções puras da tela de marcar monitoria (Monipro_web/JS/marcar/datas.js)
-const datas = require('../Monipro_web/JS/marcar/datas.js');
+const { MarcarDatas: datas } = require('../Monipro_web/JS/marcar/datas.js');
 
 describe('marcar monitoria — datas', () => {
     test('chave e deChave fazem ida e volta no fuso local', () => {

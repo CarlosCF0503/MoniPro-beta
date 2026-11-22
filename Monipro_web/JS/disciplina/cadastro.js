@@ -1,7 +1,10 @@
 // JS/disciplina/cadastro.js
 // Tela "Nova disciplina" (cadastro_disciplina.html). Só monitores chegam aqui pelo botão de
 // Minhas Disciplinas; quem abre o endereço direto sem ser monitor volta para a lista.
-/* global DisciplinaRegras, chamadaApi, mensagemDaApi, obterSessao, showToast */
+
+import { showToast, mensagemDaApi } from '../toast.js';
+import { chamadaApi, obterSessao } from '../api.js';
+import { DisciplinaRegras } from './regras.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     const R = DisciplinaRegras;

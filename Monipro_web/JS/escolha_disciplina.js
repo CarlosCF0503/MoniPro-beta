@@ -1,4 +1,8 @@
 // JS/escolha_disciplina.js
+
+import { mensagemDaApi } from './toast.js';
+import { chamadaApi, obterSessao, escaparHtml } from './api.js';
+
 document.addEventListener('DOMContentLoaded', async () => {
     const containerDisciplinas = document.querySelector('.disciplinas');
     if (!containerDisciplinas) return;

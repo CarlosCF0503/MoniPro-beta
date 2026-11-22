@@ -2,6 +2,10 @@
 // Certificados (PR 3): monta a declaração de horas a partir de GET /certificados/:codigo (só o
 // dono) e deixa imprimir ou salvar em PDF pelo navegador.
 // Depende de: api.js (chamadaApi, escaparHtml, mensagemDaApi), toast.js.
+
+import { mensagemDaApi } from './toast.js';
+import { chamadaApi, escaparHtml } from './api.js';
+
 document.addEventListener('DOMContentLoaded', async () => {
     const esc = escaparHtml;
     const folha = document.getElementById('cert-folha');

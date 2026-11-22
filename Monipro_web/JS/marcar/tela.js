@@ -5,9 +5,14 @@
 // As duas montagens usam o mesmo estado, então mudar a largura no meio do fluxo não perde nada.
 // Depende de: toast.js, api.js, marcar/datas.js, marcar/componentes.js.
 
+import { showToast, mensagemDaApi } from '../toast.js';
+import { chamadaApi, obterSessao, escaparHtml } from '../api.js';
+import { MarcarDatas } from './datas.js';
+import { MarcarComponentes } from './componentes.js';
+
 document.addEventListener('DOMContentLoaded', async () => {
-    const D = window.MarcarDatas;
-    const C = window.MarcarComponentes;
+    const D = MarcarDatas;
+    const C = MarcarComponentes;
     // Plano 8: com menos que isso até o início, a lista de espera não anda (src/config/listaEspera.js)
     const HORAS_FILA = 2;
     const esc = escaparHtml;

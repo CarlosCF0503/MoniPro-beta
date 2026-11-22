@@ -6,6 +6,19 @@ module.exports = {
     // R1: os testes de integração usam um PostgreSQL de verdade e rodam à parte, com
     // "npm run test:int" (ver jest.integracao.config.js). O "npm test" continua sem banco.
     testPathIgnorePatterns: ['/node_modules/', '<rootDir>/tests/integracao/'],
+    // O front (Monipro_web/JS) usa ES modules (import/export), e o backend e os testes usam
+    // CommonJS. Só os arquivos do front passam pelo Babel, que troca import/export por
+    // require/exports; o resto roda como está, sem transformação.
+    transform: {
+        '^.+[\\\\/]Monipro_web[\\\\/].+\\.js$': [
+            'babel-jest',
+            {
+                babelrc: false,
+                configFile: false,
+                plugins: ['@babel/plugin-transform-modules-commonjs']
+            }
+        ]
+    },
     // Cobertura ("npm run test:cobertura", que o CI roda em todo PR). Conta todo o src/, não
     // só os arquivos que algum teste importa. O server.js fica de fora: só liga o servidor e
     // é exercitado pelos testes de ponta a ponta. Os repositórios são cobertos sobretudo pelos

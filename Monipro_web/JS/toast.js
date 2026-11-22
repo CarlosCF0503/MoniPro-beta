@@ -9,7 +9,7 @@
  */
 let timerToast = null;
 
-function showToast(mensagem, tipoInformado, detalhe) {
+export function showToast(mensagem, tipoInformado, detalhe) {
     const tipo = tipoInformado || 'default';
     registrarNoConsole(mensagem, tipo, detalhe);
 
@@ -56,7 +56,7 @@ function registrarNoConsole(mensagem, tipo, detalhe) {
  * @param {string} padrao - Texto usado quando o servidor não manda mensagem.
  * @returns {string}
  */
-function mensagemDaApi(dados, padrao) {
+export function mensagemDaApi(dados, padrao) {
     if (!dados) return padrao;
     // erro: true (sem texto) é o marcador de resposta não-JSON criado em api.js
     if (typeof dados.erro === 'string' && dados.erro) return dados.erro;

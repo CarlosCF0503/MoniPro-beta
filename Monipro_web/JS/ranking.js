@@ -2,6 +2,10 @@
 // Plano 5: ranking de monitores por disciplina e semestre (GET /disciplinas/:id/ranking).
 // Mostra só monitores; a linha de quem está vendo vem marcada pela API ("voce").
 // Depende de: api.js (chamadaApi, escaparHtml, obterSessao), toast.js, base.js.
+
+import { mensagemDaApi } from './toast.js';
+import { chamadaApi, obterSessao, escaparHtml } from './api.js';
+
 document.addEventListener('DOMContentLoaded', async () => {
     const esc = escaparHtml;
     const sel = document.getElementById('rk-disc');

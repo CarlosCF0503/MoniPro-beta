@@ -7,8 +7,14 @@
 // As duas montagens usam o mesmo estado, então girar o celular ou redimensionar não perde nada.
 // Depende de: api.js (chamadaApi, mensagemDaApi, escaparHtml), toast.js, perfil/dados.js.
 
+import { showToast, mensagemDaApi } from '../toast.js';
+import { chamadaApi, obterSessao, escaparHtml } from '../api.js';
+import { PerfilDados } from './dados.js';
+import { AgendaIcs } from '../agenda.js';
+import { PerfilExcluirConta } from './excluir_conta.js';
+
 document.addEventListener('DOMContentLoaded', async () => {
-    const D = window.PerfilDados;
+    const D = PerfilDados;
     const esc = escaparHtml;
     const raiz = document.getElementById('perfil-app');
     const celularMq = window.matchMedia('(max-width: 699px)');
@@ -179,7 +185,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     function adicionarAgenda(v) {
         try {
-            window.AgendaIcs.baixar(window.AgendaIcs.eventoDaVaga(v, window.location.origin));
+            AgendaIcs.baixar(AgendaIcs.eventoDaVaga(v, window.location.origin));
             showToast('Arquivo baixado. Abra-o para colocar a monitoria na sua agenda.', 'success');
         } catch (erro) {
             showToast('Não foi possível gerar o arquivo da agenda.', 'error', erro);

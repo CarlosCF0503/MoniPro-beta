@@ -3,6 +3,10 @@
 // sempre a mesma, exista a conta ou não (evita descobrir e-mails cadastrados).
 // Com ?token=: cria a senha nova (POST /auth/senha/redefinir). As regras são as do cadastro.
 // Depende de: api.js (chamadaApi, mensagemDaApi), toast.js; o botão de olho vem de login.js.
+
+import { mensagemDaApi } from './toast.js';
+import { chamadaApi } from './api.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     const $ = (id) => document.getElementById(id);
     const token = new URLSearchParams(window.location.search).get('token');

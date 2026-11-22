@@ -2,6 +2,10 @@
 // Plano 14 (RF-018): o link do e-mail abre esta página com ?token=. A confirmação sai por
 // POST /auth/email/confirmar (um GET de verificador de links não confirma sozinho).
 // Depende de: api.js (chamadaApi, mensagemDaApi), toast.js.
+
+import { mensagemDaApi } from './toast.js';
+import { chamadaApi } from './api.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     const $ = (id) => document.getElementById(id);
     const token = new URLSearchParams(window.location.search).get('token');
