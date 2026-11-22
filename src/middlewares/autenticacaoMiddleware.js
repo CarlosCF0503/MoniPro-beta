@@ -13,7 +13,7 @@ const autenticar = async (req, res, next) => {
 
     let decodificado;
     try {
-        decodificado = jwt.verify(token, JWT_SECRET);
+        decodificado = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
     } catch {
         return res.status(401).json({ erro: 'Token inválido' });
     }
