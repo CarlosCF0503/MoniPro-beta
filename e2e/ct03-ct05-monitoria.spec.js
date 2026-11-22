@@ -94,12 +94,12 @@ test('CT-05 o monitor cria a vaga pela tela e o aluno a vê no calendário', asy
     const monitor = await api.criarConta(request, 'monitor');
     const disciplina = await api.criarDisciplina(await api.clienteDe(request, monitor));
     await api.entrarNoNavegador(context, request, monitor, baseURL);
-    const horario = diaAFrente(4, 16);
+    // Minuto fora da lista de sugestões (de 15 em 15): o monitor digita o horário exato
+    const horario = diaAFrente(4, 16, 43);
 
     await abrirDisciplina(page, disciplina.nome);
     await escolherDia(page, horario);
-    await page.getByRole('button', { name: 'Horário', exact: true }).click();
-    await page.getByRole('option', { name: horaMinuto(horario) }).click();
+    await page.getByRole('combobox', { name: 'Horário' }).fill(horaMinuto(horario));
     await page.getByLabel('Local').fill('Laboratório E2E');
     await page.getByLabel('Assunto (opcional)').fill('Revisão para a prova');
     await page.getByRole('button', { name: 'Revisar vaga' }).click();

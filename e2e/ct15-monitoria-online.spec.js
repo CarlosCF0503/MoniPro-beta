@@ -24,7 +24,7 @@ test('CT-15 vaga on-line: o link da sala só aparece para o aluno inscrito', asy
     // 1. O monitor cria a vaga on-line
     await page.goto(marcar(disciplina));
     await escolherDia(page, horario);
-    await page.getByRole('button', { name: 'Horário', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Horário' }).click();
     await page.getByRole('option', { name: horaMinuto(horario) }).click();
     await page.getByRole('radio', { name: 'On-line' }).check();
     await expect(page.getByLabel('Local')).toHaveCount(0);
