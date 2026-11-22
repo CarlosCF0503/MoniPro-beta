@@ -14,12 +14,23 @@ const {
     ErroConflito
 } = require('../utils/erros');
 
+// O monitor não se inscreve na própria vaga, nem pela conta de aluno dele (ver bloquearMonitoria)
+function exigirOutraPessoa(vaga) {
+    if (vaga.mesma_pessoa) {
+        throw new ErroNaoAutorizado('Você é o monitor desta vaga: não dá para se inscrever nela.');
+    }
+}
+
 class AgendamentoService {
     async criar(dados) {
         // Duplicidade e capacidade são verificadas na mesma transação, com a linha da monitoria
         // travada, para que inscrições simultâneas não ultrapassem o limite de vagas.
         return await agendamentoRepository.emTransacao(async (tx) => {
-            const monitoria = await agendamentoRepository.bloquearMonitoria(dados.id_monitoria, tx);
+            const monitoria = await agendamentoRepository.bloquearMonitoria(
+                dados.id_monitoria,
+                tx,
+                dados.id_aluno
+            );
             // Plano 7: vaga de disciplina ainda pendente não existe para o aluno
             if (!monitoria || monitoria.status_disciplina === 'pendente') {
                 // A monitoria vem do corpo da requisição, não da URL: é dado inválido (400), não 404
@@ -27,6 +38,7 @@ class AgendamentoService {
                     id_monitoria: 'A monitoria selecionada não foi encontrada.'
                 });
             }
+            exigirOutraPessoa(monitoria);
 
             // Plano 12: quem faltou demais não faz novas inscrições por um tempo
             await restricaoService.exigirSemRestricao(dados.id_aluno, tx);
@@ -220,6 +232,13 @@ class AgendamentoService {
                     ehMonitor
                         ? 'Você já confirmou a presença deste aluno. Falta o aluno confirmar.'
                         : 'Você já confirmou a sua presença. Falta o monitor confirmar.'
+                );
+            }
+            // Segunda trava: inscrição antiga do próprio monitor na vaga dele não conclui nem
+            // credita pontos, mesmo que tenha entrado antes da regra da inscrição
+            if (ag.id_aluno === ag.id_monitor) {
+                throw new ErroRegraNegocio(
+                    'O monitor não pode confirmar presença na própria vaga como aluno.'
                 );
             }
             validarJanelaConfirmacao(ag.horario);

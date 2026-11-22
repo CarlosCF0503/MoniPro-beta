@@ -13,11 +13,23 @@ class AgendamentoRepository {
     // Trava a linha da monitoria (SELECT ... FOR UPDATE) até o fim da transação, serializando
     // inscrições concorrentes na mesma vaga. Sem isso, duas requisições simultâneas poderiam
     // contar a mesma ocupação e ultrapassar a capacidade.
-    async bloquearMonitoria(idMonitoria, db = prisma) {
+    // Com `idAluno`, diz também se quem se inscreve é o próprio monitor da vaga: a mesma conta,
+    // ou a conta de aluno da mesma pessoa (mesma matrícula ou mesmo e-mail). Sem essa trava, o
+    // monitor confirmava a presença dos dois lados e somava pontos e horas de certificado.
+    async bloquearMonitoria(idMonitoria, db = prisma, idAluno = null) {
         // Plano 7: traz também a situação da disciplina (pendente não aceita inscrição de aluno)
+        const aluno = idAluno === null ? null : parseInt(idAluno);
         const linhas = await db.$queryRaw`
             SELECT m."id", m."capacidade", m."status"::text AS "status", m."horario",
-                   d."status"::text AS "status_disciplina"
+                   m."id_monitor", d."status"::text AS "status_disciplina",
+                   EXISTS (
+                       SELECT 1 FROM "usuarios" a
+                       JOIN "usuarios" mon ON mon."id" = m."id_monitor"
+                       WHERE a."id" = ${aluno}
+                         AND (a."id" = mon."id"
+                              OR a."matricula" = mon."matricula"
+                              OR lower(a."email") = lower(mon."email"))
+                   ) AS "mesma_pessoa"
             FROM "monitorias" m
             JOIN "disciplinas" d ON d."id" = m."id_disciplina"
             WHERE m."id" = ${parseInt(idMonitoria)}
