@@ -3,11 +3,32 @@
 import { showToast } from './toast.js';
 import { obterSessao, encerrarSessao } from './api.js';
 
+// Item "Ranking" do menu lateral. Fica só aqui (e não em cada HTML) para o menu ser igual em
+// todas as telas. É um link de verdade: Enter abre, e aria-current marca a tela atual.
+const ICONE_RANKING =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0z"/>' +
+    '<path d="M17 6h2.5a1.5 1.5 0 0 1 0 3H17"/><path d="M7 6H4.5a1.5 1.5 0 0 0 0 3H7"/></svg>';
+
+function incluirItemRanking(sidebar) {
+    if (!sidebar || sidebar.querySelector('.ranking-link')) return;
+    const item = document.createElement('a');
+    item.className = 'item ranking-link';
+    item.href = 'ranking.html';
+    item.innerHTML = '<div class="icone">' + ICONE_RANKING + '</div><p>Ranking</p>';
+    if (/(^|\/)ranking\.html$/.test(window.location.pathname))
+        item.setAttribute('aria-current', 'page');
+    const sair = sidebar.querySelector('#sair');
+    if (sair) sair.before(item);
+    else sidebar.append(item);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- 1. SELEÇÃO DOS ELEMENTOS GERAIS ---
     const menuIcon = document.getElementById('menu');
     const closeMenuIcon = document.getElementById('menu_fechar');
     const sidebar = document.getElementById('menuLateral');
+    incluirItemRanking(sidebar);
 
     const profileLinks = document.querySelectorAll('.perfil-link');
     const monitoriaLink = document.querySelector('.monitoria-link');
@@ -59,14 +80,45 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- 4. EVENT LISTENERS (CLIQUES) ---
-    if (menuIcon) menuIcon.addEventListener('click', () => showElement(sidebar));
-    if (closeMenuIcon) closeMenuIcon.addEventListener('click', hideAll);
-    if (overlay) overlay.addEventListener('click', hideAll);
+    const abrirMenu = () => {
+        showElement(sidebar);
+        if (menuIcon) menuIcon.setAttribute('aria-expanded', 'true');
+        // O foco entra no menu para quem navega pelo teclado
+        const primeiro = sidebar?.querySelector('.item');
+        if (primeiro) primeiro.focus({ preventScroll: true });
+    };
+    const fecharMenu = () => {
+        const estavaAberto = sidebar?.classList.contains('aparecer');
+        hideAll();
+        if (menuIcon) menuIcon.setAttribute('aria-expanded', 'false');
+        if (estavaAberto && menuIcon) menuIcon.focus({ preventScroll: true });
+    };
+    if (menuIcon) menuIcon.addEventListener('click', abrirMenu);
+    if (closeMenuIcon) closeMenuIcon.addEventListener('click', fecharMenu);
+
+    // Os ícones do cabeçalho e os itens do menu são <div role="button">: Enter e Espaço
+    // precisam clicar, como num botão de verdade
+    document.addEventListener('keydown', (ev) => {
+        const alvo = ev.target;
+        if (
+            (ev.key === 'Enter' || ev.key === ' ') &&
+            alvo instanceof HTMLElement &&
+            alvo.matches('div[role="button"]') &&
+            alvo.closest('header, #menuLateral')
+        ) {
+            ev.preventDefault();
+            alvo.click();
+        } else if (ev.key === 'Escape' && sidebar?.classList.contains('aparecer')) {
+            fecharMenu();
+        }
+    });
+    if (overlay) overlay.addEventListener('click', fecharMenu);
     if (cancelLogoutButton) cancelLogoutButton.addEventListener('click', hideAll);
 
     if (logoutButton) {
         logoutButton.addEventListener('click', () => {
             if (sidebar) sidebar.classList.remove('aparecer');
+            if (menuIcon) menuIcon.setAttribute('aria-expanded', 'false');
             showElement(logoutModal);
         });
     }

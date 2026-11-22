@@ -105,6 +105,70 @@ describe('marcar monitoria — lista de horários', () => {
     test('não duplica um horário que já está na grade', () => {
         expect(datas.horarios('14:00')).toHaveLength(61);
     });
+
+    test('inclui as vagas do dia fora da grade (para o aviso "já tem vaga")', () => {
+        const lista = datas.horarios('', ['14:43', '14:00', 'xx']);
+        expect(lista).toHaveLength(62);
+        expect(lista.indexOf('14:43')).toBe(lista.indexOf('14:30') + 1);
+    });
+
+    test('sugestão mais perto do que foi digitado pela metade', () => {
+        const lista = datas.horarios('');
+        expect(datas.sugestaoMaisPerto(lista, '14:4')).toBe('14:45');
+        expect(datas.sugestaoMaisPerto(lista, '14')).toBe('14:00');
+        expect(datas.sugestaoMaisPerto(lista, '23:10')).toBe('22:00');
+        expect(datas.sugestaoMaisPerto(lista, '')).toBe('');
+    });
+});
+
+describe('marcar monitoria — horário digitado', () => {
+    test('máscara HH:MM enquanto digita', () => {
+        expect(datas.mascararHora('1')).toBe('1');
+        expect(datas.mascararHora('14')).toBe('14');
+        expect(datas.mascararHora('144')).toBe('14:4');
+        expect(datas.mascararHora('1443')).toBe('14:43');
+        expect(datas.mascararHora('14:43')).toBe('14:43');
+        expect(datas.mascararHora('14h43')).toBe('14:43');
+        expect(datas.mascararHora('14434')).toBe('14:43');
+        expect(datas.mascararHora('ab')).toBe('');
+    });
+
+    test('hora de um dígito ganha o zero na frente', () => {
+        expect(datas.mascararHora('9')).toBe('09');
+        expect(datas.mascararHora('930')).toBe('09:30');
+        expect(datas.mascararHora('9:30')).toBe('09:30');
+        expect(datas.mascararHora('9h30')).toBe('09:30');
+        expect(datas.mascararHora('1:')).toBe('01');
+    });
+
+    test('normaliza ao sair do campo; incompleto ou impossível vira vazio', () => {
+        expect(datas.normalizarHora('14:43')).toBe('14:43');
+        expect(datas.normalizarHora('14')).toBe('14:00');
+        expect(datas.normalizarHora('14h')).toBe('14:00');
+        expect(datas.normalizarHora('9')).toBe('09:00');
+        expect(datas.normalizarHora('14:4')).toBe('');
+        expect(datas.normalizarHora('25:00')).toBe('');
+        expect(datas.normalizarHora('14:60')).toBe('');
+        expect(datas.normalizarHora('')).toBe('');
+    });
+
+    test('horaValida e limite de 07:00 a 22:00', () => {
+        expect(datas.horaValida('14:43')).toBe(true);
+        expect(datas.horaValida('14:4')).toBe(false);
+        expect(datas.horaValida('24:00')).toBe(false);
+        expect(datas.horaNoLimite('07:00')).toBe(true);
+        expect(datas.horaNoLimite('22:00')).toBe(true);
+        expect(datas.horaNoLimite('06:59')).toBe(false);
+        expect(datas.horaNoLimite('22:01')).toBe(false);
+    });
+
+    test('dataDoFormulario monta o minuto exato e recusa hora inválida', () => {
+        expect(datas.dataDoFormulario('2026-11-09', '14:43')).toEqual(
+            new Date(2026, 10, 9, 14, 43)
+        );
+        expect(datas.dataDoFormulario('2026-11-09', '14:4')).toBeNull();
+        expect(datas.dataDoFormulario('', '14:43')).toBeNull();
+    });
 });
 
 describe('marcar monitoria — validação da nova vaga', () => {
@@ -152,6 +216,30 @@ describe('marcar monitoria — validação da nova vaga', () => {
             'Você já tem uma vaga às 14:00 neste dia.'
         );
         expect(datas.validarVaga({ ...valido, hora: '15:00' }, agora, minhas)).toEqual({});
+    });
+
+    test('aceita qualquer minuto (14:43) e avisa conflito fora da grade', () => {
+        expect(datas.validarVaga({ ...valido, hora: '14:43' }, agora, [])).toEqual({});
+        const minhas = [{ inicio: new Date(2026, 10, 9, 14, 43) }];
+        expect(datas.validarVaga({ ...valido, hora: '14:43' }, agora, minhas).hora).toBe(
+            'Você já tem uma vaga às 14:43 neste dia.'
+        );
+    });
+
+    test('horário incompleto, fora de 07:00–22:00 ou no passado de hoje', () => {
+        expect(datas.validarVaga({ ...valido, hora: '14:4' }, agora, []).hora).toBe(
+            'Use o formato HH:MM, ex.: 14:43.'
+        );
+        expect(datas.validarVaga({ ...valido, hora: '14:4' }, agora, []).dia).toBeUndefined();
+        expect(datas.validarVaga({ ...valido, hora: '06:45' }, agora, []).hora).toBe(
+            'Escolha um horário entre 07:00 e 22:00.'
+        );
+        // Hoje às 12:00: 11:59 já passou, 12:01 ainda não
+        const hoje = { ...valido, dia: '2026-11-06' };
+        expect(datas.validarVaga({ ...hoje, hora: '11:59' }, agora, []).hora).toBe(
+            'O horário precisa estar no futuro.'
+        );
+        expect(datas.validarVaga({ ...hoje, hora: '12:01' }, agora, [])).toEqual({});
     });
 });
 

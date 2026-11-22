@@ -24,6 +24,17 @@ describe('série no formulário', () => {
         expect(datas.every((d) => d.getHours() === 18)).toBe(true);
     });
 
+    it('série com minuto fora da grade (14:43) mantém o horário exato em todas as datas', () => {
+        const s = D.serieDoForm(form({ hora: '14:43', ate: '2027-06-15' }), []);
+        expect(s.datas).toHaveLength(16);
+        expect(s.datas.every((d) => d.getHours() === 14 && d.getMinutes() === 43)).toBe(true);
+        expect(D.serieDoForm(form({ hora: '14:4' }), [])).toBeNull();
+        const minhas = [{ inicio: new Date(2027, 2, 9, 14, 43) }];
+        expect(D.serieDoForm(form({ hora: '14:43' }), minhas).puladas.map(D.diaMes)).toEqual([
+            '09/03'
+        ]);
+    });
+
     it('serieDoForm marca como pulada a data em que o monitor já tem vaga no horário', () => {
         const minhas = [
             { inicio: new Date(2027, 2, 9, 18, 0) },
