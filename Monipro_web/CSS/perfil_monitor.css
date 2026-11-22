@@ -649,8 +649,20 @@
 }
 .vg-acoes {
     display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     align-items: center;
     gap: 6px;
+    /* A coluna das ações é "auto": sem limite ela cresce até o tamanho de todos os botões
+       numa linha só e espreme as informações da vaga (uma palavra por linha) */
+    max-width: 360px;
+}
+/* Três ou mais ações (sala + agenda + cancelar/aviso): descem para uma linha própria embaixo
+   das informações, em vez de disputar a largura com elas */
+.vaga:has(> .vg-acoes > :nth-child(3)) > .vg-acoes {
+    grid-column: 2 / -1;
+    justify-content: flex-start;
+    max-width: none;
 }
 
 /* Entre 700 e 999px: uma coluna, identidade compacta em linha */
