@@ -61,10 +61,14 @@ const limiteGeral = rateLimit({
     message: { erro: 'Muitas requisições. Aguarde um minuto e tente novamente.' }
 });
 app.use(limiteGeral);
-// Plano 7: o comprovante do pedido de revisão de falta vem em base64 (até 5 MB de arquivo); só
-// esta rota aceita um corpo maior. As outras seguem com o limite padrão (100 KB).
-app.use('/agendamentos/:id/recurso', express.json({ limit: '7mb' }));
-app.use(express.json());
+// Plano 7: o comprovante do pedido de revisão de falta vem em base64 (até 5 MB de arquivo). O
+// leitor de 7 MB dessa rota fica nela mesma, depois do login (src/routes/agendamentoRotas.js):
+// sem sessão, ninguém faz o servidor ler um corpo grande. As outras rotas seguem com 100 KB.
+const ROTA_RECURSO = /^\/agendamentos\/[^/]+\/recurso\/?$/i;
+const lerJsonPadrao = express.json();
+app.use((req, res, next) =>
+    req.method === 'POST' && ROTA_RECURSO.test(req.path) ? next() : lerJsonPadrao(req, res, next)
+);
 
 // Tarefa 17: health check para monitoramento externo. Rota pública, sem dado sensível. Fica
 // depois do limite geral de propósito: consulta o banco, então não pode ser usada para
