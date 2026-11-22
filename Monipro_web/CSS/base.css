@@ -55,7 +55,10 @@ header {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1;
+    /* Menu e avisos ficam numa faixa acima de tudo o que as telas fixam (barras "sticky" do
+       perfil no celular, calendários, listas de horário: todos abaixo de 100) e abaixo dos
+       toasts (1000). Com 1 e 2, a barra de abas do perfil passava por cima do menu aberto */
+    z-index: 100;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease-in-out;
@@ -79,7 +82,7 @@ header {
     /* Fechado, o menu sai da ordem do Tab (visibility muda só depois da animação) */
     visibility: hidden;
     transition: transform 0.3s ease-in-out, visibility 0s linear 0.3s;
-    z-index: 2;
+    z-index: 101;
 }
 
 #menuLateral.aparecer {
@@ -176,7 +179,7 @@ header {
     grid-template-areas: "icone icone" "areaSim areaNao";
     grid-template-columns: 1fr 1fr;
 
-    z-index: 2;
+    z-index: 102;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
@@ -204,7 +207,7 @@ header {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto 1fr;
 
-    z-index: 2;
+    z-index: 102;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
