@@ -19,5 +19,7 @@ router.patch('/:id/presenca', autenticar, agendamentoController.confirmarPresenc
 router.patch('/:id/ausencia', autenticar, isMonitor, agendamentoController.marcarAusencia);
 // Plano 7: o aluno pede revisão da falta com comprovante (o corpo maior é aceito em app.js)
 router.post('/:id/recurso', autenticar, agendamentoController.pedirRecurso);
+// Plano 6: o aluno avalia a monitoria (presença dos dois lados, até 7 dias depois)
+router.post('/:id/avaliacao', autenticar, agendamentoController.avaliar);
 
 module.exports = router;

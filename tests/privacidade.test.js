@@ -25,7 +25,9 @@ jest.mock('../src/config/bancoDeDados', () => {
         tokenConfirmacaoEmail: { count: jest.fn(), deleteMany: jest.fn() },
         notificacao: { count: jest.fn(), deleteMany: jest.fn() },
         // Plano 7: pedidos de revisão de falta (com atestado)
-        recursoFalta: { count: jest.fn(), deleteMany: jest.fn() }
+        recursoFalta: { count: jest.fn(), deleteMany: jest.fn() },
+        // Plano 6: avaliações dadas pelo aluno
+        avaliacao: { deleteMany: jest.fn() }
     };
     prisma.$transaction = jest.fn((fn) => fn(prisma));
     return prisma;
@@ -55,6 +57,7 @@ beforeEach(() => {
     prisma.notificacao.deleteMany.mockResolvedValue({ count: 0 });
     prisma.recursoFalta.count.mockResolvedValue(0);
     prisma.recursoFalta.deleteMany.mockResolvedValue({ count: 0 });
+    prisma.avaliacao.deleteMany.mockResolvedValue({ count: 0 });
     prisma.usuario.count.mockResolvedValue(0);
     prisma.usuario.deleteMany.mockResolvedValue({ count: 0 });
 });

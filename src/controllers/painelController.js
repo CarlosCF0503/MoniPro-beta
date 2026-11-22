@@ -2,6 +2,8 @@
 // Plano 7 (RF-012): rotas /admin/* do painel da coordenação (só coordenador; ver painelRotas.js).
 const painelService = require('../services/painelService');
 const recursoService = require('../services/recursoService');
+const avaliacaoService = require('../services/avaliacaoService');
+const { periodoDe, limitesDoPeriodo } = require('../utils/periodo');
 const { ErroValidacao } = require('../utils/erros');
 
 const FORMATO_PERIODO = /^\d{4}\.[12]$/;
@@ -173,6 +175,34 @@ exports.recusarRecurso = async (req, res) => {
     const r = await recursoService.recusar(
         idDaRota(req.params.id, 'Pedido inválido.'),
         req.body ? req.body.motivo : undefined,
+        coordenadorDe(req)
+    );
+    return res.status(200).json({ success: true, ...r });
+};
+
+// GET /admin/avaliacoes?periodo=2026.2: comentários do semestre, visíveis e ocultos
+exports.avaliacoes = async (req, res) => {
+    const p = periodoDaConsulta(req.query.periodo) || periodoDe();
+    const { inicio, fim } = limitesDoPeriodo(p);
+    const avaliacoes = await avaliacaoService.paraModeracao(inicio, fim);
+    res.set('Cache-Control', 'no-store');
+    return res.status(200).json({ success: true, periodo: p, avaliacoes });
+};
+
+// POST /admin/avaliacoes/:id/ocultar { motivo }
+exports.ocultarAvaliacao = async (req, res) => {
+    const r = await avaliacaoService.ocultar(
+        idDaRota(req.params.id, 'Avaliação inválida.'),
+        req.body ? req.body.motivo : undefined,
+        coordenadorDe(req)
+    );
+    return res.status(200).json({ success: true, ...r });
+};
+
+// POST /admin/avaliacoes/:id/reexibir
+exports.reexibirAvaliacao = async (req, res) => {
+    const r = await avaliacaoService.reexibir(
+        idDaRota(req.params.id, 'Avaliação inválida.'),
         coordenadorDe(req)
     );
     return res.status(200).json({ success: true, ...r });

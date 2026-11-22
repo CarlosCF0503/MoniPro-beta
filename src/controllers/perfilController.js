@@ -3,6 +3,8 @@
 const perfilService = require('../services/perfilService');
 const privacidadeService = require('../services/privacidadeService');
 const restricaoService = require('../services/restricaoService');
+const avaliacaoService = require('../services/avaliacaoService');
+const { ErroNaoAutorizado } = require('../utils/erros');
 const { NOME_COOKIE_SESSAO, opcoesCookieSessao } = require('../config/sessao');
 const logger = require('../utils/logger');
 const { obterParametrosPaginacao, montarPaginacao } = require('../utils/paginacao');
@@ -34,6 +36,15 @@ class PerfilController {
     }
 
     // Plano 12: bloqueio por faltas do próprio usuário (null = pode se inscrever)
+    // Plano 6 (RF-007): GET /perfil/avaliacoes/resumo, só para o monitor
+    async resumoAvaliacoes(req, res) {
+        if (req.usuario.tipo !== 'monitor')
+            throw new ErroNaoAutorizado('O resumo de avaliações é só do monitor.');
+        const resumo = await avaliacaoService.resumoDoMonitor(req.usuario.id);
+        res.set('Cache-Control', 'no-store');
+        return res.status(200).json({ success: true, ...resumo });
+    }
+
     async restricao(req, res) {
         const restricao = await restricaoService.restricaoDe(req.usuario.id);
         res.json({ success: true, restricao });

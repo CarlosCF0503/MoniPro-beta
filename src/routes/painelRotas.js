@@ -34,4 +34,9 @@ router.get('/recursos/:id/arquivo', painelController.arquivoDoRecurso);
 router.post('/recursos/:id/aceitar', painelController.aceitarRecurso);
 router.post('/recursos/:id/recusar', painelController.recusarRecurso);
 
+// Plano 6: moderação dos comentários das avaliações (a nota oculta sai da média)
+router.get('/avaliacoes', painelController.avaliacoes);
+router.post('/avaliacoes/:id/ocultar', painelController.ocultarAvaliacao);
+router.post('/avaliacoes/:id/reexibir', painelController.reexibirAvaliacao);
+
 module.exports = router;

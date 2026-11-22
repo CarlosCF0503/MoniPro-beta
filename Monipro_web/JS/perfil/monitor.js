@@ -339,6 +339,95 @@ document.addEventListener('DOMContentLoaded', async () => {
             '</ul>'
         );
     }
+    // Plano 6 (RF-007): resumo das avaliações (média só com 3 ou mais; comentários sem nome)
+    async function carregarAvaliacoes() {
+        try {
+            const r = await chamadaApi('/perfil/avaliacoes/resumo');
+            S.avaliacoes = r.success ? r : null;
+        } catch {
+            S.avaliacoes = null;
+        }
+        render();
+    }
+    const MESES = [
+        'jan',
+        'fev',
+        'mar',
+        'abr',
+        'mai',
+        'jun',
+        'jul',
+        'ago',
+        'set',
+        'out',
+        'nov',
+        'dez'
+    ];
+    const mesAno = (m) => {
+        const [a, mm] = String(m).split('-');
+        return MESES[Number(mm) - 1] + '/' + a;
+    };
+    function avaliacoesHTML() {
+        const a = S.avaliacoes;
+        if (!a) return '<p class="aval-vazio">Não foi possível carregar as avaliações.</p>';
+        if (!a.total)
+            return '<p class="aval-vazio">Ainda sem avaliações. Depois de cada monitoria, os alunos com presença confirmada dão uma nota de 1 a 5.</p>';
+        const media =
+            a.media == null
+                ? '<p class="aval-falta"><b>' +
+                  D.plural(a.total, 'avaliação', 'avaliações') +
+                  '</b> · a média aparece com ' +
+                  a.minimo +
+                  '.</p>'
+                : '<div class="aval-media"><span class="n">' +
+                  String(a.media.toFixed(1)).replace('.', ',') +
+                  '</span><span class="de">/5 <i aria-hidden="true">★</i></span><small>' +
+                  D.plural(a.total, 'avaliação', 'avaliações') +
+                  '</small></div>';
+        const max = Math.max(1, ...[1, 2, 3, 4, 5].map((k) => a.distribuicao[k] || 0));
+        const barras =
+            '<ul class="aval-dist" aria-label="Quantas avaliações em cada nota">' +
+            // Decisão de 22/11: estrelas no lugar dos números, de 5 a 1 (ordem decrescente)
+            [5, 4, 3, 2, 1]
+                .map(
+                    (k) =>
+                        '<li><span class="k" aria-label="' +
+                        k +
+                        (k === 1 ? ' estrela' : ' estrelas') +
+                        '">' +
+                        '★'.repeat(k) +
+                        '</span><span class="bb"><i style="width:' +
+                        Math.round(((a.distribuicao[k] || 0) / max) * 100) +
+                        '%"></i></span><span class="q">' +
+                        (a.distribuicao[k] || 0) +
+                        '</span></li>'
+                )
+                .join('') +
+            '</ul>';
+        const coment = a.comentarios.length
+            ? '<ul class="aval-coment">' +
+              a.comentarios
+                  .map(
+                      (c) =>
+                          '<li><p>' +
+                          esc(c.comentario) +
+                          '</p><small><b>' +
+                          c.nota +
+                          '/5</b> · ' +
+                          mesAno(c.mes) +
+                          '</small></li>'
+                  )
+                  .join('') +
+              '</ul>'
+            : '';
+        return (
+            media +
+            barras +
+            coment +
+            '<p class="aval-nota">Sem o nome do aluno. Não vale pontos.</p>'
+        );
+    }
+
     async function carregarCertificados() {
         try {
             const r = await chamadaApi('/certificados');
@@ -554,6 +643,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             '</section>' +
             '<section class="pp-cartao pp-cert" aria-labelledby="h-cert"><h2 id="h-cert">Certificados</h2>' +
             certificadosHTML() +
+            '</section>' +
+            '<section class="pp-cartao pp-aval" aria-labelledby="h-aval"><h2 id="h-aval">Avaliações</h2>' +
+            avaliacoesHTML() +
             '</section></div>' +
             '<div class="pp-principal">' +
             '<div class="pp-numeros" aria-label="Resumo">' +
@@ -748,7 +840,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             topo +
             '<h2 class="lc-secao">Certificados</h2>' +
             certificadosHTML() +
-            '</div>'
+            '<h2 class="lc-secao">Avaliações</h2>' +
+            '<div class="pp-aval pp-aval-cel">' +
+            avaliacoesHTML() +
+            '</div></div>'
         );
     }
     function telaPerfilCel() {
@@ -859,6 +954,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // As horas e as declarações vêm à parte: se falharem, as vagas continuam aparecendo
             carregarHoras();
             carregarCertificados();
+            carregarAvaliacoes();
         } catch (erro) {
             S.erro = erro.message || 'Falha na comunicação com o servidor.';
             console.error('[MoniPro] Erro ao carregar o perfil do monitor.', erro);

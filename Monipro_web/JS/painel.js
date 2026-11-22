@@ -31,6 +31,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         disciplinas: [],
         aprovadas: [],
         faltas: { recursos: [], faltas: [], sem_presenca: [], bloqueados: [] },
+        avaliacoes: [],
+        filtroAval: 'visiveis',
         filtroFalta: 'recursos',
         auditoria: []
     };
@@ -81,16 +83,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         raiz.setAttribute('aria-busy', 'true');
         const q = S.periodo ? '?periodo=' + encodeURIComponent(S.periodo) : '';
         const ps = q ? '&' + q.slice(1) : '';
-        let r, m, a, cp, ca, di, fa;
+        let r, m, a, cp, ca, di, fa, av;
         try {
-            [r, m, a, cp, ca, di, fa] = await Promise.all([
+            [r, m, a, cp, ca, di, fa, av] = await Promise.all([
                 chamadaApi('/admin/resumo' + q),
                 chamadaApi('/admin/monitores' + q),
                 chamadaApi('/admin/auditoria?limit=20'),
                 chamadaApi('/admin/certificados?situacao=pendente'),
                 chamadaApi('/admin/certificados?situacao=assinado' + ps),
                 chamadaApi('/admin/disciplinas'),
-                chamadaApi('/admin/faltas' + q)
+                chamadaApi('/admin/faltas' + q),
+                chamadaApi('/admin/avaliacoes' + q)
             ]);
         } catch {
             r = { success: false, erro: 'Não foi possível conectar ao servidor.' };
@@ -113,6 +116,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
         S.disciplinas = (di && di.disciplinas) || [];
         S.aprovadas = (di && di.aprovadas) || [];
+        S.avaliacoes = (av && av.avaliacoes) || [];
         S.faltas = {
             recursos: (fa && fa.recursos) || [],
             faltas: (fa && fa.faltas) || [],
@@ -623,6 +627,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ['Horas', 'num'],
                 ['Alunos', 'num'],
                 ['Presença', 'num'],
+                ['Avaliação', 'num'],
                 ['Últimas 8 semanas', 'num'],
                 ['Certificado']
             ],
@@ -654,6 +659,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                     '</td>' +
                     '<td class="num">' +
                     p +
+                    '</td><td class="num">' +
+                    (m.avaliacao && m.avaliacao.media != null
+                        ? '<span class="pn-nota">' +
+                          String(m.avaliacao.media.toFixed(1)).replace('.', ',') +
+                          ' ★</span><small>' +
+                          m.avaliacao.total +
+                          (m.avaliacao.total === 1 ? ' avaliação' : ' avaliações') +
+                          '</small>'
+                        : '<small>' +
+                          (m.avaliacao && m.avaliacao.total ? 'menos de 3' : 'sem avaliações') +
+                          '</small>') +
                     '</td><td class="num">' +
                     spark(m.semanas) +
                     '</td><td><span class="pill ' +
@@ -912,6 +928,68 @@ document.addEventListener('DOMContentLoaded', async () => {
         );
     }
 
+    // Plano 6: comentários das avaliações; a coordenação oculta o que for ofensivo ou pessoal (decisão
+    // de 21/11). Decisão de 22/11: a nota do comentário oculto sai da média, do total e da distribuição
+    function abaAvaliacoes() {
+        const f = S.filtroAval;
+        const visiveis = S.avaliacoes.filter((x) => !x.oculto_em);
+        const ocultos = S.avaliacoes.filter((x) => x.oculto_em);
+        const lista = f === 'ocultos' ? ocultos : visiveis;
+        const filtro =
+            '<div class="pn-filtro" role="group" aria-label="Comentários">' +
+            [
+                ['visiveis', 'Visíveis ao monitor', visiveis.length],
+                ['ocultos', 'Ocultos', ocultos.length]
+            ]
+                .map(
+                    ([k, t, n]) =>
+                        '<button type="button" data-pn-aval="' +
+                        k +
+                        '" aria-pressed="' +
+                        (f === k) +
+                        '">' +
+                        t +
+                        ' (' +
+                        n +
+                        ')</button>'
+                )
+                .join('') +
+            '</div>';
+        const nota = (n) =>
+            '<span class="pn-nota-chip' + (n <= 2 ? ' baixa' : '') + '">' + n + '/5</span>';
+        return (
+            filtro +
+            '<p class="pn-dica">Comentários deixados pelos alunos no semestre. O monitor vê sem o nome do aluno. Oculte só o que for ofensivo ou pessoal: o comentário some para o monitor e a nota dele deixa de contar na média.</p>' +
+            tabela(
+                [['Comentário'], ['Monitor'], ['Nota'], ['', 'num']],
+                lista.map(
+                    (x) =>
+                        '<tr><td class="pn-just">' +
+                        esc(x.comentario) +
+                        '<small>' +
+                        esc(x.disciplina) +
+                        ' · ' +
+                        dataCurta(x.criado_em) +
+                        (x.oculto_em ? ' · oculto em ' + dataCurta(x.oculto_em) : '') +
+                        '</small></td><td>' +
+                        esc(x.monitor) +
+                        '</td><td>' +
+                        nota(x.nota) +
+                        '</td><td><div class="pn-acoes">' +
+                        (x.oculto_em
+                            ? '<button type="button" class="pp-btn pp-btn-sec pp-btn-p" data-pn="reexibir" data-id="' +
+                              x.id +
+                              '">Mostrar de novo</button>'
+                            : '<button type="button" class="pp-btn pp-btn-texto-perigo pp-btn-p" data-pn="ocultar" data-id="' +
+                              x.id +
+                              '">Ocultar</button>') +
+                        '</div></td></tr>'
+                ),
+                f === 'ocultos' ? 'Nenhum comentário oculto.' : 'Nenhum comentário neste semestre.'
+            )
+        );
+    }
+
     function abaAtividade() {
         const tipo = {
             criar_coordenador: [ICO.pessoa, ''],
@@ -922,7 +1000,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             marcar_falta: [ICO.alerta, 'perigo'],
             anular_falta: [ICO.ok, 'ok'],
             aceitar_recurso: [ICO.ok, 'ok'],
-            recusar_recurso: [ICO.x, 'perigo']
+            recusar_recurso: [ICO.x, 'perigo'],
+            ocultar_avaliacao: [ICO.x, 'perigo'],
+            reexibir_avaliacao: [ICO.ok, 'ok']
         };
         if (!S.auditoria.length) return '<p class="pn-vazio">Nenhuma ação registrada ainda.</p>';
         return (
@@ -970,12 +1050,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 S.faltas.recursos.length > 0
             ],
             ['monitores', 'Monitores', S.monitores.length, baixa > 0],
+            ['avaliacoes', 'Avaliações', S.avaliacoes.filter((x) => !x.oculto_em).length, false],
             ['atividade', 'Atividade', null, false]
         ];
         const corpo = {
             certificados: abaCertificados,
             disciplinas: abaDisciplinas,
             faltas: abaFaltas,
+            avaliacoes: abaAvaliacoes,
             monitores: abaMonitores,
             atividade: abaAtividade
         }[S.aba]();
@@ -1357,6 +1439,46 @@ document.addEventListener('DOMContentLoaded', async () => {
         carregar();
     });
 
+    // ---------- avaliações: ocultar e mostrar de novo ----------
+    const dlgOcu = document.getElementById('dlg-ocultar');
+    function abrirOcultar(x) {
+        document.getElementById('ocu-sub').textContent = '"' + x.comentario + '" · ' + x.monitor;
+        const motivo = document.getElementById('ocu-motivo');
+        motivo.value = '';
+        document.getElementById('ocu-erro').textContent = '';
+        document.getElementById('ocu-confirmar').dataset.id = x.id;
+        dlgOcu.showModal();
+        motivo.focus();
+    }
+    document.getElementById('ocu-form').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const b = document.getElementById('ocu-confirmar');
+        const motivo = document.getElementById('ocu-motivo').value.trim();
+        if (motivo.length < 10) {
+            document.getElementById('ocu-erro').textContent =
+                'Escreva o motivo com pelo menos 10 caracteres. Ele fica no registro de atividade.';
+            return;
+        }
+        const r = await executar(
+            b,
+            '/admin/avaliacoes/' + Number(b.dataset.id) + '/ocultar',
+            { motivo },
+            'Comentário oculto. O monitor deixa de ver o texto, e a nota sai da média.'
+        );
+        if (!r) return;
+        dlgOcu.close();
+        carregar();
+    });
+    async function reexibir(id, botao) {
+        const r = await executar(
+            botao,
+            '/admin/avaliacoes/' + id + '/reexibir',
+            null,
+            'O comentário voltou a aparecer para o monitor, e a nota volta a contar na média.'
+        );
+        if (r) carregar();
+    }
+
     // ---------- eventos ----------
     raiz.addEventListener('change', (ev) => {
         if (ev.target.id === 'pn-sem') {
@@ -1384,6 +1506,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('aba-' + S.aba).focus();
             return;
         }
+        const fa = ev.target.closest('[data-pn-aval]');
+        if (fa) {
+            S.filtroAval = fa.dataset.pnAval;
+            render();
+            return;
+        }
         const ff = ev.target.closest('[data-pn-falta]');
         if (ff) {
             S.filtroFalta = ff.dataset.pnFalta;
@@ -1408,6 +1536,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (b.dataset.pn === 'aprovar') return aprovarDisciplina(id, b);
         if (b.dataset.pn === 'anular') return abrirAnular(S.faltas.faltas.find((x) => x.id === id));
         if (b.dataset.pn === 'aceitar-recurso') return aceitarRecurso(id, b);
+        if (b.dataset.pn === 'ocultar') return abrirOcultar(S.avaliacoes.find((x) => x.id === id));
+        if (b.dataset.pn === 'reexibir') return reexibir(id, b);
         if (b.dataset.pn === 'recusar-recurso')
             return abrirRecusar(S.faltas.recursos.find((x) => x.id === id));
         if (b.dataset.pn === 'marcar-falta')

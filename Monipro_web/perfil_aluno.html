@@ -231,6 +231,38 @@
       </form>
     </dialog>
 
+    <!-- Plano 6 (RF-006): avaliar a monitoria (o monitor vê sem o nome do aluno) -->
+    <dialog class="pp-dlg" id="dlg-avaliar" aria-labelledby="ava-titulo">
+      <form id="ava-form" novalidate>
+        <div>
+          <h2 id="ava-titulo" tabindex="-1" autofocus>Como foi a monitoria?</h2>
+          <p class="pp-sub" id="ava-sub"></p>
+        </div>
+        <fieldset class="pp-campo ava-nota">
+          <legend class="pp-rotulo">Sua nota</legend>
+          <div class="ava-escala">
+            <input type="radio" name="nota" id="ava-1" value="1" /><label for="ava-1">1</label>
+            <input type="radio" name="nota" id="ava-2" value="2" /><label for="ava-2">2</label>
+            <input type="radio" name="nota" id="ava-3" value="3" /><label for="ava-3">3</label>
+            <input type="radio" name="nota" id="ava-4" value="4" /><label for="ava-4">4</label>
+            <input type="radio" name="nota" id="ava-5" value="5" /><label for="ava-5">5</label>
+          </div>
+          <div class="ava-pontas" aria-hidden="true"><span>Ruim</span><span>Ótima</span></div>
+          <p class="ava-escolha" id="ava-escolha" aria-live="polite">Toque numa nota de 1 a 5</p>
+        </fieldset>
+        <div class="pp-campo">
+          <label class="pp-rotulo" for="ava-comentario">Comentário (opcional)</label>
+          <textarea id="ava-comentario" rows="3" maxlength="300" placeholder="O que ajudou? O que pode melhorar?"></textarea>
+        </div>
+        <p class="pp-erro" id="ava-erro" aria-live="polite"></p>
+        <p class="nota-24h nota-bloco">O monitor vê a nota e o comentário sem o seu nome e sem a data exata. A avaliação não dá nem tira pontos. Dá para avaliar uma vez, até 7 dias depois da monitoria.</p>
+        <div class="pp-acoes">
+          <button type="button" class="pp-btn pp-btn-sec" data-fechar>Agora não</button>
+          <button type="submit" class="pp-btn pp-btn-pri" id="ava-enviar">Enviar avaliação</button>
+        </div>
+      </form>
+    </dialog>
+
     <!-- Plano 7: pedir revisão da falta à coordenação, com o atestado -->
     <dialog class="pp-dlg" id="dlg-recurso" aria-labelledby="rec-titulo">
       <form id="rec-form" novalidate>
