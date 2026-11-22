@@ -997,6 +997,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function abaAtividade() {
         const tipo = {
             criar_coordenador: [ICO.pessoa, ''],
+            convidar_coordenador: [ICO.pessoa, ''],
             assinar_certificado: [ICO.pena, 'ok'],
             revogar_certificado: [ICO.x, 'perigo'],
             aprovar_disciplina: [ICO.ok, 'ok'],

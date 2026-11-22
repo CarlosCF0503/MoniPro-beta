@@ -7,9 +7,41 @@
 import { mensagemDaApi } from './toast.js';
 import { chamadaApi } from './api.js';
 
+const TEXTOS_CONVITE = {
+    tituloNova: 'Defina sua senha',
+    textoNova:
+        'É a primeira vez que você entra na coordenação do MoniPro. Escolha a senha que vai usar daqui em diante.',
+    salvarNova: 'Salvar e continuar',
+    tituloFeito: 'Senha criada',
+    textoFeito:
+        'Pronto. Entre com o seu e-mail ou a sua matrícula e a senha que acabou de criar. Guarde o endereço moni-pro.app.br/coordenacao para as próximas vezes.',
+    irLogin: 'Entrar no painel',
+    tituloInvalido: 'Este convite não vale mais',
+    textoInvalido:
+        'O convite dura 48 horas e só pode ser usado uma vez. Peça um link novo com o seu e-mail: ele chega em alguns minutos.',
+    pedirNovo: 'Pedir link novo'
+};
+
+/** Plano 7: textos da primeira senha da coordenação (link do convite). */
+function aplicarTextosDoConvite($) {
+    for (const [id, texto] of Object.entries(TEXTOS_CONVITE)) {
+        const alvo = $(id);
+        if (!alvo) continue;
+        if (alvo.tagName === 'INPUT') alvo.value = texto;
+        else alvo.textContent = texto;
+    }
+    $('irLogin').href = 'index.html?perfil=coordenacao';
+    $('pedirNovo').href = 'redefinir_senha.html?perfil=coordenacao';
+    document.title = 'Definir senha - MoniPro';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const $ = (id) => document.getElementById(id);
-    const token = new URLSearchParams(window.location.search).get('token');
+    const parametros = new URLSearchParams(window.location.search);
+    const token = parametros.get('token');
+    // Plano 7: o convite da coordenação (scripts/criar-coordenador.js) usa este mesmo link, com
+    // ?convite=1, para a primeira senha. Só muda o texto e o caminho de volta.
+    if (token && parametros.get('convite') === '1') aplicarTextosDoConvite($);
     // Tira o token da barra de endereço (e do histórico) assim que ele é lido. Se o navegador
     // recusar (página sem endereço próprio), a tela segue normalmente.
     if (token) {
@@ -88,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         const btn = $('salvarNova');
+        const rotulo = btn.value;
         btn.disabled = true;
         btn.value = 'Salvando…';
         try {
@@ -102,6 +135,6 @@ document.addEventListener('DOMContentLoaded', () => {
             erro.textContent = 'Não foi possível conectar ao servidor. Tente de novo.';
         }
         btn.disabled = false;
-        btn.value = 'Salvar senha nova';
+        btn.value = rotulo;
     });
 });

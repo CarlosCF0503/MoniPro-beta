@@ -33,7 +33,7 @@ test('CT-19 vaga semanal: pula a data com conflito e cancela esta e as próximas
     // 1. Cria a série: 4 semanas, uma fica de fora
     await page.goto(marcar(disciplina));
     await escolherDia(page, primeira);
-    await page.getByRole('button', { name: 'Horário', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Horário' }).click();
     await page.getByRole('option', { name: horaMinuto(primeira) }).click();
     await page.getByLabel('Local').fill('Sala 12');
     await page.getByLabel('Repetir toda semana').check();

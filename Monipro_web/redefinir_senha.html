@@ -33,7 +33,7 @@
                             <input type="radio" id="radioMonitor" name="tipo_usuario" value="monitor">
                             <label for="radioMonitor" class="btn-profile">Monitor</label>
 
-                            <!-- Plano 7: só aparece com ?perfil=coordenacao (login.js); a conta é criada no servidor -->
+                            <!-- Plano 7: marcado com ?perfil=coordenacao (login.js), que esconde esta seção inteira; a conta é criada no servidor -->
                             <input type="radio" id="radioCoordenacao" name="tipo_usuario" value="coordenador">
                             <label for="radioCoordenacao" class="btn-profile" hidden>Coordenação</label>
                         </div>
@@ -62,8 +62,8 @@
             <!-- Etapa 2: criar a senha nova (com ?token=...) -->
             <div id="etapa-nova" hidden>
                 <div class="header-text">
-                    <h1 class="text1">Crie uma senha nova</h1>
-                    <p>Depois de salvar, você entra de novo com a senha nova. As outras sessões abertas são encerradas.</p>
+                    <h1 class="text1" id="tituloNova">Crie uma senha nova</h1>
+                    <p id="textoNova">Depois de salvar, você entra de novo com a senha nova. As outras sessões abertas são encerradas.</p>
                 </div>
                 <form id="formNova" novalidate>
                     <div class="input-group input-group-senha">
@@ -90,17 +90,17 @@
             <!-- Etapa 2b: senha trocada -->
             <div id="etapa-feito" class="rs-caixa" hidden tabindex="-1">
                 <div class="rs-ico ok"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></div>
-                <h1 class="text1">Senha alterada</h1>
-                <p>Entre com a senha nova. Se não foi você quem pediu a troca, avise a coordenação.</p>
-                <a class="rs-pri" href="index.html">Ir para o login</a>
+                <h1 class="text1" id="tituloFeito">Senha alterada</h1>
+                <p id="textoFeito">Entre com a senha nova. Se não foi você quem pediu a troca, avise a coordenação.</p>
+                <a class="rs-pri" id="irLogin" href="index.html">Ir para o login</a>
             </div>
 
             <!-- Link vencido, já usado ou adulterado -->
             <div id="etapa-invalido" class="rs-caixa" hidden tabindex="-1">
                 <div class="rs-ico perigo"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg></div>
-                <h1 class="text1">Este link não vale mais</h1>
-                <p>O link de redefinição dura 30 minutos e só pode ser usado uma vez. Peça um novo para continuar.</p>
-                <a class="rs-pri" href="redefinir_senha.html">Pedir novo link</a>
+                <h1 class="text1" id="tituloInvalido">Este link não vale mais</h1>
+                <p id="textoInvalido">O link de redefinição dura 30 minutos e só pode ser usado uma vez. Peça um novo para continuar.</p>
+                <a class="rs-pri" id="pedirNovo" href="redefinir_senha.html">Pedir novo link</a>
             </div>
 
             <p class="rodape-legal"><a href="privacidade.html">Aviso de Privacidade</a></p>

@@ -22,14 +22,14 @@
             <img src="IMG/MoniPro-Logo.png" alt="Logo MoniPro" class="logo">
 
             <div class="header-text">
-                <h1 class="text1">Bem-vindo de volta!</h1>
-                <p>Faça login para acessar o seu painel.</p>
+                <h1 class="text1" id="tituloLogin">Bem-vindo de volta!</h1>
+                <p id="subtituloLogin">Faça login para acessar o seu painel.</p>
             </div>
 
             <form id="formLogin">
 
                 <!-- SELETOR DE PERFIL (Sua lógica de rádio mantida) -->
-                <div class="profile-section">
+                <div class="profile-section" id="secaoPerfil">
                     <p class="profile-title">Escolha como deseja entrar:</p>
                     <div class="profile-selector">
                         <input type="radio" id="radioAluno" name="tipo_usuario" value="aluno" checked>
@@ -38,7 +38,7 @@
                         <input type="radio" id="radioMonitor" name="tipo_usuario" value="monitor">
                         <label for="radioMonitor" class="btn-profile">Monitor</label>
 
-                        <!-- Plano 7: só aparece com ?perfil=coordenacao (login.js); a conta é criada no servidor -->
+                        <!-- Plano 7: marcado com ?perfil=coordenacao (login.js), que esconde esta seção inteira; a conta é criada no servidor -->
                         <input type="radio" id="radioCoordenacao" name="tipo_usuario" value="coordenador">
                         <label for="radioCoordenacao" class="btn-profile" hidden>Coordenação</label>
                     </div>
@@ -82,12 +82,18 @@
                 <!-- BOTÃO ENTRAR E LINK DE CADASTRO -->
                 <input type="submit" id="entrar" value="Acessar Sistema">
 
-                <div class="link-cadastro">
+                <div class="link-cadastro" id="linkCadastro">
                     <p class="cadastro">Não tem cadastro?</p>
                     <a href="escolha_cadastro.html">Cadastre-se</a>
                 </div>
 
-                <p class="rodape-legal"><a href="privacidade.html">Aviso de Privacidade</a></p>
+                <!-- Plano 7: no modo coordenação, a volta para o login de aluno e monitor -->
+                <div class="link-cadastro" id="linkVoltarPublico" hidden>
+                    <p class="cadastro">É aluno ou monitor?</p>
+                    <a href="index.html">Entrar por aqui</a>
+                </div>
+
+                <p class="rodape-legal"><a href="privacidade.html">Aviso de Privacidade</a><span id="acessoCoordenacao"> · <a href="index.html?perfil=coordenacao">Acesso da coordenação</a></span></p>
 
             </form>
         </div>

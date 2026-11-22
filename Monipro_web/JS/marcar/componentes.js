@@ -277,8 +277,9 @@ const MarcarComponentes = (function () {
      * @param {string[]} ocupados - horários em que o monitor já tem vaga no dia.
      * @param {string} atributos - aria-describedby/aria-invalid já montados.
      */
+    // Horário digitável (HH:MM) com lista de sugestões; eventos em campo_hora.js
     function campoHora(atual, ocupados, atributos) {
-        const itens = D.horarios(atual)
+        const itens = D.horarios(atual, ocupados)
             .map(
                 (h) =>
                     '<li role="option" id="h-' +
@@ -294,17 +295,16 @@ const MarcarComponentes = (function () {
             )
             .join('');
         return (
-            '<div class="hora"><button type="button" id="f-hora" class="hora-btn" aria-haspopup="listbox" aria-expanded="false" aria-controls="lista-hora"' +
-            atributos +
-            '>' +
+            '<div class="hora" data-hora-caixa>' +
+            '<span class="hora-ico">' +
             icone('relogio', 16) +
-            '<span class="valor' +
-            (atual ? '' : ' sem-valor') +
-            '">' +
-            esc(atual || 'Escolher') +
-            '</span><span class="seta">' +
+            '</span><input id="f-hora" class="hora-input" data-hora-campo type="text" inputmode="numeric" autocomplete="off" maxlength="5" placeholder="HH:MM" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="lista-hora" value="' +
+            esc(atual || '') +
+            '"' +
+            atributos +
+            '><button type="button" class="hora-abrir" data-hora-abrir tabindex="-1" aria-label="Mostrar sugestões de horário" aria-controls="lista-hora" aria-expanded="false">' +
             icone('abaixo', 16, 2.5) +
-            '</span></button><ul class="hora-lista" id="lista-hora" role="listbox" aria-label="Horários" tabindex="-1" hidden>' +
+            '</button><ul class="hora-lista" id="lista-hora" role="listbox" aria-label="Sugestões de horário" hidden>' +
             itens +
             '</ul></div>'
         );
