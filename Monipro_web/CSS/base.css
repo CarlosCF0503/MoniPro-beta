@@ -76,12 +76,16 @@ header {
     display: flex;
     flex-direction: column;
     transform: translateX(-100%);
-    transition: transform 0.3s ease-in-out;
+    /* Fechado, o menu sai da ordem do Tab (visibility muda só depois da animação) */
+    visibility: hidden;
+    transition: transform 0.3s ease-in-out, visibility 0s linear 0.3s;
     z-index: 2;
 }
 
 #menuLateral.aparecer {
     transform: translateX(0);
+    visibility: visible;
+    transition: transform 0.3s ease-in-out;
 }
 
 .logo_fechar {
@@ -140,6 +144,21 @@ header {
 
 .item:hover .icone {
     margin-right: 50px;
+}
+
+/* "Ranking" é um link (incluído pelo base.js): mesma aparência dos outros itens */
+#menuLateral a.item {
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+}
+#menuLateral a.item:hover {
+    color: white;
+}
+/* Tela atual */
+#menuLateral .item[aria-current='page'] {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    box-shadow: inset 4px 0 0 #FFFAFA;
 }
 
 #aviso_sair {

@@ -313,13 +313,13 @@
           </div>
           <div class="pp-campo">
             <label class="pp-rotulo" for="ed-hora">Horário</label>
-            <!-- Lista curta de horários, como em "Abrir nova vaga": o campo de hora nativo só abria pelo ícone do relógio -->
-            <div class="pp-hora">
-              <button type="button" class="pp-input pp-hora-btn" id="ed-hora" aria-haspopup="listbox" aria-expanded="false" aria-controls="ed-hora-lista">
-                <span class="valor"></span>
+            <!-- Como em "Abrir nova vaga": digita HH:MM (qualquer minuto) ou escolhe na lista (JS/marcar/campo_hora.js) -->
+            <div class="pp-hora" data-hora-caixa>
+              <input type="text" class="pp-input pp-hora-input" id="ed-hora" data-hora-campo inputmode="numeric" autocomplete="off" maxlength="5" placeholder="HH:MM" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="ed-hora-lista">
+              <button type="button" class="pp-hora-abrir" data-hora-abrir tabindex="-1" aria-label="Mostrar sugestões de horário" aria-controls="ed-hora-lista" aria-expanded="false">
                 <svg class="seta" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
               </button>
-              <ul class="pp-hora-lista" id="ed-hora-lista" role="listbox" aria-label="Horários" tabindex="-1" hidden></ul>
+              <ul class="pp-hora-lista" id="ed-hora-lista" role="listbox" aria-label="Sugestões de horário" hidden></ul>
             </div>
           </div>
           <div class="pp-cal" id="ed-cal" role="group" aria-label="Escolher o dia" hidden></div>

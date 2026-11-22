@@ -47,10 +47,12 @@ const MarcarDatas = (function () {
         return DOMINIOS_SALA.some((d) => host === d || host.endsWith('.' + d));
     }
     const LIMITE_DESCRICAO = 500;
-    // Lista de horários do formulário do monitor (validada pelo time): 07:00 a 22:00, de 15 em 15
+    // Horário da vaga: o monitor digita qualquer minuto (HH:MM) entre 07:00 e 22:00. A lista de
+    // sugestões ao lado do campo continua de 15 em 15 (validada pelo time), só para agilizar.
     const HORARIO_INICIO = 7 * 60;
     const HORARIO_FIM = 22 * 60;
     const HORARIO_PASSO = 15;
+    const TEXTO_LIMITE_HORARIO = 'entre 07:00 e 22:00';
 
     /** Chave AAAA-MM-DD no fuso local (o calendário trabalha com o dia do usuário). */
     function chave(data) {
@@ -216,9 +218,49 @@ const MarcarDatas = (function () {
         return contagem;
     }
 
-    /** Junta "AAAA-MM-DD" e "HH:MM" em uma data local; null se faltar o dia. */
+    const minutosDoDia = (hhmm) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3));
+    const textoDaHora = (min) =>
+        String(Math.floor(min / 60)).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0');
+
+    /** "HH:MM" completo, de 00:00 a 23:59. */
+    function horaValida(texto) {
+        return /^([01]\d|2[0-3]):[0-5]\d$/.test(String(texto || ''));
+    }
+
+    /** Dentro do horário das vagas (07:00 a 22:00, inclusive). */
+    function horaNoLimite(hhmm) {
+        if (!horaValida(hhmm)) return false;
+        const m = minutosDoDia(hhmm);
+        return m >= HORARIO_INICIO && m <= HORARIO_FIM;
+    }
+
+    /**
+     * Máscara enquanto o monitor digita: só números, e os dois pontos entram sozinhos
+     * ("1443" → "14:43"). Hora de um dígito ganha o zero: "9:30", "9h30" e "930" → "09:30".
+     */
+    function mascararHora(texto) {
+        const bruto = String(texto || '');
+        let digitos = bruto.replace(/\D/g, '');
+        if (/^\s*\d\s*[:hH.]/.test(bruto) || /^[3-9]/.test(digitos)) digitos = '0' + digitos;
+        digitos = digitos.slice(0, 4);
+        return digitos.length > 2 ? digitos.slice(0, 2) + ':' + digitos.slice(2) : digitos;
+    }
+
+    /**
+     * Texto digitado → "HH:MM", ou '' quando não dá para entender. Ao sair do campo, "14" e
+     * "14h" viram "14:00"; "14:4" fica incompleto ('').
+     */
+    function normalizarHora(texto) {
+        const m = mascararHora(texto);
+        if (!m) return '';
+        const hhmm = m.length <= 2 ? m.padStart(2, '0') + ':00' : m;
+        return horaValida(hhmm) ? hhmm : '';
+    }
+
+    /** Junta "AAAA-MM-DD" e "HH:MM" em uma data local; null se faltar o dia ou a hora for inválida. */
     function dataDoFormulario(diaChave, horaTexto) {
         if (!diaChave) return null;
+        if (horaTexto && !horaValida(horaTexto)) return null;
         const data = deChave(diaChave);
         const [h, m] = String(horaTexto || '00:00')
             .split(':')
@@ -228,21 +270,26 @@ const MarcarDatas = (function () {
     }
 
     /**
-     * Horários oferecidos na lista ("HH:MM"). Um valor fora da grade (ex.: 18:10, de uma vaga
-     * antiga) entra na posição certa para não se perder.
+     * Sugestões da lista ("HH:MM"), de 15 em 15. O horário escolhido e os `extras` fora da grade
+     * (ex.: 14:43, digitado ou de outra vaga do monitor no dia) entram na posição certa, para
+     * aparecerem marcados e com o aviso "já tem vaga".
      */
-    function horarios(atual) {
+    function horarios(atual, extras) {
         const lista = [];
-        for (let m = HORARIO_INICIO; m <= HORARIO_FIM; m += HORARIO_PASSO) {
-            lista.push(
-                String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0')
-            );
-        }
-        if (atual && !lista.includes(atual)) {
-            lista.push(atual);
-            lista.sort();
-        }
-        return lista;
+        for (let m = HORARIO_INICIO; m <= HORARIO_FIM; m += HORARIO_PASSO)
+            lista.push(textoDaHora(m));
+        [atual, ...(extras || [])].forEach((h) => {
+            if (horaValida(h) && !lista.includes(h)) lista.push(h);
+        });
+        return lista.sort((a, b) => a.localeCompare(b));
+    }
+
+    /** Sugestão mais perto de um texto digitado pela metade ("14:4" → "14:45"); '' sem número. */
+    function sugestaoMaisPerto(lista, texto) {
+        const m = mascararHora(texto);
+        if (!m) return '';
+        const alvo = (m.slice(0, 2).padEnd(2, '0') + ':' + m.slice(3).padEnd(2, '0')).slice(0, 5);
+        return lista.find((h) => h >= alvo) || lista[lista.length - 1];
     }
 
     /**
@@ -278,7 +325,7 @@ const MarcarDatas = (function () {
      * as que serão criadas. null quando não repete ou falta dia, horário ou data final.
      */
     function serieDoForm(form, minhas) {
-        if (!form.repetir || !form.ate || !form.hora) return null;
+        if (!form.repetir || !form.ate || !horaValida(form.hora)) return null;
         const inicio = dataDoFormulario(form.dia, form.hora);
         if (!inicio || form.ate < form.dia) return null;
         const datas = ocorrencias(inicio, form.ate);
@@ -306,8 +353,11 @@ const MarcarDatas = (function () {
     function validarVaga(form, agora, minhasNoDia) {
         const erros = {};
         const data = dataDoFormulario(form.dia, form.hora);
-        if (!data) erros.dia = 'Escolha o dia no calendário.';
+        if (!form.dia) erros.dia = 'Escolha o dia no calendário.';
         if (!form.hora) erros.hora = 'Informe o horário.';
+        else if (!horaValida(form.hora)) erros.hora = 'Use o formato HH:MM, ex.: 14:43.';
+        else if (!horaNoLimite(form.hora))
+            erros.hora = 'Escolha um horário ' + TEXTO_LIMITE_HORARIO + '.';
         else if (data && data <= agora) erros.hora = 'O horário precisa estar no futuro.';
         else if (data && (minhasNoDia || []).some((v) => hora(v.inicio) === form.hora))
             erros.hora = 'Você já tem uma vaga às ' + form.hora + ' neste dia.';
@@ -381,7 +431,13 @@ const MarcarDatas = (function () {
         vagasDoDia,
         contarPorDia,
         dataDoFormulario,
+        horaValida,
+        horaNoLimite,
+        mascararHora,
+        normalizarHora,
+        TEXTO_LIMITE_HORARIO,
         horarios,
+        sugestaoMaisPerto,
         validarVaga
     };
 
