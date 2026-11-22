@@ -142,6 +142,11 @@
 .pagina-perfil .pn-anexo { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--navy-2); text-decoration: none; overflow-wrap: anywhere; }
 .pagina-perfil .pn-anexo:hover { text-decoration: underline; }
 
+/* avaliações (plano 6) */
+.pn .pn-nota { font-weight: 800; color: var(--navy); }
+.pn .pn-nota-chip { display: inline-flex; font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 99px; background: var(--soft); color: var(--slate-ink); font-variant-numeric: tabular-nums; }
+.pn .pn-nota-chip.baixa { background: var(--bad-soft); color: var(--bad); }
+
 /* diálogos */
 .pp-dlg .pn-sessoes { list-style: none; display: flex; flex-direction: column; max-height: 300px; overflow-y: auto; border: 1px solid var(--line); border-radius: 10px; }
 .pp-dlg .pn-sessoes li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--line); font-size: 13px; }

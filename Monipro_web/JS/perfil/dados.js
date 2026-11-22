@@ -280,6 +280,8 @@
             // Plano 7: data da falta e o pedido de revisão (recurso) do aluno, se houver
             ausenteEm: a.ausente_em ? new Date(a.ausente_em) : null,
             recurso: a.recurso || null,
+            // Plano 6 (RF-006): a nota que o aluno já deu a esta monitoria, se deu
+            avaliacao: a.avaliacao || null,
             // Pode cancelar até o início: a vaga mudou de dia, horário ou local depois da
             // inscrição (editar vaga) ou o aluno saiu da lista de espera a menos de 24h (plano 8)
             liberado: Boolean(a.liberado_cancelar_em),

@@ -2,9 +2,11 @@
 // /admin/* e o script que cria a conta. O banco real fica com
 // tests/integracao/painelCoordenacao.int.test.js.
 jest.mock('../src/repositories/painelRepository');
+jest.mock('../src/repositories/avaliacaoRepository');
 
 const request = require('supertest');
 const repo = require('../src/repositories/painelRepository');
+const avalRepo = require('../src/repositories/avaliacaoRepository');
 const painelService = require('../src/services/painelService');
 const {
     inicioDaSemana,
@@ -48,7 +50,10 @@ function vaga(horarioIso, extra = {}) {
     };
 }
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+    jest.clearAllMocks();
+    avalRepo.mediasPorMonitor.mockResolvedValue(new Map());
+});
 
 describe('Datas no fuso do campus', () => {
     it('a semana começa na segunda às 00:00 de Brasília', () => {
