@@ -18,7 +18,8 @@
 
 require('../src/config/env');
 const { randomBytes } = require('node:crypto');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
+const { CUSTO_BCRYPT } = require('../src/config/senha');
 const prisma = require('../src/config/bancoDeDados');
 const { cadastroSchema } = require('../src/schemas/autenticacaoSchemas');
 const { gerarToken, hashDoToken } = require('../src/utils/tokenDeUso');
@@ -127,7 +128,7 @@ async function criar(args, db, agora) {
                 nome_completo: args.nome_completo,
                 email: args.email,
                 matricula: args.matricula,
-                senha: await bcrypt.hash(senhaInutil, 10),
+                senha: await bcrypt.hash(senhaInutil, CUSTO_BCRYPT),
                 tipo_usuario: 'coordenador',
                 email_confirmado_em: agora
             }

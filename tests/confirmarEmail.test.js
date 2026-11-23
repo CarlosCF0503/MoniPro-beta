@@ -1,7 +1,7 @@
 // Plano 14 (RF-018, RN-017): confirmar o e-mail no cadastro (rotas, regras e e-mail enviado)
 const crypto = require('node:crypto');
 const request = require('supertest');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 
 // Limite por IP folgado neste arquivo: todos os pedidos daqui vêm do mesmo IP. O limite por
 // conta continua no padrão (3 por hora) e tem teste próprio.

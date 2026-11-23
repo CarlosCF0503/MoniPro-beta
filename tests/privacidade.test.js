@@ -1,7 +1,7 @@
 // R3 (LGPD): excluir a conta (DELETE /perfil), registro do último acesso no login e rotina de
 // retenção (scripts/retencao.js).
 const request = require('supertest');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 const { gerarToken } = require('./helpers/token');
 
 jest.mock('../src/config/bancoDeDados', () => {

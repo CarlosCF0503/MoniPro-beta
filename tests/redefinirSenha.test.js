@@ -1,7 +1,7 @@
 // RF-008 / RN-009: recuperar a senha pelo e-mail (rotas, regras e e-mail enviado)
 const crypto = require('node:crypto');
 const request = require('supertest');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 
 // Limite por IP folgado neste arquivo: todos os pedidos daqui vêm do mesmo IP. O limite por
 // e-mail continua no padrão (3 por hora) e tem teste próprio.

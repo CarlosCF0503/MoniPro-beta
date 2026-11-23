@@ -2,7 +2,7 @@
 process.env.ALLOWED_ORIGINS = 'https://moni-pro.app.br';
 
 const request = require('supertest');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { gerarToken } = require('./helpers/token');
 

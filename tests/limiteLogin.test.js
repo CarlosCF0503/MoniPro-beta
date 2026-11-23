@@ -4,7 +4,7 @@ process.env.LIMITE_FALHAS_LOGIN_CONTA = '3';
 process.env.LIMITE_FALHAS_LOGIN_IP = '5';
 
 const request = require('supertest');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 
 jest.mock('../src/config/bancoDeDados', () => ({
     usuario: { findFirst: jest.fn(), update: jest.fn() }

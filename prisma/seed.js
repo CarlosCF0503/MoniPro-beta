@@ -12,7 +12,8 @@
 // Pode rodar de novo: usuários e disciplinas são atualizados (upsert) e as vagas dos
 // monitores fictícios são recriadas com datas a partir de hoje.
 
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
+const { CUSTO_BCRYPT } = require('../src/config/senha');
 
 const DOMINIO = '@ficticio.invalid';
 const PREFIXO = '[FICTÍCIO]';
@@ -86,7 +87,7 @@ async function main() {
             );
         }
 
-        const hash = await bcrypt.hash(senha, 10);
+        const hash = await bcrypt.hash(senha, CUSTO_BCRYPT);
 
         const disciplinas = [];
         for (const nome of DISCIPLINAS) {

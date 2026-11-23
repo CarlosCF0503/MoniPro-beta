@@ -3,7 +3,8 @@
 // de retenção que aplica os prazos do Aviso de Privacidade (src/config/retencao.js).
 
 const crypto = require('node:crypto');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
+const { CUSTO_BCRYPT } = require('../config/senha');
 const privacidadeRepository = require('../repositories/privacidadeRepository');
 const recursoRepository = require('../repositories/recursoRepository');
 const notificacaoRepository = require('../repositories/notificacaoRepository');
@@ -31,7 +32,7 @@ async function anonimizarEPromover(idUsuario, hash, agora) {
 
 // Hash de uma senha aleatória que ninguém conhece: a conta anonimizada não entra mais
 async function hashInutilizavel() {
-    return await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
+    return await bcrypt.hash(crypto.randomBytes(32).toString('hex'), CUSTO_BCRYPT);
 }
 
 function mesesAtras(agora, meses) {
