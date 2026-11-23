@@ -3,6 +3,38 @@
 import { mensagemDaApi } from './toast.js';
 import { chamadaApi, obterSessao, escaparHtml } from './api.js';
 
+// Busca por nome: ignora maiúsculas e acentos. Filtra os cards já desenhados
+// (só esconde/mostra; a lista continua vindo inteira da API).
+function normalizar(texto) {
+    return String(texto)
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+}
+
+function ativarBusca(container) {
+    const campo = document.getElementById('inputBuscaDisciplina');
+    if (!campo) return;
+
+    const aviso = document.createElement('div');
+    aviso.className = 'lista-vazia';
+    aviso.style.display = 'none';
+    aviso.textContent = 'Nenhuma disciplina encontrada.';
+    container.appendChild(aviso);
+
+    campo.addEventListener('input', () => {
+        const termo = normalizar(campo.value.trim());
+        let visiveis = 0;
+        container.querySelectorAll('.disciplina-card').forEach((card) => {
+            const nome = normalizar(card.querySelector('h2')?.textContent || '');
+            const mostrar = nome.includes(termo);
+            card.style.display = mostrar ? '' : 'none';
+            if (mostrar) visiveis++;
+        });
+        aviso.style.display = visiveis > 0 ? 'none' : '';
+    });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     const containerDisciplinas = document.querySelector('.disciplinas');
     if (!containerDisciplinas) return;
@@ -70,6 +102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             containerDisciplinas.appendChild(card);
         });
+        ativarBusca(containerDisciplinas);
     } catch (error) {
         console.error('[MoniPro] Erro ao carregar disciplinas:', error.message);
         containerDisciplinas.innerHTML = `<p>Erro ao carregar disciplinas: ${escaparHtml(error.message)}</p>`;
