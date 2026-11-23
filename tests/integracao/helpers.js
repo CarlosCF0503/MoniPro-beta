@@ -1,7 +1,7 @@
 // R1: utilitários dos testes de integração. Os dados são criados direto no banco (sem passar
 // pelo /auth/cadastro, que tem limite de 10 tentativas por 15 minutos) e as sessões são JWT
 // assinados com a versão real do usuário, que o middleware confere no banco.
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const prisma = require('../../src/config/bancoDeDados');
 const { NOME_COOKIE_SESSAO } = require('../../src/config/sessao');

@@ -20,11 +20,18 @@ const tipoUsuarioLogin = z.enum(['aluno', 'monitor', 'coordenador'], {
 });
 
 // Política de senha forte: mín. 8 caracteres, com pelo menos uma letra e um número.
-// Máx. 72 porque o bcrypt ignora o que passa de 72 bytes.
+// Máx. 72 bytes porque o bcrypt ignora o que passa disso, sem avisar: duas senhas com os
+// mesmos primeiros 72 bytes dariam o mesmo hash. Letra acentuada ocupa 2 bytes em UTF-8,
+// então o limite é conferido em bytes, e não só em caracteres.
+const LIMITE_BYTES_BCRYPT = 72;
 const senhaForte = z
     .string({ error: 'A senha é obrigatória.' })
     .min(8, 'A senha deve ter no mínimo 8 caracteres.')
     .max(72, 'A senha deve ter no máximo 72 caracteres.')
+    .refine(
+        (senha) => Buffer.byteLength(senha, 'utf8') <= LIMITE_BYTES_BCRYPT,
+        'A senha é longa demais: use até 72 caracteres sem acento (letras acentuadas contam como 2).'
+    )
     .regex(/\p{L}/u, 'A senha deve conter pelo menos uma letra.')
     .regex(/\d/, 'A senha deve conter pelo menos um número.');
 

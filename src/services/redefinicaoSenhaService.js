@@ -6,7 +6,8 @@
 //   um pedido novo invalida os anteriores.
 // - Trocar a senha encerra todas as sessões abertas (versao_token) e confirma o e-mail (plano 14).
 
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
+const { CUSTO_BCRYPT } = require('../config/senha');
 const usuarioRepository = require('../repositories/usuarioRepository');
 const tokenRepository = require('../repositories/tokenRedefinicaoRepository');
 const tokenConfirmacaoRepository = require('../repositories/tokenConfirmacaoRepository');
@@ -56,7 +57,7 @@ class RedefinicaoSenhaService {
 
     async redefinir(token, senhaNova, agora = new Date()) {
         // O bcrypt roda fora da transação: é lento e não precisa segurar a linha do token
-        const hashSenha = await bcrypt.hash(senhaNova, 10);
+        const hashSenha = await bcrypt.hash(senhaNova, CUSTO_BCRYPT);
         const idUsuario = await tokenRepository.emTransacao(async (tx) => {
             const id = await tokenRepository.consumir(hashDoToken(token), agora, tx);
             if (!id) throw new ErroLinkInvalido();
