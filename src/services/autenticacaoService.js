@@ -1,4 +1,5 @@
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
+const { CUSTO_BCRYPT } = require('../config/senha');
 const jwt = require('jsonwebtoken');
 const usuarioRepository = require('../repositories/usuarioRepository');
 const sessaoRepository = require('../repositories/sessaoRepository');
@@ -23,7 +24,7 @@ class ErroEmailNaoConfirmado extends ErroAplicacao {
 }
 // Hash de uma senha que ninguém usa, com o mesmo custo dos hashes reais: comparado
 // quando o usuário não existe, para igualar o tempo de resposta (ver login).
-const HASH_FICTICIO = bcrypt.hashSync('senha-ficticia-sem-usuario', 10);
+const HASH_FICTICIO = bcrypt.hashSync('senha-ficticia-sem-usuario', CUSTO_BCRYPT);
 
 class AutenticacaoService {
     async cadastrar(dados) {
@@ -46,7 +47,7 @@ class AutenticacaoService {
         }
 
         // 2. Se passou pelas validações, cria o cadastro
-        const hashSenha = await bcrypt.hash(dados.senha, 10);
+        const hashSenha = await bcrypt.hash(dados.senha, CUSTO_BCRYPT);
         const usuario = await usuarioRepository.criar({ ...dados, senha: hashSenha });
 
         // 3. Plano 14 (RF-018): link de confirmação para o e-mail informado. A conta nasce sem
