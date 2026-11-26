@@ -5,6 +5,10 @@ const agendamentoController = require('../controllers/agendamentoController');
 const { autenticar, isMonitor } = require('../middlewares/autenticacaoMiddleware');
 const validarCorpo = require('../middlewares/validarCorpo');
 const { criarAgendamentoSchema } = require('../schemas/agendamentoSchemas');
+const validarIdRota = require('../middlewares/validarIdRota');
+
+// Todo :id destas rotas precisa ser um número inteiro positivo (senão, 404)
+router.param('id', validarIdRota('Inscrição não encontrada.'));
 
 // app.js registra: app.use('/agendamentos', agendamentoRotas)
 // Portanto as rotas aqui usam '/' e '/:id' — sem prefixo duplicado

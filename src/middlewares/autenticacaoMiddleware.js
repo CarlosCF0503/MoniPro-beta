@@ -9,20 +9,23 @@ const { ErroNaoAutorizado } = require('../utils/erros');
 // durante a transição, deixou de valer.
 const autenticar = async (req, res, next) => {
     const token = lerCookie(req, NOME_COOKIE_SESSAO);
-    if (!token) return res.status(401).json({ erro: 'Sessão não encontrada. Faça login.' });
+    if (!token)
+        return res.status(401).json({ success: false, erro: 'Sessão não encontrada. Faça login.' });
 
     let decodificado;
     try {
         decodificado = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
     } catch {
-        return res.status(401).json({ erro: 'Token inválido' });
+        return res.status(401).json({ success: false, erro: 'Token inválido' });
     }
 
     try {
         // Revogação: o token só vale enquanto a versão dele for a atual do usuário
         const versaoAtual = await sessaoRepository.buscarVersao(decodificado.id);
         if (versaoAtual === null || (decodificado.v ?? 0) !== versaoAtual) {
-            return res.status(401).json({ erro: 'Sessão encerrada. Faça login novamente.' });
+            return res
+                .status(401)
+                .json({ success: false, erro: 'Sessão encerrada. Faça login novamente.' });
         }
     } catch (erroBanco) {
         return next(erroBanco);

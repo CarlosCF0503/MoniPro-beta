@@ -4,7 +4,7 @@
 const agendamentoService = require('../services/agendamentoService');
 const recursoService = require('../services/recursoService');
 const avaliacaoService = require('../services/avaliacaoService');
-const { ErroNaoAutorizado, ErroNaoEncontrado } = require('../utils/erros');
+const { ErroNaoAutorizado } = require('../utils/erros');
 const { obterParametrosPaginacao, montarPaginacao } = require('../utils/paginacao');
 const { PONTOS_MONITOR, PONTOS_ALUNO } = require('../utils/regrasConclusao');
 
@@ -37,7 +37,7 @@ class AgendamentoController {
 
     async deletar(req, res) {
         const { saiuDaFila } = await agendamentoService.deletar(
-            parseInt(req.params.id),
+            Number(req.params.id),
             req.usuario.id
         );
         res.json({
@@ -48,14 +48,12 @@ class AgendamentoController {
         });
     }
 
-    // Plano 12: o monitor dono da vaga marca que o aluno faltou
     // Plano 6: POST /agendamentos/:id/avaliacao { nota, comentario? }
+    // O :id já chega conferido (router.param em src/routes/agendamentoRotas.js)
     async avaliar(req, res) {
         if (req.usuario.tipo !== 'aluno')
             throw new ErroNaoAutorizado('Só o aluno avalia a monitoria em que esteve.');
         const id = Number(req.params.id);
-        if (!Number.isInteger(id) || id <= 0)
-            throw new ErroNaoEncontrado('Inscrição não encontrada.');
         const avaliacao = await avaliacaoService.avaliar(id, req.usuario.id, req.body);
         return res.status(201).json({ success: true, avaliacao });
     }
@@ -65,15 +63,14 @@ class AgendamentoController {
         if (req.usuario.tipo !== 'aluno')
             throw new ErroNaoAutorizado('Só o aluno pode pedir a revisão da própria falta.');
         const id = Number(req.params.id);
-        if (!Number.isInteger(id) || id <= 0)
-            throw new ErroNaoEncontrado('Inscrição não encontrada.');
         const recurso = await recursoService.pedir(id, req.usuario.id, req.body);
         return res.status(201).json({ success: true, recurso });
     }
 
+    // Plano 12: o monitor dono da vaga marca que o aluno faltou
     async marcarAusencia(req, res) {
         const agendamento = await agendamentoService.marcarAusencia(
-            parseInt(req.params.id, 10),
+            Number(req.params.id),
             req.usuario.id
         );
         res.json({
@@ -87,7 +84,7 @@ class AgendamentoController {
     // P2 (R4): o monitor dono da vaga confirma a presença do aluno
     async concluir(req, res) {
         const { agendamento, concluiu } = await agendamentoService.registrarPresenca(
-            parseInt(req.params.id, 10),
+            Number(req.params.id),
             'monitor',
             req.usuario.id
         );
@@ -104,7 +101,7 @@ class AgendamentoController {
     // P2 (R4): o aluno confirma a própria presença
     async confirmarPresenca(req, res) {
         const { agendamento, concluiu } = await agendamentoService.registrarPresenca(
-            parseInt(req.params.id, 10),
+            Number(req.params.id),
             'aluno',
             req.usuario.id
         );

@@ -138,8 +138,8 @@ class AgendamentoRepository {
         return { dados, total };
     }
 
-    async buscarPorId(id) {
-        return await prisma.agendamento.findUnique({
+    async buscarPorId(id, db = prisma) {
+        return await db.agendamento.findUnique({
             where: { id: parseInt(id) }
         });
     }
