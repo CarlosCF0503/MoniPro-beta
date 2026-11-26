@@ -80,7 +80,7 @@ class MonitoriaController {
     }
     async finalizar(req, res) {
         const monitoria = await monitoriaService.finalizar(
-            parseInt(req.params.id, 10),
+            Number(req.params.id),
             req.usuario.id,
             req.body.data_fim
         );
@@ -93,7 +93,7 @@ class MonitoriaController {
 
     async atualizar(req, res) {
         const { monitoria, alterouQuandoOuOnde, inscritos } = await monitoriaService.atualizar(
-            parseInt(req.params.id, 10),
+            Number(req.params.id),
             req.usuario.id,
             req.body
         );
@@ -110,7 +110,7 @@ class MonitoriaController {
     async entrarNaFila(req, res) {
         if (req.usuario.tipo !== 'aluno')
             throw new ErroNaoAutorizado('Só alunos entram na lista de espera.');
-        const id = parseInt(req.params.id, 10);
+        const id = Number(req.params.id);
         const { agendamento, posicao } = await listaEsperaService.entrar(id, req.usuario.id);
         res.status(201).json({
             success: true,
@@ -122,10 +122,7 @@ class MonitoriaController {
 
     // Plano 9: "Cancelar esta e as próximas" da série
     async cancelarProximas(req, res) {
-        const r = await monitoriaService.cancelarProximas(
-            parseInt(req.params.id, 10),
-            req.usuario.id
-        );
+        const r = await monitoriaService.cancelarProximas(Number(req.params.id), req.usuario.id);
         const n = r.canceladas.length;
         res.json({
             success: true,
@@ -136,7 +133,7 @@ class MonitoriaController {
     }
 
     async cancelar(req, res) {
-        const monitoria = await monitoriaService.cancelar(parseInt(req.params.id), req.usuario.id);
+        const monitoria = await monitoriaService.cancelar(Number(req.params.id), req.usuario.id);
         res.json({
             success: true,
             mensagem: 'Vaga de monitoria cancelada com sucesso.',

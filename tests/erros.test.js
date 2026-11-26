@@ -7,7 +7,9 @@ jest.mock('../src/config/bancoDeDados', () => ({
     disciplina: { findUnique: async () => ({ id: 1, status: 'aprovada', id_criador: null }) },
     usuario: {},
     monitoria: { create: jest.fn(), findFirst: jest.fn(), findUnique: jest.fn() },
-    agendamento: { findUnique: jest.fn(), findMany: jest.fn(), count: jest.fn() }
+    agendamento: { findUnique: jest.fn(), findMany: jest.fn(), count: jest.fn() },
+    // O cancelamento roda numa transação: o mock repassa o próprio cliente como `tx`
+    $transaction: async (fn) => fn(require('../src/config/bancoDeDados'))
 }));
 
 jest.mock('../src/utils/logger', () => ({ info: jest.fn(), warn: jest.fn(), error: jest.fn() }));
@@ -42,6 +44,42 @@ describe('middleware central de erro', () => {
 
         expect(resposta.status).toBe(404);
         expect(resposta.body.erro).toBe('Vaga de monitoria não encontrada.');
+    });
+
+    // Antes, "abc" virava NaN no parseInt, o Prisma recusava e a resposta era 500
+    it.each([
+        ['delete', '/agendamentos/abc', tokenAluno, 'Inscrição não encontrada.'],
+        ['patch', '/agendamentos/12abc/presenca', tokenAluno, 'Inscrição não encontrada.'],
+        ['patch', '/agendamentos/0/concluir', tokenMonitor, 'Inscrição não encontrada.'],
+        ['patch', '/agendamentos/-3/ausencia', tokenMonitor, 'Inscrição não encontrada.'],
+        ['put', '/monitorias/abc/cancelar', tokenMonitor, 'Monitoria não encontrada.'],
+        ['put', '/monitorias/1e3/cancelar-proximas', tokenMonitor, 'Monitoria não encontrada.'],
+        ['post', '/monitorias/1.5/espera', tokenAluno, 'Monitoria não encontrada.'],
+        ['patch', '/monitorias/abc', tokenMonitor, 'Monitoria não encontrada.'],
+        [
+            'patch',
+            '/monitorias/99999999999999999999/finalizar',
+            tokenMonitor,
+            'Monitoria não encontrada.'
+        ]
+    ])('%s %s com id que não é inteiro positivo: 404, sem erro no log', async (m, url, tk, msg) => {
+        const resposta = await request(app)[m](url).set('Cookie', `monipro_sessao=${tk}`).send({});
+
+        expect(resposta.status).toBe(404);
+        expect(resposta.body).toEqual({ success: false, erro: msg });
+        expect(prisma.agendamento.findUnique).not.toHaveBeenCalled();
+        expect(prisma.monitoria.findUnique).not.toHaveBeenCalled();
+        expect(logger.error).not.toHaveBeenCalled();
+    });
+
+    it('401 sem sessão segue o formato do tratador central', async () => {
+        const resposta = await request(app).get('/agendamentos');
+
+        expect(resposta.status).toBe(401);
+        expect(resposta.body).toEqual({
+            success: false,
+            erro: 'Sessão não encontrada. Faça login.'
+        });
     });
 
     it('traduz violação de FK (P2003) em 400 com o campo da disciplina', async () => {

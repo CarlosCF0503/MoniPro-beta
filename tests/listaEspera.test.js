@@ -188,7 +188,7 @@ describe('rotas', () => {
 
         expect(r.status).toBe(200);
         expect(r.body.mensagem).toBe('Você saiu da lista de espera.');
-        expect(repo.deletar).toHaveBeenCalledWith(3);
+        expect(repo.deletar).toHaveBeenCalledWith(3, tx);
         expect(repo.primeirosDaFila).not.toHaveBeenCalled();
     });
 

@@ -9,6 +9,11 @@ const {
     finalizarMonitoriaSchema,
     atualizarMonitoriaSchema
 } = require('../schemas/monitoriaSchemas');
+const validarIdRota = require('../middlewares/validarIdRota');
+
+// Todo :id destas rotas precisa ser um número inteiro positivo (senão, 404). O :idDisciplina
+// da listagem é conferido no controller.
+router.param('id', validarIdRota('Monitoria não encontrada.'));
 
 // app.js registra: app.use('/monitorias', monitoriaRotas)
 router.post(

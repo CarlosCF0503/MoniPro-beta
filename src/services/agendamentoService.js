@@ -124,40 +124,45 @@ class AgendamentoService {
     }
 
     async deletar(id, idAluno) {
-        const agendamento = await agendamentoRepository.buscarPorId(id);
-        if (!agendamento) {
-            throw new ErroNaoEncontrado('Agendamento não encontrado.');
-        }
-        if (agendamento.id_aluno !== idAluno) {
-            throw new ErroNaoAutorizado('Você não tem permissão para cancelar este agendamento.');
-        }
-        // Plano 8: sair da lista de espera vale a qualquer momento e não libera lugar
-        if (agendamento.status === 'em_espera') {
-            await agendamentoRepository.deletar(id);
-            return { saiuDaFila: true, promovidos: 0 };
-        }
-        // RN-001 com os ajustes do editar vaga e da lista de espera: se a vaga mudou de dia,
-        // horário ou local depois da inscrição, ou se o aluno saiu da fila a menos de 24h do
-        // início, ele pode cancelar sem as 24h, desde que a sessão ainda não tenha começado
-        if (agendamento.liberado_cancelar_em) {
-            if (new Date(agendamento.data_hora) <= new Date()) {
-                throw new ErroRegraNegocio('Cancelamento não permitido: a monitoria já começou.');
-            }
-        } else {
-            validarAntecedenciaCancelamento(agendamento.data_hora);
-        }
-        // O lugar liberado vai para o primeiro da fila, na mesma transação e com a vaga travada
+        // Tudo na mesma transação, com a vaga travada: a fila (plano 8) muda o status das
+        // inscrições sob essa mesma trava, então as regras abaixo nunca usam um status vencido.
         return await agendamentoRepository.emTransacao(async (tx) => {
-            await agendamentoRepository.bloquearMonitoria(agendamento.id_monitoria, tx);
+            const inicial = await agendamentoRepository.buscarPorId(id, tx);
+            if (inicial) await agendamentoRepository.bloquearMonitoria(inicial.id_monitoria, tx);
+            // Relida depois da trava: outra transação pode ter promovido ou apagado a inscrição
+            const agendamento = inicial && (await agendamentoRepository.buscarPorId(id, tx));
+            if (!agendamento) {
+                throw new ErroNaoEncontrado('Agendamento não encontrado.');
+            }
+            if (agendamento.id_aluno !== idAluno) {
+                throw new ErroNaoAutorizado(
+                    'Você não tem permissão para cancelar este agendamento.'
+                );
+            }
+            // Plano 8: sair da lista de espera vale a qualquer momento e não libera lugar
+            if (agendamento.status === 'em_espera') {
+                await agendamentoRepository.deletar(id, tx);
+                return { saiuDaFila: true, promovidos: 0 };
+            }
+            // RN-001 com os ajustes do editar vaga e da lista de espera: se a vaga mudou de dia,
+            // horário ou local depois da inscrição, ou se o aluno saiu da fila a menos de 24h do
+            // início, ele pode cancelar sem as 24h, desde que a sessão ainda não tenha começado
+            if (agendamento.liberado_cancelar_em) {
+                if (new Date(agendamento.data_hora) <= new Date()) {
+                    throw new ErroRegraNegocio(
+                        'Cancelamento não permitido: a monitoria já começou.'
+                    );
+                }
+            } else {
+                validarAntecedenciaCancelamento(agendamento.data_hora);
+            }
+            // O lugar liberado vai para o primeiro da fila
             await agendamentoRepository.deletar(id, tx);
             const promovidos = await listaEsperaService.promover(agendamento.id_monitoria, tx);
             return { saiuDaFila: false, promovidos: promovidos.length };
         });
     }
 
-    // P2 (R4): a presença vale quando o aluno e o monitor da vaga confirmam, cada um do seu
-    // lado, depois do início da sessão e em até 7 dias. Quem confirma por último conclui o
-    // agendamento, e os pontos (D1) entram uma única vez. `lado` é 'aluno' ou 'monitor'.
     /**
      * Plano 12: o monitor dono da vaga marca que o aluno faltou, depois do início e no prazo da
      * presença (7 dias). Depois que os dois confirmaram a presença, não dá mais (409). Desfazer
@@ -193,6 +198,9 @@ class AgendamentoService {
         });
     }
 
+    // P2 (R4): a presença vale quando o aluno e o monitor da vaga confirmam, cada um do seu
+    // lado, depois do início da sessão e em até 7 dias. Quem confirma por último conclui o
+    // agendamento, e os pontos (D1) entram uma única vez. `lado` é 'aluno' ou 'monitor'.
     async registrarPresenca(id, lado, idUsuario) {
         return await agendamentoRepository.emTransacao(async (tx) => {
             const ag = await agendamentoRepository.bloquearParaPresenca(id, tx);
