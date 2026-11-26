@@ -6,13 +6,16 @@
 //   "Em aberto / Histórico" e os detalhes abrem num painel que sobe do rodapé.
 // P2 (R4): depois de cada sessão o aluno confirma a própria presença; com a confirmação do
 // monitor também, ele ganha os pontos.
-// Depende de: api.js (chamadaApi, mensagemDaApi, escaparHtml), toast.js, perfil/dados.js.
+// Depende de: api.js (chamadaApi, mensagemDaApi, escaparHtml), toast.js, perfil/dados.js e, nesta
+// pasta, comum.js (sessão e ícones), aluno_telas.js (montagem) e aluno_dialogos.js (diálogos).
 
 import { showToast, mensagemDaApi } from '../toast.js';
-import { chamadaApi, obterSessao, escaparHtml } from '../api.js';
+import { chamadaApi, escaparHtml } from '../api.js';
 import { PerfilDados } from './dados.js';
+import { conferirSessaoDoPerfil, icone } from './comum.js';
 import { AgendaIcs } from '../agenda.js';
-import { PerfilExcluirConta } from './excluir_conta.js';
+import { criarTelasAluno } from './aluno_telas.js';
+import { criarDialogosAluno } from './aluno_dialogos.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     const D = PerfilDados;
@@ -22,26 +25,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const celular = () => celularMq.matches;
     if (!raiz || !D) return;
 
-    // --- 1. Sessão ---
-    // P3 (R7): quem está logado vem de GET /auth/sessao (o token fica no cookie httpOnly)
-    let usuarioSessao;
-    try {
-        usuarioSessao = await obterSessao();
-    } catch (erro) {
-        showToast(erro.message || 'Falha na comunicação com o servidor.', 'error', erro);
-        return;
-    }
-    if (!usuarioSessao) {
-        showToast('Sessão expirada. Faça login novamente.', 'error');
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 1500);
-        return;
-    }
-    if (usuarioSessao.tipo === 'monitor') {
-        window.location.href = 'perfil_monitor.html';
-        return;
-    }
+    // --- 1. Sessão (perfil/comum.js) ---
+    if (!(await conferirSessaoDoPerfil(false))) return;
 
     // --- 2. Estado ---
     const LIMITE = 100; // máximo aceito por utils/paginacao.js
@@ -59,44 +44,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         gatilho: null
     };
 
-    // --- 3. Ícones (os mesmos do perfil do monitor) ---
-    const ICONES = {
-        // Plano 7: comprovante anexado ao pedido de revisão da falta
-        doc: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/>',
-        relogio: '<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>',
-        local: '<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
-        video: '<rect x="2" y="6" width="14" height="12" rx="2"/><path d="m22 8-6 4 6 4V8z"/>',
-        pessoa: '<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>',
-        pessoas:
-            '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
-        calendario:
-            '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
-        mais: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
-        ok: '<polyline points="20 6 9 17 4 12"/>',
-        x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
-        moeda: '<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 10h5M9.5 14h5"/>',
-        email: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
-        matricula:
-            '<rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="9" cy="12" r="2.5"/><path d="M14 10h4M14 14h4"/>',
-        direita: '<polyline points="9 18 15 12 9 6"/>',
-        esquerda: '<polyline points="15 18 9 12 15 6"/>',
-        semRede:
-            '<path d="M2 8.8a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><line x1="12" y1="20" x2="12.01" y2="20"/>'
-    };
-    function icone(nome, tamanho) {
-        const t = tamanho || 14;
-        return (
-            '<svg class="ico" width="' +
-            t +
-            '" height="' +
-            t +
-            '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-            ICONES[nome] +
-            '</svg>'
-        );
-    }
-
-    // --- 4. Peças ---
+    // --- 3. Peças ---
     const listas = () => D.separarInscricoes(S.inscricoes, S.agora);
     const situacao = (i) => D.situacaoDoAluno(i, S.agora);
     const confirmadas = () => S.inscricoes.filter((i) => i.status === 'concluido').length;
@@ -454,401 +402,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     const temDados = () => !S.carregando && !S.erro && S.inscricoes.length > 0;
 
-    // --- 5. Computador (opção A) ---
-    function itemInscricao(i) {
-        const sit = situacao(i);
-        const nota = notaPresenca(i);
-        return (
-            '<li class="vaga' +
-            (sit === 'confirmar' ? ' vaga-atencao' : '') +
-            '">' +
-            '<div class="dt" aria-hidden="true"><span class="dt-sem">' +
-            D.DIAS_SEMANA[i.inicio.getDay()] +
-            '</span><span class="dt-dia">' +
-            String(i.inicio.getDate()).padStart(2, '0') +
-            '</span><span class="dt-mes">' +
-            D.MESES_CURTOS[i.inicio.getMonth()] +
-            '</span></div>' +
-            '<div class="vg-info"><div class="vg-topo"><h3>' +
-            esc(i.disciplina) +
-            '</h3>' +
-            etiqueta(i) +
-            '</div><div class="vg-meta">' +
-            '<span>' +
-            icone('relogio') +
-            '<span class="sr-only">' +
-            D.diaMes(i.inicio) +
-            ', </span>' +
-            quando(i) +
-            '</span><span>' +
-            localHTML(i) +
-            '</span><span>' +
-            icone('pessoa') +
-            esc(i.monitor) +
-            '</span></div>' +
-            (nota ? '<p class="pp-nota-presenca">' + nota + '</p>' : '') +
-            // Quem só saiu da fila já tem a nota acima ("Você entrou pela lista de espera")
-            (sit === 'antes' && i.liberado && (D.mudancasDaVaga(i).length || !i.promovido)
-                ? '<p class="pp-nota-presenca">' + esc(textoMudou(i)) + '</p>'
-                : '') +
-            '</div>' +
-            acoes(i) +
-            '</li>'
-        );
-    }
+    // --- 4. Telas: computador (opção A) e celular (opção C), em perfil/aluno_telas.js ---
+    const { telaDesktop, telaCelular } = criarTelasAluno({
+        S,
+        situacao,
+        confirmadas,
+        textoMudou,
+        posicaoTexto,
+        SITUACOES,
+        podeAvaliar,
+        botaoAvaliar,
+        paraAvaliar,
+        etiqueta,
+        quando,
+        notaPresenca,
+        botaoConfirmar,
+        localHTML,
+        acoes,
+        pontosHTML,
+        comoGanharHTML,
+        estadoHTML,
+        temDados,
+        avisoRestricao
+    });
 
-    function telaDesktop(L) {
-        // Abre em "Para confirmar" quando há o que confirmar
-        if (temDados() && (!S.abaEscolhida || (S.aba === 'confirmar' && !L.confirmar.length)))
-            S.aba = L.confirmar.length ? 'confirmar' : 'proximas';
-        if (!S.aba) S.aba = 'confirmar';
-        const abas = [
-            ['confirmar', 'Para confirmar', L.confirmar],
-            ['proximas', 'Próximas', L.proximas],
-            ['historico', 'Histórico', L.historico]
-        ];
-        const u = S.usuario;
-        const nome = u ? u.nome_completo || 'Aluno' : 'Carregando…';
-
-        let painel;
-        if (!temDados()) painel = estadoHTML();
-        else {
-            const lista = L[S.aba];
-            const dica = {
-                confirmar:
-                    'Monitorias que já aconteceram. Confirme a sua presença para ganhar os pontos.',
-                proximas: 'Em ordem de data, da mais próxima para a mais distante.',
-                historico: 'Presenças confirmadas, aguardando o monitor e encerradas.'
-            }[S.aba];
-            const vazio = {
-                confirmar: 'Tudo em dia. Nenhuma presença esperando a sua confirmação.',
-                proximas: 'Nenhuma monitoria marcada. Escolha uma disciplina para marcar.',
-                historico: 'As monitorias que já passaram aparecem aqui.'
-            }[S.aba];
-            painel = lista.length
-                ? '<p class="pp-dica">' +
-                  dica +
-                  '</p><ul class="vagas-lista">' +
-                  lista.map(itemInscricao).join('') +
-                  '</ul>'
-                : '<p class="pp-vazio">' + vazio + '</p>';
-        }
-
-        const numeros = temDados()
-            ? [L.confirmar.length, L.proximas.length, confirmadas()]
-            : S.carregando
-              ? ['…', '…', '…']
-              : S.erro
-                ? ['–', '–', '–']
-                : [0, 0, 0];
-        const rotulos = ['Para confirmar', 'Próximas monitorias', 'Presenças confirmadas'];
-
-        return (
-            '<div class="pp-desk">' +
-            '<a class="pp-voltar" href="base.html">' +
-            icone('esquerda', 16) +
-            'Início</a>' +
-            '<div class="pp-cabecalho"><div><h1>Meu perfil</h1><p>Suas monitorias, sua presença e seus pontos.</p></div>' +
-            '<a class="pp-btn pp-btn-pri" href="escolha_disciplina.html">' +
-            icone('mais', 18) +
-            'Marcar monitoria</a></div>' +
-            '<div class="pp-grade"><div class="pp-lateral">' +
-            '<section class="pp-cartao pp-id" aria-label="Seus dados">' +
-            '<div class="avatar" aria-hidden="true">' +
-            esc(u ? D.iniciais(u.nome_completo) : '') +
-            '</div><h2 class="pp-nome">' +
-            esc(nome) +
-            '</h2><div class="pp-chips"><span class="chip chip-papel">Aluno</span>' +
-            pontosHTML() +
-            '</div><ul class="pp-dados">' +
-            '<li><span class="pp-dados-ico">' +
-            icone('email', 16) +
-            '</span><span><small>E-mail</small>' +
-            esc(u ? u.email : '') +
-            '</span></li>' +
-            '<li><span class="pp-dados-ico">' +
-            icone('matricula', 16) +
-            '</span><span><small>Matrícula</small>' +
-            esc(u ? u.matricula : '') +
-            '</span></li></ul>' +
-            // R3 (LGPD): Aviso de Privacidade e "Excluir minha conta" (excluir_conta.js)
-            (u ? PerfilExcluirConta.blocoHTML() : '') +
-            '</section>' +
-            '<section class="pp-cartao pp-cert" aria-labelledby="h-pontos"><h2 id="h-pontos">Pontos</h2>' +
-            comoGanharHTML() +
-            '</section></div>' +
-            '<div class="pp-principal">' +
-            avisoRestricao() +
-            '<div class="pp-numeros" aria-label="Resumo">' +
-            numeros
-                .map(
-                    (n, k) =>
-                        '<div class="pp-cartao pp-numero' +
-                        (k === 0 && temDados() && L.confirmar.length ? ' atencao' : '') +
-                        '"><span class="n">' +
-                        esc(n) +
-                        '</span><span class="l">' +
-                        rotulos[k] +
-                        '</span></div>'
-                )
-                .join('') +
-            '</div>' +
-            '<section class="pp-cartao pp-vagas" aria-labelledby="h-insc"><h2 id="h-insc">Minhas monitorias</h2>' +
-            '<div class="pp-abas" role="tablist" aria-label="Filtrar monitorias">' +
-            abas
-                .map(
-                    ([k, t, arr]) =>
-                        '<button type="button" class="pp-aba" role="tab" id="aba-' +
-                        k +
-                        '" aria-selected="' +
-                        (S.aba === k) +
-                        '" aria-controls="painel-insc" tabindex="' +
-                        (S.aba === k ? 0 : -1) +
-                        '" data-aba="' +
-                        k +
-                        '">' +
-                        t +
-                        (temDados()
-                            ? '<span class="cnt' +
-                              (k === 'confirmar' && arr.length ? ' atencao' : '') +
-                              '">' +
-                              arr.length +
-                              '</span>'
-                            : '') +
-                        '</button>'
-                )
-                .join('') +
-            '</div><div id="painel-insc" role="tabpanel" aria-labelledby="aba-' +
-            S.aba +
-            '">' +
-            painel +
-            '</div></section></div></div></div>'
-        );
-    }
-
-    // --- 6. Celular (opção C) ---
-    function linhaCel(i) {
-        const sit = situacao(i);
-        let sub;
-        if (sit === 'fila')
-            sub =
-                '<span class="lc-presenca">Lista de espera · ' +
-                posicaoTexto(i) +
-                '</span> · ' +
-                D.hora(i.inicio);
-        else if (sit === 'antes')
-            sub =
-                (i.liberado
-                    ? '<span class="lc-presenca">' +
-                      (D.mudancasDaVaga(i).length || !i.promovido
-                          ? 'Vaga alterada'
-                          : 'Saiu da fila') +
-                      '</span> · '
-                    : '') +
-                D.hora(i.inicio) +
-                ' · ' +
-                esc(i.monitor);
-        else if (sit === 'confirmar')
-            sub =
-                '<span class="lc-presenca">Prazo: ' +
-                D.diaMes(D.limiteConfirmacao({ inicio: i.inicio })) +
-                '</span>';
-        else {
-            const [classe, , texto] = SITUACOES[sit];
-            const ponto = classe === 'pill-ok' ? 'ok' : classe === 'pill-perigo' ? 'perigo' : '';
-            sub = '<span class="ponto ' + ponto + '"></span>' + texto;
-        }
-        const avaliar = sit === 'confirmada' && podeAvaliar(i);
-        return (
-            '<li class="lc' +
-            (sit === 'confirmar' ? ' lc-atencao' : '') +
-            '"><button type="button" class="lc-main" data-acao="detalhes" data-id="' +
-            esc(i.id) +
-            '"><span class="lc-data"><b>' +
-            String(i.inicio.getDate()).padStart(2, '0') +
-            '</b>' +
-            D.MESES_CURTOS[i.inicio.getMonth()] +
-            '</span><span class="lc-texto"><span class="lc-titulo">' +
-            esc(i.disciplina) +
-            '</span><span class="lc-sub">' +
-            sub +
-            '</span></span>' +
-            (sit === 'confirmar' || avaliar ? '' : icone('direita', 18)) +
-            '</button>' +
-            (sit === 'confirmar' ? botaoConfirmar(i, 'lc-acao', 'Confirmar') : '') +
-            (avaliar ? botaoAvaliar(i, 'lc-acao lc-acao-sec', 'Avaliar') : '') +
-            '</li>'
-        );
-    }
-    function historicoCel(L) {
-        if (!L.historico.length)
-            return '<p class="pp-vazio">As monitorias que já passaram aparecem aqui.</p>';
-        return (
-            '<p class="lc-resumo">' +
-            D.plural(confirmadas(), 'presença confirmada', 'presenças confirmadas') +
-            '</p>' +
-            D.agruparPorMes(L.historico)
-                .map(
-                    (g) =>
-                        '<h2 class="lc-secao">' +
-                        g.rotulo +
-                        '</h2><ul class="lc-lista">' +
-                        g.vagas.map(linhaCel).join('') +
-                        '</ul>'
-                )
-                .join('')
-        );
-    }
-    function telaMonitoriasCel(L) {
-        let corpo;
-        if (!temDados()) corpo = estadoHTML();
-        else if (S.filtroCel === 'historico') corpo = historicoCel(L);
-        else
-            corpo =
-                (L.confirmar.length
-                    ? '<h2 class="lc-secao atencao">Para confirmar · ' +
-                      L.confirmar.length +
-                      '</h2><ul class="lc-lista">' +
-                      L.confirmar.map(linhaCel).join('') +
-                      '</ul>'
-                    : '') +
-                (paraAvaliar(L).length
-                    ? '<h2 class="lc-secao">Para avaliar · ' +
-                      paraAvaliar(L).length +
-                      '</h2><ul class="lc-lista">' +
-                      paraAvaliar(L).map(linhaCel).join('') +
-                      '</ul>'
-                    : '') +
-                '<h2 class="lc-secao">Próximas · ' +
-                L.proximas.length +
-                '</h2>' +
-                (L.proximas.length
-                    ? '<ul class="lc-lista">' + L.proximas.map(linhaCel).join('') + '</ul>'
-                    : '<p class="pp-vazio">Nenhuma monitoria marcada.</p>');
-        const filtro = temDados()
-            ? '<div class="seg-fixo"><div class="seg" role="tablist" aria-label="Filtrar monitorias">' +
-              '<button type="button" role="tab" id="filtro-aberto" aria-selected="' +
-              (S.filtroCel === 'aberto') +
-              '" data-filtro="aberto">Em aberto' +
-              (L.confirmar.length ? '<i class="selo">' + L.confirmar.length + '</i>' : '') +
-              '</button><button type="button" role="tab" id="filtro-historico" aria-selected="' +
-              (S.filtroCel === 'historico') +
-              '" data-filtro="historico">Histórico</button></div></div>'
-            : '';
-        return (
-            '<div class="cel-topo"><h1>Minhas monitorias</h1><a class="pp-btn pp-btn-pri pp-btn-p" href="escolha_disciplina.html">' +
-            icone('mais', 16) +
-            'Marcar</a></div>' +
-            avisoRestricao() +
-            filtro +
-            '<div class="cel-corpo"' +
-            (temDados() ? ' role="tabpanel" aria-labelledby="filtro-' + S.filtroCel + '"' : '') +
-            '>' +
-            corpo +
-            '</div>'
-        );
-    }
-    function telaPontosCel() {
-        let topo;
-        if (S.carregando) topo = '<div class="pp-esqueleto" aria-hidden="true"><span></span></div>';
-        else if (S.erro) topo = estadoHTML();
-        else {
-            const porDisc = D.presencasPorDisciplina(S.inscricoes);
-            const max = porDisc.length ? porDisc[0].n : 1;
-            const n = confirmadas();
-            topo =
-                '<div class="horas-total"><span class="n">' +
-                esc(S.usuario ? Number(S.usuario.pontos) || 0 : 0) +
-                ' pontos</span><span class="l">' +
-                (n
-                    ? D.plural(n, 'presença confirmada', 'presenças confirmadas')
-                    : 'Confirme suas presenças para somar pontos.') +
-                '</span></div>' +
-                (porDisc.length
-                    ? '<ul class="horas-barras">' +
-                      porDisc
-                          .map(
-                              (x) =>
-                                  '<li><span class="bl">' +
-                                  esc(x.disciplina) +
-                                  '</span><span class="bv">' +
-                                  D.plural(x.n, 'presença', 'presenças') +
-                                  '</span><span class="bb" aria-hidden="true"><i style="width:' +
-                                  Math.round((x.n / max) * 100) +
-                                  '%"></i></span></li>'
-                          )
-                          .join('') +
-                      '</ul>'
-                    : '');
-        }
-        return (
-            '<div class="cel-topo"><h1>Pontos</h1></div><div class="cel-corpo">' +
-            topo +
-            '<h2 class="lc-secao">Extrato de pontos</h2>' +
-            comoGanharHTML() +
-            '</div>'
-        );
-    }
-    function telaPerfilCel() {
-        const u = S.usuario;
-        return (
-            '<div class="cel-topo"><h1>Meus dados</h1></div><div class="cel-corpo">' +
-            '<div class="cel-id"><div class="avatar" aria-hidden="true">' +
-            esc(u ? D.iniciais(u.nome_completo) : '') +
-            '</div><strong>' +
-            esc(u ? u.nome_completo : S.erro ? '—' : 'Carregando…') +
-            '</strong><div class="pp-chips"><span class="chip chip-papel">Aluno</span>' +
-            pontosHTML() +
-            '</div></div><dl class="cel-dl"><div><dt>E-mail</dt><dd>' +
-            esc(u ? u.email : '—') +
-            '</dd></div><div><dt>Matrícula</dt><dd>' +
-            esc(u ? u.matricula : '—') +
-            '</dd></div></dl>' +
-            (u ? PerfilExcluirConta.blocoHTML() : '') +
-            '</div>'
-        );
-    }
-    function telaCelular(L) {
-        const tela =
-            S.abaCel === 'pontos'
-                ? telaPontosCel()
-                : S.abaCel === 'perfil'
-                  ? telaPerfilCel()
-                  : telaMonitoriasCel(L);
-        const abas = [
-            ['monitorias', 'Monitorias', 'calendario'],
-            ['pontos', 'Pontos', 'moeda'],
-            ['perfil', 'Perfil', 'pessoa']
-        ];
-        return (
-            '<div class="pp-cel">' +
-            tela +
-            '<nav class="cel-abas" aria-label="Seções do perfil">' +
-            abas
-                .map(
-                    ([k, t, ic]) =>
-                        '<button type="button" data-aba-cel="' +
-                        k +
-                        '" aria-current="' +
-                        (S.abaCel === k ? 'page' : 'false') +
-                        '">' +
-                        icone(ic, 22) +
-                        '<span>' +
-                        t +
-                        '</span>' +
-                        (k === 'monitorias' && temDados() && L.confirmar.length
-                            ? '<i class="selo-aba">' +
-                              L.confirmar.length +
-                              '<span class="sr-only"> para confirmar</span></i>'
-                            : '') +
-                        '</button>'
-                )
-                .join('') +
-            '</nav></div>'
-        );
-    }
-
-    // --- 7. Desenho ---
+    // --- 5. Desenho ---
     function render() {
         S.agora = new Date();
         const L = listas();
@@ -861,7 +439,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     celularMq.addEventListener('change', render);
 
-    // --- 8. Carga ---
+    // --- 6. Carga ---
     function sessaoExpirada() {
         showToast('Sessão expirada. Faça login novamente.', 'error');
         setTimeout(() => {
@@ -914,329 +492,42 @@ document.addEventListener('DOMContentLoaded', async () => {
         carregarExtrato();
     }
 
-    // --- 9. Diálogos ---
+    // --- 7. Diálogos ---
     const dlgCan = document.getElementById('dlg-cancelar');
     const dlgDet = document.getElementById('dlg-detalhes');
     const inscricaoPorId = (id) => S.inscricoes.find((i) => String(i.id) === String(id));
 
-    function preencherDetalhes(i) {
-        const sit = situacao(i);
-        document.getElementById('det-titulo').textContent = i.disciplina;
-        let acoesDet = '';
-        if (sit === 'confirmar')
-            acoesDet =
-                '<div class="pp-det-acoes">' + botaoConfirmar(i, 'pp-btn pp-btn-pri') + '</div>';
-        else if (sit === 'fila')
-            acoesDet = '<div class="pp-det-acoes">' + botaoCancelar(i) + '</div>';
-        else if (sit === 'confirmada' && avaliacaoHTML(i))
-            acoesDet = '<div class="pp-det-acoes">' + avaliacaoHTML(i) + '</div>';
-        else if (sit === 'ausente')
-            acoesDet =
-                '<div class="pp-det-acoes">' +
-                (situacaoRecurso(i) === 'pode' ? botaoRecurso(i) : notaRecurso(i)) +
-                '</div>';
-        else if (sit === 'antes')
-            acoesDet =
-                '<div class="pp-det-acoes">' +
-                botaoSala(i) +
-                botaoAgenda(i) +
-                '</div>' +
-                (D.podeCancelarInscricao(i, S.agora)
-                    ? (i.liberado
-                          ? '<p class="nota-24h nota-bloco">' +
-                            icone('relogio', 14) +
-                            '<span>' +
-                            esc(textoMudou(i)) +
-                            ' Você pode cancelar até o início.</span></p>'
-                          : '') +
-                      '<div class="pp-det-acoes">' +
-                      botaoCancelar(i) +
-                      '</div>'
-                    : '<p class="nota-24h nota-bloco">' +
-                      icone('relogio', 14) +
-                      AVISO_24H +
-                      '. Faltam menos de ' +
-                      D.HORAS_CANCELAMENTO +
-                      'h para o início.</p>');
-        const nota = notaPresenca(i);
-        document.getElementById('det-corpo').innerHTML =
-            '<span id="det-situacao" tabindex="-1">' +
-            etiqueta(i) +
-            '</span>' +
-            '<dl class="cel-dl"><div><dt>Data</dt><dd>' +
-            D.diaCurto(i.inicio) +
-            '</dd></div><div><dt>Horário</dt><dd>' +
-            quando(i) +
-            '</dd></div><div><dt>Local</dt><dd>' +
-            (i.online ? 'On-line' : esc(i.local)) +
-            '</dd></div><div><dt>Monitor</dt><dd>' +
-            esc(i.monitor) +
-            '</dd></div></dl>' +
-            (nota ? '<p class="pp-insc-nota">' + nota + '</p>' : '') +
-            acoesDet;
-    }
-    function abrirDetalhes(i) {
-        S.alvo = i;
-        preencherDetalhes(i);
-        dlgDet.showModal();
-    }
-    dlgDet.addEventListener('click', (ev) => {
-        if (ev.target === dlgDet) dlgDet.close(); // toque fora do painel
-    });
-
-    // P2 (R4): PATCH /agendamentos/:id/presenca, feito pelo próprio aluno
-    async function confirmarPresenca(botao) {
-        const i = inscricaoPorId(botao.dataset.id);
-        if (!i) return;
-        const noDialogo = Boolean(botao.closest('dialog'));
-        botao.disabled = true;
-        botao.textContent = 'Confirmando…';
-        try {
-            const dados = await chamadaApi('/agendamentos/' + i.id + '/presenca', {
-                method: 'PATCH'
-            });
-            if (dados.statusHttp === 401) return sessaoExpirada();
-            if (dados.erro || !dados.success) {
-                showToast(
-                    mensagemDaApi(dados, 'Não foi possível confirmar a presença.'),
-                    'error',
-                    dados
-                );
-                botao.disabled = false;
-                botao.textContent = 'Confirmar presença';
-                return;
-            }
-            i.alunoConfirmou = true;
-            if (dados.concluido) {
-                i.status = 'concluido';
-                if (S.usuario) S.usuario.pontos = (Number(S.usuario.pontos) || 0) + D.PONTOS_ALUNO;
-                carregarExtrato();
-            }
-            render();
-            if (noDialogo) {
-                preencherDetalhes(i);
-                document.getElementById('det-situacao').focus();
-            } else {
-                const alvo = raiz.querySelector('[aria-selected="true"]');
-                if (alvo) alvo.focus();
-            }
-            showToast(dados.mensagem || 'Presença registrada.', 'success');
-        } catch (erro) {
-            showToast('Erro de rede. Verifique a conexão e tente de novo.', 'error', erro);
-            botao.disabled = false;
-            botao.textContent = 'Confirmar presença';
-        }
-    }
-
-    // O mesmo diálogo serve para cancelar a inscrição e para sair da lista de espera (plano 8)
-    const TEXTOS_CANCELAR = {
-        inscricao: {
-            titulo: 'Cancelar sua inscrição?',
-            aviso: 'A vaga fica livre para outro aluno.',
-            manter: 'Manter inscrição',
-            confirmar: 'Cancelar inscrição',
-            feito: 'Inscrição cancelada.'
-        },
-        fila: {
-            titulo: 'Sair da lista de espera?',
-            aviso: 'Você perde a sua posição. Para voltar, entre de novo no fim da fila.',
-            manter: 'Continuar na fila',
-            confirmar: 'Sair da fila',
-            feito: 'Você saiu da lista de espera.'
-        }
-    };
-    const textosCancelar = (i) => TEXTOS_CANCELAR[i.naFila ? 'fila' : 'inscricao'];
-    function abrirCancelar(i) {
-        S.alvo = i;
-        const t = textosCancelar(i);
-        document.getElementById('can-titulo').textContent = t.titulo;
-        document.getElementById('can-aviso').textContent = t.aviso;
-        document.getElementById('can-manter').textContent = t.manter;
-        document.getElementById('can-confirmar').textContent = t.confirmar;
-        document.getElementById('can-sub').textContent =
-            i.disciplina + ' · ' + D.diaCurto(i.inicio) + ' às ' + D.hora(i.inicio);
-        dlgCan.showModal();
-    }
-    document.getElementById('can-form').addEventListener('submit', async (ev) => {
-        ev.preventDefault();
-        const i = S.alvo;
-        if (!i) return;
-        const botao = document.getElementById('can-confirmar');
-        botao.disabled = true;
-        try {
-            const dados = await chamadaApi('/agendamentos/' + i.id, { method: 'DELETE' });
-            if (dados.statusHttp === 401) return sessaoExpirada();
-            if (dados.erro || !dados.success) {
-                dlgCan.close();
-                showToast(
-                    mensagemDaApi(dados, 'Não foi possível cancelar a inscrição.'),
-                    'error',
-                    dados
-                );
-                return;
-            }
-            S.inscricoes = S.inscricoes.filter((x) => x !== i);
-            dlgCan.close();
-            render();
-            showToast(textosCancelar(i).feito, 'success');
-            // Quem estava atrás na mesma fila anda uma posição (plano 8)
-            if (i.naFila) carregar();
-        } catch (erro) {
-            showToast('Erro de rede. Verifique a conexão e tente de novo.', 'error', erro);
-        } finally {
-            botao.disabled = false;
-        }
-    });
-
-    // Plano 7: pedir revisão da falta com o atestado (PDF, JPG ou PNG, até 5 MB)
-    const dlgRec = document.getElementById('dlg-recurso');
-    function abrirRecurso(i) {
-        S.alvo = i;
-        document.getElementById('rec-sub').textContent =
-            i.disciplina + ' · ' + D.diaCurto(i.inicio) + ' às ' + D.hora(i.inicio);
-        document.getElementById('rec-justificativa').value = '';
-        document.getElementById('rec-arquivo').value = '';
-        document.getElementById('rec-erro').textContent = '';
-        dlgRec.showModal();
-    }
-    const lerBase64 = (arquivo) =>
-        new Promise((ok, falha) => {
-            const leitor = new FileReader();
-            leitor.onload = () => ok(String(leitor.result).split(',')[1] || '');
-            leitor.onerror = () => falha(new Error('Não foi possível ler o arquivo.'));
-            leitor.readAsDataURL(arquivo);
+    const { abrirDetalhes, confirmarPresenca, abrirCancelar, abrirRecurso, abrirAvaliar } =
+        criarDialogosAluno({
+            raiz,
+            S,
+            situacao,
+            AVISO_24H,
+            textoMudou,
+            MAX_ANEXO,
+            TIPOS_ANEXO,
+            situacaoRecurso,
+            botaoRecurso,
+            notaRecurso,
+            SIGNIFICADO,
+            avaliacaoHTML,
+            etiqueta,
+            quando,
+            notaPresenca,
+            botaoConfirmar,
+            botaoCancelar,
+            botaoSala,
+            botaoAgenda,
+            carregarExtrato,
+            render,
+            sessaoExpirada,
+            carregar,
+            dlgCan,
+            dlgDet,
+            inscricaoPorId
         });
-    document.getElementById('rec-form').addEventListener('submit', async (ev) => {
-        ev.preventDefault();
-        const i = S.alvo;
-        if (!i) return;
-        const erro = document.getElementById('rec-erro');
-        const justificativa = document.getElementById('rec-justificativa').value.trim();
-        const arquivo = document.getElementById('rec-arquivo').files[0];
-        if (justificativa.length < 10) {
-            erro.textContent = 'Explique o motivo da falta com pelo menos 10 caracteres.';
-            return;
-        }
-        if (!arquivo) {
-            erro.textContent = 'Anexe o atestado ou outro comprovante.';
-            return;
-        }
-        if (!TIPOS_ANEXO.includes(arquivo.type)) {
-            erro.textContent = 'O comprovante precisa ser PDF, JPG ou PNG.';
-            return;
-        }
-        if (arquivo.size > MAX_ANEXO) {
-            erro.textContent =
-                'O arquivo passa de 5 MB. Tire a foto com menos resolução ou envie em PDF.';
-            return;
-        }
-        const botao = document.getElementById('rec-enviar');
-        botao.disabled = true;
-        try {
-            const dados = await chamadaApi('/agendamentos/' + i.id + '/recurso', {
-                method: 'POST',
-                body: JSON.stringify({
-                    justificativa,
-                    arquivo: {
-                        nome: arquivo.name,
-                        tipo: arquivo.type,
-                        conteudo: await lerBase64(arquivo)
-                    }
-                })
-            });
-            if (dados.statusHttp === 401) return sessaoExpirada();
-            if (!dados.success) {
-                erro.textContent = mensagemDaApi(dados, 'Não foi possível enviar o pedido.');
-                return;
-            }
-            i.recurso = dados.recurso;
-            dlgRec.close();
-            showToast(
-                'Pedido enviado. A coordenação analisa e você recebe a resposta por e-mail.',
-                'success'
-            );
-            render();
-        } catch (e) {
-            erro.textContent = e.message || 'Não foi possível enviar o pedido.';
-        } finally {
-            botao.disabled = false;
-        }
-    });
 
-    // Plano 6: diálogo de avaliação
-    const dlgAva = document.getElementById('dlg-avaliar');
-    function abrirAvaliar(i) {
-        S.alvo = i;
-        document.getElementById('ava-sub').textContent =
-            i.disciplina + ' com ' + i.monitor + ' · ' + D.diaCurto(i.inicio);
-        document
-            .querySelectorAll('#ava-form input[name="nota"]')
-            .forEach((r) => (r.checked = false));
-        document.getElementById('ava-comentario').value = '';
-        document.getElementById('ava-erro').textContent = '';
-        document.getElementById('ava-escolha').textContent = 'Toque numa nota de 1 a 5';
-        dlgAva.showModal();
-    }
-    document.getElementById('ava-form').addEventListener('change', (ev) => {
-        if (ev.target.name !== 'nota') return;
-        document.getElementById('ava-escolha').textContent =
-            ev.target.value + ' de 5 · ' + SIGNIFICADO[ev.target.value];
-        document.getElementById('ava-erro').textContent = '';
-    });
-    document.getElementById('ava-form').addEventListener('submit', async (ev) => {
-        ev.preventDefault();
-        const i = S.alvo;
-        if (!i) return;
-        const marcada = document.querySelector('#ava-form input[name="nota"]:checked');
-        const erro = document.getElementById('ava-erro');
-        if (!marcada) {
-            erro.textContent = 'Escolha uma nota de 1 a 5.';
-            return;
-        }
-        const comentario = document.getElementById('ava-comentario').value.trim();
-        const botao = document.getElementById('ava-enviar');
-        botao.disabled = true;
-        try {
-            const dados = await chamadaApi('/agendamentos/' + i.id + '/avaliacao', {
-                method: 'POST',
-                body: JSON.stringify({
-                    nota: Number(marcada.value),
-                    comentario: comentario || undefined
-                })
-            });
-            if (dados.statusHttp === 401) return sessaoExpirada();
-            if (!dados.success) {
-                erro.textContent = mensagemDaApi(dados, 'Não foi possível enviar a avaliação.');
-                return;
-            }
-            i.avaliacao = { nota: Number(marcada.value) };
-            dlgAva.close();
-            showToast('Obrigado! Sua avaliação foi enviada sem o seu nome.', 'success');
-            render();
-        } catch (e) {
-            erro.textContent = e.message || 'Não foi possível enviar a avaliação.';
-        } finally {
-            botao.disabled = false;
-        }
-    });
-
-    // Fechar pelos botões "Voltar"/X e devolver o foco a quem abriu
-    document.addEventListener('click', (ev) => {
-        const b = ev.target.closest('.pp-dlg [data-fechar]');
-        if (b) b.closest('dialog').close();
-    });
-    [dlgCan, dlgDet, dlgRec, dlgAva].forEach((d) =>
-        d.addEventListener('close', () => {
-            if (document.querySelector('.pp-dlg[open]')) return;
-            if (S.gatilho && document.body.contains(S.gatilho)) S.gatilho.focus();
-            else {
-                const alvo = raiz.querySelector('[aria-selected="true"], h1');
-                if (alvo) alvo.focus({ preventScroll: true });
-            }
-        })
-    );
-
-    // --- 10. Ações da tela ---
+    // --- 8. Ações da tela ---
     function trocarAba(chave) {
         S.aba = chave;
         S.abaEscolhida = true;
